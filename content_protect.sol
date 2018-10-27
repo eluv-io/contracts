@@ -1,6 +1,6 @@
 pragma solidity ^0.4.21;
 
-import 'ownable.sol';
+import './ownable.sol';
 
 contract ContentProtect {
 

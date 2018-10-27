@@ -12,14 +12,16 @@ contract ContentType {
 
     constructor(string memory content_type, string memory cddl_schema, string memory terms_schema ) public {
         owner = msg.sender;
-	name = stringToBytes32(content_type);
-	schema = cddl_schema;
-	terms = terms_schema;
+        name = stringToBytes32(content_type);
+        schema = cddl_schema;
+        terms = terms_schema;
     }
 
+
+    // TODO: is ContentType supposed to be Ownable - that's where 'creator' is defined
     function kill() public {
-        if (msg.sender == creator)
-            selfdestruct(creator);  // kills contract; send remaining funds back to creator
+        if (msg.sender == owner)
+            selfdestruct(owner);  // kills contract; send remaining funds back to creator
     }
 
     function set_terms_fabric_link(string memory terms_fabric_link) public {

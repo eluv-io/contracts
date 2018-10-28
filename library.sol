@@ -39,11 +39,6 @@ contract ContentLibrary is Ownable {
     event ApproveContentExecuted(address content_address, bool approved, string note);
     event SetLibraryHash(bytes32 library_hash);
     event PayCredit(address payee, uint256 amount);
-    event DbgString(string s);
-    event DbgAddress(address a);
-    event DbgUint256(uint256 u);
-    event DbgUint(uint u);
-    event DbgInt(int i);
 
     function () public payable { }
 
@@ -58,7 +53,6 @@ contract ContentLibrary is Ownable {
 
     function setAddressKMS(address address_KMS) public onlyOwner {
       addressKMS = address_KMS;
-      emit DbgAddress(addressKMS);
     }
 
 
@@ -169,7 +163,6 @@ contract ContentLibrary is Ownable {
       address content_contract = msg.sender;
       Content c = Content(content_contract);
       if (c.owner() != tx.origin) { 
-        emit DbgString("Publish request needs to be submitted by content owner");
         return false;
       }
       if (reviewer_groups_length == 0) { //No review required
@@ -185,7 +178,6 @@ contract ContentLibrary is Ownable {
 	return true;
       }
       if (approvalRequestsMap[content_contract] != 0) {
-	emit DbgString("Duplicate entry, request already queued");
         return false;
       }
       // Create a new approval request and add to pending list
@@ -213,7 +205,6 @@ contract ContentLibrary is Ownable {
 
     function approveContentExecuted(address content_contract, bool approved, string note) public returns ( bool ) {
       if (canReview(tx.origin) == false) {
-	emit DbgString("Unauthorized reviewer");
 	return false;
       }
       // credit the account based on the percent_complete
@@ -248,7 +239,6 @@ contract ContentLibrary is Ownable {
         } else {
           new_status_code = (current_status + 1) * -1; // returned to draft
         }
-        emit DbgInt(new_status_code);
         uint256 to_be_paid = c.updateStatus(new_status_code, percent_complete);
         payCredit(c, to_be_paid);
 
@@ -256,7 +246,6 @@ contract ContentLibrary is Ownable {
         emit ApproveContentExecuted(content_contract, approved, note);
         return true;
       } else {
-        emit DbgString("Approval can only be granted to content in review");
         return false;
       }
     }
@@ -293,8 +282,6 @@ contract ContentLibrary is Ownable {
         //get custom contract address associated with content_type from hash
         address custom_contract = contentTypeContracts[content_type];
 	uint256 licensing_fee = contentTypeLicensingFees[content_type];
-        emit DbgAddress(custom_contract);
-        emit DbgUint256(licensing_fee);
 
         //create content object
         address contentAddress = new Content(address(this), content_type);
@@ -302,58 +289,6 @@ contract ContentLibrary is Ownable {
         emit ContentObjectCreated(contentAddress, address(this), content_type, tx.origin);
        
         return contentAddress; //for debugging and testing
-    }
-
-    // Creates a new content object and tests accessing it
-    function testCreateAndAccess(address customContractAddr) public payable returns(bool)
-    {
-        emit DbgString("EnterTestCreateAndAccess.");
-
-	bytes32 content_type = bytes32("TEST CONTENT-TYPE");
-	addContentType(content_type, customContractAddr, 0) ; //no licensing fee for basic create and access test
-
-	//CREATE CONTENT
-        string memory pkbOwner = "pkbowner";
-	address latest_content = createContent(content_type);
-	emit DbgAddress(latest_content);
-        // TEST ACCESS
-        Content c = Content(latest_content);
-        //c.setAccessCharge( 10000000000000000000 );
-	//emit DbgString("Access charge set.");
-        emit DbgInt(c.statusCode());
-	c.publish(100, "All good");
-	emit DbgString("Published content.");
-        emit DbgInt(c.statusCode());
-	approveContentExecuted(latest_content, true, "Approved for testing");
-	emit DbgString("Approved content.");
-        emit DbgInt(c.statusCode());
-
-        address[] memory stakeholders = new address[](1);
-        bytes32[] memory customValues = new bytes32[](4);
-        stakeholders[0] = 0x07947A0A9eFe103cc68Ab284090Dd88B5DD53149; //payment service
-        customValues[0] = "FSA_16";
-        customValues[1] = "PG-13";
-        customValues[2] = "Restricted";
-        customValues[3] = "EU";
-
-        bytes memory sigstr  = "SIGNATURE 001177";
-        //bytes32 hash = bytes32("0x11112222");
-        string memory pkeRequestor = "pkerequestor";
-        string memory pkbRequestor = "pkbrequestor";
-        string memory reKey = "rekey";
-
-        bool r = c.accessRequest(1, pkeRequestor,"afgh dummy pub key", customValues, stakeholders);
-        if (r) {
-          c.accessGrant(1, true, reKey, "the AES key encrypted with requested public key"); //since contract is new the request ID is the first hence the value 1
-          c.accessComplete(1, 80, "0xffff");
-	  //c.kill(); //for cleaning up // but can not be called because of ownership
-	  emit DbgString("Access granted.");
-          return true;
-        }
-        else {
-          emit DbgString("Access denied.");
-          return false;
-        }
     }
 }
 
@@ -401,12 +336,6 @@ contract Content is Ownable {
     event ReturnCustomHook(address custom_contract, uint256 result);
     event InvokeCustomPostHook(address custom_contract);
 
-    event DbgString(string s);
-    event DbgAddress(address a);
-    event DbgUint256(uint256 u);
-    event DbgUint(uint u);
-    event DbgBytes32(bytes32 b);
-
     // "Fallback" function - necessary if this contract needs to be paid
     function () public payable { }
 
@@ -421,7 +350,6 @@ contract Content is Ownable {
         customContractAddress = lib.contentTypeContracts(content_type);
         licensingFee = lib.contentTypeLicensingFees(content_type);
 	addressKMS = lib.addressKMS();
-        emit DbgUint256(licensingFee);
         emit ContentObjectCreate(address(this), containingLibrary, content_type, tx.origin);
         emit SetCustomContract(customContractAddress);
     }
@@ -551,7 +479,6 @@ contract Content is Ownable {
         setStatusCode(new_status_code);
 	return to_be_paid;
       } else {
-	emit DbgString("updater is not authorized");
         return 0;
       }
     }
@@ -585,17 +512,14 @@ contract Content is Ownable {
       //Check if request is funded
       uint256 requiredFund = getAccessCharge(level, customValues, stakeholders);
       if (msg.value < uint(requiredFund)) {
-        emit DbgString("Underfunded access request: 103"); 
         emit AccessRequest(103, requestID, level, bytes32(""), "", ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
 	return false;
       }
       RequestData memory r  = RequestData(msg.sender, msg.value, 0);// status of 0 indicates the payment received is in escrow in the content contract 
       requestMap[requestID] = r;
       if (customContractAddress != 0x0) {
-        emit DbgAddress(customContractAddress);
         CustomContract c = CustomContract(customContractAddress);
         uint result = c.runAccess(requestID, level, customValues, stakeholders);
-        emit DbgUint(result);
         if ( result != 0 ) {
           emit AccessRequest(result, requestID, level, bytes32(""), "", ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
           return false;
@@ -625,12 +549,10 @@ contract Content is Ownable {
     function accessGrant(uint256 request_ID, bool access_granted, string reKey, string encrypted_AES_key) public returns(bool)
     {
 	if ((msg.sender != owner) && (msg.sender != addressKMS)) {
-	  emit DbgString("Invalid use, function can only been called by owner or KMS");
 	  return false;
 	}
         RequestData r  = requestMap[request_ID]; 
         if (r.originator == 0x0){
-	  emit DbgString("Request was already fulfilled");
 	  return false;
 	}
         if (r.status == 0) {

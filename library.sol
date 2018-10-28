@@ -163,42 +163,6 @@ contract ContentLibrary is Ownable {
       return false;
     }
 
-/* Not used anymore - replaced by publish function on content object directly 
-    function publishContent(address content_contract, uint8 pct_complete, string signed_verification)
-        public payable returns (uint)
-    {
-
-	//First ensure that the method is called by the owner of the content
-	Content c = Content(content_contract);
-	if (c.owner() != msg.sender) {
-	  emit DbgString("Publish request needs to be submitted by content owner");
-	  return 1;
-	}
-
-        // Check that content is verified via the custom data and add to approval list for review if so
-        // Here we check that the signed_verification is valid
-
-        // TODO - CHECK SIGNATURE
-        keccak256(signed_verification);
-
-	// Update the content contract to reflect the approval process
-	c.updateStatus(1, pct_complete); //mark with statusCode 1, which is the default for in-review - NOTE: could be change to be (currentStatus * -1) 
-
-        // Create a new approval request and add to pending list
-        if (approvalRequestsLength < approvalRequests.length) {
-            approvalRequests[approvalRequestsLength] = content_contract;
-         }
-         else {
-             approvalRequests.push(content_contract);
-         }
-	 approvalRequestsMap[content_contract] = (approvalRequestsLength + 1);//should be same either way, but in second case the length and number of items match
-         approvalRequestsLength ++;
-
-         // Log event
-         emit ApproveContentRequest(content_contract, msg.sender, pct_complete);
-         return 0;
-    }
-*/
 
 
     function submitApprovalRequest() public returns (bool) {
@@ -207,6 +171,18 @@ contract ContentLibrary is Ownable {
       if (c.owner() != tx.origin) { 
         emit DbgString("Publish request needs to be submitted by content owner");
         return false;
+      }
+      if (reviewer_groups_length == 0) { //No review required
+        int current_status = c.statusCode();
+        uint8 percent_complete = c.percentComplete();
+        int new_status_code;
+        new_status_code = 0; // indicates approval, custom contract might overwrite that decision
+        uint256 to_be_paid = c.updateStatus(new_status_code, percent_complete);
+        payCredit(c, to_be_paid);
+
+        // Log event
+        emit ApproveContentExecuted(content_contract, true, "");
+	return true;
       }
       if (approvalRequestsMap[content_contract] != 0) {
 	emit DbgString("Duplicate entry, request already queued");
@@ -366,7 +342,7 @@ contract ContentLibrary is Ownable {
         string memory pkbRequestor = "pkbrequestor";
         string memory reKey = "rekey";
 
-        bool r = c.accessRequest(1, pkeRequestor, customValues, stakeholders);
+        bool r = c.accessRequest(1, pkeRequestor,"afgh dummy pub key", customValues, stakeholders);
         if (r) {
           c.accessGrant(1, true, reKey, "the AES key encrypted with requested public key"); //since contract is new the request ID is the first hence the value 1
           c.accessComplete(1, 80, "0xffff");
@@ -407,7 +383,7 @@ contract Content is Ownable {
     mapping ( uint256 => RequestData ) public requestMap; 
 
     event ContentObjectCreate(address content_address, address containing_library, bytes32 content_type, address content_owner);
-    event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 contentHash, string pkeRequestor);
+    event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 contentHash, string pkeRequestor, string pkeAFGH);
     event AccessGrant(uint256 request_ID, bool access_granted, string reKey, string encrypted_AES_key);
     event AccessRequestValue(bytes32 customValue);
     event AccessRequestStakeholder(address stakeholder);
@@ -415,6 +391,7 @@ contract Content is Ownable {
     event SetCustomContract(address custom_contract_address);
     event SetContentHash(bytes32 content_hash);
     event SetAccessCharge(uint256 access_charge);
+    event GetAccessCharge(uint8 level, uint256 access_charge);
     event InsufficientFunds(uint256 access_charge, uint256 amount_provided);
     event SetStatusCode(int status_code);
     event Publish(uint8 pct_complete,bool request_status);
@@ -505,15 +482,17 @@ contract Content is Ownable {
          emit SetCustomContract(customContractAddress);
     }
 
-    function getAccessCharge(uint8 level, string pkeRequestor, bytes32[] customValues, address[] stakeholders) public returns (uint256) {
+    function getAccessCharge(uint8 level, bytes32[] customValues, address[] stakeholders) public returns (uint256) {
+      uint256 level_access_charge = accessCharge;
       if (customContractAddress != 0x0) {
         CustomContract c = CustomContract(customContractAddress);
-        int256 calculatedCharge = c.runAccessCharge(level, pkeRequestor, customValues, stakeholders);
+        int256 calculatedCharge = c.runAccessCharge(level, customValues, stakeholders);
 	if (calculatedCharge >= 0) {
-	  return uint256(calculatedCharge);
+	  level_access_charge = uint256(calculatedCharge);
 	} 
       }
-      return accessCharge;
+      emit GetAccessCharge(level, level_access_charge);
+      return level_access_charge;
     }
 
     function setAccessCharge (uint256 charge) public onlyOwner returns (uint256) {
@@ -594,19 +573,20 @@ contract Content is Ownable {
 
 
     //  level - the security group for which the access request is for
-    //  pkeRequestor - ephemeral public key of the requestor
+    //  pkeRequestor - ethereum public key of the requestor (ECIES)
+    //  pkeAFGH - ephemeral public key of the requestor (AFGH)
     //  customValues - an array of custom values used to convey additional information
     //  stakeholders - an array of additional address used to provide additional relevant addresses
-    function accessRequest(uint8 level, string pkeRequestor, bytes32[] customValues, address[] stakeholders) public payable returns(bool)
+    function accessRequest(uint8 level, string pkeRequestor, string pkeAFGH, bytes32[] customValues, address[] stakeholders) public payable returns(bool)
     {
       requestID = requestID + 1;
       //if (statusCode !=0) return false; // only published content should be accessible (debatable)
 
       //Check if request is funded
-      uint256 requiredFund = getAccessCharge(level, pkeRequestor, customValues, stakeholders);
+      uint256 requiredFund = getAccessCharge(level, customValues, stakeholders);
       if (msg.value < uint(requiredFund)) {
-        emit DbgString("Underfunded access request: 101"); 
-        emit AccessRequest(101, requestID, level, bytes32(""), ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
+        emit DbgString("Underfunded access request: 103"); 
+        emit AccessRequest(103, requestID, level, bytes32(""), "", ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
 	return false;
       }
       RequestData memory r  = RequestData(msg.sender, msg.value, 0);// status of 0 indicates the payment received is in escrow in the content contract 
@@ -617,12 +597,12 @@ contract Content is Ownable {
         uint result = c.runAccess(requestID, level, customValues, stakeholders);
         emit DbgUint(result);
         if ( result != 0 ) {
-          emit AccessRequest(result, requestID, level, bytes32(""), ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
+          emit AccessRequest(result, requestID, level, bytes32(""), "", ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
           return false;
         }
       }
       // Raise Event
-      emit AccessRequest(0, requestID, level, contentHash, pkeRequestor);
+      emit AccessRequest(0, requestID, level, contentHash, pkeRequestor, pkeAFGH);
       // Logs custom key/value pairs
       uint256 i;
       for (i=0; i < customValues.length; i++) {
@@ -700,15 +680,17 @@ contract Content is Ownable {
         }
 	// Delete request from map after customContract in case it was needed for execution of custom wrap-up
 	RequestData r  = requestMap[request_ID];
-	if ((r.originator != 0x0) && (r.status == 0) && (msg.sender == r.originator)){
-	  msg.sender.transfer(r.amountPaid); //if access was not granted, payment is returned to originator
+        if ((r.originator != 0x0) && (msg.sender == r.originator)){
+	  if (r.status == 0) {
+	    msg.sender.transfer(r.amountPaid); //if access was not granted, payment is returned to originator
+	  }
 	  delete requestMap[request_ID]; 
-
-          // record to event
-          emit AccessComplete(request_ID, scorePct, mlOutHash, result);
-          return result;
+	} else {
+          result = false;
 	}
-        return false;
+        // record to event
+        emit AccessComplete(request_ID, scorePct, mlOutHash, result);
+        return result;
     }
 
 
@@ -726,7 +708,7 @@ contract CustomContract is Ownable {
     event DbgAddress(address a);
     event DbgUint256(uint256 u);
     event DbgUint(uint u);
-    event RunAccessCharge(uint8 level, string pkeRequestor, int256 calculateAccessCharge);
+    event RunAccessCharge(uint8 level, int256 calculateAccessCharge);
     event RunAccess(uint256 request_ID, uint result);
     event RunFinalize(uint256 request_ID, bool result);
     event RunStatusChange(int proposed_status_code, int return_status_code, int256 licenseFeeToBePaid);
@@ -734,7 +716,7 @@ contract CustomContract is Ownable {
     function () public payable { }
 
     // charge, amount paid and address of the originator can all be retrieved from the requestMap using the requestID
-    function runAccessCharge(uint8 level, string pkeRequestor, bytes32[] customValues, address[] stakeholders) public returns (int256) {
+    function runAccessCharge(uint8 level, bytes32[] customValues, address[] stakeholders) public returns (int256) {
 	return -1; // indicates that the amount is the static one configured in the Content object and no extra calculation is required
     }
     function runAccess(uint256 request_ID, uint8 level, bytes32[] custom_values, address[] stake_holders) public payable returns(uint) {

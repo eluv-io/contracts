@@ -29,8 +29,8 @@ fi
 
 
 # use abigen
-cd $gopath_dir 
-$(./bin/abigen --sol $contracts_dir/$fsol --pkg=main --out $contracts_dir/abigen/$fout)
+cd $gopath_dir
+$(./bin/abigen --sol $contracts_dir/$fsol --pkg=contracts --out $contracts_dir/abigen/$fout)
 if [ $? -ne 0 ]; then
 echo "error occured while creating go binding!"
 else

@@ -1,6 +1,7 @@
 pragma solidity ^0.4.21;
 
-import './library.sol';
+import {Content} from '../content.sol';
+import {BaseContent} from '../base_content.sol';
 
 
 //
@@ -9,13 +10,13 @@ import './library.sol';
 // fee is paid to the contributor, with the remaining balance paid upon
 // full, final approval.
 //
-contract PartialPayment is CustomContract
+contract PartialPayment is Content
 {
 
     
-    function runStatusChange(int proposed_status_code) public returns (int, int256)
+    function runStatusChange(int proposed_status_code) public payable returns (int, int256)
     {
-        Content contentObj = Content(msg.sender);
+        BaseContent contentObj = BaseContent(msg.sender);
         uint8 percent_complete = contentObj.percentComplete();
         uint256 licensingFee = contentObj.licensingFee();
         uint256 licensingFeeReceived = contentObj.licensingFeeReceived();

@@ -86,20 +86,18 @@ contract BaseLibrary is Editable {
     }
 
 
-    //TO DO: modify to match can_contribute if it works
-    // Since this calls an external contract it can not be made a public view,
-    //  so it executes as a transaction and the side effect is that we do not get the returned values, making it useless
-    //  A possible workaround would be emit permission granted / permission denied event instead of returning the boolean. It seems wasteful though and would be inconvenient to use.
-    function hasAccess(address candidate) public returns (bool) {
+    function hasAccess(address candidate) public constant returns (bool) {
         if (accessor_groups.length == 0){
             return true;
         }
         address group;
-        for (uint i=0; i < accessor_groups.length; i++) {
-            group = accessor_groups[i];
-            bool groupAccess;
+        bool groupAccess;
+        BaseAccessControlGroup groupContract;
+        for (uint i=0; i <  accessor_groups.length; i++) {
+            group =  accessor_groups[i];
             if (group != 0x0){
-                groupAccess = group.call(bytes4(keccak256("has_access(address)")), candidate);
+                groupContract = BaseAccessControlGroup(group);
+                groupAccess = groupContract.hasAccess(candidate);
                 if (groupAccess == true) {
                     return true;
                 }

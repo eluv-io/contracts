@@ -1,11 +1,12 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.21;
 
+import {Editable} from "./editable.sol";
+import {BaseAccessControlGroup} from "./base_access_control_group.sol";
+import {BaseContent} from "./base_content.sol";
 
-import {Editable} from './editable.sol';
-import {BaseAccessControlGroup} from './base_access_control_group.sol';
-import {BaseContent} from './base_content.sol';
 
 contract BaseLibrary is Editable {
+
 
     //mapping (address => bool) public managers; //for now let it be restricted to owner
     address public space;
@@ -106,16 +107,16 @@ contract BaseLibrary is Editable {
         return false;
     }
 
-
     function canContribute(address candidate) public constant returns (bool) {
-        if (contributor_groups.length == 0){
+
+        if (contributor_groups.length == 0) {
             return true;
         }
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i=0; i <  contributor_groups.length; i++) {
-            group =  contributor_groups[i];
+        for (uint i = 0; i < contributor_groups.length; i++) {
+            group = contributor_groups[i];
             if (group != 0x0){
                 groupContract = BaseAccessControlGroup(group);
                 groupAccess = groupContract.hasAccess(candidate);
@@ -126,7 +127,6 @@ contract BaseLibrary is Editable {
         }
         return false;
     }
-
 
     function canReview(address candidate) public constant returns (bool) {
         if (candidate == owner) {
@@ -147,8 +147,6 @@ contract BaseLibrary is Editable {
         }
         return false;
     }
-
-
 
     function submitApprovalRequest() public returns (bool) {
         address content_contract = msg.sender;
@@ -185,7 +183,6 @@ contract BaseLibrary is Editable {
         return true;
     }
 
-
     function getPendingApprovalRequest(uint256 index) public constant returns (address) {
         // Read and process the first content in the approvalRequests list
         if ((approvalRequestsLength == 0) || (approvalRequestsLength <= index)) {
@@ -204,7 +201,7 @@ contract BaseLibrary is Editable {
 
         // remove the request from the list
         delete approvalRequests[index];
-        approvalRequestsLength --;
+        approvalRequestsLength--;
         approvalRequestsMap[content_contract] = 0;
         if (approvalRequestsLength > index) {
             address last_request = approvalRequests[approvalRequestsLength];
@@ -241,7 +238,6 @@ contract BaseLibrary is Editable {
         }
     }
 
-
     function payCredit(address content_contract, uint256 amount) public returns (uint256) {
         if (amount > 0) {
             BaseContent c = BaseContent(content_contract);
@@ -262,7 +258,6 @@ contract BaseLibrary is Editable {
         }
     }
 
-
     function createContent(address content_type) public  returns (address) {
         //check if sender has contributor access
         if (canContribute(tx.origin) == false) {
@@ -282,7 +277,15 @@ contract BaseLibrary is Editable {
 
         return contentAddress;
     }
+
+    function accessRequest() public returns (bool){
+        if (hasAccess(tx.origin)) {
+            emit AccessRequest(0);
+            return true;
+        } else {
+            emit AccessRequest(105);
+            return false;
+        }
+    }
 }
-
-
 

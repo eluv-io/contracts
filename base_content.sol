@@ -1,8 +1,8 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.21;
 
-import {Editable} from './editable.sol';
-import {Content} from './content.sol';
-import {BaseLibrary} from './base_library.sol';
+import {Editable} from "./editable.sol";
+import {Content} from "./content.sol";
+import {BaseLibrary} from "./base_library.sol";
 
 
 contract BaseContent is Editable {
@@ -219,6 +219,11 @@ contract BaseContent is Editable {
 	{
 		requestID = requestID + 1;
 		//if (statusCode !=0) return false; // only published content should be accessible (debatable)
+		BaseLibrary lib = BaseLibrary(libraryAddress);
+		if (lib.hasAccess(tx.origin) == false) {
+			emit AccessRequest(105, requestID, level, bytes32(""), "", ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
+			return false;
+		}
 
 		//Check if request is funded
 		uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);

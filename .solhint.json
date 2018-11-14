@@ -1,0 +1,15 @@
+{                                              
+    "extends": "default",                      
+    "rules": {                                 
+        "indent": ["error", 4],                
+        "quotes": ["error", "double"],         
+        "max-line-length": ["error", 120],
+	"no-simple-event-func-name": false,
+	"avoid-tx-origin": false,
+	"compiler-fixed": "error",
+	"two-lines-top-level-separator": "warn",
+	"func-param-name-mixedcase": false,
+	"code-complexity": ["warn", 10],
+	"no-empty-blocks": false
+    }                                          
+}                                              

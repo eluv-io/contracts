@@ -10,8 +10,8 @@ contracts_dir="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
 ws_dir="$( cd "$( dirname $contracts_dir)" && pwd)"
 
 # check if the GOPATH is set to content-fabric
-if [[ $GOPATH != *"$ws_dir/content-fabric"* ]]; then
 gopath_dir="$( cd "$ws_dir/content-fabric" && pwd )"
+if [[ $GOPATH != *"$ws_dir/content-fabric"* ]]; then
 export GOPATH=$GOPATH:$gopath_dir
 fi
 

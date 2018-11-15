@@ -1,12 +1,14 @@
 pragma solidity 0.4.21;
 
-import {Ownable} from "./ownable.sol";
+import {Accessible} from "./accessible.sol";
+import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
+import "./accessible.sol";
 
 
-contract BaseContentSpace is Ownable {
+contract BaseContentSpace is Accessible, Editable {
 
 
     string public name;
@@ -21,7 +23,7 @@ contract BaseContentSpace is Ownable {
         name = content_space_name;
     }
 
-    function setDescription(string memory content_space_description) public {
+    function setDescription(string memory content_space_description) public onlyOwner {
         description = content_space_description;
     }
 

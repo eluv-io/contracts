@@ -1,7 +1,7 @@
 #!/bin/sh
 
-read -p "Enter sol_file:" fsol
-read -p "Enter output file name:" fout #Exmaple: content.go
+#read -p "Enter sol_file:" fsol
+#read -p "Enter output file name:" fout #Exmaple: content.go
 
 # to get path to contracts folder
 contracts_dir="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
@@ -30,14 +30,12 @@ fi
 
 # use abigen
 cd $gopath_dir
-$(./bin/abigen --sol $contracts_dir/$fsol --pkg=contracts --out $contracts_dir/abigen/$fout)
+$(./bin/abigen --sol $contracts_dir/base_content_space.sol --pkg=contracts --out $contracts_dir/abigen/base_content_space.go)
 if [ $? -ne 0 ]; then
 echo "error occured while creating go binding!"
 else
-echo "The go binding for $fsol is present at $contracts_dir/abigen/$fout"
+echo "The go binding for base_content_space.sol is present at $contracts_dir/abigen/base_content_space.go"
 fi
-
-
 
 
 

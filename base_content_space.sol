@@ -1,12 +1,13 @@
 pragma solidity 0.4.21;
 
-import {Ownable} from "./ownable.sol";
+import {Accessible} from "./accessible.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
+import "./accessible.sol";
 
 
-contract BaseContentSpace is Ownable {
+contract BaseContentSpace is Accessible {
 
 
     string public name;

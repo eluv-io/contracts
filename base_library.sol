@@ -1,11 +1,13 @@
 pragma solidity 0.4.21;
 
+import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
+import "./accessible.sol";
 
 
-contract BaseLibrary is Editable {
+contract BaseLibrary is Accessible, Editable {
 
 
     address public space;

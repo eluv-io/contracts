@@ -220,11 +220,14 @@ contract BaseContent is Editable {
         //Check if request is funded, except if user is owner
         if (tx.origin != owner) {
             uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);
+            require (msg.value >= uint(requiredFund));
+            /*
             if (msg.value < uint(requiredFund)) {
                 emit AccessRequest(103, requestID, level, bytes32(""), "", "");
                 //for non-0 (unsuccessful request) no need to emit the contentHash and pke
                 return false;
             }
+            */
         }
         RequestData memory r = RequestData(msg.sender, msg.value, 0);
         // status of 0 indicates the payment received is in escrow in the content contract
@@ -266,9 +269,8 @@ contract BaseContent is Editable {
     )
         public returns (bool)
     {
-        if ((msg.sender != owner) && (msg.sender != addressKMS)) {
-            return false;
-        }
+        require ((msg.sender == owner) || (msg.sender == addressKMS));
+
         RequestData storage r = requestMap[request_ID];
         if (r.originator == 0x0) {
             return false;
@@ -301,22 +303,20 @@ contract BaseContent is Editable {
     //
     // add a state variable in the contract indicating whether to credit back based on quality score
     function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) public payable returns (bool) {
+        RequestData storage r = requestMap[request_ID];
+        require((r.originator != 0x0) && (msg.sender == r.originator));
         bool result = true;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
             result = c.runFinalize(request_ID);
         }
         // Delete request from map after customContract in case it was needed for execution of custom wrap-up
-        RequestData storage r = requestMap[request_ID];
-        if ((r.originator != 0x0) && (msg.sender == r.originator)) {
-            if (r.status == 0) {
-                msg.sender.transfer(r.amountPaid);
-                //if access was not granted, payment is returned to originator
-            }
-            delete requestMap[request_ID];
-        } else {
-            result = false;
+        if (r.status == 0) {
+            //if access was not granted, payment is returned to originator
+            msg.sender.transfer(r.amountPaid);
         }
+        delete requestMap[request_ID];
+
         // record to event
         emit AccessComplete(request_ID, score_pct, ml_out_hash, result);
         return result;

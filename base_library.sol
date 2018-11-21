@@ -257,7 +257,7 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function accessRequest() public returns (bool) {
-        if (hasAccess(tx.origin)) {
+        if (hasAccess(tx.origin) || canContribute(tx.origin) || canReview(tx.origin)) {
             emit AccessRequest(0);
             return true;
         } else {

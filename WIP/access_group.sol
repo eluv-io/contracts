@@ -15,59 +15,56 @@ contract AccessControlGroup is Ownable {
     event UnauthorizedOperation(uint operation_code, address candidate);
 
     function stringToBytes32(string memory source) pure internal returns (bytes32 result) {
-       bytes memory tempEmptyStringTest = bytes(source);
-       if (tempEmptyStringTest.length == 0) {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
            return 0x0;
-       }
-       assembly {
+        }
+        assembly {
            result := mload(add(source, 32))
-       }
+        }
     }
 
     function AccessControlGroup(string memory groupName) public {
-	name = stringToBytes32(groupName);
-	managers[creator] = true;
-	members[creator] = true;
+	    name = stringToBytes32(groupName);
+	    managers[creator] = true;
+	    members[creator] = true;
     }
 
 
     function grantManagerAccess(address manager) public onlyOwner {
-	managers[manager] = true;
-	emit ManagerAccessGranted(manager);
+	    managers[manager] = true;
+	    emit ManagerAccessGranted(manager);
     }
 
     function revokeManagerAccess(address manager) public {
-      if ((msg.sender == creator) || (msg.sender == manager)) {
-	managers[manager] = false;
-	emit ManagerAccessRevoked(manager);
-      }	else {
-	//console.log("Unauthorized attempt by "+ msg.sender + " to revoke manager privilege for " + manager);
-	emit UnauthorizedOperation(11, manager);
-      }
+        if ((msg.sender == creator) || (msg.sender == manager)) {
+	        managers[manager] = false;
+	        emit ManagerAccessRevoked(manager);
+        } else {
+	        emit UnauthorizedOperation(11, manager);
+        }
     }
 
     function hasManagerAccess(address candidate) public view returns (bool) {
-	return (managers[candidate] == true);
+	    return (managers[candidate] == true);
     }
 
     function grantAccess(address candidate) public {
-      if (managers[msg.sender] == true) {
-        members[candidate] = true;
-	emit MemberAdded(candidate);
-      } else {
-        //console.log("Unauthorized attempt by "+ msg.sender + " to grant access privilege to " + candidate);
-	emit UnauthorizedOperation(20, candidate);
-      }
+        if (managers[msg.sender] == true) {
+            members[candidate] = true;
+	        emit MemberAdded(candidate);
+        } else {
+            emit UnauthorizedOperation(20, candidate);
+        }
     }
 
     function revokeAccess(address candidate) public {
-      if ((managers[msg.sender] == true) || (msg.sender == candidate)) {
-        members[candidate] = false;
-	emit MemberRevoked(candidate);
-      } else {
-        //console.log("Unauthorized attempt by "+ msg.sender + " to revoke access privilege for " + manager);
-	emit UnauthorizedOperation(21, candidate);
-      }
+        if ((managers[msg.sender] == true) || (msg.sender == candidate)) {
+            members[candidate] = false;
+	        emit MemberRevoked(candidate);
+        } else {
+            emit UnauthorizedOperation(21, candidate);
+        }
     }
 
     function hasAccess(address candidate) public view returns (bool) {
@@ -75,7 +72,7 @@ contract AccessControlGroup is Ownable {
     }
 
     function groupName() public view returns (string) {
-	bytes memory bytesArray = new bytes(32);
+	    bytes memory bytesArray = new bytes(32);
         for (uint256 i; i < 32; i++) {
           bytesArray[i] = name[i];
         }

@@ -1,59 +1,56 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.21;
 
 /**
- * @title Ownable
- * @dev The Ownable contract has an owner address, and provides basic authorization control
+ * Ownable
+ * The Ownable contract stores owner and creator addresses, and provides basic authorization control
  * functions, this simplifies the implementation of "user permissions".
  */
+
 contract Ownable {
 
-  address public creator;
-  address public owner;
+    address public creator;
+    address public owner;
 
-  /**
-   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-   * account.
-   */
-  function Ownable() public {
-    creator = tx.origin;
-    owner = tx.origin;
-  }
-
-
-  /**
-   * @dev Throws if called by any account other than the owner.
-   */
-  modifier onlyOwner() {
-    require(tx.origin == owner);
-    _;
-  }
-
-  modifier onlyCreator() {
-    require(tx.origin == creator);
-    _;
-  }
-
-
-  /**
-   * @dev Allows the current owner to transfer control of the contract to a newOwner.
-   * @param newOwner The address to transfer ownership to.
-   */
-  function transferOwnership(address newOwner) public onlyOwner {
-    require(newOwner != address(0));
-    owner = newOwner;
-  }
-
-  function transferCreatorship(address newCreator) public onlyCreator {
-    require(newCreator != address(0));
-    if (owner == creator){
-      owner = newCreator;
+    function Ownable() public payable {
+        creator = tx.origin;
+        owner = tx.origin;
     }
-    creator = newCreator;
-  }
 
-  function kill() public onlyOwner {
-    selfdestruct(owner);  // kills contract; send remaining funds back to owner
-  }
+    // "Fallback" function - necessary if this contract needs to be paid
+    function () public payable { }
+
+    /**
+     * Throws if called by any account other than the owner.
+     *  note: both transaction initiator (tx.origin) and caller entity (msg.sender) are considered to also allow
+     *       ownership by contracts, not just accounts.
+     */
+    modifier onlyOwner() {
+        require((tx.origin == owner) || (msg.sender == owner));
+        _;
+    }
+
+    modifier onlyCreator() {
+        require(tx.origin == creator);
+        _;
+    }
+
+    /**
+     * Allows the current owner to transfer control of the contract to a newOwner.
+     *  newOwner: The address to transfer ownership to.
+     */
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0));
+        owner = newOwner;
+    }
+
+    function transferCreatorship(address newCreator) public onlyCreator {
+        require(newCreator != address(0));
+        creator = newCreator;
+    }
+
+    function kill() public onlyOwner {
+        selfdestruct(owner);  // kills contract; send remaining funds back to owner
+    }
 
 
 }

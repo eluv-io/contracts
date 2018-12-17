@@ -6,21 +6,20 @@ import './ownable.sol';
 contract ContentLibrary is Ownable {
 
     //mapping (address => bool) public managers; //for now let it be restricted to owner
-    string public name;
-    bytes32 public space;
-    bytes32 public restricted_space;
+    address public space;
+    //bytes32 public restricted_space;
     bytes32 public libraryHash;
     address[] public contributor_groups;
     address[] public reviewer_groups;
     address[] public accessor_groups;
-    bytes32[] public content_types;
+    address[] public content_types;
     uint256 public contributor_groups_length;
     uint256 public reviewer_groups_length;
     uint256 public accessor_groups_length;
     uint256 public content_types_length;
 
-    mapping ( bytes32 => address ) public contentTypeContracts;  // custom contracts map
-    mapping ( bytes32 => uint256 ) public contentTypeLicensingFees;  // custom contracts map
+    mapping ( address => address ) public contentTypeContracts;  // custom contracts map
+    mapping ( address => uint256 ) public contentTypeLicensingFees;  // custom contracts map
 
     //uint256 public maxCredit = 10;
 
@@ -29,22 +28,22 @@ contract ContentLibrary is Ownable {
     uint256 public approvalRequestsLength = 0;
     mapping (address => uint256) private approvalRequestsMap; // the position + 1 in the array, the + 1, is to differentiate index 0 from un-mapped
 
-    event ContentObjectCreated(address contentAddress, address containingLibrary, bytes32 content_type, address content_owner);
+    event ContentObjectCreated(address contentAddress, address content_type);
     event ContributorGroupAdded(address group);
     event ReviewerGroupAdded(address group);
     event AccessorGroupAdded(address group);
-    event ContentTypeAdded(bytes32 group);
+    event ContentTypeAdded(address contentType, address customContract, uint256 licensingFee);
     event UnauthorizedOperation(uint operation_code, address candidate);
     event ApproveContentRequest(address content_address, address submitter);
     event ApproveContentExecuted(address content_address, bool approved, string note);
-    event SetLibraryHash(bytes32 library_hash);
+    event Commit(bytes32 library_hash);
+    event UpdateRequest(bytes32 libraryHash);
     event PayCredit(address payee, uint256 amount);
 
-    function () public payable { }
+    //function () public payable { }
 
-    function ContentLibrary(string memory library_name, bytes32 content_space, address address_KMS) public payable {
-      name = library_name;
-      space = content_space;
+    function ContentLibrary(address address_KMS) public payable {
+      space = msg.sender;
       contributor_groups_length = 0;
       reviewer_groups_length = 0;
       accessor_groups_length = 0;
@@ -56,14 +55,20 @@ contract ContentLibrary is Ownable {
     }
 
 
-    function setLibraryHash(bytes32 library_hash) public onlyOwner {
+    function commit(bytes32 library_hash) public onlyOwner {
       libraryHash = library_hash;
-      emit SetLibraryHash(library_hash);
+      emit Commit(library_hash);
     }
 
+    function updateRequest() public onlyOwner {
+        emit UpdateRequest(libraryHash);
+    }
+
+    /* NOT USED
     function setRestrictedSpace(bytes32 new_restricted_space) public onlyOwner {
       restricted_space = new_restricted_space;
     }
+    */
 
 
     function addContributorGroup(address group) public onlyOwner {
@@ -84,12 +89,12 @@ contract ContentLibrary is Ownable {
       emit AccessorGroupAdded(group);
     }
 
-    function addContentType(bytes32 content_type, address custom_contract, uint256 licensing_fee) public onlyOwner {
+    function addContentType(address content_type, address custom_contract, uint256 licensing_fee) public onlyOwner {
       content_types.push(content_type);
       content_types_length = content_types_length + 1;
       contentTypeContracts[content_type] = custom_contract;
       contentTypeLicensingFees[content_type] = licensing_fee;
-      emit ContentTypeAdded(content_type);
+      emit ContentTypeAdded(content_type, custom_contract, licensing_fee);
     }
 
 
@@ -166,7 +171,7 @@ contract ContentLibrary is Ownable {
         return false;
       }
       if (reviewer_groups_length == 0) { //No review required
-        int current_status = c.statusCode();
+        //int current_status = c.statusCode();
         uint8 percent_complete = c.percentComplete();
         int new_status_code;
         new_status_code = 0; // indicates approval, custom contract might overwrite that decision
@@ -272,7 +277,7 @@ contract ContentLibrary is Ownable {
      }
 
 
-    function createContent(bytes32 content_type) public  returns (address) {
+    function createContent(address content_type) public  returns (address) {
         //check if sender has contributor access
         if (canContribute(tx.origin) == false) {
           emit UnauthorizedOperation(101, tx.origin);
@@ -280,15 +285,16 @@ contract ContentLibrary is Ownable {
         }
 
         //get custom contract address associated with content_type from hash
-        address custom_contract = contentTypeContracts[content_type];
-	uint256 licensing_fee = contentTypeLicensingFees[content_type];
+        //address custom_contract = contentTypeContracts[content_type]; //Not required anylonger
+	    //uint256 licensing_fee = contentTypeLicensingFees[content_type]; //Not required anylonger
 
         //create content object
-        address contentAddress = new Content(address(this), content_type);
+        address contentAddress = new Content();
         Content c = Content(contentAddress);
-        emit ContentObjectCreated(contentAddress, address(this), content_type, tx.origin);
+        c.setContentType(content_type);
+        emit ContentObjectCreated(contentAddress, content_type);
        
-        return contentAddress; //for debugging and testing
+        return contentAddress;
     }
 }
 
@@ -296,7 +302,7 @@ contract ContentLibrary is Ownable {
 
 contract Content is Ownable {
 
-    bytes32 public contentType;
+    address public contentType;
     address public addressKMS;
     address public customContractAddress;
     address public libraryAddress;
@@ -317,14 +323,15 @@ contract Content is Ownable {
 
     mapping ( uint256 => RequestData ) public requestMap; 
 
-    event ContentObjectCreate(address content_address, address containing_library, bytes32 content_type, address content_owner);
+    event ContentObjectCreate(address containing_library);
+    event SetContentType(address contentType, address customContractAddress, uint256 licensingFee);
     event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 contentHash, string pkeRequestor, string pkeAFGH);
     event AccessGrant(uint256 request_ID, bool access_granted, string reKey, string encrypted_AES_key);
     event AccessRequestValue(bytes32 customValue);
     event AccessRequestStakeholder(address stakeholder);
     event AccessComplete(uint256 request_ID, uint256 scorePct, bytes32 mlOutHash, bool customContractResult);
     event SetCustomContract(address custom_contract_address);
-    event SetContentHash(bytes32 content_hash);
+    event Commit(bytes32 content_hash);
     event SetAccessCharge(uint256 access_charge);
     event GetAccessCharge(uint8 level, uint256 access_charge);
     event InsufficientFunds(uint256 access_charge, uint256 amount_provided);
@@ -337,21 +344,24 @@ contract Content is Ownable {
     event InvokeCustomPostHook(address custom_contract);
 
     // "Fallback" function - necessary if this contract needs to be paid
-    function () public payable { }
+    //function () public payable { } moved to ownable
 
-    function Content(address containingLibrary, bytes32 content_type) public payable {
-        libraryAddress = containingLibrary;
-        contentType = content_type;
+    function Content() public payable {
+        libraryAddress = msg.sender;
         statusCode = -1;
-	licensingFeeReceived = 0;
-	requestID = 0;
+	    licensingFeeReceived = 0;
+	    requestID = 0;
+        emit ContentObjectCreate(libraryAddress);
+    }
+
+    function setContentType(address content_type) public onlyOwner {
+        contentType = content_type;
         //get custom contract address associated with content_type from hash
-	ContentLibrary lib = ContentLibrary(containingLibrary);
+        ContentLibrary lib = ContentLibrary(libraryAddress);
         customContractAddress = lib.contentTypeContracts(content_type);
         licensingFee = lib.contentTypeLicensingFees(content_type);
-	addressKMS = lib.addressKMS();
-        emit ContentObjectCreate(address(this), containingLibrary, content_type, tx.origin);
-        emit SetCustomContract(customContractAddress);
+        addressKMS = lib.addressKMS();
+        emit SetContentType(content_type, customContractAddress, licensingFee);
     }
 
     function setLicensingFee(uint256 licensing_fee) public {
@@ -399,9 +409,9 @@ contract Content is Ownable {
       return licensingFeeReceived;
     }
 
-    function setContentHash(bytes32 content_hash) public onlyOwner {
+    function commit(bytes32 content_hash) public onlyOwner {
         contentHash = content_hash;
-        emit SetContentHash(content_hash);
+        emit Commit(content_hash);
     }
 
 
@@ -442,7 +452,7 @@ contract Content is Ownable {
       updateStatus(1, pct_complete); //mark with statusCode 1, which is the default for in-review - NOTE: could be change to be (currentStatus * -1)
       if (statusCode > 0) {
         ContentLibrary lib = ContentLibrary(libraryAddress);
-	bool submitStatus = lib.submitApprovalRequest();
+	    bool submitStatus = lib.submitApprovalRequest();
 
         // Log event
         emit Publish(pct_complete,submitStatus);
@@ -455,32 +465,32 @@ contract Content is Ownable {
 
     //returns the amount of licensing fee to be paid for the content, typically 0 or 100 if content approved to go live, unless a custom contract says otherwise
     function updateStatus(int status_code, uint8 percent_complete) public returns (uint256){
-      if ((tx.origin == owner) || (msg.sender == libraryAddress)) {
-	percentComplete = percent_complete;
-	uint256 to_be_paid=0;
-        int new_status_code;
-        if (customContractAddress == 0x0) {
-	  new_status_code = status_code;
-	  if ((percentComplete == 100) && (status_code == 0)){
-            to_be_paid = (licensingFee - licensingFeeReceived);
-          }
+        if ((tx.origin == owner) || (msg.sender == libraryAddress)) {
+	        percentComplete = percent_complete;
+	        uint256 to_be_paid=0;
+            int new_status_code;
+            if (customContractAddress == 0x0) {
+	            new_status_code = status_code;
+	            if ((percentComplete == 100) && (status_code == 0)){
+                    to_be_paid = (licensingFee - licensingFeeReceived);
+                }
+            } else {
+	            CustomContract c = CustomContract(customContractAddress);
+	            int256 calculatedAmount;
+                (new_status_code, calculatedAmount) = c.runStatusChange(status_code);
+	            if (calculatedAmount < 0) {
+	                if (status_code == 0) {
+	                    to_be_paid = (licensingFee - licensingFeeReceived);
+	                }
+	            } else {
+	                to_be_paid = uint256(calculatedAmount);
+	            }
+	        }
+            setStatusCode(new_status_code);
+	        return to_be_paid;
         } else {
-	  CustomContract c = CustomContract(customContractAddress);
-	  int256 calculatedAmount;
-          (new_status_code, calculatedAmount) = c.runStatusChange(status_code);
-	  if (calculatedAmount < 0) {
-	    if (status_code == 0) {
-	      to_be_paid = (licensingFee - licensingFeeReceived);
-	    }
-	  } else {
-	    to_be_paid = uint256(calculatedAmount);
-	  }
-	}
-        setStatusCode(new_status_code);
-	return to_be_paid;
-      } else {
-        return 0;
-      }
+            return 0;
+        }
     }
 
 
@@ -551,7 +561,7 @@ contract Content is Ownable {
 	if ((msg.sender != owner) && (msg.sender != addressKMS)) {
 	  return false;
 	}
-        RequestData r  = requestMap[request_ID]; 
+        RequestData storage r  = requestMap[request_ID];
         if (r.originator == 0x0){
 	  return false;
 	}
@@ -601,7 +611,7 @@ contract Content is Ownable {
             result = c.runFinalize(request_ID);
         }
 	// Delete request from map after customContract in case it was needed for execution of custom wrap-up
-	RequestData r  = requestMap[request_ID];
+	RequestData storage r  = requestMap[request_ID];
         if ((r.originator != 0x0) && (msg.sender == r.originator)){
 	  if (r.status == 0) {
 	    msg.sender.transfer(r.amountPaid); //if access was not granted, payment is returned to originator
@@ -638,16 +648,16 @@ contract CustomContract is Ownable {
     function () public payable { }
 
     // charge, amount paid and address of the originator can all be retrieved from the requestMap using the requestID
-    function runAccessCharge(uint8 level, bytes32[] customValues, address[] stakeholders) public returns (int256) {
-	return -1; // indicates that the amount is the static one configured in the Content object and no extra calculation is required
+    function runAccessCharge(uint8 /*level*/, bytes32[] /*customValues*/, address[] /*stakeholders*/) public payable returns (int256) {
+	    return -1; // indicates that the amount is the static one configured in the Content object and no extra calculation is required
     }
-    function runAccess(uint256 request_ID, uint8 level, bytes32[] custom_values, address[] stake_holders) public payable returns(uint) {
-	return 0; //indicates that access request can proceed. Other number can be used as error codes and would stop the processing.
+    function runAccess(uint256 /*request_ID*/, uint8 /*level*/, bytes32[] /*custom_values*/, address[] /*stake_holders*/) public payable returns(uint) {
+	    return 0; //indicates that access request can proceed. Other number can be used as error codes and would stop the processing.
     }
-    function runFinalize(uint256 request_ID) public returns(bool) {
-	return true; //the status is logged in an event at the end of the accessComplete function, behavior is currently unchanged regardless of result.
+    function runFinalize(uint256 /*request_ID*/) public payable returns(bool) {
+	    return true; //the status is logged in an event at the end of the accessComplete function, behavior is currently unchanged regardless of result.
     }
-    function runStatusChange(int proposed_status_code) public returns (int, int256) {
-	return (proposed_status_code, -1); // a negative number indicates that the licending fee to be paid is the default
+    function runStatusChange(int proposed_status_code) public payable returns (int, int256) {
+	    return (proposed_status_code, -1); // a negative number indicates that the licending fee to be paid is the default
     }
 }

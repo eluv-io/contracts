@@ -39,7 +39,6 @@ contract AdmgrAdvertisement is Content {
         int8 status; //0 unpaid, 1 paid off
     }
 
-
     mapping(bytes32 => RequestData) public requestMap;
 
     uint256 public maxCreditPerAd = 0; //By default no maximum is set

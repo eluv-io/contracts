@@ -18,7 +18,7 @@ contract BaseLibrary is Accessible, Editable {
     uint256 public contributorGroupsLength;
     uint256 public reviewerGroupsLength;
     uint256 public accessorGroupsLength;
-    uint256 public contentTypesLength;
+    uint256 public contentTypesLength = 0;
 
     mapping ( address => address ) public contentTypeContracts;  // custom contracts map
 
@@ -124,8 +124,10 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
-        contentTypes.push(content_type);
-        contentTypesLength = contentTypesLength + 1;
+        if ((contentTypeContracts[content_type] == 0x0) && (validType(content_type) == false)) {
+            contentTypes.push(content_type);
+            contentTypesLength = contentTypesLength + 1;
+        }
         contentTypeContracts[content_type] = content_contract;
         emit ContentTypeAdded(content_type, content_contract);
     }
@@ -263,16 +265,20 @@ contract BaseLibrary is Accessible, Editable {
         }
     }
 
+    function validType(address content_type) public view returns (bool) {
+        bool isValidType = false;
+        for (uint i = 0; i < contentTypesLength; i++){
+            if (contentTypes[i] == content_type){
+                isValidType = true;
+            }
+        }
+        return isValidType;
+    }
+
     function createContent(address content_type) public  returns (address) {
         require(canContribute(tx.origin)); //check if sender has contributor access
         if (contentTypesLength != 0) {
-            bool validType = false;
-            for (uint i = 0; i < contentTypesLength; i++){
-                if (contentTypes[i] == content_type){
-                    validType = true;
-                }
-            }
-            require(validType);
+            require(validType(content_type));
         }
         address contentAddress = new BaseContent(content_type);
         BaseContent content = BaseContent(contentAddress);

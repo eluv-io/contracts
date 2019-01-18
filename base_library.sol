@@ -62,7 +62,7 @@ contract BaseLibrary is Accessible, Editable {
         emit ContributorGroupAdded(group);
     }
 
-    function removeContributorGroup(address group) public onlyOwner {
+    function removeContributorGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < contributorGroupsLength; i++) {
             if (contributorGroups[i] == group) {
                 delete contributorGroups[i];
@@ -72,8 +72,10 @@ contract BaseLibrary is Accessible, Editable {
                 }
                 contributorGroupsLength--;
                 emit ContributorGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addReviewerGroup(address group) public onlyOwner {
@@ -86,7 +88,7 @@ contract BaseLibrary is Accessible, Editable {
         emit ReviewerGroupAdded(group);
     }
 
-    function removeReviewerGroup(address group) public onlyOwner {
+    function removeReviewerGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < reviewerGroupsLength; i++) {
             if (reviewerGroups[i] == group) {
                 delete reviewerGroups[i];
@@ -96,8 +98,10 @@ contract BaseLibrary is Accessible, Editable {
                 }
                 reviewerGroupsLength--;
                 emit ReviewerGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addAccessorGroup(address group) public onlyOwner {
@@ -110,7 +114,7 @@ contract BaseLibrary is Accessible, Editable {
         emit AccessorGroupAdded(group);
     }
 
-    function removeAccessorGroup(address group) public onlyOwner {
+    function removeAccessorGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < accessorGroupsLength; i++) {
             if (accessorGroups[i] == group) {
                 delete accessorGroups[i];
@@ -120,20 +124,26 @@ contract BaseLibrary is Accessible, Editable {
                 }
                 accessorGroupsLength--;
                 emit AccessorGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
         if ((contentTypeContracts[content_type] == 0x0) && (validType(content_type) == false)) {
-            contentTypes.push(content_type);
+            if (contentTypesLength < contentTypes.length) {
+                contentTypes[contentTypesLength] = content_type;
+            } else {
+                contentTypes.push(content_type);
+            }
             contentTypesLength = contentTypesLength + 1;
         }
         contentTypeContracts[content_type] = content_contract;
         emit ContentTypeAdded(content_type, content_contract);
     }
 
-    function removeContentType(address content_type) public onlyOwner {
+    function removeContentType(address content_type) public onlyOwner returns (bool) {
         for (uint i = 0; i < contentTypesLength; i++){
             if (contentTypes[i] == content_type){
                 delete contentTypes[i];
@@ -142,10 +152,12 @@ contract BaseLibrary is Accessible, Editable {
                     delete contentTypes[contentTypesLength - 1];
                 }
                 contentTypesLength--;
+                delete contentTypeContracts[content_type];
                 emit ContentTypeRemoved(content_type);
+                return true;
             }
         }
-
+        return false;
     }
 
     function hasAccess(address candidate) public constant returns (bool) {

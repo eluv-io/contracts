@@ -35,6 +35,7 @@ contract BaseLibrary is Accessible, Editable {
     event AccessorGroupAdded(address group);
     event AccessorGroupRemoved(address group);
     event ContentTypeAdded(address contentType, address contentContract);
+    event ContentTypeRemoved(address contentType);
     event UnauthorizedOperation(uint operationCode, address candidate);
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
@@ -130,6 +131,21 @@ contract BaseLibrary is Accessible, Editable {
         }
         contentTypeContracts[content_type] = content_contract;
         emit ContentTypeAdded(content_type, content_contract);
+    }
+
+    function removeContentType(address content_type) public onlyOwner {
+        for (uint i = 0; i < contentTypesLength; i++){
+            if (contentTypes[i] == content_type){
+                delete contentTypes[i];
+                if (i != (contentTypesLength - 1)){
+                    contentTypes[i] = contentTypes[contentTypesLength - 1];
+                    delete contentTypes[contentTypesLength - 1];
+                }
+                contentTypesLength--;
+                emit ContentTypeRemoved(content_type);
+            }
+        }
+
     }
 
     function hasAccess(address candidate) public constant returns (bool) {

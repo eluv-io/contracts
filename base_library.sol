@@ -66,7 +66,7 @@ contract BaseLibrary is Accessible, Editable {
         for (uint i = 0; i < contributorGroupsLength; i++) {
             if (contributorGroups[i] == group) {
                 delete contributorGroups[i];
-                if (i != (contributorGroupsLength - 1)){
+                if (i != (contributorGroupsLength - 1)) {
                     contributorGroups[i] = contributorGroups[contributorGroupsLength - 1];
                     delete contributorGroups[contributorGroupsLength - 1];
                 }
@@ -92,7 +92,7 @@ contract BaseLibrary is Accessible, Editable {
         for (uint i = 0; i < reviewerGroupsLength; i++) {
             if (reviewerGroups[i] == group) {
                 delete reviewerGroups[i];
-                if (i != (reviewerGroupsLength - 1)){
+                if (i != (reviewerGroupsLength - 1)) {
                     reviewerGroups[i] = reviewerGroups[reviewerGroupsLength - 1];
                     delete reviewerGroups[reviewerGroupsLength - 1];
                 }
@@ -118,7 +118,7 @@ contract BaseLibrary is Accessible, Editable {
         for (uint i = 0; i < accessorGroupsLength; i++) {
             if (accessorGroups[i] == group) {
                 delete accessorGroups[i];
-                if (i != (accessorGroupsLength - 1)){
+                if (i != (accessorGroupsLength - 1)) {
                     accessorGroups[i] = accessorGroups[accessorGroupsLength - 1];
                     delete accessorGroups[accessorGroupsLength - 1];
                 }
@@ -144,10 +144,10 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function removeContentType(address content_type) public onlyOwner returns (bool) {
-        for (uint i = 0; i < contentTypesLength; i++){
-            if (contentTypes[i] == content_type){
+        for (uint i = 0; i < contentTypesLength; i++) {
+            if (contentTypes[i] == content_type) {
                 delete contentTypes[i];
-                if (i != (contentTypesLength - 1)){
+                if (i != (contentTypesLength - 1)) {
                     contentTypes[i] = contentTypes[contentTypesLength - 1];
                     delete contentTypes[contentTypesLength - 1];
                 }
@@ -295,8 +295,8 @@ contract BaseLibrary is Accessible, Editable {
 
     function validType(address content_type) public view returns (bool) {
         bool isValidType = false;
-        for (uint i = 0; i < contentTypesLength; i++){
-            if (contentTypes[i] == content_type){
+        for (uint i = 0; i < contentTypesLength; i++) {
+            if (contentTypes[i] == content_type) {
                 isValidType = true;
             }
         }

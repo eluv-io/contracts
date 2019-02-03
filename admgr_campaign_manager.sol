@@ -68,9 +68,9 @@ contract AdmgrCampaign is Content {
         AdData storage adData = adDataMap[ad];
         require(adData.status == 1);
         require(adData.budget - adData.paidOut >= amount);
-        adDataMap[msg.sender].paidOut = adData.paidOut + amount;
-        if (adDataMap[msg.sender].paidOut == adDataMap[msg.sender].budget) {
-            adDataMap[msg.sender].status = -1;
+        adDataMap[ad].paidOut = adData.paidOut + amount;
+        if (adDataMap[ad].paidOut == adData.budget) {
+            adDataMap[ad].status = -1;
         }
         uint256 amount_library = amount / 100 * libraryRetrocession;
         if (amount_library != 0){

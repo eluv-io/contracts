@@ -1,9 +1,9 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.4.24;
 
 import "./openzeppelin-solidity/SafeMath.sol";
-// import "zeppelin-solidity/contracts/ECRecovery.sol";
 
 // abigen --sol channel/SimpleStateChannel.sol --pkg=contracts --out build/state_channel.go
+// abigen --sol channel/SimpleStateChannel.sol --pkg=contracts --out build/state_channel.go --solc ~/code/qluvio/elv-toolchain/solc/bin/darwin-10.13/solc-0.4.21
 
 /**
  * @title SimplePaymentChannel
@@ -17,7 +17,6 @@ import "./openzeppelin-solidity/SafeMath.sol";
  */
 contract SimplePaymentChannel {
     using SafeMath for uint256;
-    // using ECRecovery for bytes32;
 
     //============================================================================
     // EVENTS
@@ -27,9 +26,9 @@ contract SimplePaymentChannel {
     event ChannelClosed(uint256 senderBalance, uint256 recipientBalance);
 
     // Creator of channel
-    address payable public sender;
+    address public sender;
     // Recipient of channel
-    address payable public recipient;
+    address public recipient;
     // When sender can close the channel
     uint256 public expiration;
 
@@ -42,7 +41,7 @@ contract SimplePaymentChannel {
     * @param _recipient address Address of the receiving party
     * @param _duration uint256 Time period past creation that defines expiration
     */
-    constructor(address payable _recipient, uint256 _duration) public payable {
+    constructor(address _recipient, uint256 _duration) public payable {
         // sanity checks
         require(msg.value > 0);
         require(msg.sender != _recipient);
@@ -112,11 +111,6 @@ contract SimplePaymentChannel {
     // INTERNAL FUNCTIONS
     //============================================================================
 
-    /*
-        function recoverAddr(bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) public pure returns (address) {
-        return ecrecover(msgHash, v, r, s);
-    }
-
     /**
     * @dev Derive and verify sender address from signed message and message hash
     * @param _balance uint256 The balance agreed to by the sender in their signed message
@@ -124,16 +118,15 @@ contract SimplePaymentChannel {
     function isValidSignature(uint256 _balance, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
     public
     // internal - make visible for testing
-    // view
+    view
     returns (bool)
     {
-        // signature is on [contract address | balance | nonce]
+        // currently signature is on just [contract address | balance | nonce]
         // bytes32 checkHash = prefixedHash(keccak256(abi.encodePacked(address(this), _balance, _nonce)));
         bytes32 checkHash = keccak256(abi.encodePacked(address(this), _balance, _nonce));
 
         // check that the signature is from the payment sender
         address checkAddr = ecrecover(checkHash, _v, _r, _s);
-        emit CheckEcRecover(checkAddr);
         return checkAddr == sender;
     }
 
@@ -155,10 +148,9 @@ contract SimplePaymentChannel {
         return (v, r, s);
     }
 
-    event CheckEcRecover(address checkAddr);
     function checkEcrecover(bytes32 _hash, bytes memory _sig)
     public
-    // view
+    view
     returns (address)
     {
         uint8 v;
@@ -167,18 +159,10 @@ contract SimplePaymentChannel {
 
         (v, r, s) = splitSignature(_sig);
         address checkAddr = ecrecover(_hash, v, r, s);
-        emit CheckEcRecover(checkAddr);
         return checkAddr;
     }
 
-    function checkVRS(uint8 _v, bytes32 _r, bytes32 _s)
-    public
-    view
-    returns (bytes memory)
-    {
-        return abi.encodePacked(_v, _r, _s);
-    }
-
+    // used for testing
     function checkPackedAndHashed(uint256 _balance, uint256 _nonce)
     public
     view
@@ -187,10 +171,7 @@ contract SimplePaymentChannel {
         return keccak256(abi.encodePacked(address(this), _balance, _nonce));
     }
 
-    /**
-    * @dev Builds a prefixed hash to mimic the behavior of eth_sign
-    * @param _hash bytes32 Message hash to be prefixed
-    */
+    // TODO: not currently used - but may need to be for compatibility at some point ...
     function prefixedHash(bytes32 _hash)
     internal
     pure
@@ -199,3 +180,4 @@ contract SimplePaymentChannel {
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _hash));
     }
 }
+

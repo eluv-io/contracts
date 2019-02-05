@@ -124,7 +124,7 @@ contract SimplePaymentChannel {
     function isValidSignature(uint256 _balance, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
     public
     // internal - make visible for testing
-    view
+    // view
     returns (bool)
     {
         // signature is on [contract address | balance | nonce]
@@ -132,8 +132,9 @@ contract SimplePaymentChannel {
         bytes32 checkHash = keccak256(abi.encodePacked(address(this), _balance, _nonce));
 
         // check that the signature is from the payment sender
-        ecrecover(checkHash, _v, _r, _s);
-        return true;
+        address checkAddr = ecrecover(checkHash, _v, _r, _s);
+        emit CheckEcRecover(checkAddr);
+        return checkAddr == sender;
     }
 
     function splitSignature(bytes memory _sig) pure public returns (uint8, bytes32, bytes32) {
@@ -154,9 +155,10 @@ contract SimplePaymentChannel {
         return (v, r, s);
     }
 
+    event CheckEcRecover(address checkAddr);
     function checkEcrecover(bytes32 _hash, bytes memory _sig)
     public
-    view
+    // view
     returns (address)
     {
         uint8 v;
@@ -164,7 +166,9 @@ contract SimplePaymentChannel {
         bytes32 s;
 
         (v, r, s) = splitSignature(_sig);
-        return ecrecover(_hash, v, r, s);
+        address checkAddr = ecrecover(_hash, v, r, s);
+        emit CheckEcRecover(checkAddr);
+        return checkAddr;
     }
 
     function checkVRS(uint8 _v, bytes32 _r, bytes32 _s)

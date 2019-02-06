@@ -134,9 +134,6 @@ contract AdmgrCampaignManager is Content {
         return 0;
     }
 
-    function markAsCampaignManager() public onlyCreator {
-
-    }
 
 
 }

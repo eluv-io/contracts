@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
@@ -153,7 +153,7 @@ contract BaseContent is Editable {
         emit SetContentContract(contentContractAddress);
     }
 
-    function getAccessCharge(uint8 level, bytes32[] custom_values, address[] stakeholders) public returns (uint256) {
+    function getAccessCharge(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint256) {
         uint256 levelAccessCharge = accessCharge;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);

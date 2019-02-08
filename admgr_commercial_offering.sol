@@ -17,6 +17,19 @@ contract AdmgrCommercialOffering is Content {
     uint256 public presetAccessCharge;
     bool public mandatoryPresetAccessCharge;
 
+    function runAccessCharge(
+        uint8 level, /*level*/
+        bytes32[], /*customValues*/
+        address[] /*stakeholders*/
+    )
+    public payable returns (int256)
+    {
+        if (level == 0){
+            return 0;
+        }
+        return -1;
+    }
+
     function setCommercialOfferingManagerAddress(address commercial_offering_manager_address) public onlyCreator {
         commercialOfferingManagerAddress = commercial_offering_manager_address;
     }

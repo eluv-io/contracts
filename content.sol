@@ -5,10 +5,13 @@ import {Ownable} from "./ownable.sol";
 
 contract Content is Ownable {
 
+    bytes32 public version ="Content20190221101700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event Log(string label);
+    event LogBool(string label, bool b);
     event LogAddress(string label, address a);
     event LogUint256(string label, uint256 u);
+    event LogInt256(string label, int256 u);
     event LogBytes32(string label, bytes32 b);
     event LogPayment(string label, address payee, uint256 amount);
     event RunCreate(uint result);
@@ -65,11 +68,22 @@ contract Content is Ownable {
         return 0;
     }
 
+    //0 indicates that access grant can proceed.
+    // Other numbers can be used as error codes and would stop the processing.
+    function runGrant(
+        uint256, /*request_ID */
+        bool /*access_granted */
+    )
+    public payable returns (uint)
+    {
+        return 0;
+    }
+
     //the status is logged in an event at the end of the accessComplete function
     // behavior is currently unchanged regardless of result.
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
-    function runFinalize(uint256 /*request_ID*/) public payable returns(uint) {
+    function runFinalize(uint256 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
         return 0;
     }
 

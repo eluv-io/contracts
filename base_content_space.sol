@@ -10,6 +10,7 @@ import "./accessible.sol";
 
 contract BaseContentSpace is Accessible, Editable {
 
+    bytes32 public version ="BaseContentSpace20190221114100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;

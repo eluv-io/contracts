@@ -5,6 +5,8 @@ import "./ownable.sol";
 
 contract BaseAccessControlGroup is Ownable {
 
+    bytes32 public version ="BsAccessCtrlGrp20190222140700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
     address public contentSpace;
 
     mapping (address => bool) public members;

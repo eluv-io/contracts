@@ -46,6 +46,12 @@ contract ElvWallet is Transactable {
         }
     }
 
+    function shiftValuesDown(uint256[] memory _values, uint256 _fromIdx) private {
+        for (uint256 i = 0; i < _fromIdx; i++) {
+            _values[i] = _values[i + 1];
+        }
+    }
+
     function shiftTimestampsUp(uint256 fromIdx) private {
         for (uint256 i = timestamps.length - 1; i < fromIdx; i--) {
             timestamps[i] = timestamps[i - 1];

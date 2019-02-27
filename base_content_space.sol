@@ -16,8 +16,8 @@ contract BaseContentSpace is Accessible, Editable {
     address[] public activeNodeAddresses;
     bytes[] public activeNodeLocators;
 
-    address[] pendingNodeAddresses;
-    bytes[] pendingNodeLocators;
+    address[] public pendingNodeAddresses;
+    bytes[] public pendingNodeLocators;
 
     function checkRedundantEntry(address[] _addrs, bytes[] _locators, address _nodeAddr, bytes _nodeLocator) pure internal returns (bool) {
         require(_addrs.length == _locators.length);
@@ -30,13 +30,42 @@ contract BaseContentSpace is Accessible, Editable {
         return false;
     }
 
+    event NodeSubmitted(address addr, bytes locator);
+
+    function numActiveNodes() public view returns (uint) {
+        return activeNodeLocators.length;
+    }
+
+    function numPendingNodes() public view returns (uint) {
+        return pendingNodeLocators.length;
+    }
+
     // we assume that this call is made from the submitted node - that is, from their address
     function submitNode(bytes _locator) public {
         require(!checkRedundantEntry(pendingNodeAddresses, pendingNodeLocators, msg.sender, _locator));
         require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, msg.sender, _locator));
-        require(pendingNodeAddresses.length < 100); // don't allow abuse - TODO: what value?
+        require(pendingNodeAddresses.length < 100); // don't allow *too* much abuse - TODO: what value?
         pendingNodeLocators.push(_locator);
         pendingNodeAddresses.push(msg.sender);
+        emit NodeSubmitted(msg.sender, _locator);
+    }
+
+    function approveNode(address _nodeAddr) public onlyOwner {
+        bool found = false;
+        for (uint i = 0; i < pendingNodeAddresses.length; i++) {
+            if (pendingNodeAddresses[i] == _nodeAddr) {
+                activeNodeAddresses.push(pendingNodeAddresses[i]);
+                activeNodeLocators.push(pendingNodeLocators[i]);
+                if (i != pendingNodeAddresses.length - 1) {
+                    pendingNodeLocators[i] = pendingNodeLocators[pendingNodeLocators.length - 1];
+                    pendingNodeAddresses[i] = pendingNodeAddresses[pendingNodeAddresses.length - 1];
+                }
+                delete pendingNodeLocators[pendingNodeLocators.length - 1];
+                delete pendingNodeAddresses[pendingNodeAddresses.length - 1];
+                found = true;
+            }
+        }
+        require(found);
     }
 
     event CreateContentType(address contentTypeAddress);

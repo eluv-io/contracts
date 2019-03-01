@@ -4,9 +4,13 @@ import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {BaseLibrary} from "./base_library.sol";
 
+/* -- Revision history --
+BaseContent20190221101600ML: First versioned released
+BaseContent20190301121900ML: Adds support for getAccessInfo, to replace getAccessCharge (not deprecated yet)
+*/
 
 contract BaseContent is Editable {
-    bytes32 public version ="BaseContent20190221101600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190301121900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -154,16 +158,32 @@ contract BaseContent is Editable {
         emit SetContentContract(contentContractAddress);
     }
 
-    function getAccessCharge(uint8 level, bytes32[] custom_values, address[] stakeholders) public returns (uint256) {
-        uint256 levelAccessCharge = accessCharge;
+    // Access codes
+    // 0   -> accessible
+    // 100 -> calculation of price exceeds specified cap (accessCharge)
+    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (int8, uint256) {
+        uint256 levelAccessCharge;
+        int8 accessCode = -1;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            int256 calculatedCharge = c.runAccessCharge(level, custom_values, stakeholders);
-            if (calculatedCharge >= 0) {
-                levelAccessCharge = uint256(calculatedCharge);
+            (accessCode, levelAccessCharge) = c.runAccessInfo(level, custom_values, stakeholders);
+            if (levelAccessCharge > accessCharge) {
+                accessCode = 100;
             }
-            require(levelAccessCharge <= accessCharge);
         }
+        if (accessCode == -1) { //No custom calculations
+            return (0, accessCharge);
+        } else {
+            return (accessCode, levelAccessCharge);
+        }
+    }
+
+    //This function should be deprecated as it is very costly, getAccessInfo, which is a view, can be used instead
+    function getAccessCharge(uint8 level, bytes32[] custom_values, address[] stakeholders) public returns (uint256) {
+        uint256 levelAccessCharge;
+        int8 accessCode;
+        (accessCode, levelAccessCharge) = getAccessInfo(level, custom_values, stakeholders);
+        require(accessCode == 0);
         emit GetAccessCharge(level, levelAccessCharge);
         return levelAccessCharge;
     }

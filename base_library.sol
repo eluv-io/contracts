@@ -41,8 +41,8 @@ contract BaseLibrary is Accessible, Editable {
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
 
-    function BaseLibrary(address address_KMS) public payable {
-        contentSpace = msg.sender;
+    function BaseLibrary(address address_KMS, address content_space) public payable {
+        contentSpace = content_space;
         contributorGroupsLength = 0;
         reviewerGroupsLength = 0;
         accessorGroupsLength = 0;

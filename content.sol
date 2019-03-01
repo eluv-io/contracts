@@ -2,10 +2,14 @@ pragma solidity 0.4.21;
 
 import {Ownable} from "./ownable.sol";
 
+/* -- Revision history --
+Content20190221101700ML: First versioned released
+Content20190301121800ML: Adds stub for runAccessInfo
+*/
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20190221101700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20190301121800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event Log(string label);
     event LogBool(string label, bool b);
@@ -42,18 +46,31 @@ contract Content is Ownable {
         return proposed_status_code;
     }
 
+
+    function runAccessInfo(
+        uint8, /*level*/
+        bytes32[], /*customValues*/
+        address[] /*stakeholders*/
+    )
+    public view returns (int8, uint256)
+    {
+        return (-1, 0);
+    }
+
+    /* DEPRECATED - runAccessInfo is used instead
     // charge, amount paid and address of the originator can all be retrieved from the requestMap using the requestID
     // a -1 return indicates that the amount is the static one configured in the Content object
     //  and no extra calculation is required
     function runAccessCharge(
-        uint8, /*level*/
-        bytes32[], /*customValues*/
-        address[] /*stakeholders*/
+        uint8, //level
+        bytes32[], //customValues
+        address[] //stakeholders
     )
         public payable returns (int256)
     {
         return -1;
     }
+    */
 
     //0 indicates that access request can proceed.
     // Other numbers can be used as error codes and would stop the processing.

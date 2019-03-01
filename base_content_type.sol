@@ -11,8 +11,8 @@ contract BaseContentType is Accessible, Editable {
 
     address public contentSpace;
 
-    function BaseContentType() public payable {
-        contentSpace = msg.sender;
+    function BaseContentType(address content_space) public payable {
+        contentSpace = content_space;
     }
 
 }

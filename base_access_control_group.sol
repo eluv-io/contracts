@@ -1,6 +1,7 @@
 pragma solidity 0.4.21;
 
 import "./ownable.sol";
+import {BaseFactory} from "./base_content_space.sol";
 
 
 contract BaseAccessControlGroup is Ownable {
@@ -18,8 +19,8 @@ contract BaseAccessControlGroup is Ownable {
     event ManagerAccessRevoked(address candidate);
     event UnauthorizedOperation(uint operationCode, address candidate);
 
-    function BaseAccessControlGroup() public {
-        contentSpace = msg.sender;
+    function BaseAccessControlGroup(address content_space) public {
+        contentSpace = content_space;
         managers[creator] = true;
         members[creator] = true;
     }

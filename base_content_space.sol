@@ -68,6 +68,16 @@ contract BaseContentSpace is Accessible, Editable {
         require(found);
     }
 
+    // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
+    function canNodePublish(address candidate) public view returns (bool) {
+        for (uint i = 0; i < activeNodeAddresses.length; i++) {
+            if (activeNodeAddresses[i] == candidate) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
     event CreateGroup(address groupAddress);
@@ -88,7 +98,7 @@ contract BaseContentSpace is Accessible, Editable {
     }
 
     function createLibrary(address address_KMS) public returns (address) {
-        address libraryAddress = new BaseLibrary(address_KMS);
+        address libraryAddress = new BaseLibrary(this, address_KMS);
         emit CreateLibrary(libraryAddress);
         return libraryAddress;
     }

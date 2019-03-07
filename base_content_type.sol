@@ -14,4 +14,7 @@ contract BaseContentType is Accessible, Editable {
         contentSpace = msg.sender;
     }
 
+    function canPublish() view returns (bool) {
+        return msg.sender == owner;
+    }
 }

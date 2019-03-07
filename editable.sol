@@ -11,7 +11,13 @@ contract Editable is Ownable {
 
     bytes32 public objectHash;
 
-    function commit(bytes32 object_hash) public onlyOwner {
+    // intended to be overridden
+    function canPublish() view returns (bool) {
+        return false;
+    }
+
+    function commit(bytes32 object_hash) public {
+        require(msg.sender == owner || canPublish());
         objectHash = object_hash;
         emit Commit(objectHash);
     }

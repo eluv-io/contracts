@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
@@ -15,4 +15,7 @@ contract BaseContentType is Accessible, Editable {
         contentSpace = content_space;
     }
 
+    function canPublish() view returns (bool) {
+        return msg.sender == owner;
+    }
 }

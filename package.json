@@ -2,15 +2,24 @@
   "name": "elv-contracts",
   "version": "1.0.0",
   "description": "Contract source code for the Eluvio Content Fabric",
-  "scripts": {},
+  "scripts": {
+    "build": "node build/BuildContracts.js",
+    "postinstall": "npm run build"
+  },
+  "main": "Index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qluvio/contracts.git"
+    "url": "git+https://github.com/eluv-io/contracts.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/qluvio/contracts/issues"
+    "url": "https://github.com/eluv-io/contracts/issues"
   },
-  "homepage": "https://github.com/qluvio/contracts#readme"
+  "homepage": "https://github.com/eluv-io/contracts#readme",
+  "dependencies": {
+    "ethers": "^4.0.26",
+    "glob": "^7.1.3",
+    "solc": "^0.4.25"
+  }
 }

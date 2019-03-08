@@ -1,0 +1,16 @@
+{
+  "name": "elv-contracts",
+  "version": "1.0.0",
+  "description": "Contract source code for the Eluvio Content Fabric",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qluvio/contracts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qluvio/contracts/issues"
+  },
+  "homepage": "https://github.com/qluvio/contracts#readme"
+}

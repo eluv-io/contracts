@@ -15,6 +15,7 @@ fi
 
 out_dir="$( mkdir -p "$sol_dir/build" && cd "$sol_dir/build" && pwd )"
 
+# abigen --sol ./base_content_space.sol --pkg=contracts --out build/base_content_space.go
 $(abigen --sol $sol_dir/base_content_space.sol --pkg=contracts --out $out_dir/base_content_space.go)
 if [ $? -ne 0 ]; then
 echo "error occured while creating go binding!"

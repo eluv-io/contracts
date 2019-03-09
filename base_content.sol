@@ -197,13 +197,16 @@ contract BaseContent is Editable {
     bytes32[] public versionHashes;
     bytes32 pendingHash;
 
-//    function commit(bytes32 object_hash) public onlyOwner {
+    event CommitPending(bytes32 objectHash);
+
+    //    function commit(bytes32 object_hash) public onlyOwner {
 //        objectHash = object_hash;
 //        emit Commit(objectHash);
 //    }
     function commit(bytes32 _objectHash) public onlyOwner {
         // TODO: what to do if there already *is* a pendingHash?
         pendingHash = _objectHash;
+        emit CommitPending(pendingHash);
     }
 
     function canPublish() view returns (bool) {

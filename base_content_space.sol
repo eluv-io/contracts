@@ -54,12 +54,15 @@ contract BaseContentSpace is Accessible, Editable {
         emit NodeSubmitted(msg.sender, _locator);
     }
 
+    event NodeApproved(address addr, bytes locator);
+
     function approveNode(address _nodeAddr) public onlyOwner {
         bool found = false;
         for (uint i = 0; i < pendingNodeAddresses.length; i++) {
             if (pendingNodeAddresses[i] == _nodeAddr) {
                 activeNodeAddresses.push(pendingNodeAddresses[i]);
                 activeNodeLocators.push(pendingNodeLocators[i]);
+                emit NodeApproved(pendingNodeAddresses[i], pendingNodeLocators[i]);
                 if (i != pendingNodeAddresses.length - 1) {
                     pendingNodeLocators[i] = pendingNodeLocators[pendingNodeLocators.length - 1];
                     pendingNodeAddresses[i] = pendingNodeAddresses[pendingNodeAddresses.length - 1];
@@ -67,6 +70,7 @@ contract BaseContentSpace is Accessible, Editable {
                 delete pendingNodeLocators[pendingNodeLocators.length - 1];
                 delete pendingNodeAddresses[pendingNodeAddresses.length - 1];
                 found = true;
+                break;
             }
         }
         require(found);

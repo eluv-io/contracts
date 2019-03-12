@@ -76,6 +76,13 @@ contract BaseContentSpace is Accessible, Editable {
         require(found);
     }
 
+    // direct method for owner to add node(s)
+    function addNode(address _nodeAddr, bytes _locator) public onlyOwner {
+        require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, _nodeAddr, _locator));
+        activeNodeAddresses.push(_nodeAddr);
+        activeNodeLocators.push(_locator);
+    }
+
     // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
     function canNodePublish(address candidate) public view returns (bool) {
         for (uint i = 0; i < activeNodeAddresses.length; i++) {

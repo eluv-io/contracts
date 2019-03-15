@@ -56,6 +56,18 @@ contract BaseContentSpace is Accessible, Editable {
 
     event NodeApproved(address addr, bytes locator);
 
+    function removeNodeInternal(uint nodeOrd, address[] storage _nodeAddresses, bytes[] storage _nodeLocators) internal {
+        require(nodeOrd < _nodeAddresses.length && nodeOrd < _nodeLocators.length);
+        if (nodeOrd != _nodeAddresses.length - 1) {
+            _nodeLocators[nodeOrd] = _nodeLocators[_nodeLocators.length - 1];
+            _nodeAddresses[nodeOrd] = _nodeAddresses[_nodeAddresses.length - 1];
+        }
+        delete _nodeLocators[_nodeLocators.length - 1];
+        _nodeLocators.length--;
+        delete _nodeAddresses[_nodeAddresses.length - 1];
+        _nodeAddresses.length--;
+    }
+
     function approveNode(address _nodeAddr) public onlyOwner {
         bool found = false;
         for (uint i = 0; i < pendingNodeAddresses.length; i++) {
@@ -63,12 +75,7 @@ contract BaseContentSpace is Accessible, Editable {
                 activeNodeAddresses.push(pendingNodeAddresses[i]);
                 activeNodeLocators.push(pendingNodeLocators[i]);
                 emit NodeApproved(pendingNodeAddresses[i], pendingNodeLocators[i]);
-                if (i != pendingNodeAddresses.length - 1) {
-                    pendingNodeLocators[i] = pendingNodeLocators[pendingNodeLocators.length - 1];
-                    pendingNodeAddresses[i] = pendingNodeAddresses[pendingNodeAddresses.length - 1];
-                }
-                delete pendingNodeLocators[pendingNodeLocators.length - 1];
-                delete pendingNodeAddresses[pendingNodeAddresses.length - 1];
+                removeNodeInternal(i, pendingNodeAddresses, pendingNodeLocators);
                 found = true;
                 break;
             }
@@ -81,6 +88,15 @@ contract BaseContentSpace is Accessible, Editable {
         require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, _nodeAddr, _locator));
         activeNodeAddresses.push(_nodeAddr);
         activeNodeLocators.push(_locator);
+    }
+
+    // direct method for owner to remove node(s)
+    function removeNode(address _nodeAddr) public onlyOwner {
+        for (uint i = 0; i < activeNodeAddresses.length; i++) {
+            if (activeNodeAddresses[i] == _nodeAddr) {
+                removeNodeInternal(i, activeNodeAddresses, activeNodeLocators);
+            }
+        }
     }
 
     // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object

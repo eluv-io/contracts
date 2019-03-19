@@ -8,18 +8,24 @@ import "./accessible.sol";
 import "./base_content_space.sol";
 
 
+/* -- Revision history --
+BaseLibrary20190221101700ML: First versioned released
+BaseLibrary20190318101300ML: Migrated to 0.4.24
+*/
+
+
 contract BaseLibrary is Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190221101700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190318101300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
     address[] public reviewerGroups;
     address[] public accessorGroups;
     address[] public contentTypes;
-    uint256 public contributorGroupsLength;
-    uint256 public reviewerGroupsLength;
-    uint256 public accessorGroupsLength;
+    uint256 public contributorGroupsLength = 0;
+    uint256 public reviewerGroupsLength = 0;
+    uint256 public accessorGroupsLength = 0;
     uint256 public contentTypesLength = 0;
 
     mapping ( address => address ) public contentTypeContracts;  // custom contracts map
@@ -42,11 +48,8 @@ contract BaseLibrary is Accessible, Editable {
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
 
-    constructor(address address_KMS, address _content_space) public payable {
-        contentSpace = _content_space;
-        contributorGroupsLength = 0;
-        reviewerGroupsLength = 0;
-        accessorGroupsLength = 0;
+    constructor(address address_KMS, address content_space) public payable {
+        contentSpace = content_space;
         addressKMS = address_KMS;
     }
 
@@ -317,7 +320,7 @@ contract BaseLibrary is Accessible, Editable {
         if (contentTypesLength != 0) {
             require(validType(content_type));
         }
-        BaseContent content = new BaseContent(this, content_type);
+        BaseContent content = new BaseContent(content_type);
         content.setAddressKMS(addressKMS);
         content.setContentContractAddress(contentTypeContracts[content_type]);
         emit ContentObjectCreated(address(content), content_type);

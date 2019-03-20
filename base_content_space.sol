@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
@@ -8,6 +8,10 @@ import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
 import "./accessible.sol";
 
+/* -- Revision history --
+BaseContentSpace20190221114100ML: First versioned released
+BaseContentSpace20190319194900ML: Requires 0.4.24
+*/
 
 contract BaseContentSpace is Accessible, Editable {
 
@@ -158,19 +162,13 @@ contract BaseContentSpace is Accessible, Editable {
 /* -- Revision history --
 BaseFactory20190227170400ML: First versioned released
 BaseFactory20190301105700ML: No changes version bump to test
+BaseFactory20190319195000ML: with  0.4.24 migration
 */
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20190301105700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    /*address public contentSpace;
-
-    function setContentSpace() public onlyOwner {
-        contentSpace = msg.sender;
-    }
-    */
-
+    bytes32 public version ="BaseFactory20190319195000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    
     function createContentType() public returns (address) {
         return (new BaseContentType(msg.sender));
     }

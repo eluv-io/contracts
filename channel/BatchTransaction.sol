@@ -1,9 +1,6 @@
 pragma solidity ^0.4.24;
 
 import "./Transactable.sol";
-// trick to get abigen to generate wallet ABI as well. otherwise, if ElvWallet is generated separately the ABI for
-//  Transactable is generated in both places and doesn't compile.
-// import "./ElvWallet.sol";
 
 // abigen --sol channel/BatchTransaction.sol --pkg=contracts --out build/batch_trans.go
 

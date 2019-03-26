@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "./Transactable.sol";
+import "./BatchTransaction.sol";
 
 // abigen --sol channel/ChannelWallet.sol --pkg=contracts --out build/channel_wallet.go
 
@@ -52,8 +53,6 @@ contract ChannelWallet is Transactable {
         require(msg.sender == guarantor); // only the guarantor can resolve transactions / chits
         require(_ts > currentTimestamp);
 
-        currentTimestamp = _ts;
-
         if (address(this).balance < _value) {
             emit ExecStatus(guarantor, 1);
             return false;
@@ -66,6 +65,8 @@ contract ChannelWallet is Transactable {
             emit ExecStatus(guarantor, 2);
             return false;
         }
+
+        currentTimestamp = _ts;
 
         // TODO: for a content access request there might be other data we want to pass ...?
         bool sent = _dest.send(_value);

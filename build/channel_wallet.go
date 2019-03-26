@@ -27,6 +27,312 @@ var (
 	_ = event.NewSubscription
 )
 
+// BatchTransactionABI is the input ABI used to generate the binding from.
+const BatchTransactionABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8[]\"},{\"name\":\"_r\",\"type\":\"bytes32[]\"},{\"name\":\"_s\",\"type\":\"bytes32[]\"},{\"name\":\"_from\",\"type\":\"address[]\"},{\"name\":\"_dest\",\"type\":\"address[]\"},{\"name\":\"_value\",\"type\":\"uint256[]\"},{\"name\":\"_ts\",\"type\":\"uint256[]\"}],\"name\":\"executeBatch\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"success\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"dest\",\"type\":\"address\"}],\"name\":\"TransactionStatus\",\"type\":\"event\"}]"
+
+// BatchTransactionBin is the compiled bytecode used for deploying new contracts.
+const BatchTransactionBin = `0x60806040526104a9806100136000396000f3006080604052600436106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663e9861ab18114610042575b005b34801561004e57600080fd5b506040805160206004803580820135838102808601850190965280855261004095369593946024949385019291829185019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a9989019892975090820195509350839250850190849080828437509497506101ed9650505050505050565b600080600088518a5114151561020257600080fd5b875189511461021057600080fd5b865188511461021e57600080fd5b855187511461022c57600080fd5b845186511461023a57600080fd5b835185511461024857600080fd5b600092505b895183101561047157868381518110151561026457fe5b9060200190602002015191508173ffffffffffffffffffffffffffffffffffffffff166394489c428b8581518110151561029a57fe5b906020019060200201518b868151811015156102b257fe5b906020019060200201518b878151811015156102ca57fe5b906020019060200201518a888151811015156102e257fe5b906020019060200201518a898151811015156102fa57fe5b906020019060200201518a8a81518110151561031257fe5b6020908102909101810151604080517c010000000000000000000000000000000000000000000000000000000063ffffffff8b1602815260ff90981660048901526024880196909652604487019490945273ffffffffffffffffffffffffffffffffffffffff9092166064860152608485015260a4840191909152905160c4808401938290030181600087803b1580156103ab57600080fd5b505af11580156103bf573d6000803e3d6000fd5b505050506040513d60208110156103d557600080fd5b505190507f41f5d8bdb5631ef260ce5fb88cf0a48c22d261827bebce333beb5963b3fe3edd81888581518110151561040957fe5b90602001906020020151888681518110151561042157fe5b602090810290910181015160408051941515855273ffffffffffffffffffffffffffffffffffffffff938416928501929092529190911682820152519081900360600190a160019092019161024d565b505050505050505050505600a165627a7a723058207ce163d450419f0d5c7af2be2565f46499a44d0fc7070a7c62236af5fa4faec20029`
+
+// DeployBatchTransaction deploys a new Ethereum contract, binding an instance of BatchTransaction to it.
+func DeployBatchTransaction(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BatchTransaction, error) {
+	parsed, err := abi.JSON(strings.NewReader(BatchTransactionABI))
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BatchTransactionBin), backend)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	return address, tx, &BatchTransaction{BatchTransactionCaller: BatchTransactionCaller{contract: contract}, BatchTransactionTransactor: BatchTransactionTransactor{contract: contract}, BatchTransactionFilterer: BatchTransactionFilterer{contract: contract}}, nil
+}
+
+// BatchTransaction is an auto generated Go binding around an Ethereum contract.
+type BatchTransaction struct {
+	BatchTransactionCaller     // Read-only binding to the contract
+	BatchTransactionTransactor // Write-only binding to the contract
+	BatchTransactionFilterer   // Log filterer for contract events
+}
+
+// BatchTransactionCaller is an auto generated read-only Go binding around an Ethereum contract.
+type BatchTransactionCaller struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// BatchTransactionTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type BatchTransactionTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// BatchTransactionFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type BatchTransactionFilterer struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// BatchTransactionSession is an auto generated Go binding around an Ethereum contract,
+// with pre-set call and transact options.
+type BatchTransactionSession struct {
+	Contract     *BatchTransaction // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts     // Call options to use throughout this session
+	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+}
+
+// BatchTransactionCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// with pre-set call options.
+type BatchTransactionCallerSession struct {
+	Contract *BatchTransactionCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts           // Call options to use throughout this session
+}
+
+// BatchTransactionTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// with pre-set transact options.
+type BatchTransactionTransactorSession struct {
+	Contract     *BatchTransactionTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
+}
+
+// BatchTransactionRaw is an auto generated low-level Go binding around an Ethereum contract.
+type BatchTransactionRaw struct {
+	Contract *BatchTransaction // Generic contract binding to access the raw methods on
+}
+
+// BatchTransactionCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type BatchTransactionCallerRaw struct {
+	Contract *BatchTransactionCaller // Generic read-only contract binding to access the raw methods on
+}
+
+// BatchTransactionTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type BatchTransactionTransactorRaw struct {
+	Contract *BatchTransactionTransactor // Generic write-only contract binding to access the raw methods on
+}
+
+// NewBatchTransaction creates a new instance of BatchTransaction, bound to a specific deployed contract.
+func NewBatchTransaction(address common.Address, backend bind.ContractBackend) (*BatchTransaction, error) {
+	contract, err := bindBatchTransaction(address, backend, backend, backend)
+	if err != nil {
+		return nil, err
+	}
+	return &BatchTransaction{BatchTransactionCaller: BatchTransactionCaller{contract: contract}, BatchTransactionTransactor: BatchTransactionTransactor{contract: contract}, BatchTransactionFilterer: BatchTransactionFilterer{contract: contract}}, nil
+}
+
+// NewBatchTransactionCaller creates a new read-only instance of BatchTransaction, bound to a specific deployed contract.
+func NewBatchTransactionCaller(address common.Address, caller bind.ContractCaller) (*BatchTransactionCaller, error) {
+	contract, err := bindBatchTransaction(address, caller, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &BatchTransactionCaller{contract: contract}, nil
+}
+
+// NewBatchTransactionTransactor creates a new write-only instance of BatchTransaction, bound to a specific deployed contract.
+func NewBatchTransactionTransactor(address common.Address, transactor bind.ContractTransactor) (*BatchTransactionTransactor, error) {
+	contract, err := bindBatchTransaction(address, nil, transactor, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &BatchTransactionTransactor{contract: contract}, nil
+}
+
+// NewBatchTransactionFilterer creates a new log filterer instance of BatchTransaction, bound to a specific deployed contract.
+func NewBatchTransactionFilterer(address common.Address, filterer bind.ContractFilterer) (*BatchTransactionFilterer, error) {
+	contract, err := bindBatchTransaction(address, nil, nil, filterer)
+	if err != nil {
+		return nil, err
+	}
+	return &BatchTransactionFilterer{contract: contract}, nil
+}
+
+// bindBatchTransaction binds a generic wrapper to an already deployed contract.
+func bindBatchTransaction(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(BatchTransactionABI))
+	if err != nil {
+		return nil, err
+	}
+	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_BatchTransaction *BatchTransactionRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _BatchTransaction.Contract.BatchTransactionCaller.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_BatchTransaction *BatchTransactionRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _BatchTransaction.Contract.BatchTransactionTransactor.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_BatchTransaction *BatchTransactionRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _BatchTransaction.Contract.BatchTransactionTransactor.contract.Transact(opts, method, params...)
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_BatchTransaction *BatchTransactionCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _BatchTransaction.Contract.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_BatchTransaction *BatchTransactionTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _BatchTransaction.Contract.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_BatchTransaction *BatchTransactionTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _BatchTransaction.Contract.contract.Transact(opts, method, params...)
+}
+
+// ExecuteBatch is a paid mutator transaction binding the contract method 0xe9861ab1.
+//
+// Solidity: function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) returns()
+func (_BatchTransaction *BatchTransactionTransactor) ExecuteBatch(opts *bind.TransactOpts, _v []uint8, _r [][32]byte, _s [][32]byte, _from []common.Address, _dest []common.Address, _value []*big.Int, _ts []*big.Int) (*types.Transaction, error) {
+	return _BatchTransaction.contract.Transact(opts, "executeBatch", _v, _r, _s, _from, _dest, _value, _ts)
+}
+
+// ExecuteBatch is a paid mutator transaction binding the contract method 0xe9861ab1.
+//
+// Solidity: function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) returns()
+func (_BatchTransaction *BatchTransactionSession) ExecuteBatch(_v []uint8, _r [][32]byte, _s [][32]byte, _from []common.Address, _dest []common.Address, _value []*big.Int, _ts []*big.Int) (*types.Transaction, error) {
+	return _BatchTransaction.Contract.ExecuteBatch(&_BatchTransaction.TransactOpts, _v, _r, _s, _from, _dest, _value, _ts)
+}
+
+// ExecuteBatch is a paid mutator transaction binding the contract method 0xe9861ab1.
+//
+// Solidity: function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) returns()
+func (_BatchTransaction *BatchTransactionTransactorSession) ExecuteBatch(_v []uint8, _r [][32]byte, _s [][32]byte, _from []common.Address, _dest []common.Address, _value []*big.Int, _ts []*big.Int) (*types.Transaction, error) {
+	return _BatchTransaction.Contract.ExecuteBatch(&_BatchTransaction.TransactOpts, _v, _r, _s, _from, _dest, _value, _ts)
+}
+
+// BatchTransactionTransactionStatusIterator is returned from FilterTransactionStatus and is used to iterate over the raw logs and unpacked data for TransactionStatus events raised by the BatchTransaction contract.
+type BatchTransactionTransactionStatusIterator struct {
+	Event *BatchTransactionTransactionStatus // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *BatchTransactionTransactionStatusIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(BatchTransactionTransactionStatus)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(BatchTransactionTransactionStatus)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *BatchTransactionTransactionStatusIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *BatchTransactionTransactionStatusIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// BatchTransactionTransactionStatus represents a TransactionStatus event raised by the BatchTransaction contract.
+type BatchTransactionTransactionStatus struct {
+	Success bool
+	From    common.Address
+	Dest    common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// FilterTransactionStatus is a free log retrieval operation binding the contract event 0x41f5d8bdb5631ef260ce5fb88cf0a48c22d261827bebce333beb5963b3fe3edd.
+//
+// Solidity: event TransactionStatus(bool success, address from, address dest)
+func (_BatchTransaction *BatchTransactionFilterer) FilterTransactionStatus(opts *bind.FilterOpts) (*BatchTransactionTransactionStatusIterator, error) {
+
+	logs, sub, err := _BatchTransaction.contract.FilterLogs(opts, "TransactionStatus")
+	if err != nil {
+		return nil, err
+	}
+	return &BatchTransactionTransactionStatusIterator{contract: _BatchTransaction.contract, event: "TransactionStatus", logs: logs, sub: sub}, nil
+}
+
+// WatchTransactionStatus is a free log subscription operation binding the contract event 0x41f5d8bdb5631ef260ce5fb88cf0a48c22d261827bebce333beb5963b3fe3edd.
+//
+// Solidity: event TransactionStatus(bool success, address from, address dest)
+func (_BatchTransaction *BatchTransactionFilterer) WatchTransactionStatus(opts *bind.WatchOpts, sink chan<- *BatchTransactionTransactionStatus) (event.Subscription, error) {
+
+	logs, sub, err := _BatchTransaction.contract.WatchLogs(opts, "TransactionStatus")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(BatchTransactionTransactionStatus)
+				if err := _BatchTransaction.contract.UnpackLog(event, "TransactionStatus", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
 // ChannelWalletABI is the input ABI used to generate the binding from.
 const ChannelWalletABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"currentTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_ts\",\"type\":\"uint64\"}],\"name\":\"validateTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"guarantor\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"execute\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_guarantor\",\"type\":\"address\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"guarantor\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"code\",\"type\":\"int256\"}],\"name\":\"ExecStatus\",\"type\":\"event\"}]"
 

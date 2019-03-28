@@ -7,6 +7,7 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
 import "./accessible.sol";
+import "./node.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -113,16 +114,44 @@ contract BaseContentSpace is Accessible, Editable {
         return false;
     }
 
+    event RegisterNode(address nodeObjAddr);
+    event UnregisterNode(address nodeObjAddr);
+    mapping(address => address) public nodeMapping;
+
+    // used to create a node contract instance. should be called by the address of the node that wishes to register.
+    function registerSpaceNode() public returns (address) {
+        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
+        uint i = 0;
+        for (; i < activeNodeAddresses.length; i++) {
+            if (activeNodeAddresses[i] == msg.sender) {
+                break;
+            }
+        }
+        require(i < activeNodeAddresses.length); // node should be in active list
+        address nodeAddr = SpaceFactory(factory).createNode(msg.sender);
+        nodeMapping[msg.sender] = nodeAddr;
+        emit RegisterNode(nodeAddr);
+        return nodeAddr;
+    }
+
+    function unregisterSpaceNode() public returns (bool) {
+        require(nodeMapping[msg.sender] != 0x0);
+        address nodeAddr = nodeMapping[msg.sender];
+        delete nodeMapping[msg.sender];
+        Node(nodeAddr).kill();
+        emit UnregisterNode(nodeAddr);
+    }
+
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
     event CreateGroup(address groupAddress);
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
 
-
-    constructor(string memory content_space_name) public {
-        name = content_space_name;
-        factory = new BaseFactory();
+    constructor(string memory _content_space_name, address _factoryAddress) public {
+        name = _content_space_name;
+        factory = _factoryAddress;
+        // factory = new BaseFactory();
         //BaseFactory(factory).setContentSpace();
     }
 
@@ -136,19 +165,19 @@ contract BaseContentSpace is Accessible, Editable {
     }
 
     function createContentType() public returns (address) {
-        address contentTypeAddress = BaseFactory(factory).createContentType();
+        address contentTypeAddress = SpaceFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
         return contentTypeAddress;
     }
 
     function createLibrary(address address_KMS) public returns (address) {
-        address libraryAddress = BaseFactory(factory).createLibrary(address_KMS);
+        address libraryAddress = SpaceFactory(factory).createLibrary(address_KMS);
         emit CreateLibrary(libraryAddress);
         return libraryAddress;
     }
 
     function createGroup() public returns (address) {
-        address groupAddress = BaseFactory(factory).createGroup();
+        address groupAddress = SpaceFactory(factory).createGroup();
         emit CreateGroup(groupAddress);
         return groupAddress;
     }
@@ -165,6 +194,13 @@ BaseFactory20190301105700ML: No changes version bump to test
 BaseFactory20190319195000ML: with  0.4.24 migration
 */
 
+interface SpaceFactory {
+    function createContentType() external returns (address);
+    function createLibrary(address address_KMS) external returns (address);
+    function createGroup() external returns (address);
+    function createNode(address _owner) external returns (address);
+}
+
 contract BaseFactory is Ownable {
 
     bytes32 public version ="BaseFactory20190319195000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
@@ -180,5 +216,10 @@ contract BaseFactory is Ownable {
     function createGroup() public returns (address) {
         return (new BaseAccessControlGroup(msg.sender));
     }
-}
 
+    function createNode(address _owner) public returns (address) {
+        Node n = new Node(); // this sets owner to tx.origin?
+        require(n.owner() == _owner);
+        return address(n);
+    }
+}

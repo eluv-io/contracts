@@ -24,7 +24,7 @@ contract ChannelWallet is Transactable {
     }
 
     // TODO: not sure if this is necessary - there should be a default accessor for currentTimestamp?
-    function validateTimestamp(uint64 _ts) public view returns (bool) {
+    function validateTimestamp(uint256 _ts) public view returns (bool) {
         if (_ts > currentTimestamp)
             return true;
         return false;

@@ -7,6 +7,7 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
 import "./accessible.sol";
+import "./node.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released

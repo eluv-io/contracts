@@ -19,7 +19,7 @@ contract Node is Ownable {
 
 
     function log(string label) public onlyOwner {
-        owner.transfer(1000000000000000000); // 1 ETH
+        owner.transfer(100000000000000000); // .1 ETH
         emit Log(label);
     }
 }

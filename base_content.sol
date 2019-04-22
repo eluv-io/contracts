@@ -198,6 +198,10 @@ contract BaseContent is Editable {
     bytes32[] public versionHashes;
     bytes32 pendingHash;
 
+    function countVersionHashes() public view returns (uint256) {
+        return versionHashes.length;
+    }
+
     event CommitPending(bytes32 objectHash);
 
     //    function commit(bytes32 object_hash) public onlyOwner {

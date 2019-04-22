@@ -5,20 +5,28 @@ import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
 import "./accessible.sol";
+import "./base_content_space.sol";
+
+
+/* -- Revision history --
+BaseLibrary20190221101700ML: First versioned released
+BaseLibrary20190318101300ML: Migrated to 0.4.24
+*/
 
 
 contract BaseLibrary is Accessible, Editable {
 
+    bytes32 public version ="BaseLibrary20190318101300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
     address[] public reviewerGroups;
     address[] public accessorGroups;
     address[] public contentTypes;
-    uint256 public contributorGroupsLength;
-    uint256 public reviewerGroupsLength;
-    uint256 public accessorGroupsLength;
-    uint256 public contentTypesLength;
+    uint256 public contributorGroupsLength = 0;
+    uint256 public reviewerGroupsLength = 0;
+    uint256 public accessorGroupsLength = 0;
+    uint256 public contentTypesLength = 0;
 
     mapping ( address => address ) public contentTypeContracts;  // custom contracts map
 
@@ -35,15 +43,13 @@ contract BaseLibrary is Accessible, Editable {
     event AccessorGroupAdded(address group);
     event AccessorGroupRemoved(address group);
     event ContentTypeAdded(address contentType, address contentContract);
+    event ContentTypeRemoved(address contentType);
     event UnauthorizedOperation(uint operationCode, address candidate);
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
 
-    function BaseLibrary(address address_KMS) public payable {
-        contentSpace = msg.sender;
-        contributorGroupsLength = 0;
-        reviewerGroupsLength = 0;
-        accessorGroupsLength = 0;
+    constructor(address address_KMS, address content_space) public payable {
+        contentSpace = content_space;
         addressKMS = address_KMS;
     }
 
@@ -61,18 +67,20 @@ contract BaseLibrary is Accessible, Editable {
         emit ContributorGroupAdded(group);
     }
 
-    function removeContributorGroup(address group) public onlyOwner {
+    function removeContributorGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < contributorGroupsLength; i++) {
             if (contributorGroups[i] == group) {
                 delete contributorGroups[i];
-                if (i != (contributorGroupsLength - 1)){
+                if (i != (contributorGroupsLength - 1)) {
                     contributorGroups[i] = contributorGroups[contributorGroupsLength - 1];
                     delete contributorGroups[contributorGroupsLength - 1];
                 }
                 contributorGroupsLength--;
                 emit ContributorGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addReviewerGroup(address group) public onlyOwner {
@@ -85,18 +93,20 @@ contract BaseLibrary is Accessible, Editable {
         emit ReviewerGroupAdded(group);
     }
 
-    function removeReviewerGroup(address group) public onlyOwner {
+    function removeReviewerGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < reviewerGroupsLength; i++) {
             if (reviewerGroups[i] == group) {
                 delete reviewerGroups[i];
-                if (i != (reviewerGroupsLength - 1)){
+                if (i != (reviewerGroupsLength - 1)) {
                     reviewerGroups[i] = reviewerGroups[reviewerGroupsLength - 1];
                     delete reviewerGroups[reviewerGroupsLength - 1];
                 }
                 reviewerGroupsLength--;
                 emit ReviewerGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addAccessorGroup(address group) public onlyOwner {
@@ -109,25 +119,51 @@ contract BaseLibrary is Accessible, Editable {
         emit AccessorGroupAdded(group);
     }
 
-    function removeAccessorGroup(address group) public onlyOwner {
+    function removeAccessorGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < accessorGroupsLength; i++) {
             if (accessorGroups[i] == group) {
                 delete accessorGroups[i];
-                if (i != (accessorGroupsLength - 1)){
+                if (i != (accessorGroupsLength - 1)) {
                     accessorGroups[i] = accessorGroups[accessorGroupsLength - 1];
                     delete accessorGroups[accessorGroupsLength - 1];
                 }
                 accessorGroupsLength--;
                 emit AccessorGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
-        contentTypes.push(content_type);
-        contentTypesLength = contentTypesLength + 1;
+        if ((contentTypeContracts[content_type] == 0x0) && (validType(content_type) == false)) {
+            if (contentTypesLength < contentTypes.length) {
+                contentTypes[contentTypesLength] = content_type;
+            } else {
+                contentTypes.push(content_type);
+            }
+            contentTypesLength = contentTypesLength + 1;
+        }
         contentTypeContracts[content_type] = content_contract;
         emit ContentTypeAdded(content_type, content_contract);
+    }
+
+    function removeContentType(address content_type) public onlyOwner returns (bool) {
+        uint256 latestIndex = contentTypesLength - 1;
+        for (uint256 i = 0; i < contentTypesLength; i++) {
+            if (contentTypes[i] == content_type) {
+                delete contentTypes[i];
+                if (i != latestIndex) {
+                    contentTypes[i] = contentTypes[latestIndex];
+                    delete contentTypes[latestIndex];
+                }
+                contentTypesLength = latestIndex; //decrease by 1
+                delete contentTypeContracts[content_type];
+                emit ContentTypeRemoved(content_type);
+                return true;
+            }
+        }
+        return false;
     }
 
     function hasAccess(address candidate) public constant returns (bool) {
@@ -188,6 +224,12 @@ contract BaseLibrary is Accessible, Editable {
             }
         }
         return false;
+    }
+
+    // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
+    function canNodePublish(address candidate) public view returns (bool) {
+        BaseContentSpace bcs = BaseContentSpace(contentSpace);
+        return bcs.canNodePublish(candidate);
     }
 
     function submitApprovalRequest() public returns (bool) {
@@ -263,24 +305,26 @@ contract BaseLibrary is Accessible, Editable {
         }
     }
 
+    function validType(address content_type) public view returns (bool) {
+        bool isValidType = false;
+        for (uint i = 0; i < contentTypesLength; i++) {
+            if (contentTypes[i] == content_type) {
+                isValidType = true;
+            }
+        }
+        return isValidType;
+    }
+
     function createContent(address content_type) public  returns (address) {
         require(canContribute(tx.origin)); //check if sender has contributor access
         if (contentTypesLength != 0) {
-            bool validType = false;
-            for (uint i = 0; i < contentTypesLength; i++){
-                if (contentTypes[i] == content_type){
-                    validType = true;
-                }
-            }
-            require(validType);
+            require(validType(content_type));
         }
-        address contentAddress = new BaseContent(content_type);
-        BaseContent content = BaseContent(contentAddress);
+        BaseContent content = new BaseContent(content_type);
         content.setAddressKMS(addressKMS);
         content.setContentContractAddress(contentTypeContracts[content_type]);
-
-        emit ContentObjectCreated(contentAddress, content_type);
-        return contentAddress;
+        emit ContentObjectCreated(address(content), content_type);
+        return address(content);
     }
 
     function accessRequest() public returns (bool) {

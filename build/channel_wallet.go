@@ -334,10 +334,10 @@ func (_BatchTransaction *BatchTransactionFilterer) WatchTransactionStatus(opts *
 }
 
 // ChannelWalletABI is the input ABI used to generate the binding from.
-const ChannelWalletABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"currentTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_ts\",\"type\":\"uint64\"}],\"name\":\"validateTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"guarantor\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"execute\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_guarantor\",\"type\":\"address\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"guarantor\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"code\",\"type\":\"int256\"}],\"name\":\"ExecStatus\",\"type\":\"event\"}]"
+const ChannelWalletABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"currentTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"guarantor\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"execute\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_guarantor\",\"type\":\"address\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"guarantor\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"code\",\"type\":\"int256\"}],\"name\":\"ExecStatus\",\"type\":\"event\"}]"
 
 // ChannelWalletBin is the compiled bytecode used for deploying new contracts.
-const ChannelWalletBin = `0x`
+const ChannelWalletBin = `0x6080604052604051602080610516833981016040525160018054600160a060020a0319908116331790915560028054600160a060020a0390931692909116919091179055426000556104c0806100566000396000f3006080604052600436106100775763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631e2ff94f811461007c57806371cf516b146100a3578063763d5ee6146100d45780638da5cb5b1461011b57806394489c4214610130578063f50b2efe14610163575b600080fd5b34801561008857600080fd5b5061009161017b565b60408051918252519081900360200190f35b3480156100af57600080fd5b506100b8610181565b60408051600160a060020a039092168252519081900360200190f35b3480156100e057600080fd5b5061010760ff60043516602435604435600160a060020a036064351660843560a435610190565b604080519115158252519081900360200190f35b34801561012757600080fd5b506100b86102f9565b34801561013c57600080fd5b5061010760ff60043516602435604435600160a060020a036064351660843560a435610308565b34801561016f57600080fd5b50610107600435610478565b60005481565b600254600160a060020a031681565b604080516c01000000000000000000000000308102602080840191909152600160a060020a038716909102603483015260488201859052606880830185905283518084039091018152608890920192839052815160009384938493909282918401908083835b602083106102155780518252601f1990920191602091820191016101f6565b6001836020036101000a038019825116818451168082178552505050505050905001915050604051809103902091506001828a8a8a604051600081526020016040526040518085600019166000191681526020018460ff1660ff1681526020018360001916600019168152602001826000191660001916815260200194505050505060206040516020810390808403906000865af11580156102bb573d6000803e3d6000fd5b5050604051601f190151600154909250600160a060020a0380841691161490506102e857600092506102ed565b600192505b50509695505050505050565b600154600160a060020a031681565b60025460009081908190600160a060020a0316331461032657600080fd5b600054841161033457600080fd5b303185111561038d5760025460408051600160a060020a0390921682526001602083015280517f583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad9281900390910190a1600092506102ed565b61039b898989898989610190565b91508115156103f7576002805460408051600160a060020a039092168252602082019290925281517f583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad929181900390910190a1600092506102ed565b6000848155604051600160a060020a0388169187156108fc02918891818181858888f1935050505090508015156102e85760025460408051600160a060020a0390921682526003602083015280517f583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad9281900390910190a1600092506102ed565b6000805482111561048b5750600161048f565b5060005b9190505600a165627a7a72305820c0d051c165ef49a37d8b26f3be86c897c2caf46b682ae7ff56565460eae1f1840029`
 
 // DeployChannelWallet deploys a new Ethereum contract, binding an instance of ChannelWallet to it.
 func DeployChannelWallet(auth *bind.TransactOpts, backend bind.ContractBackend, _guarantor common.Address) (common.Address, *types.Transaction, *ChannelWallet, error) {
@@ -574,31 +574,27 @@ func (_ChannelWallet *ChannelWalletCallerSession) Owner() (common.Address, error
 
 // ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
 //
-// Solidity: function validateTimestamp(uint256 _ts) constant returns(bool, uint256)
-func (_ChannelWallet *ChannelWalletCaller) ValidateTimestamp(opts *bind.CallOpts, _ts *big.Int) (bool, *big.Int, error) {
+// Solidity: function validateTimestamp(uint256 _ts) constant returns(bool)
+func (_ChannelWallet *ChannelWalletCaller) ValidateTimestamp(opts *bind.CallOpts, _ts *big.Int) (bool, error) {
 	var (
 		ret0 = new(bool)
-		ret1 = new(*big.Int)
 	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
-	}
+	out := ret0
 	err := _ChannelWallet.contract.Call(opts, out, "validateTimestamp", _ts)
-	return *ret0, *ret1, err
+	return *ret0, err
 }
 
 // ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
 //
-// Solidity: function validateTimestamp(uint256 _ts) constant returns(bool, uint256)
-func (_ChannelWallet *ChannelWalletSession) ValidateTimestamp(_ts *big.Int) (bool, *big.Int, error) {
+// Solidity: function validateTimestamp(uint256 _ts) constant returns(bool)
+func (_ChannelWallet *ChannelWalletSession) ValidateTimestamp(_ts *big.Int) (bool, error) {
 	return _ChannelWallet.Contract.ValidateTimestamp(&_ChannelWallet.CallOpts, _ts)
 }
 
 // ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
 //
-// Solidity: function validateTimestamp(uint256 _ts) constant returns(bool, uint256)
-func (_ChannelWallet *ChannelWalletCallerSession) ValidateTimestamp(_ts *big.Int) (bool, *big.Int, error) {
+// Solidity: function validateTimestamp(uint256 _ts) constant returns(bool)
+func (_ChannelWallet *ChannelWalletCallerSession) ValidateTimestamp(_ts *big.Int) (bool, error) {
 	return _ChannelWallet.Contract.ValidateTimestamp(&_ChannelWallet.CallOpts, _ts)
 }
 

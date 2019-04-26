@@ -6,6 +6,7 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
 import "./accessible.sol";
 import "./base_content_space.sol";
+import "./meta_object.sol";
 
 
 /* -- Revision history --
@@ -14,7 +15,7 @@ BaseLibrary20190318101300ML: Migrated to 0.4.24
 */
 
 
-contract BaseLibrary is Accessible, Editable {
+contract BaseLibrary is MetaObject, Accessible, Editable {
 
     bytes32 public version ="BaseLibrary20190318101300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -57,80 +58,79 @@ contract BaseLibrary is Accessible, Editable {
         addressKMS = address_KMS;
     }
 
-    function addContributorGroup(address group) public onlyOwner {
-        if (contributorGroupsLength < contributorGroups.length) {
-            contributorGroups[contributorGroupsLength] = group;
-        } else {
-            contributorGroups.push(group);
+    function addToGroupList(address _addGroup, address[] storage _groupList) internal returns (uint256) {
+        for (uint i = 0; i < _groupList.length; i++) {
+            if (_addGroup == _groupList[i]) {
+                return _groupList.length;
+            }
         }
-        contributorGroupsLength = contributorGroupsLength + 1;
-        emit ContributorGroupAdded(group);
+        _groupList.push(_addGroup);
+        return _groupList.length;
+    }
+
+    function removeFromGroupList(address _removeGroup, address[] storage _groupList) internal returns (uint256) {
+        for (uint i = 0; i < _groupList.length; i++) {
+            if (_removeGroup == _groupList[i]) {
+                delete _groupList[i];
+                if (i != _groupList.length - 1) {
+                    _groupList[i] = _groupList[_groupList.length - 1];
+                }
+                _groupList.length--;
+            }
+        }
+        return _groupList.length;
+    }
+
+    function addContributorGroup(address group) public onlyOwner {
+        uint256 prevLen = contributorGroupsLength;
+        contributorGroupsLength = addToGroupList(group, contributorGroups);
+        if (contributorGroupsLength > prevLen) {
+            emit ContributorGroupAdded(group);
+        }
     }
 
     function removeContributorGroup(address group) public onlyOwner returns (bool) {
-        for (uint i = 0; i < contributorGroupsLength; i++) {
-            if (contributorGroups[i] == group) {
-                delete contributorGroups[i];
-                if (i != (contributorGroupsLength - 1)) {
-                    contributorGroups[i] = contributorGroups[contributorGroupsLength - 1];
-                    delete contributorGroups[contributorGroupsLength - 1];
-                }
-                contributorGroupsLength--;
-                emit ContributorGroupRemoved(group);
-                return true;
-            }
+        uint256 prevLen = contributorGroupsLength;
+        contributorGroupsLength = removeFromGroupList(group, contributorGroups);
+        if (contributorGroupsLength < prevLen) {
+            emit ContributorGroupRemoved(group);
+            return true;
         }
         return false;
     }
 
     function addReviewerGroup(address group) public onlyOwner {
-        if (reviewerGroupsLength < reviewerGroups.length) {
-            reviewerGroups[reviewerGroupsLength] = group;
-        } else {
-            reviewerGroups.push(group);
+        uint256 prevLen = reviewerGroupsLength;
+        reviewerGroupsLength = addToGroupList(group, reviewerGroups);
+        if (reviewerGroupsLength > prevLen) {
+            emit ReviewerGroupAdded(group);
         }
-        reviewerGroupsLength = reviewerGroupsLength + 1;
-        emit ReviewerGroupAdded(group);
     }
 
     function removeReviewerGroup(address group) public onlyOwner returns (bool) {
-        for (uint i = 0; i < reviewerGroupsLength; i++) {
-            if (reviewerGroups[i] == group) {
-                delete reviewerGroups[i];
-                if (i != (reviewerGroupsLength - 1)) {
-                    reviewerGroups[i] = reviewerGroups[reviewerGroupsLength - 1];
-                    delete reviewerGroups[reviewerGroupsLength - 1];
-                }
-                reviewerGroupsLength--;
-                emit ReviewerGroupRemoved(group);
-                return true;
-            }
+        uint256 prevLen = reviewerGroupsLength;
+        reviewerGroupsLength = removeFromGroupList(group, reviewerGroups);
+        if (reviewerGroupsLength < prevLen) {
+            emit ReviewerGroupRemoved(group);
+            return true;
         }
         return false;
     }
 
     function addAccessorGroup(address group) public onlyOwner {
-        if (accessorGroupsLength < accessorGroups.length) {
-            accessorGroups[accessorGroupsLength] = group;
-        } else {
-            accessorGroups.push(group);
+        uint256 prevLen = accessorGroupsLength;
+        accessorGroupsLength = addToGroupList(group, accessorGroups);
+        if (accessorGroupsLength > prevLen) {
+            emit AccessorGroupAdded(group);
         }
-        accessorGroupsLength = accessorGroupsLength + 1;
-        emit AccessorGroupAdded(group);
     }
 
     function removeAccessorGroup(address group) public onlyOwner returns (bool) {
-        for (uint i = 0; i < accessorGroupsLength; i++) {
-            if (accessorGroups[i] == group) {
-                delete accessorGroups[i];
-                if (i != (accessorGroupsLength - 1)) {
-                    accessorGroups[i] = accessorGroups[accessorGroupsLength - 1];
-                    delete accessorGroups[accessorGroupsLength - 1];
-                }
-                accessorGroupsLength--;
-                emit AccessorGroupRemoved(group);
-                return true;
-            }
+        uint256 prevLen = accessorGroupsLength;
+        accessorGroupsLength = removeFromGroupList(group, accessorGroups);
+        if (accessorGroupsLength < prevLen) {
+            emit AccessorGroupRemoved(group);
+            return true;
         }
         return false;
     }
@@ -166,64 +166,37 @@ contract BaseLibrary is Accessible, Editable {
         return false;
     }
 
-    function hasAccess(address candidate) public constant returns (bool) {
+    function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
+        for (uint i = 0; i < _groupList.length; i++) {
+            if (_groupList[i] != 0x0) {
+                BaseAccessControlGroup groupContract = BaseAccessControlGroup(_groupList[i]);
+                if (groupContract.hasAccess(_candidate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function hasAccess(address _candidate) public constant returns (bool) {
         if (accessorGroupsLength == 0) {
             return true;
         }
-        address group;
-        bool groupAccess;
-        BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < accessorGroupsLength; i++) {
-            group = accessorGroups[i];
-            if (group != 0x0) {
-                groupContract = BaseAccessControlGroup(group);
-                groupAccess = groupContract.hasAccess(candidate);
-                if (groupAccess == true) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return hasGroupAccess(_candidate, accessorGroups);
     }
 
-    function canContribute(address candidate) public constant returns (bool) {
+    function canContribute(address _candidate) public constant returns (bool) {
         if (contributorGroupsLength == 0) {
             return true;
         }
-        address group;
-        bool groupAccess;
-        BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < contributorGroupsLength; i++) {
-            group = contributorGroups[i];
-            if (group != 0x0) {
-                groupContract = BaseAccessControlGroup(group);
-                groupAccess = groupContract.hasAccess(candidate);
-                if (groupAccess == true) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return hasGroupAccess(_candidate, contributorGroups);
     }
 
-    function canReview(address candidate) public constant returns (bool) {
-        if (candidate == owner) {
+    function canReview(address _candidate) public constant returns (bool) {
+        if (_candidate == owner) {
             return true;
         }
-        address group;
-        bool groupAccess;
-        BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < reviewerGroupsLength; i++) {
-            group = reviewerGroups[i];
-            if (group != 0x0) {
-                groupContract = BaseAccessControlGroup(group);
-                groupAccess = groupContract.hasAccess(candidate);
-                if (groupAccess == true) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return hasGroupAccess(_candidate, reviewerGroups);
     }
 
     // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object

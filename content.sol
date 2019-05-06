@@ -1,16 +1,18 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
+import {BaseContent} from "./base_content.sol";
 
 /* -- Revision history --
 Content20190221101700ML: First versioned released
 Content20190301121800ML: Adds stub for runAccessInfo
 Content20190315171500ML: Migrated to 0.4.24
+Content20190506155000ML: Mackes the default for runAccess match content object behavior that does not have custom contract
 */
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20190315171500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20190506155000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event Log(string label);
     event LogBool(string label, bool b);
@@ -83,7 +85,12 @@ contract Content is Ownable {
     )
         public payable returns(uint)
     {
-        return 0;
+        BaseContent contentObj = BaseContent(msg.sender);
+        if (contentObj.canAccess(tx.origin)) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 
     //0 indicates that access grant can proceed.

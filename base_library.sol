@@ -4,19 +4,22 @@ import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
+import {BaseContentSpace} from "./base_content_space.sol";
 import "./accessible.sol";
 import "./base_content_space.sol";
+import "./access_indexor.sol";
 
 
 /* -- Revision history --
 BaseLibrary20190221101700ML: First versioned released
 BaseLibrary20190318101300ML: Migrated to 0.4.24
+BaseLibrary20190506153700ML: Adds access indexing
 */
 
 
 contract BaseLibrary is Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190318101300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190506153700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
@@ -65,6 +68,8 @@ contract BaseLibrary is Accessible, Editable {
         }
         contributorGroupsLength = contributorGroupsLength + 1;
         emit ContributorGroupAdded(group);
+        AccessIndexor accessIndex = AccessIndexor(group);
+        accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
     }
 
     function removeContributorGroup(address group) public onlyOwner returns (bool) {
@@ -77,6 +82,8 @@ contract BaseLibrary is Accessible, Editable {
                 }
                 contributorGroupsLength--;
                 emit ContributorGroupRemoved(group);
+                AccessIndexor accessIndex = AccessIndexor(group);
+                accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
                 return true;
             }
         }
@@ -91,6 +98,8 @@ contract BaseLibrary is Accessible, Editable {
         }
         reviewerGroupsLength = reviewerGroupsLength + 1;
         emit ReviewerGroupAdded(group);
+        AccessIndexor accessIndex = AccessIndexor(group);
+        accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
     }
 
     function removeReviewerGroup(address group) public onlyOwner returns (bool) {
@@ -104,9 +113,12 @@ contract BaseLibrary is Accessible, Editable {
                 reviewerGroupsLength--;
                 emit ReviewerGroupRemoved(group);
                 return true;
+                //AccessIndexor accessIndex = AccessIndexor(group);
+                //accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
             }
         }
         return false;
+
     }
 
     function addAccessorGroup(address group) public onlyOwner {
@@ -117,6 +129,8 @@ contract BaseLibrary is Accessible, Editable {
         }
         accessorGroupsLength = accessorGroupsLength + 1;
         emit AccessorGroupAdded(group);
+        AccessIndexor accessIndex = AccessIndexor(group);
+        accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
     }
 
     function removeAccessorGroup(address group) public onlyOwner returns (bool) {
@@ -130,6 +144,8 @@ contract BaseLibrary is Accessible, Editable {
                 accessorGroupsLength--;
                 emit AccessorGroupRemoved(group);
                 return true;
+                AccessIndexor accessIndex = AccessIndexor(group);
+                accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
             }
         }
         return false;
@@ -324,6 +340,13 @@ contract BaseLibrary is Accessible, Editable {
         content.setAddressKMS(addressKMS);
         content.setContentContractAddress(contentTypeContracts[content_type]);
         emit ContentObjectCreated(address(content), content_type);
+
+        //register object in user wallet
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        address walletAddress = contentSpaceObj.getAccessWallet();
+        AccessIndexor userWallet = AccessIndexor(walletAddress);
+        userWallet.setContentObjectRights(address(content), userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
+
         return address(content);
     }
 
@@ -332,5 +355,24 @@ contract BaseLibrary is Accessible, Editable {
         emit AccessRequest();
         return true;
     }
+
+
+    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        address walletAddress = contentSpaceObj.userWallets(stakeholder);
+        if (walletAddress == 0x0){
+            //stakeholder is not a user (hence group or wallet)
+            setGroupRights(stakeholder, access_type, access);
+        } else {
+            setGroupRights(walletAddress, access_type, access);
+        }
+    }
+
+    function setGroupRights(address group, uint8 access_type, uint8 access) public {
+        AccessIndexor indexor = AccessIndexor(group);
+        indexor.setLibraryRights(address(this), access_type, access);
+    }
+
+
 }
 

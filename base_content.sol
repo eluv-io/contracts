@@ -3,16 +3,19 @@ pragma solidity 0.4.24;
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {BaseLibrary} from "./base_library.sol";
+import {BaseContentSpace} from "./base_content_space.sol";
+import {AccessIndexor} from "./access_indexor.sol";
 
 /* -- Revision history --
 BaseContent20190221101600ML: First versioned released
 BaseContent20190301121900ML: Adds support for getAccessInfo, to replace getAccessCharge (not deprecated yet)
 BaseContent20190315175100ML: Migrated to 0.4.24
+BaseContent20190321122100ML: accessRequest returns requestID, removed ml_hash from access_complete event
 */
 
 
 contract BaseContent is Editable {
-    bytes32 public version ="BaseContent20190315175100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190321122100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -52,7 +55,7 @@ contract BaseContent is Editable {
     event AccessGrant(uint256 requestID, bool access_granted, string reKey, string encryptedAESKey);
     event AccessRequestValue(bytes32 customValue);
     event AccessRequestStakeholder(address stakeholder);
-    event AccessComplete(uint256 requestID, uint256 scorePct, bytes32 mlOutHash, bool customContractResult);
+    event AccessComplete(uint256 requestID, uint256 scorePct, bool customContractResult);
     event SetContentContract(address contentContractAddress);
 
     event SetAccessCharge(uint256 accessCharge);
@@ -277,6 +280,19 @@ contract BaseContent is Editable {
         }
     }
 
+    function canAccess(address accessor) public view returns (bool) {
+        if (accessor == owner) {
+            return true;
+        }
+        /*
+        if (statusCode != 0) {
+            return false; // only published content should be accessible
+        }
+        */
+        BaseLibrary lib = BaseLibrary(libraryAddress);
+        return (lib.hasAccess(tx.origin));
+    }
+
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)
     //  pkeAFGH - ephemeral public key of the requestor (AFGH)
@@ -289,12 +305,9 @@ contract BaseContent is Editable {
         bytes32[] custom_values,
         address[] stakeholders
     )
-        public payable returns (bool)
+        public payable returns (uint256)
     {
         requestID = requestID + 1;
-        //if (statusCode !=0) return false; // only published content should be accessible (debatable)
-        BaseLibrary lib = BaseLibrary(libraryAddress);
-        require(lib.hasAccess(tx.origin));
 
         if (tx.origin != owner) { //Check if request is funded, except if user is owner
             uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);
@@ -307,6 +320,8 @@ contract BaseContent is Editable {
             Content c = Content(contentContractAddress);
             uint result = c.runAccess(requestID, level, custom_values, stakeholders);
             require(result == 0);
+        } else {
+            require(canAccess(tx.origin));
         }
         // Raise Event
         emit AccessRequest(requestID, level, objectHash, pke_requestor, pke_AFGH);
@@ -323,7 +338,7 @@ contract BaseContent is Editable {
             }
         }
 
-        return true;
+        return requestID;
     }
 
     //The rekey provided is encrypted with the pkeRequestor
@@ -379,6 +394,7 @@ contract BaseContent is Editable {
     //
     // add a state variable in the contract indicating whether to credit back based on quality score
     function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) public payable returns (bool) {
+        require(ml_out_hash == ml_out_hash); //placeholder for verification of signature
         RequestData storage r = requestMap[request_ID];
         require((r.originator != 0x0) && ((msg.sender == r.originator) || (msg.sender == owner)));
         bool success = (score_pct != 0);
@@ -406,7 +422,7 @@ contract BaseContent is Editable {
         }
         delete requestMap[request_ID];
         // record to event
-        emit AccessComplete(request_ID, score_pct, ml_out_hash, success);
+        emit AccessComplete(request_ID, score_pct, success);
         return success;
     }
 
@@ -417,5 +433,24 @@ contract BaseContent is Editable {
         }
         super.kill();
     }
+
+
+    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
+        BaseLibrary lib = BaseLibrary(libraryAddress);
+        BaseContentSpace contentSpaceObj = BaseContentSpace(lib.contentSpace());
+        address walletAddress = contentSpaceObj.userWallets(stakeholder);
+        if (walletAddress == 0x0){
+            //stakeholder is not a user (hence group or wallet)
+            setGroupRights(stakeholder, access_type, access);
+        } else {
+            setGroupRights(walletAddress, access_type, access);
+        }
+    }
+
+    function setGroupRights(address group, uint8 access_type, uint8 access) public {
+        AccessIndexor indexor = AccessIndexor(group);
+        indexor.setContentObjectRights(address(this), access_type, access);
+    }
+
 
 }

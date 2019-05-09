@@ -8,13 +8,14 @@ import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
 import "./accessible.sol";
 import "./node.sol";
+import "./meta_object.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
 BaseContentSpace20190319194900ML: Requires 0.4.24
 */
 
-contract BaseContentSpace is Accessible, Editable {
+contract BaseContentSpace is MetaObject, Accessible, Editable {
 
     bytes32 public version ="BaseContentSpace20190221114100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

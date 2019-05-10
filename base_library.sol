@@ -14,12 +14,13 @@ import "./access_indexor.sol";
 BaseLibrary20190221101700ML: First versioned released
 BaseLibrary20190318101300ML: Migrated to 0.4.24
 BaseLibrary20190506153700ML: Adds access indexing
+BaseLibrary20190510151800ML: Modified createContent to use contentspace factory
 */
 
 
 contract BaseLibrary is Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190506153700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190510151800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
@@ -331,6 +332,7 @@ contract BaseLibrary is Accessible, Editable {
         return isValidType;
     }
 
+    /*
     function createContent(address content_type) public  returns (address) {
         require(canContribute(tx.origin)); //check if sender has contributor access
         if (contentTypesLength != 0) {
@@ -348,6 +350,13 @@ contract BaseLibrary is Accessible, Editable {
         userWallet.setContentObjectRights(address(content), userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
 
         return address(content);
+    }
+    */
+
+    function createContent(address content_type) public  returns (address) {
+        address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
+        emit ContentObjectCreated(content, content_type);
+        return content;
     }
 
     function accessRequest() public returns (bool) {

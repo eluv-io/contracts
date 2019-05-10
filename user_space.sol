@@ -16,5 +16,5 @@ contract UserSpace {
     bytes32 public version ="UserSpace20190506155300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping(address => address) public userWallets;
-    
+
 }

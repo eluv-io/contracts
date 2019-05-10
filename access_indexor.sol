@@ -5,12 +5,13 @@ import {UserSpace} from "./user_space.sol";
 
 /* -- Revision history --
 AccessIndexor20190423111800ML: First versioned release
+AccessIndexor20190510150600ML: Removes debug events
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20190506155200ML";
+    bytes32 public version = "AccessIndexor20190510150600ML";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
     //event dbUint8(string label, uint8 value);
@@ -100,35 +101,9 @@ contract AccessIndexor is Ownable {
         return checkRights(CATEGORY_GROUP, group, access_type);
     }
 
-    function checkContentObjectRights(address group, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_CONTENT_OBJECT, group, access_type);
-    }
-    /*
-    event dbAddress(string label, address addr);
     function checkContentObjectRights(address obj, uint8 access_type) public view returns(bool) {
-        emit dbAddress("start", obj);
-        bool directRights = checkRights(contentObjects, obj, access_type);
-        if (directRights == true) {
-            emit dbAddress("direct", address(this));
-            return true;
-        } else {
-            AccessIndexor groupObj;
-            address group;
-            for (uint i = 0; i < accessGroups.length; i++) {
-                group = accessGroups.list[i];
-                if (group != 0x0) {
-                    groupObj = AccessIndexor(group);
-                    if (groupObj.checkContentObjectRights(obj, access_type) == true) {
-                        emit dbAddress("group", group);
-                        return true;
-                    }
-                }
-            }
-        }
-        emit dbAddress("end", obj);
-        return false;
+        return checkRights(CATEGORY_CONTENT_OBJECT, obj, access_type);
     }
-*/
 
     function checkContentTypeRights(address obj, uint8 access_type) public view returns(bool) {
         return checkRights(CATEGORY_CONTENT_TYPE, obj, access_type);
@@ -204,7 +179,7 @@ contract AccessIndexor is Ownable {
 
     function checkDirectRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
         Ownable instance = Ownable(obj);
-        if (instance.owner() == tx.origin){
+        if (instance.owner() == owner){
             return true;
         }
         if (index_type == CATEGORY_CONTENT_OBJECT) {
@@ -250,19 +225,28 @@ contract AccessIndexor is Ownable {
         return (owner == instance.owner());
     }
 
-    event dbAddress(string label, address addr);
+    //event dbAddress(string label, address addr);
+    //event dbUint8(string label, uint8 i);
+    //event dbbool(string label, bool b);
     function setRights(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private  {
-        UserSpace space = UserSpace(contentSpace);
-        address walletAddress = space.userWallets(tx.origin);
-        if  (walletAddress == 0x0) {
-            Ownable instance = Ownable(obj);
-            require(tx.origin == instance.owner());
+        if (access != ACCESS_NONE) {
+            UserSpace space = UserSpace(contentSpace);
+            address walletAddress = space.userWallets(tx.origin);
+            if  (walletAddress == 0x0) {
+                Ownable instance = Ownable(obj);
+                require(tx.origin == instance.owner());
+            }
+            if (walletAddress != 0x0) {
+                AccessIndexor wallet = AccessIndexor(walletAddress);
+                //emit dbAddress("wallet address", walletAddress);
+                //emit dbUint8("cateogry", index.category);
+                //emit dbAddress("obj", obj);
+                //emit dbUint8("access type checked", TYPE_EDIT);
+                //bool b = wallet.checkRights(index.category, obj, TYPE_EDIT);
+                //emit dbbool("has access", b);
+                require(wallet.checkRights(index.category, obj, TYPE_EDIT));
+            }
         }
-        if (walletAddress != 0x0) {
-            AccessIndexor wallet = AccessIndexor(walletAddress);
-            require(wallet.checkRights(index.category, obj, TYPE_EDIT));
-        }
-
         uint8 currentAggregate = index.rights[obj];
         uint8[3] memory currentRights;
         currentRights[0] = currentAggregate % 10;

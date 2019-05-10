@@ -7,10 +7,11 @@ import "./access_indexor.sol";
 /* -- Revision history --
 BaseAccessWallet20190320114000ML: First versioned released
 BaseAccessWallet20190506154400ML: Adds instantiation via factory, adds access indexing
+BaseAccessWallet20190510151100ML: Supports modified getAccessInfo API
 */
 
 contract BaseAccessWallet is AccessIndexor {
-    bytes32 public version = "BaseAccessWallet20190506154400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "BaseAccessWallet20190510151100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event AccessRequest(
         uint256 requestID,
@@ -62,10 +63,11 @@ contract BaseAccessWallet is AccessIndexor {
 
         BaseContent content = BaseContent(content_address);
         uint256 requiredFund;
-
-        int8 accessCode;
-        (accessCode, requiredFund) = content.getAccessInfo( level, custom_values, stakeholders);
-        uint256 requestID =  content.accessRequest.value(requiredFund)(level, pke_requestor, pke_AFGH, custom_values, stakeholders);
+        uint8 visibilityCode;
+        uint8 accessCode;
+        (visibilityCode, accessCode, requiredFund) = content.getAccessInfo( level, custom_values, stakeholders);
+        require(visibilityCode == 0);
+        uint256 requestID = content.accessRequest.value((accessCode != 0) ? requiredFund : 0)(level, pke_requestor, pke_AFGH, custom_values, stakeholders);
         emit AccessRequest(requestID, level, content_address, owner);
         return requestID;
 

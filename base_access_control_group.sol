@@ -11,12 +11,13 @@ import {AccessIndexor} from "./access_indexor.sol";
 BsAccessCtrlGrp20190222140700ML: First versioned released
 BsAccessCtrlGrp20190315172900ML: Migrated to 0.4.24
 BsAccessCtrlGrp20190506153800ML: Adds access indexing
+BsAccessCtrlGrp20190510150700ML: Fixes bug (wrong index was used for group rights)
 */
 
 
 contract BaseAccessControlGroup is AccessIndexor {
 
-    bytes32 public version ="BsAccessCtrlGrp20190506153800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20190510150700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping (address => bool) public members;
     mapping (address => bool) public managers;
@@ -40,7 +41,7 @@ contract BaseAccessControlGroup is AccessIndexor {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setContentTypeRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_TENTATIVE());
+        userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_TENTATIVE());
     }
 
     function revokeManagerAccess(address manager) public {
@@ -57,7 +58,7 @@ contract BaseAccessControlGroup is AccessIndexor {
         return (managers[candidate] == true);
     }
 
-    event dbg_setAccessGroupRights(address a, uint8 b, uint8 c);
+    //event dbg_setAccessGroupRights(address a, uint8 b, uint8 c);
     function grantAccess(address candidate) public {
         require(managers[msg.sender] == true);
         members[candidate] = true;
@@ -67,7 +68,8 @@ contract BaseAccessControlGroup is AccessIndexor {
         address walletAddress = contentSpaceObj.userWallets(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
-        emit dbg_setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
+        //emit dbg_setAccessGroupRights(walletAddress, userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
+        //emit dbg_setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
     }
 
     function revokeAccess(address candidate) public {

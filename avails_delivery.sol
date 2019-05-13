@@ -14,14 +14,14 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 
 /* -- Revision history --
 AvlDelivery20190404103300ML: First versioned released
-AvlDelivery2019040510152500ML: updated for new runAccessInfo API
+AvlDelivery20190510152500ML: updated for new runAccessInfo API
 */
 
 
 contract AvailsDelivery is Content {
 
 
-    bytes32 public version ="AvlDelivery2019040510152500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AvlDelivery20190510152500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     struct AvailabilityData {
         bool clearedSD; // cleared for SD

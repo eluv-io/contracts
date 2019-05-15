@@ -15,12 +15,13 @@ BaseLibrary20190221101700ML: First versioned released
 BaseLibrary20190318101300ML: Migrated to 0.4.24
 BaseLibrary20190506153700ML: Adds access indexing
 BaseLibrary20190510151800ML: Modified createContent to use contentspace factory
+BaseLibrary20190515103800ML: Overload canPublish to take into account EDIT privilege granted for update request and commit
 */
 
 
 contract BaseLibrary is Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190510151800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190515103800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
@@ -55,6 +56,20 @@ contract BaseLibrary is Accessible, Editable {
     constructor(address address_KMS, address content_space) public payable {
         contentSpace = content_space;
         addressKMS = address_KMS;
+    }
+
+    function canPublish() public view returns (bool) {
+        if ((tx.origin == owner) || (msg.sender == owner)) {
+            return true;
+        }
+        address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
+        if (userWallet != 0x0) {
+            AccessIndexor wallet = AccessIndexor(userWallet);
+            if (wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT()) == true) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function setAddressKMS(address address_KMS) public onlyOwner {
@@ -183,6 +198,7 @@ contract BaseLibrary is Accessible, Editable {
         return false;
     }
 
+    // Current implementation ignores rights provided directly to individual
     function hasAccess(address candidate) public constant returns (bool) {
         if (accessorGroupsLength == 0) {
             return true;
@@ -203,6 +219,7 @@ contract BaseLibrary is Accessible, Editable {
         return false;
     }
 
+    // Current implementation ignores rights provided directly to individual
     function canContribute(address candidate) public constant returns (bool) {
         if (contributorGroupsLength == 0) {
             return true;

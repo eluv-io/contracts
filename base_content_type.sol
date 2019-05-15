@@ -11,12 +11,13 @@ import "./access_indexor.sol";
 BaseContentType20190222145700ML: First versioned released
 BaseContentType20190318101200ML: Migrated to 0.4.24
 BaseContentType20190506153900ML: Adds access indexing
+BaseContentType20190515104000ML: Overloads canPublish to take into account EDIT privilege granted for update request and commit
 */
 
 
 contract BaseContentType is Accessible, Editable {
 
-    bytes32 public version ="BaseContentType20190506153900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20190515104000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
 
@@ -25,7 +26,17 @@ contract BaseContentType is Accessible, Editable {
     }
 
     function canPublish() public view returns (bool) {
-        return msg.sender == owner;
+        if ((tx.origin == owner) || (msg.sender == owner)) {
+            return true;
+        }
+        address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
+        if (userWallet != 0x0) {
+            AccessIndexor wallet = AccessIndexor(userWallet);
+            if (wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT()) == true) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -44,4 +55,5 @@ contract BaseContentType is Accessible, Editable {
         AccessIndexor indexor = AccessIndexor(group);
         indexor.setContentObjectRights(address(this), access_type, access);
     }
+
 }

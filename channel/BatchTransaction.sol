@@ -1,20 +1,27 @@
 pragma solidity ^0.4.24;
 
 import "./Transactable.sol";
-import "../ownable.sol";
 
 // abigen --sol channel/BatchTransaction.sol --pkg=contracts --out build/batch_trans.go
 
-contract BatchTransaction is Ownable {
+contract BatchTransaction {
 
     event TransactionStatus(bool success, address from, address dest);
 
-    constructor() public payable {}
+    // can't currently use Ownable because of build issues.
+    // TODO: fix build issues a/o complete impl of 'ownable' here - e.g. change of ownership
+    address owner;
+    constructor() public payable {
+        owner = msg.sender;
+    }
 
     function () public payable {}
 
     // abi.encodePacked(address(this), _dest, _value, _ts)
-    function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public onlyOwner {
+    function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public {
+
+        require(msg.sender == owner);
+
         // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly, which is the same as a revert...?
         require(_v.length == _r.length);
         require(_r.length == _s.length);

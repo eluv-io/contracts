@@ -46,15 +46,25 @@ contract ChannelWallet is Transactable {
 
     event ExecStatus(address guarantor, int code);
 
+    int public constant execStatusOk = 0;
+    int public constant execStatusNonceFail = 1;
+    int public constant execStatusBalanceFail = 2;
+    int public constant execStatusSigFail = 3;
+    int public constant execStatusSendFail = 4;
+
     function execute(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts)
     external
     returns (bool) {
 
         require(msg.sender == guarantor); // only the guarantor can resolve transactions / chits
-        require(_ts > currentTimestamp);
+
+        if (_ts <= currentTimestamp) {
+            emit ExecStatus(guarantor, execStatusNonceFail);
+            return false;
+        }
 
         if (address(this).balance < _value) {
-            emit ExecStatus(guarantor, 1);
+            emit ExecStatus(guarantor, execStatusBalanceFail);
             return false;
         }
 
@@ -62,7 +72,7 @@ contract ChannelWallet is Transactable {
         //  accepting it into a batch.
         bool checkTrans = validateTransaction(_v, _r, _s, _dest, _value, _ts);
         if (!checkTrans) {
-            emit ExecStatus(guarantor, 2);
+            emit ExecStatus(guarantor, execStatusSigFail);
             return false;
         }
 
@@ -71,9 +81,11 @@ contract ChannelWallet is Transactable {
         // TODO: for a content access request there might be other data we want to pass ...?
         bool sent = _dest.send(_value);
         if (!sent) {
-            emit ExecStatus(guarantor, 3);
+            emit ExecStatus(guarantor, execStatusSendFail);
             return false;
         }
+
+        emit ExecStatus(guarantor, execStatusOk);
 
         return true;
     }

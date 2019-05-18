@@ -4,6 +4,7 @@ import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
+import {BaseContentType} from "./base_content_type.sol";
 import "./accessible.sol";
 import "./base_content_space.sol";
 import "./meta_object.sol";
@@ -278,16 +279,6 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         }
     }
 
-    function validType(address content_type) public view returns (bool) {
-        bool isValidType = false;
-        for (uint i = 0; i < contentTypesLength; i++) {
-            if (contentTypes[i] == content_type) {
-                isValidType = true;
-            }
-        }
-        return isValidType;
-    }
-
     function createContent(address content_type) public  returns (address) {
         require(canContribute(tx.origin)); //check if sender has contributor access
         if (contentTypesLength != 0) {
@@ -304,6 +295,27 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         require(hasAccess(tx.origin) || canContribute(tx.origin) || canReview(tx.origin));
         emit AccessRequest();
         return true;
+    }
+
+    function validType(address content_type) public view returns (bool) {
+        bool isValidType = false;
+        for (uint i = 0; i < contentTypesLength; i++) {
+            if (contentTypes[i] == content_type) {
+                isValidType = true;
+            }
+        }
+        return isValidType;
+    }
+
+
+    function findTypeByHash(bytes32 typeHash) public view returns (address) {
+        for (uint i = 0; i < contentTypes.length; i++) {
+            BaseContentType contentType = BaseContentType(contentTypes[i]);
+            if (contentType.objectHash() == typeHash) {
+                return contentTypes[i];
+            }
+        }
+        return 0x0;
     }
 }
 

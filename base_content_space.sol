@@ -23,6 +23,8 @@ contract BaseContentSpace is MetaObject, Accessible, Editable {
     string public description;
     address public factory;
 
+    address public guarantor;
+
     address[] public activeNodeAddresses;
     bytes[] public activeNodeLocators;
 
@@ -159,6 +161,10 @@ contract BaseContentSpace is MetaObject, Accessible, Editable {
     function setFactory(address new_factory) public onlyOwner {
         factory = new_factory;
         //BaseFactory(factory).setContentSpace();
+    }
+
+    function setGuarantor(address _guarantor) public onlyOwner {
+        guarantor = _guarantor;
     }
 
     function setDescription(string memory content_space_description) public onlyOwner {

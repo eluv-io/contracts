@@ -6,8 +6,6 @@ import "./Transactable.sol";
 
 contract BatchTransaction {
 
-    event TransactionStatus(bool success, address from, address dest);
-
     // can't currently use Ownable because of build issues.
     // TODO: fix build issues a/o complete impl of 'ownable' here - e.g. change of ownership
     address owner;
@@ -38,7 +36,6 @@ contract BatchTransaction {
                 // we failed to get the target wallet to pay so - in this scenario - we have to pay!
                 // _dest[i].send(_value[i]); // TODO: transfer? error handling?
             }
-            emit TransactionStatus(success, _from[i], _dest[i]);
         }
     }
 }

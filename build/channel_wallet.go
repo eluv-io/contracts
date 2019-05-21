@@ -28,10 +28,10 @@ var (
 )
 
 // BatchTransactionABI is the input ABI used to generate the binding from.
-const BatchTransactionABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8[]\"},{\"name\":\"_r\",\"type\":\"bytes32[]\"},{\"name\":\"_s\",\"type\":\"bytes32[]\"},{\"name\":\"_from\",\"type\":\"address[]\"},{\"name\":\"_dest\",\"type\":\"address[]\"},{\"name\":\"_value\",\"type\":\"uint256[]\"},{\"name\":\"_ts\",\"type\":\"uint256[]\"}],\"name\":\"executeBatch\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"success\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"dest\",\"type\":\"address\"}],\"name\":\"TransactionStatus\",\"type\":\"event\"}]"
+const BatchTransactionABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8[]\"},{\"name\":\"_r\",\"type\":\"bytes32[]\"},{\"name\":\"_s\",\"type\":\"bytes32[]\"},{\"name\":\"_from\",\"type\":\"address[]\"},{\"name\":\"_dest\",\"type\":\"address[]\"},{\"name\":\"_value\",\"type\":\"uint256[]\"},{\"name\":\"_ts\",\"type\":\"uint256[]\"}],\"name\":\"executeBatch\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"}]"
 
 // BatchTransactionBin is the compiled bytecode used for deploying new contracts.
-const BatchTransactionBin = `0x608060405260008054600160a060020a031916331790556104cb806100256000396000f3006080604052600436106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663e9861ab18114610042575b005b34801561004e57600080fd5b506040805160206004803580820135838102808601850190965280855261004095369593946024949385019291829185019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a9989019892975090820195509350839250850190849080828437509497506101ed9650505050505050565b600080548190819073ffffffffffffffffffffffffffffffffffffffff16331461021657600080fd5b88518a511461022457600080fd5b875189511461023257600080fd5b865188511461024057600080fd5b855187511461024e57600080fd5b845186511461025c57600080fd5b835185511461026a57600080fd5b600092505b895183101561049357868381518110151561028657fe5b9060200190602002015191508173ffffffffffffffffffffffffffffffffffffffff166394489c428b858151811015156102bc57fe5b906020019060200201518b868151811015156102d457fe5b906020019060200201518b878151811015156102ec57fe5b906020019060200201518a8881518110151561030457fe5b906020019060200201518a8981518110151561031c57fe5b906020019060200201518a8a81518110151561033457fe5b6020908102909101810151604080517c010000000000000000000000000000000000000000000000000000000063ffffffff8b1602815260ff90981660048901526024880196909652604487019490945273ffffffffffffffffffffffffffffffffffffffff9092166064860152608485015260a4840191909152905160c4808401938290030181600087803b1580156103cd57600080fd5b505af11580156103e1573d6000803e3d6000fd5b505050506040513d60208110156103f757600080fd5b505190507f41f5d8bdb5631ef260ce5fb88cf0a48c22d261827bebce333beb5963b3fe3edd81888581518110151561042b57fe5b90602001906020020151888681518110151561044357fe5b602090810290910181015160408051941515855273ffffffffffffffffffffffffffffffffffffffff938416928501929092529190911682820152519081900360600190a160019092019161026f565b505050505050505050505600a165627a7a723058204ec3d64c516918fc23b6fbf9adfcae0d0c5fff3a3cb7af85c8b673ded64a86f20029`
+const BatchTransactionBin = `0x608060405260008054600160a060020a0319163317905561043e806100256000396000f3006080604052600436106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663e9861ab18114610042575b005b34801561004e57600080fd5b506040805160206004803580820135838102808601850190965280855261004095369593946024949385019291829185019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a998901989297509082019550935083925085019084908082843750506040805187358901803560208181028481018201909552818452989b9a9989019892975090820195509350839250850190849080828437509497506101ed9650505050505050565b600080548190819073ffffffffffffffffffffffffffffffffffffffff16331461021657600080fd5b88518a511461022457600080fd5b875189511461023257600080fd5b865188511461024057600080fd5b855187511461024e57600080fd5b845186511461025c57600080fd5b835185511461026a57600080fd5b600092505b895183101561040657868381518110151561028657fe5b9060200190602002015191508173ffffffffffffffffffffffffffffffffffffffff166394489c428b858151811015156102bc57fe5b906020019060200201518b868151811015156102d457fe5b906020019060200201518b878151811015156102ec57fe5b906020019060200201518a8881518110151561030457fe5b906020019060200201518a8981518110151561031c57fe5b906020019060200201518a8a81518110151561033457fe5b6020908102909101810151604080517c010000000000000000000000000000000000000000000000000000000063ffffffff8b1602815260ff90981660048901526024880196909652604487019490945273ffffffffffffffffffffffffffffffffffffffff9092166064860152608485015260a4840191909152905160c4808401938290030181600087803b1580156103cd57600080fd5b505af11580156103e1573d6000803e3d6000fd5b505050506040513d60208110156103f757600080fd5b5051905060019092019161026f565b505050505050505050505600a165627a7a7230582071c59ff8095fa78161b42b4114088a17eaf7519f64d4cf7e614ad8b6462dd0560029`
 
 // DeployBatchTransaction deploys a new Ethereum contract, binding an instance of BatchTransaction to it.
 func DeployBatchTransaction(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BatchTransaction, error) {
@@ -209,135 +209,11 @@ func (_BatchTransaction *BatchTransactionTransactorSession) ExecuteBatch(_v []ui
 	return _BatchTransaction.Contract.ExecuteBatch(&_BatchTransaction.TransactOpts, _v, _r, _s, _from, _dest, _value, _ts)
 }
 
-// BatchTransactionTransactionStatusIterator is returned from FilterTransactionStatus and is used to iterate over the raw logs and unpacked data for TransactionStatus events raised by the BatchTransaction contract.
-type BatchTransactionTransactionStatusIterator struct {
-	Event *BatchTransactionTransactionStatus // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *BatchTransactionTransactionStatusIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(BatchTransactionTransactionStatus)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(BatchTransactionTransactionStatus)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *BatchTransactionTransactionStatusIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *BatchTransactionTransactionStatusIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// BatchTransactionTransactionStatus represents a TransactionStatus event raised by the BatchTransaction contract.
-type BatchTransactionTransactionStatus struct {
-	Success bool
-	From    common.Address
-	Dest    common.Address
-	Raw     types.Log // Blockchain specific contextual infos
-}
-
-// FilterTransactionStatus is a free log retrieval operation binding the contract event 0x41f5d8bdb5631ef260ce5fb88cf0a48c22d261827bebce333beb5963b3fe3edd.
-//
-// Solidity: event TransactionStatus(bool success, address from, address dest)
-func (_BatchTransaction *BatchTransactionFilterer) FilterTransactionStatus(opts *bind.FilterOpts) (*BatchTransactionTransactionStatusIterator, error) {
-
-	logs, sub, err := _BatchTransaction.contract.FilterLogs(opts, "TransactionStatus")
-	if err != nil {
-		return nil, err
-	}
-	return &BatchTransactionTransactionStatusIterator{contract: _BatchTransaction.contract, event: "TransactionStatus", logs: logs, sub: sub}, nil
-}
-
-// WatchTransactionStatus is a free log subscription operation binding the contract event 0x41f5d8bdb5631ef260ce5fb88cf0a48c22d261827bebce333beb5963b3fe3edd.
-//
-// Solidity: event TransactionStatus(bool success, address from, address dest)
-func (_BatchTransaction *BatchTransactionFilterer) WatchTransactionStatus(opts *bind.WatchOpts, sink chan<- *BatchTransactionTransactionStatus) (event.Subscription, error) {
-
-	logs, sub, err := _BatchTransaction.contract.WatchLogs(opts, "TransactionStatus")
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(BatchTransactionTransactionStatus)
-				if err := _BatchTransaction.contract.UnpackLog(event, "TransactionStatus", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
 // ChannelWalletABI is the input ABI used to generate the binding from.
-const ChannelWalletABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"currentTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"guarantor\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"execute\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"execStatusOk\",\"outputs\":[{\"name\":\"\",\"type\":\"int256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_guarantor\",\"type\":\"address\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"guarantor\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"code\",\"type\":\"int256\"}],\"name\":\"ExecStatus\",\"type\":\"event\"}]"
+const ChannelWalletABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"execStatusNonceFail\",\"outputs\":[{\"name\":\"\",\"type\":\"int256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"execStatusSendFail\",\"outputs\":[{\"name\":\"\",\"type\":\"int256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"currentTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"guarantor\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_v\",\"type\":\"uint8\"},{\"name\":\"_r\",\"type\":\"bytes32\"},{\"name\":\"_s\",\"type\":\"bytes32\"},{\"name\":\"_dest\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"},{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"execute\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"execStatusBalanceFail\",\"outputs\":[{\"name\":\"\",\"type\":\"int256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"execStatusOk\",\"outputs\":[{\"name\":\"\",\"type\":\"int256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"execStatusSigFail\",\"outputs\":[{\"name\":\"\",\"type\":\"int256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_ts\",\"type\":\"uint256\"}],\"name\":\"validateTimestamp\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_guarantor\",\"type\":\"address\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"guarantor\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"code\",\"type\":\"int256\"}],\"name\":\"ExecStatus\",\"type\":\"event\"}]"
 
 // ChannelWalletBin is the compiled bytecode used for deploying new contracts.
-const ChannelWalletBin = `0x6080604052604051602080610569833981016040525160018054600160a060020a0319908116331790915560028054600160a060020a039093169290911691909117905542600055610513806100566000396000f3006080604052600436106100825763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631e2ff94f811461008757806371cf516b146100ae578063763d5ee6146100df5780638da5cb5b1461012657806394489c421461013b57806395ba60ba1461016e578063f50b2efe14610183575b600080fd5b34801561009357600080fd5b5061009c61019b565b60408051918252519081900360200190f35b3480156100ba57600080fd5b506100c36101a1565b60408051600160a060020a039092168252519081900360200190f35b3480156100eb57600080fd5b5061011260ff60043516602435604435600160a060020a036064351660843560a4356101b0565b604080519115158252519081900360200190f35b34801561013257600080fd5b506100c3610319565b34801561014757600080fd5b5061011260ff60043516602435604435600160a060020a036064351660843560a435610328565b34801561017a57600080fd5b5061009c6104a6565b34801561018f57600080fd5b506101126004356104ab565b60005481565b600254600160a060020a031681565b604080516c01000000000000000000000000308102602080840191909152600160a060020a038716909102603483015260488201859052606880830185905283518084039091018152608890920192839052815160009384938493909282918401908083835b602083106102355780518252601f199092019160209182019101610216565b6001836020036101000a038019825116818451168082178552505050505050905001915050604051809103902091506001828a8a8a604051600081526020016040526040518085600019166000191681526020018460ff1660ff1681526020018360001916600019168152602001826000191660001916815260200194505050505060206040516020810390808403906000865af11580156102db573d6000803e3d6000fd5b5050604051601f190151600154909250600160a060020a038084169116149050610308576000925061030d565b600192505b50509695505050505050565b600154600160a060020a031681565b60025460009081908190600160a060020a0316331461034657600080fd5b600054841161035457600080fd5b303185111561039b5760025460408051600160a060020a0390921682526001602083015280516000805160206104c88339815191529281900390910190a16000925061030d565b6103a98989898989896101b0565b91508115156103f3576002805460408051600160a060020a039092168252602082019290925281516000805160206104c8833981519152929181900390910190a16000925061030d565b6000848155604051600160a060020a0388169187156108fc02918891818181858888f1935050505090508015156104625760025460408051600160a060020a0390921682526003602083015280516000805160206104c88339815191529281900390910190a16000925061030d565b60025460408051600160a060020a0390921682526000602083015280516000805160206104c88339815191529281900390910190a150600198975050505050505050565b600081565b600080548211156104be575060016104c2565b5060005b9190505600583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefada165627a7a7230582044e6db8b470b05696314e2d7363190a0947115d564416b7578673c882dd3c8580029`
+const ChannelWalletBin = `0x6080604052604051602080610636833981016040525160018054600160a060020a0319908116331790915560028054600160a060020a0390931692909116919091179055426000556105e0806100566000396000f3006080604052600436106100ae5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166304f55daf81146100b357806307a08237146100da5780631e2ff94f146100ef57806371cf516b14610104578063763d5ee6146101355780638da5cb5b1461017c57806394489c42146101915780639476c478146101c457806395ba60ba146101d9578063eb23b7aa146101ee578063f50b2efe14610203575b600080fd5b3480156100bf57600080fd5b506100c861021b565b60408051918252519081900360200190f35b3480156100e657600080fd5b506100c8610220565b3480156100fb57600080fd5b506100c8610225565b34801561011057600080fd5b5061011961022b565b60408051600160a060020a039092168252519081900360200190f35b34801561014157600080fd5b5061016860ff60043516602435604435600160a060020a036064351660843560a43561023a565b604080519115158252519081900360200190f35b34801561018857600080fd5b506101196103a3565b34801561019d57600080fd5b5061016860ff60043516602435604435600160a060020a036064351660843560a4356103b2565b3480156101d057600080fd5b506100c8610569565b3480156101e557600080fd5b506100c861056e565b3480156101fa57600080fd5b506100c8610573565b34801561020f57600080fd5b50610168600435610578565b600181565b600481565b60005481565b600254600160a060020a031681565b604080516c01000000000000000000000000308102602080840191909152600160a060020a038716909102603483015260488201859052606880830185905283518084039091018152608890920192839052815160009384938493909282918401908083835b602083106102bf5780518252601f1990920191602091820191016102a0565b6001836020036101000a038019825116818451168082178552505050505050905001915050604051809103902091506001828a8a8a604051600081526020016040526040518085600019166000191681526020018460ff1660ff1681526020018360001916600019168152602001826000191660001916815260200194505050505060206040516020810390808403906000865af1158015610365573d6000803e3d6000fd5b5050604051601f190151600154909250600160a060020a0380841691161490506103925760009250610397565b600192505b50509695505050505050565b600154600160a060020a031681565b60025460009081908190600160a060020a031633146103d057600080fd5b60005484116104175760025460408051600160a060020a0390921682526001602083015280516000805160206105958339815191529281900390910190a160009250610397565b3031851115610461576002805460408051600160a060020a03909216825260208201929092528151600080516020610595833981519152929181900390910190a160009250610397565b61046f89898989898961023a565b91508115156104b65760025460408051600160a060020a0390921682526003602083015280516000805160206105958339815191529281900390910190a160009250610397565b6000848155604051600160a060020a0388169187156108fc02918891818181858888f1935050505090508015156105255760025460408051600160a060020a0390921682526004602083015280516000805160206105958339815191529281900390910190a160009250610397565b60025460408051600160a060020a0390921682526000602083015280516000805160206105958339815191529281900390910190a150600198975050505050505050565b600281565b600081565b600381565b6000805482111561058b5750600161058f565b5060005b9190505600583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefada165627a7a72305820d0752bed25f2367a2ecab922642c1337390bb291ca969a48cdbd2af85d06dc5f0029`
 
 // DeployChannelWallet deploys a new Ethereum contract, binding an instance of ChannelWallet to it.
 func DeployChannelWallet(auth *bind.TransactOpts, backend bind.ContractBackend, _guarantor common.Address) (common.Address, *types.Transaction, *ChannelWallet, error) {
@@ -520,6 +396,58 @@ func (_ChannelWallet *ChannelWalletCallerSession) CurrentTimestamp() (*big.Int, 
 	return _ChannelWallet.Contract.CurrentTimestamp(&_ChannelWallet.CallOpts)
 }
 
+// ExecStatusBalanceFail is a free data retrieval call binding the contract method 0x9476c478.
+//
+// Solidity: function execStatusBalanceFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCaller) ExecStatusBalanceFail(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _ChannelWallet.contract.Call(opts, out, "execStatusBalanceFail")
+	return *ret0, err
+}
+
+// ExecStatusBalanceFail is a free data retrieval call binding the contract method 0x9476c478.
+//
+// Solidity: function execStatusBalanceFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletSession) ExecStatusBalanceFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusBalanceFail(&_ChannelWallet.CallOpts)
+}
+
+// ExecStatusBalanceFail is a free data retrieval call binding the contract method 0x9476c478.
+//
+// Solidity: function execStatusBalanceFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCallerSession) ExecStatusBalanceFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusBalanceFail(&_ChannelWallet.CallOpts)
+}
+
+// ExecStatusNonceFail is a free data retrieval call binding the contract method 0x04f55daf.
+//
+// Solidity: function execStatusNonceFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCaller) ExecStatusNonceFail(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _ChannelWallet.contract.Call(opts, out, "execStatusNonceFail")
+	return *ret0, err
+}
+
+// ExecStatusNonceFail is a free data retrieval call binding the contract method 0x04f55daf.
+//
+// Solidity: function execStatusNonceFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletSession) ExecStatusNonceFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusNonceFail(&_ChannelWallet.CallOpts)
+}
+
+// ExecStatusNonceFail is a free data retrieval call binding the contract method 0x04f55daf.
+//
+// Solidity: function execStatusNonceFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCallerSession) ExecStatusNonceFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusNonceFail(&_ChannelWallet.CallOpts)
+}
+
 // ExecStatusOk is a free data retrieval call binding the contract method 0x95ba60ba.
 //
 // Solidity: function execStatusOk() constant returns(int256)
@@ -544,6 +472,58 @@ func (_ChannelWallet *ChannelWalletSession) ExecStatusOk() (*big.Int, error) {
 // Solidity: function execStatusOk() constant returns(int256)
 func (_ChannelWallet *ChannelWalletCallerSession) ExecStatusOk() (*big.Int, error) {
 	return _ChannelWallet.Contract.ExecStatusOk(&_ChannelWallet.CallOpts)
+}
+
+// ExecStatusSendFail is a free data retrieval call binding the contract method 0x07a08237.
+//
+// Solidity: function execStatusSendFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCaller) ExecStatusSendFail(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _ChannelWallet.contract.Call(opts, out, "execStatusSendFail")
+	return *ret0, err
+}
+
+// ExecStatusSendFail is a free data retrieval call binding the contract method 0x07a08237.
+//
+// Solidity: function execStatusSendFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletSession) ExecStatusSendFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusSendFail(&_ChannelWallet.CallOpts)
+}
+
+// ExecStatusSendFail is a free data retrieval call binding the contract method 0x07a08237.
+//
+// Solidity: function execStatusSendFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCallerSession) ExecStatusSendFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusSendFail(&_ChannelWallet.CallOpts)
+}
+
+// ExecStatusSigFail is a free data retrieval call binding the contract method 0xeb23b7aa.
+//
+// Solidity: function execStatusSigFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCaller) ExecStatusSigFail(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _ChannelWallet.contract.Call(opts, out, "execStatusSigFail")
+	return *ret0, err
+}
+
+// ExecStatusSigFail is a free data retrieval call binding the contract method 0xeb23b7aa.
+//
+// Solidity: function execStatusSigFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletSession) ExecStatusSigFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusSigFail(&_ChannelWallet.CallOpts)
+}
+
+// ExecStatusSigFail is a free data retrieval call binding the contract method 0xeb23b7aa.
+//
+// Solidity: function execStatusSigFail() constant returns(int256)
+func (_ChannelWallet *ChannelWalletCallerSession) ExecStatusSigFail() (*big.Int, error) {
+	return _ChannelWallet.Contract.ExecStatusSigFail(&_ChannelWallet.CallOpts)
 }
 
 // Guarantor is a free data retrieval call binding the contract method 0x71cf516b.

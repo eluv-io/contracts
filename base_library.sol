@@ -13,12 +13,13 @@ import "./meta_object.sol";
 /* -- Revision history --
 BaseLibrary20190221101700ML: First versioned released
 BaseLibrary20190318101300ML: Migrated to 0.4.24
+BaseLibrary20190522154000SS: Changed hash bytes32 to string
 */
 
 
 contract BaseLibrary is MetaObject, Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190318101300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190522154000SS"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
@@ -311,7 +312,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
     function findTypeByHash(bytes32 typeHash) public view returns (address) {
         for (uint i = 0; i < contentTypes.length; i++) {
             BaseContentType contentType = BaseContentType(contentTypes[i]);
-            if (contentType.objectHash() == typeHash) {
+            if (keccak256(abi.encodePacked(contentType.objectHash())) == keccak256(abi.encodePacked(typeHash))) {
                 return contentTypes[i];
             }
         }

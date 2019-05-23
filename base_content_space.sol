@@ -11,6 +11,8 @@ import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import "./user_space.sol";
+import "./node.sol";
+import "./meta_object.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -20,7 +22,8 @@ BaseContentSpace20190506153400ML: Moves dependant creation to factories, require
 BaseContentSpace20190510150900ML: Moves content creation from library to a dedicated content space factory
 */
 
-contract BaseContentSpace is Accessible, Editable, UserSpace {
+
+contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
 
     bytes32 public version ="BaseContentSpace20190510150900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -30,6 +33,8 @@ contract BaseContentSpace is Accessible, Editable, UserSpace {
     address public walletFactory;
     address public libraryFactory;
     address public contentFactory;
+
+    address public guarantor;
 
     address[] public activeNodeAddresses;
     bytes[] public activeNodeLocators;
@@ -124,6 +129,33 @@ contract BaseContentSpace is Accessible, Editable, UserSpace {
         return false;
     }
 
+    event RegisterNode(address nodeObjAddr);
+    event UnregisterNode(address nodeObjAddr);
+    mapping(address => address) public nodeMapping;
+
+    // used to create a node contract instance. should be called by the address of the node that wishes to register.
+    function registerSpaceNode() public returns (address) {
+        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
+        uint i = 0;
+        for (; i < activeNodeAddresses.length; i++) {
+            if (activeNodeAddresses[i] == msg.sender) {
+                break;
+            }
+        }
+        require(i < activeNodeAddresses.length); // node should be in active list
+        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
+        nodeMapping[msg.sender] = nodeAddr;
+        emit RegisterNode(nodeAddr);
+        return nodeAddr;
+    }
+
+    function unregisterSpaceNode() public returns (bool) {
+        require(nodeMapping[msg.sender] != 0x0);
+        address nodeAddr = nodeMapping[msg.sender];
+        delete nodeMapping[msg.sender];
+        Node(nodeAddr).kill();
+        emit UnregisterNode(nodeAddr);
+    }
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
@@ -135,8 +167,6 @@ contract BaseContentSpace is Accessible, Editable, UserSpace {
 
     constructor(string memory content_space_name) public {
         name = content_space_name;
-        //factory = new BaseFactory();
-        //BaseFactory(factory).setContentSpace();
     }
 
     function setFactory(address new_factory) public onlyOwner {
@@ -155,6 +185,9 @@ contract BaseContentSpace is Accessible, Editable, UserSpace {
         contentFactory = new_factory;
     }
 
+    function setGuarantor(address _guarantor) public onlyOwner {
+        guarantor = _guarantor;
+    }
 
     function setDescription(string memory content_space_description) public onlyOwner {
         description = content_space_description;
@@ -258,6 +291,12 @@ contract BaseFactory is Ownable {
         return newGroup;
     }
 
+    function createNode(address _owner) public returns (address) {
+        Node n = new Node(); // this sets owner to tx.origin?
+        require(n.owner() == _owner);
+        return address(n);
+    }
+
 }
 
 
@@ -278,7 +317,6 @@ contract BaseLibraryFactory is Ownable {
         userWallet.setLibraryRights(newLib, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
         return newLib;
     }
-
 }
 
 

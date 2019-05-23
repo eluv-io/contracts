@@ -5,9 +5,9 @@ import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
 import {BaseContentSpace} from "./base_content_space.sol";
-import "./accessible.sol";
-import "./base_content_space.sol";
+import {BaseContentType} from "./base_content_type.sol";
 import "./access_indexor.sol";
+import "./meta_object.sol";
 
 
 /* -- Revision history --
@@ -16,12 +16,13 @@ BaseLibrary20190318101300ML: Migrated to 0.4.24
 BaseLibrary20190506153700ML: Adds access indexing
 BaseLibrary20190510151800ML: Modified createContent to use contentspace factory
 BaseLibrary20190515103800ML: Overload canPublish to take into account EDIT privilege granted for update request and commit
+BaseLibrary20190522154000SS: Changed hash bytes32 to string
 */
 
 
-contract BaseLibrary is Accessible, Editable {
+contract BaseLibrary is MetaObject, Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190515103800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190522154000SS"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
@@ -76,93 +77,92 @@ contract BaseLibrary is Accessible, Editable {
         addressKMS = address_KMS;
     }
 
-    function addContributorGroup(address group) public onlyOwner {
-        if (contributorGroupsLength < contributorGroups.length) {
-            contributorGroups[contributorGroupsLength] = group;
-        } else {
-            contributorGroups.push(group);
+    function addToGroupList(address _addGroup, address[] storage _groupList) internal returns (uint256) {
+        for (uint i = 0; i < _groupList.length; i++) {
+            if (_addGroup == _groupList[i]) {
+                return _groupList.length;
+            }
         }
-        contributorGroupsLength = contributorGroupsLength + 1;
-        emit ContributorGroupAdded(group);
-        AccessIndexor accessIndex = AccessIndexor(group);
-        accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
+        _groupList.push(_addGroup);
+        return _groupList.length;
+    }
+
+    function removeFromGroupList(address _removeGroup, address[] storage _groupList) internal returns (uint256) {
+        for (uint i = 0; i < _groupList.length; i++) {
+            if (_removeGroup == _groupList[i]) {
+                delete _groupList[i];
+                if (i != _groupList.length - 1) {
+                    _groupList[i] = _groupList[_groupList.length - 1];
+                }
+                _groupList.length--;
+            }
+        }
+        return _groupList.length;
+    }
+
+    function addContributorGroup(address group) public onlyOwner {
+        uint256 prevLen = contributorGroupsLength;
+        contributorGroupsLength = addToGroupList(group, contributorGroups);
+        if (contributorGroupsLength > prevLen) {
+            emit ContributorGroupAdded(group);
+            AccessIndexor accessIndex = AccessIndexor(group);
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
+        }
     }
 
     function removeContributorGroup(address group) public onlyOwner returns (bool) {
-        for (uint i = 0; i < contributorGroupsLength; i++) {
-            if (contributorGroups[i] == group) {
-                delete contributorGroups[i];
-                if (i != (contributorGroupsLength - 1)) {
-                    contributorGroups[i] = contributorGroups[contributorGroupsLength - 1];
-                    delete contributorGroups[contributorGroupsLength - 1];
-                }
-                contributorGroupsLength--;
-                emit ContributorGroupRemoved(group);
-                AccessIndexor accessIndex = AccessIndexor(group);
-                accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
-                return true;
-            }
+        uint256 prevLen = contributorGroupsLength;
+        contributorGroupsLength = removeFromGroupList(group, contributorGroups);
+        if (contributorGroupsLength < prevLen) {
+            emit ContributorGroupRemoved(group);
+	    AccessIndexor accessIndex = AccessIndexor(group);
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+            return true;
         }
         return false;
     }
 
     function addReviewerGroup(address group) public onlyOwner {
-        if (reviewerGroupsLength < reviewerGroups.length) {
-            reviewerGroups[reviewerGroupsLength] = group;
-        } else {
-            reviewerGroups.push(group);
+        uint256 prevLen = reviewerGroupsLength;
+        reviewerGroupsLength = addToGroupList(group, reviewerGroups);
+        if (reviewerGroupsLength > prevLen) {
+            emit ReviewerGroupAdded(group);
+            AccessIndexor accessIndex = AccessIndexor(group);
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
         }
-        reviewerGroupsLength = reviewerGroupsLength + 1;
-        emit ReviewerGroupAdded(group);
-        AccessIndexor accessIndex = AccessIndexor(group);
-        accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
     }
 
     function removeReviewerGroup(address group) public onlyOwner returns (bool) {
-        for (uint i = 0; i < reviewerGroupsLength; i++) {
-            if (reviewerGroups[i] == group) {
-                delete reviewerGroups[i];
-                if (i != (reviewerGroupsLength - 1)) {
-                    reviewerGroups[i] = reviewerGroups[reviewerGroupsLength - 1];
-                    delete reviewerGroups[reviewerGroupsLength - 1];
-                }
-                reviewerGroupsLength--;
-                emit ReviewerGroupRemoved(group);
-                return true;
-                //AccessIndexor accessIndex = AccessIndexor(group);
-                //accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
-            }
+        uint256 prevLen = reviewerGroupsLength;
+        reviewerGroupsLength = removeFromGroupList(group, reviewerGroups);
+        if (reviewerGroupsLength < prevLen) {
+            emit ReviewerGroupRemoved(group);
+            //AccessIndexor accessIndex = AccessIndexor(group);
+            //accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
+            return true;
         }
         return false;
 
     }
 
     function addAccessorGroup(address group) public onlyOwner {
-        if (accessorGroupsLength < accessorGroups.length) {
-            accessorGroups[accessorGroupsLength] = group;
-        } else {
-            accessorGroups.push(group);
+        uint256 prevLen = accessorGroupsLength;
+        accessorGroupsLength = addToGroupList(group, accessorGroups);
+        if (accessorGroupsLength > prevLen) {
+            emit AccessorGroupAdded(group);
+            AccessIndexor accessIndex = AccessIndexor(group);
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
         }
-        accessorGroupsLength = accessorGroupsLength + 1;
-        emit AccessorGroupAdded(group);
-        AccessIndexor accessIndex = AccessIndexor(group);
-        accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
     }
 
     function removeAccessorGroup(address group) public onlyOwner returns (bool) {
-        for (uint i = 0; i < accessorGroupsLength; i++) {
-            if (accessorGroups[i] == group) {
-                delete accessorGroups[i];
-                if (i != (accessorGroupsLength - 1)) {
-                    accessorGroups[i] = accessorGroups[accessorGroupsLength - 1];
-                    delete accessorGroups[accessorGroupsLength - 1];
-                }
-                accessorGroupsLength--;
-                emit AccessorGroupRemoved(group);
-                return true;
-                AccessIndexor accessIndex = AccessIndexor(group);
-                accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
-            }
+        uint256 prevLen = accessorGroupsLength;
+        accessorGroupsLength = removeFromGroupList(group, accessorGroups);
+        if (accessorGroupsLength < prevLen) {
+            emit AccessorGroupRemoved(group);
+            AccessIndexor accessIndex = AccessIndexor(group);
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
+            return true;
         }
         return false;
     }
@@ -198,66 +198,40 @@ contract BaseLibrary is Accessible, Editable {
         return false;
     }
 
+    function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
+        for (uint i = 0; i < _groupList.length; i++) {
+            if (_groupList[i] != 0x0) {
+                BaseAccessControlGroup groupContract = BaseAccessControlGroup(_groupList[i]);
+                if (groupContract.hasAccess(_candidate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Current implementation ignores rights provided directly to individual
-    function hasAccess(address candidate) public constant returns (bool) {
+    function hasAccess(address _candidate) public constant returns (bool) {
         if (accessorGroupsLength == 0) {
             return true;
         }
-        address group;
-        bool groupAccess;
-        BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < accessorGroupsLength; i++) {
-            group = accessorGroups[i];
-            if (group != 0x0) {
-                groupContract = BaseAccessControlGroup(group);
-                groupAccess = groupContract.hasAccess(candidate);
-                if (groupAccess == true) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return hasGroupAccess(_candidate, accessorGroups);
     }
 
     // Current implementation ignores rights provided directly to individual
-    function canContribute(address candidate) public constant returns (bool) {
+    function canContribute(address _candidate) public constant returns (bool) {
         if (contributorGroupsLength == 0) {
             return true;
         }
-        address group;
-        bool groupAccess;
-        BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < contributorGroupsLength; i++) {
-            group = contributorGroups[i];
-            if (group != 0x0) {
-                groupContract = BaseAccessControlGroup(group);
-                groupAccess = groupContract.hasAccess(candidate);
-                if (groupAccess == true) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return hasGroupAccess(_candidate, contributorGroups);
     }
 
-    function canReview(address candidate) public constant returns (bool) {
-        if (candidate == owner) {
+    // Current implementation ignores rights provided directly to individual
+    function canReview(address _candidate) public constant returns (bool) {
+        if (_candidate == owner) {
             return true;
         }
-        address group;
-        bool groupAccess;
-        BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < reviewerGroupsLength; i++) {
-            group = reviewerGroups[i];
-            if (group != 0x0) {
-                groupContract = BaseAccessControlGroup(group);
-                groupAccess = groupContract.hasAccess(candidate);
-                if (groupAccess == true) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return hasGroupAccess(_candidate, reviewerGroups);
     }
 
     // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
@@ -349,27 +323,6 @@ contract BaseLibrary is Accessible, Editable {
         return isValidType;
     }
 
-    /*
-    function createContent(address content_type) public  returns (address) {
-        require(canContribute(tx.origin)); //check if sender has contributor access
-        if (contentTypesLength != 0) {
-            require(validType(content_type));
-        }
-        BaseContent content = new BaseContent(content_type);
-        content.setAddressKMS(addressKMS);
-        content.setContentContractAddress(contentTypeContracts[content_type]);
-        emit ContentObjectCreated(address(content), content_type);
-
-        //register object in user wallet
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.getAccessWallet();
-        AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setContentObjectRights(address(content), userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
-
-        return address(content);
-    }
-    */
-
     function createContent(address content_type) public  returns (address) {
         address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type);
@@ -381,7 +334,6 @@ contract BaseLibrary is Accessible, Editable {
         emit AccessRequest();
         return true;
     }
-
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
@@ -399,6 +351,14 @@ contract BaseLibrary is Accessible, Editable {
         indexor.setLibraryRights(address(this), access_type, access);
     }
 
-
+    function findTypeByHash(bytes32 typeHash) public view returns (address) {
+        for (uint i = 0; i < contentTypes.length; i++) {
+            BaseContentType contentType = BaseContentType(contentTypes[i]);
+            if (keccak256(abi.encodePacked(contentType.objectHash())) == keccak256(abi.encodePacked(typeHash))) {
+                return contentTypes[i];
+            }
+        }
+        return 0x0;
+    }
 }
 

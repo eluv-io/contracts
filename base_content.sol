@@ -12,11 +12,13 @@ BaseContent20190301121900ML: Adds support for getAccessInfo, to replace getAcces
 BaseContent20190315175100ML: Migrated to 0.4.24
 BaseContent20190321122100ML: accessRequest returns requestID, removed ml_hash from access_complete event
 BaseContent20190510151500ML: creation via ContentSpace factory, modified getAccessInfo API
+BaseContent20190522154000SS: Changed hash bytes32 to string
 */
 
 
 contract BaseContent is Editable {
-    bytes32 public version ="BaseContent20190510151500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
+    bytes32 public version ="BaseContent20190522154000SS"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -53,7 +55,7 @@ contract BaseContent is Editable {
     event AccessRequest(
         uint256 requestID,
         uint8 level,
-        bytes32 contentHash,
+        string contentHash,
         string pkeRequestor,
         string pkeAFGH
     );
@@ -68,7 +70,7 @@ contract BaseContent is Editable {
     event GetAccessCharge(uint8 level, uint256 accessCharge);
     event InsufficientFunds(uint256 accessCharge, uint256 amountProvided);
     event SetStatusCode(int statusCode);
-    event Publish(bool requestStatus, int statusCode, bytes32 objectHash);
+    event Publish(bool requestStatus, int statusCode, string objectHash);
 
     // Debug events
     event InvokeCustomPreHook(address custom_contract);
@@ -339,16 +341,20 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
-    bytes32[] public versionHashes;
-    bytes32 pendingHash;
+    string[] public versionHashes;
+    string pendingHash;
 
-    event CommitPending(bytes32 objectHash);
+    function countVersionHashes() public view returns (uint256) {
+        return versionHashes.length;
+    }
+
+    event CommitPending(string objectHash);
 
     //    function commit(bytes32 object_hash) public onlyOwner {
 //        objectHash = object_hash;
 //        emit Commit(objectHash);
 //    }
-    function commit(bytes32 _objectHash) public onlyOwner {
+    function commit(string _objectHash) public onlyOwner {
         // TODO: what to do if there already *is* a pendingHash?
         pendingHash = _objectHash;
         emit CommitPending(pendingHash);
@@ -367,7 +373,7 @@ contract BaseContent is Editable {
 
         // TODO: hmmmm... this doesn't quite make sense WRT current code ...
         //require(pendingHash != ""); //ML: commented for now, as commit is typically not called in current code base
-        if (objectHash != "") {
+        if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
         }
         super.commit(pendingHash);
@@ -595,6 +601,5 @@ contract BaseContent is Editable {
         AccessIndexor indexor = AccessIndexor(group);
         indexor.setContentObjectRights(address(this), access_type, access);
     }
-
 
 }

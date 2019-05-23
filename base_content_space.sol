@@ -164,7 +164,6 @@ contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
     event SetFactory(address factory);
     event CreateAccessWallet(address wallet);
 
-
     constructor(string memory content_space_name) public {
         name = content_space_name;
     }
@@ -273,7 +272,7 @@ contract BaseFactory is Ownable {
 
     function createContentType() public returns (address) {
         address newType = (new BaseContentType(msg.sender));
-        //register library in user wallet
+        // register library in user wallet
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
@@ -283,7 +282,7 @@ contract BaseFactory is Ownable {
 
     function createGroup() public returns (address) {
         address newGroup = (new BaseAccessControlGroup(msg.sender));
-        //register library in user wallet
+        // register library in user wallet
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
@@ -296,7 +295,6 @@ contract BaseFactory is Ownable {
         require(n.owner() == _owner);
         return address(n);
     }
-
 }
 
 
@@ -310,7 +308,7 @@ contract BaseLibraryFactory is Ownable {
 
     function createLibrary(address address_KMS) public returns (address) {
         address newLib = (new BaseLibrary(address_KMS, msg.sender));
-        //register library in user wallet
+        // register library in user wallet
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
@@ -338,7 +336,7 @@ contract BaseContentFactory is Ownable {
         content.setAddressKMS(libraryObj.addressKMS());
         content.setContentContractAddress(libraryObj.contentTypeContracts(content_type));
 
-        //register object in user wallet
+        // register object in user wallet
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         AccessIndexor userWallet = AccessIndexor(walletAddress);
@@ -346,5 +344,4 @@ contract BaseContentFactory is Ownable {
 
         return address(content);
     }
-
 }

@@ -15,14 +15,15 @@ BaseLibrary20190221101700ML: First versioned released
 BaseLibrary20190318101300ML: Migrated to 0.4.24
 BaseLibrary20190506153700ML: Adds access indexing
 BaseLibrary20190510151800ML: Modified createContent to use contentspace factory
-BaseLibrary20190515103800ML: Overload canPublish to take into account EDIT privilege granted for update request and commit
+BaseLibrary20190515103800ML: Overloads canPublish to take into account EDIT privilege granted for update request and commit
 BaseLibrary20190522154000SS: Changed hash bytes32 to string
+BaseLibrary20190523121700ML: Fixes logic of add/remove of groups to revert to compact arrays
 */
 
 
 contract BaseLibrary is MetaObject, Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190522154000SS"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190523121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
@@ -77,32 +78,37 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         addressKMS = address_KMS;
     }
 
-    function addToGroupList(address _addGroup, address[] storage _groupList) internal returns (uint256) {
-        for (uint i = 0; i < _groupList.length; i++) {
+    function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
+        for (uint256 i = 0; i < _groupListLength; i++) {
             if (_addGroup == _groupList[i]) {
-                return _groupList.length;
+                return _groupListLength;
             }
         }
-        _groupList.push(_addGroup);
-        return _groupList.length;
+        if (_groupListLength < _groupList.length) {
+            _groupList[_groupListLength] = _addGroup;
+        } else {
+            _groupList.push(_addGroup);
+        }
+        return (_groupListLength + 1);
     }
 
-    function removeFromGroupList(address _removeGroup, address[] storage _groupList) internal returns (uint256) {
-        for (uint i = 0; i < _groupList.length; i++) {
+    function removeFromGroupList(address _removeGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
+        for (uint256 i = 0; i < _groupListLength; i++) {
             if (_removeGroup == _groupList[i]) {
                 delete _groupList[i];
-                if (i != _groupList.length - 1) {
-                    _groupList[i] = _groupList[_groupList.length - 1];
+                if (i != _groupListLength - 1) {
+                    _groupList[i] = _groupList[_groupListLength - 1];
+                    delete _groupList[_groupListLength - 1];
                 }
-                _groupList.length--;
+                return (_groupListLength - 1);
             }
         }
-        return _groupList.length;
+        return _groupListLength;
     }
 
     function addContributorGroup(address group) public onlyOwner {
         uint256 prevLen = contributorGroupsLength;
-        contributorGroupsLength = addToGroupList(group, contributorGroups);
+        contributorGroupsLength = addToGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength > prevLen) {
             emit ContributorGroupAdded(group);
             AccessIndexor accessIndex = AccessIndexor(group);
@@ -112,7 +118,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
 
     function removeContributorGroup(address group) public onlyOwner returns (bool) {
         uint256 prevLen = contributorGroupsLength;
-        contributorGroupsLength = removeFromGroupList(group, contributorGroups);
+        contributorGroupsLength = removeFromGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength < prevLen) {
             emit ContributorGroupRemoved(group);
 	    AccessIndexor accessIndex = AccessIndexor(group);
@@ -124,7 +130,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
 
     function addReviewerGroup(address group) public onlyOwner {
         uint256 prevLen = reviewerGroupsLength;
-        reviewerGroupsLength = addToGroupList(group, reviewerGroups);
+        reviewerGroupsLength = addToGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength > prevLen) {
             emit ReviewerGroupAdded(group);
             AccessIndexor accessIndex = AccessIndexor(group);
@@ -134,7 +140,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
 
     function removeReviewerGroup(address group) public onlyOwner returns (bool) {
         uint256 prevLen = reviewerGroupsLength;
-        reviewerGroupsLength = removeFromGroupList(group, reviewerGroups);
+        reviewerGroupsLength = removeFromGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength < prevLen) {
             emit ReviewerGroupRemoved(group);
             //AccessIndexor accessIndex = AccessIndexor(group);
@@ -147,7 +153,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
 
     function addAccessorGroup(address group) public onlyOwner {
         uint256 prevLen = accessorGroupsLength;
-        accessorGroupsLength = addToGroupList(group, accessorGroups);
+        accessorGroupsLength = addToGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength > prevLen) {
             emit AccessorGroupAdded(group);
             AccessIndexor accessIndex = AccessIndexor(group);
@@ -157,7 +163,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
 
     function removeAccessorGroup(address group) public onlyOwner returns (bool) {
         uint256 prevLen = accessorGroupsLength;
-        accessorGroupsLength = removeFromGroupList(group, accessorGroups);
+        accessorGroupsLength = removeFromGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength < prevLen) {
             emit AccessorGroupRemoved(group);
             AccessIndexor accessIndex = AccessIndexor(group);

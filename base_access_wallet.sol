@@ -10,6 +10,8 @@ BaseAccessWallet20190506154400ML: Adds instantiation via factory, adds access in
 BaseAccessWallet20190510151100ML: Supports modified getAccessInfo API
 */
 
+// abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
+
 contract BaseAccessWallet is AccessIndexor {
     bytes32 public version = "BaseAccessWallet20190510151100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

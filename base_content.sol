@@ -341,25 +341,6 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
-    string[] public versionHashes;
-    string pendingHash;
-
-    function countVersionHashes() public view returns (uint256) {
-        return versionHashes.length;
-    }
-
-    event CommitPending(string objectHash);
-
-    //    function commit(bytes32 object_hash) public onlyOwner {
-//        objectHash = object_hash;
-//        emit Commit(objectHash);
-//    }
-    function commit(string _objectHash) public onlyOwner {
-        // TODO: what to do if there already *is* a pendingHash?
-        pendingHash = _objectHash;
-        emit CommitPending(pendingHash);
-    }
-
     function canPublish() public view returns (bool) {
         if (msg.sender == owner || msg.sender == libraryAddress) return true;
         BaseLibrary lib = BaseLibrary(libraryAddress);
@@ -367,17 +348,9 @@ contract BaseContent is Editable {
     }
 
     // TODO: why payable?
-    // function confirm() public payable onlyOwner returns (bool) {
     function publish() public payable returns (bool) {
-        require(canPublish());
 
-        // TODO: hmmmm... this doesn't quite make sense WRT current code ...
-        //require(pendingHash != ""); //ML: commented for now, as commit is typically not called in current code base
-        if (bytes(objectHash).length > 0) {
-            versionHashes.push(objectHash); // save existing version info
-        }
-        super.commit(pendingHash);
-        pendingHash = "";
+        super.publish();
 
         // Update the content contract to reflect the approval process
         updateStatus(1); //update status to in-review

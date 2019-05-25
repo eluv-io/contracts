@@ -356,15 +356,5 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         AccessIndexor indexor = AccessIndexor(group);
         indexor.setLibraryRights(address(this), access_type, access);
     }
-
-    function findTypeByHash(bytes32 typeHash) public view returns (address) {
-        for (uint i = 0; i < contentTypes.length; i++) {
-            BaseContentType contentType = BaseContentType(contentTypes[i]);
-            if (keccak256(abi.encodePacked(contentType.objectHash())) == keccak256(abi.encodePacked(typeHash))) {
-                return contentTypes[i];
-            }
-        }
-        return 0x0;
-    }
 }
 

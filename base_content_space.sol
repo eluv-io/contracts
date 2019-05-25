@@ -163,6 +163,7 @@ contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
     event CreateAccessWallet(address wallet);
+    event CreateContent(address contentAddress);
 
     constructor(string memory content_space_name) public {
         name = content_space_name;
@@ -206,6 +207,7 @@ contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
 
     function createContent(address lib, address content_type) public returns (address) {
         address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
+        emit CreateContent(contentAddress);
         return contentAddress;
     }
 

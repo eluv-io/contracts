@@ -341,25 +341,6 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
-    string[] public versionHashes;
-    string pendingHash;
-
-    function countVersionHashes() public view returns (uint256) {
-        return versionHashes.length;
-    }
-
-    event CommitPending(string objectHash);
-
-    //    function commit(bytes32 object_hash) public onlyOwner {
-//        objectHash = object_hash;
-//        emit Commit(objectHash);
-//    }
-    function commit(string _objectHash) public onlyOwner {
-        // TODO: what to do if there already *is* a pendingHash?
-        pendingHash = _objectHash;
-        emit CommitPending(pendingHash);
-    }
-
     function canPublish() public view returns (bool) {
         if (msg.sender == owner || msg.sender == libraryAddress) return true;
         Container lib = Container(libraryAddress);
@@ -367,27 +348,8 @@ contract BaseContent is Editable {
     }
 
     // TODO: why payable?
-    // function confirm() public payable onlyOwner returns (bool) {
     function publish() public payable returns (bool) {
-        require(canPublish());
-
-        // TODO: hmmmm... this doesn't quite make sense WRT current code ...
-        //require(pendingHash != ""); //ML: commented for now, as commit is typically not called in current code base
-        if (bytes(objectHash).length > 0) {
-            versionHashes.push(objectHash); // save existing version info
-        }
-        super.commit(pendingHash);
-        pendingHash = "";
-/* BEFORE modification to accommodate generic container
-        // Update the content contract to reflect the approval process
-        updateStatus(1); //update status to in-review
-        // mark with statusCode 1, which is the default for in-review - NOTE: could be change to be (currentStatus * -1)
-        bool submitStatus = false;
-        if (statusCode > 0) {
-            BaseLibrary lib = BaseLibrary(libraryAddress);
-            submitStatus = lib.submitApprovalRequest();
-        }
-*/
+        super.publish();
         bool submitStatus = Container(libraryAddress).publish(address(this));
         // Log event
         emit Publish(submitStatus, statusCode, objectHash); // TODO: confirm?

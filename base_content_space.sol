@@ -39,13 +39,21 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     address public guarantor;
 
+    mapping(address => address) public nodeMapping;
+
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
     event CreateGroup(address groupAddress);
+    event CreateContent(address contentAddress);
+    event CreateAccessWallet(address wallet);
+
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
-    event CreateAccessWallet(address wallet);
+
+    event RegisterNode(address nodeObjAddr);
+    event UnregisterNode(address nodeObjAddr);
+
 
     constructor(string memory content_space_name) public {
         name = content_space_name;
@@ -101,6 +109,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         emit UnregisterNode(nodeAddr);
     }
 
+
     function createContentType() public returns (address) {
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
@@ -115,6 +124,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     function createContent(address lib, address content_type) public returns (address) {
         address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
+        emit CreateContent(contentAddress);
         return contentAddress;
     }
 

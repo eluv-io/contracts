@@ -307,7 +307,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         indexor.setLibraryRights(address(this), access_type, access);
     }
 
-
     function publish(address contentObj) public returns (bool) {
         require(msg.sender == contentObj);
         BaseContent content = BaseContent(contentObj);

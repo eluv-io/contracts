@@ -111,9 +111,7 @@ contract NodeSpace is Ownable {
         return false;
     }
 
-    event RegisterNode(address nodeObjAddr);
-    event UnregisterNode(address nodeObjAddr);
-    mapping(address => address) public nodeMapping;
+
 
 
 

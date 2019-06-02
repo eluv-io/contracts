@@ -18,7 +18,7 @@ BaseContentType20190528194000ML: Removes contentSpace is field as it is now inhe
 
 contract BaseContentType is Accessible, Editable {
 
-    bytes32 public version ="BaseContentType20190528194000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20190602093600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
@@ -28,7 +28,12 @@ contract BaseContentType is Accessible, Editable {
         if ((tx.origin == owner) || (msg.sender == owner)) {
             return true;
         }
-        address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
+
+        BaseContentSpace spc = BaseContentSpace(contentSpace);
+        bool nodePublish = spc.canNodePublish(msg.sender);
+        if (nodePublish) return true;
+
+        address userWallet = spc.userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT()) == true) {

@@ -15,6 +15,7 @@ import "./user_space.sol";
 import "./node_space.sol";
 import "./node.sol";
 import "./meta_object.sol";
+import "./transactable.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -41,6 +42,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     mapping(address => address) public nodeMapping;
 
+    mapping(address => bytes[]) public kmsMapping;
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
@@ -189,7 +191,60 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
     */
 
+    function checkKMS(address _kmsAddr) public view returns (bool) {
+        return kmsMapping[_kmsAddr].length > 0;
+    }
 
+    // KMS mappings
+    // mapping(address => string[]) public kmsMapping;
+    function addKMSLocator(address _kmsAddr, bytes _locator) public onlyOwner returns (bool) {
+        bytes[] memory kmsLocators = kmsMapping[_kmsAddr];
+        for (uint i = 0; i < kmsLocators.length; i++) {
+            if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
+                return false;
+            }
+        }
+        kmsMapping[_kmsAddr].push(_locator);
+        return true;
+    }
+
+    function removeKMSLocator(address _kmsAddr, bytes _locator) public onlyOwner returns (bool) {
+        bytes[] memory kmsLocators = kmsMapping[_kmsAddr];
+        for (uint i = 0; i < kmsLocators.length; i++) {
+            if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
+                if (i != kmsLocators.length - 1) {
+                    kmsMapping[_kmsAddr][i] = kmsLocators[kmsLocators.length - 1];
+                }
+                delete kmsMapping[_kmsAddr][kmsLocators.length - 1];
+                kmsMapping[_kmsAddr].length -= 1;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public {
+
+        require(msg.sender == owner || checkKMS(msg.sender));
+
+        // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly, which is the same as a revert...?
+        require(_v.length == _r.length);
+        require(_r.length == _s.length);
+        require(_s.length == _from.length);
+        require(_from.length == _dest.length);
+        require(_dest.length == _value.length);
+        require(_value.length == _ts.length);
+
+        for (uint i = 0; i < _v.length; i++) {
+            Transactable t = Transactable(_from[i]);
+            bool success = t.execute(msg.sender, _v[i], _r[i], _s[i], _dest[i], _value[i], _ts[i]);
+
+            if (!success) {
+                // we failed to get the target wallet to pay so - in this scenario - we have to pay!
+                // _dest[i].send(_value[i]); // TODO: transfer? error handling?
+            }
+        }
+    }
 }
 
 /* -- Revision history --

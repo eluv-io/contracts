@@ -38,8 +38,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     address public libraryFactory;
     address public contentFactory;
 
-    address public guarantor;
-
     mapping(address => address) public nodeMapping;
 
     mapping(address => bytes[]) public kmsMapping;
@@ -76,10 +74,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     function setContentFactory(address new_factory) public onlyOwner {
         contentFactory = new_factory;
-    }
-
-    function setGuarantor(address _guarantor) public onlyOwner {
-        guarantor = _guarantor;
     }
 
     function setDescription(string memory content_space_description) public onlyOwner {

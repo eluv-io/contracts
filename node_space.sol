@@ -92,7 +92,7 @@ contract NodeSpace is Ownable {
         require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, _nodeAddr, _locator));
         activeNodeAddresses.push(_nodeAddr);
         activeNodeLocators.push(_locator);
-        emit NodeAdded(msg.sender, _nodeAddr, _locator);
+        emit NodeAdded(msg.sender, _nodeAddr);
     }
 
     // direct method for owner to remove node(s)

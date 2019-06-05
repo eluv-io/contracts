@@ -41,6 +41,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     mapping(address => address) public nodeMapping;
 
     mapping(address => bytes[]) public kmsMapping;
+    mapping(address => string) public kmsPublicKeys;
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
@@ -185,8 +186,13 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
     */
 
-    function checkKMS(address _kmsAddr) public view returns (bool) {
-        return kmsMapping[_kmsAddr].length > 0;
+    function checkKMS(address _kmsAddr) public view returns (uint) {
+        return kmsMapping[_kmsAddr].length;
+    }
+
+    // can be used to add or remove - i.e. set to ""
+    function setKMSPublicKey(address _kmsAddr, string _pubKey) public onlyOwner {
+        kmsPublicKeys[_kmsAddr] = _pubKey;
     }
 
     // KMS mappings
@@ -219,7 +225,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public {
 
-        require(msg.sender == owner || checkKMS(msg.sender));
+        require(msg.sender == owner || checkKMS(msg.sender) > 0);
 
         // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly, which is the same as a revert...?
         require(_v.length == _r.length);

@@ -55,6 +55,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event RegisterNode(address nodeObjAddr);
     event UnregisterNode(address nodeObjAddr);
 
+    event AddKMSLocator(address sender,uint status);
+    event RemoveKMSLocator(address sender, uint status);
 
     constructor(string memory content_space_name) public {
         name = content_space_name;
@@ -204,20 +206,27 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return (locators[0], locators[1], locators[2], publicKey);
     }
 
+
     // KMS mappings
     // mapping(address => string[]) public kmsMapping;
+    // status -> 0 added
+    // status -> 1 not added
     function addKMSLocator(address _kmsAddr, bytes _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsAddr];
         require(kmsLocators.length < 3);
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
+                emit AddKMSLocator(msg.sender, 1);
                 return false;
             }
         }
         kmsMapping[_kmsAddr].push(_locator);
+        emit AddKMSLocator(msg.sender, 1);
         return true;
     }
 
+    // status -> 0 removed
+    // status -> 1 not removed
     function removeKMSLocator(address _kmsAddr, bytes _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsAddr];
         for (uint i = 0; i < kmsLocators.length; i++) {
@@ -227,9 +236,11 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
                 }
                 delete kmsMapping[_kmsAddr][kmsLocators.length - 1];
                 kmsMapping[_kmsAddr].length -= 1;
+                emit RemoveKMSLocator(msg.sender,0);
                 return true;
             }
         }
+        emit RemoveKMSLocator(msg.sender,1);
         return false;
     }
 

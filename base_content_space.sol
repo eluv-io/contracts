@@ -195,9 +195,12 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         kmsPublicKeys[_kmsAddr] = _pubKey;
     }
 
-    function getKMSInfo(address kmsAddr) public view returns (bytes, bytes, bytes, string) {
-        bytes[] memory locators = kmsMapping[kmsAddr];
-        string memory publicKey = kmsPublicKeys[kmsAddr];
+    function getKMSInfo(address _kmsAddr) public view returns (bytes, bytes, bytes, string) {
+        bytes[] memory locators = kmsMapping[_kmsAddr];
+        string memory publicKey = kmsPublicKeys[_kmsAddr];
+        if (locators.length == 0) return ("", "", "", publicKey);
+        if (locators.length == 1) return (locators[0], "", "", publicKey);
+        if (locators.length == 2) return (locators[0], locators[1], "", publicKey);
         return (locators[0], locators[1], locators[2], publicKey);
     }
 

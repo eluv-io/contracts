@@ -146,6 +146,20 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return createUserWallet(tx.origin);
     }
 
+    // TODO: TESTING
+    function createUserGuarantorWallet(address _user) public returns (bool) {
+        if (userWallets[_user] != 0x0) {
+            return false;
+        }
+        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
+        BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
+        // wallet.setGuarantor(msg.sender);
+        wallet.transferOwnership(_user);
+        userWallets[_user] = walletAddress;
+        emit CreateAccessWallet(walletAddress); // TODO: different event here?
+        return true;
+    }
+
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
     function createUserWallet(address user) private returns (address) {

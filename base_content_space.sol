@@ -40,8 +40,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     mapping(address => address) public nodeMapping;
 
-    mapping(address => bytes[]) public kmsMapping;
-    mapping(address => string) public kmsPublicKeys;
+    mapping(string => bytes[]) kmsMapping;
+    mapping(string => string)  kmsPublicKeys;
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
@@ -82,7 +82,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     function setDescription(string memory content_space_description) public onlyOwner {
         description = content_space_description;
     }
-
+    
 
     // used to create a node contract instance. should be called by the address of the node that wishes to register.
     function registerSpaceNode() public returns (address) {
@@ -188,18 +188,24 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
     */
 
+    // TODO kmsAddr => kmsID
+    function getKMSID(address _kmsAddr) public view returns (string){
+        return "";
+    }
+    
     function checkKMS(address _kmsAddr) public view returns (uint) {
-        return kmsMapping[_kmsAddr].length;
+        string memory kmsID = getKMSID(_kmsAddr); 
+        return kmsMapping[kmsID].length;
     }
 
     // can be used to add or remove - i.e. set to 0x0
-    function setKMSPublicKey(address _kmsAddr, string _pubKey) public onlyOwner {
-        kmsPublicKeys[_kmsAddr] = _pubKey;
+    function setKMSPublicKey(string _kmsID, string _pubKey) public onlyOwner {
+        kmsPublicKeys[_kmsID] = _pubKey;
     }
 
-    function getKMSInfo(address _kmsAddr) public view returns (bytes, bytes, bytes, string) {
-        bytes[] memory locators = kmsMapping[_kmsAddr];
-        string memory publicKey = kmsPublicKeys[_kmsAddr];
+    function getKMSInfo(string _kmsID) public view returns (bytes, bytes, bytes, string) {
+        bytes[] memory locators = kmsMapping[_kmsID];
+        string memory publicKey = kmsPublicKeys[_kmsID];
         if (locators.length == 0) return ("", "", "", publicKey);
         if (locators.length == 1) return (locators[0], "", "", publicKey);
         if (locators.length == 2) return (locators[0], locators[1], "", publicKey);
@@ -211,8 +217,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     // mapping(address => string[]) public kmsMapping;
     // status -> 0 added
     // status -> 1 not added
-    function addKMSLocator(address _kmsAddr, bytes _locator) public onlyOwner returns (bool) {
-        bytes[] memory kmsLocators = kmsMapping[_kmsAddr];
+    function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+        bytes[] memory kmsLocators = kmsMapping[_kmsID];
         require(kmsLocators.length < 3);
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
@@ -220,22 +226,22 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
                 return false;
             }
         }
-        kmsMapping[_kmsAddr].push(_locator);
+        kmsMapping[_kmsID].push(_locator);
         emit AddKMSLocator(msg.sender, 1);
         return true;
     }
 
     // status -> 0 removed
     // status -> 1 not removed
-    function removeKMSLocator(address _kmsAddr, bytes _locator) public onlyOwner returns (bool) {
-        bytes[] memory kmsLocators = kmsMapping[_kmsAddr];
+    function removeKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+        bytes[] memory kmsLocators = kmsMapping[_kmsID];
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
                 if (i != kmsLocators.length - 1) {
-                    kmsMapping[_kmsAddr][i] = kmsLocators[kmsLocators.length - 1];
+                    kmsMapping[_kmsID][i] = kmsLocators[kmsLocators.length - 1];
                 }
-                delete kmsMapping[_kmsAddr][kmsLocators.length - 1];
-                kmsMapping[_kmsAddr].length -= 1;
+                delete kmsMapping[_kmsID][kmsLocators.length - 1];
+                kmsMapping[_kmsID].length -= 1;
                 emit RemoveKMSLocator(msg.sender,0);
                 return true;
             }

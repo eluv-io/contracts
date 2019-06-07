@@ -165,7 +165,7 @@ contract BaseContent is Editable {
         if (addressKMS == 0x0 || contentSpaceObj.checkKMS(addressKMS) == 0) {
             return ("", "", "", "");
         }
-        return contentSpaceObj.getKMSInfo(addressKMS);
+        return contentSpaceObj.getKMSInfo(contentSpaceObj.getKMSID(addressKMS));
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.

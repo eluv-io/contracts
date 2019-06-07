@@ -192,7 +192,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return kmsMapping[_kmsAddr].length;
     }
 
-    // can be used to add or remove - i.e. set to 0x0
+    // can be used to add or remove - i.e. set to ""
     function setKMSPublicKey(address _kmsAddr, string _pubKey) public onlyOwner {
         kmsPublicKeys[_kmsAddr] = _pubKey;
     }

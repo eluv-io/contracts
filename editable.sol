@@ -14,7 +14,7 @@ Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the c
 
 contract Editable is Ownable {
 
-    bytes32 public version ="Editable20190605144500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20190607105600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(string objectHash);
     event UpdateRequest(string objectHash);
@@ -44,7 +44,7 @@ contract Editable is Ownable {
         emit CommitPending(pendingHash);
     }
 
-    function confirm() public payable returns (bool) {
+    function confirmCommit() public payable returns (bool) {
         require(canConfirm());
 
         if (bytes(objectHash).length > 0) {

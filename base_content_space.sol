@@ -16,6 +16,7 @@ import "./node_space.sol";
 import "./node.sol";
 import "./meta_object.sol";
 import "./transactable.sol";
+import "./lib_precompile.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -190,7 +191,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     // TODO kmsAddr => kmsID
     function getKMSID(address _kmsAddr) public view returns (string){
-        return "";
+        return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
     }
     
     function checkKMS(address _kmsAddr) public view returns (uint) {

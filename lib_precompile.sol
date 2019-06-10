@@ -12,7 +12,7 @@ library Precompile {
         return KMS;
     }
 
-    uint constant idStrLen = 26;
+    uint constant idStrLen = 32;
 
     function makeIDString(int _code, address _addr) internal constant returns (string ret) {
 
@@ -34,14 +34,14 @@ library Precompile {
             x,          // Inputs are stored at location x
             0x28,       // Inputs are 40 bytes long
             x,          // Store output over input
-            0x40)       // Outputs are 64 bytes long
+            0x60)       // Outputs are 96 bytes long
 
             if eq(res, 0) {
                 revert(0, 0)
             }
 
             ret := x
-            mstore(0x40, add(x, 0x40))  // Set storage pointer to empty space - i.e. after returned storage
+            mstore(0x40, add(x, 0x60))  // Set storage pointer to empty space - i.e. after returned storage
         }
     }
 }

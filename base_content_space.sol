@@ -31,7 +31,7 @@ BaseContentSpace20190605144600ML: Implements canConfirm to overloads default fro
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
 
-    bytes32 public version ="BaseContentSpace20190605144600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;

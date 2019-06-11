@@ -20,7 +20,7 @@ BaseContent20190605203200ML: Split publish and confirm logic
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190605203200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;

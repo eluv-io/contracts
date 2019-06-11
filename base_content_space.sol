@@ -204,13 +204,50 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         kmsPublicKeys[_kmsID] = _pubKey;
     }
 
-    function getKMSInfo(string _kmsID) public view returns (bytes, bytes, bytes, string) {
+    function matchesPrefix(bytes input, byte[] prefix) pure internal returns (bool) {
+        uint len = prefix.length;
+        if (len > input.length) len = input.length;
+        for (uint x = 0; x < len; x++) {
+            if (input[x] != prefix[x]) return false;
+        }
+        return true;
+    }
+
+    function filterPrefix(bytes[] input, byte[] prefix) view internal returns (bytes[]) {
+        uint countMatch = 0;
+        for (uint i = 0; i < input.length; i++) {
+            if (matchesPrefix(input[i], prefix)) {
+                countMatch++;
+            }
+        }
+        bytes[] memory output = new bytes[](countMatch);
+        if (countMatch == 0) return output;
+        countMatch = 0;
+        for (i = 0; i < input.length; i++) {
+            if (matchesPrefix(input[i], prefix)) {
+                output[countMatch] = input[i];
+                countMatch++;
+            }
+        }
+        return output;
+    }
+
+    function getKMSInfo(string _kmsID, byte[] prefix) public view returns (string, string) {
         bytes[] memory locators = kmsMapping[_kmsID];
         string memory publicKey = kmsPublicKeys[_kmsID];
-        if (locators.length == 0) return ("", "", "", publicKey);
-        if (locators.length == 1) return (locators[0], "", "", publicKey);
-        if (locators.length == 2) return (locators[0], locators[1], "", publicKey);
-        return (locators[0], locators[1], locators[2], publicKey);
+
+        if (locators.length == 0) return ("", publicKey);
+        bytes[] memory filtered = filterPrefix(locators, prefix);
+
+        string memory output;
+        for (uint i = 0; i < filtered.length; i++) {
+            if (i == filtered.length -1) {
+                output = string(abi.encodePacked(output, string(filtered[i])));
+            } else {
+                output = string(abi.encodePacked(output, string(filtered[i]), ","));
+            }
+        }
+        return (output, publicKey);
     }
 
 

@@ -160,12 +160,12 @@ contract BaseContent is Editable {
         addressKMS = address_KMS;
     }
 
-    function getKMSInfo() public view returns (bytes, bytes, bytes, string) {
+    function getKMSInfo(byte[] prefix) public view returns (string, string) {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         if (addressKMS == 0x0 || contentSpaceObj.checkKMS(addressKMS) == 0) {
-            return ("", "", "", "");
+            return ("", "");
         }
-        return contentSpaceObj.getKMSInfo(contentSpaceObj.getKMSID(addressKMS));
+        return contentSpaceObj.getKMSInfo(contentSpaceObj.getKMSID(addressKMS), prefix);
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.

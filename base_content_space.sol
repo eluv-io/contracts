@@ -269,7 +269,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
             }
         }
         kmsMapping[_kmsID].push(_locator);
-        emit AddKMSLocator(msg.sender, 1);
+        emit AddKMSLocator(msg.sender, 0);
         return true;
     }
 

@@ -194,8 +194,12 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
     }
     
-    function checkKMS(address _kmsAddr) public view returns (uint) {
-        string memory kmsID = getKMSID(_kmsAddr); 
+    function checkKMS(string _kmsIdStr) public view returns (uint) {
+        return kmsMapping[_kmsIdStr].length;
+    }
+
+    function checkKMSAddr(address _kmsAddr) public view returns (uint) {
+        string memory kmsID = getKMSID(_kmsAddr);
         return kmsMapping[kmsID].length;
     }
 
@@ -290,7 +294,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public {
 
-        require(msg.sender == owner || checkKMS(msg.sender) > 0);
+        require(msg.sender == owner || checkKMSAddr(msg.sender) > 0);
 
         // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly, which is the same as a revert...?
         require(_v.length == _r.length);

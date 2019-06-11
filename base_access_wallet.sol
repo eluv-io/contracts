@@ -125,8 +125,8 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     returns (bool) {
 
         BaseContentSpace spc = BaseContentSpace(contentSpace);
-        require(msg.sender == contentSpace || spc.checkKMS(msg.sender) > 0);
-        require(spc.checkKMS(_guarantor) > 0);
+        require(msg.sender == contentSpace || spc.checkKMSAddr(msg.sender) > 0);
+        require(spc.checkKMSAddr(_guarantor) > 0);
 
         if (_ts <= currentTimestamp) {
             emit ExecStatus(_guarantor, execStatusNonceFail);

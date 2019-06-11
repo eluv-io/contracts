@@ -25,12 +25,13 @@ BaseContentSpace20190320114200ML: Adding support for user-wallet
 BaseContentSpace20190506153400ML: Moves dependant creation to factories, requires factory to be set after instantiation
 BaseContentSpace20190510150900ML: Moves content creation from library to a dedicated content space factory
 BaseContentSpace20190528193500ML: Moves node management to a parent class (NodeSpace)
+BaseContentSpace20190605144600ML: Implements canConfirm to overloads default from Editable
 */
 
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
 
-    bytes32 public version ="BaseContentSpace20190528193500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20190605144600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -83,7 +84,10 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     function setDescription(string memory content_space_description) public onlyOwner {
         description = content_space_description;
     }
-    
+
+    function canConfirm() public view returns (bool) {
+        return canNodePublish(msg.sender);
+    }
 
     // used to create a node contract instance. should be called by the address of the node that wishes to register.
     function registerSpaceNode() public returns (address) {

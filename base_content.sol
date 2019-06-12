@@ -161,7 +161,7 @@ contract BaseContent is Editable {
         addressKMS = address_KMS;
     }
 
-    function getKMSInfo(byte[] prefix) public view returns (string, string) {
+    function getKMSInfo(bytes prefix) public view returns (string, string) {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         if (addressKMS == 0x0 || contentSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");

@@ -215,7 +215,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         kmsPublicKeys[_kmsID] = _pubKey;
     }
 
-    function matchesPrefix(bytes input, byte[] prefix) pure internal returns (bool) {
+    function matchesPrefix(bytes input, bytes prefix) pure internal returns (bool) {
         uint len = prefix.length;
         if (len > input.length) len = input.length;
         for (uint x = 0; x < len; x++) {
@@ -224,7 +224,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return true;
     }
 
-    function filterPrefix(bytes[] input, byte[] prefix) view internal returns (bytes[]) {
+    function filterPrefix(bytes[] input, bytes prefix) view internal returns (bytes[]) {
         uint countMatch = 0;
         for (uint i = 0; i < input.length; i++) {
             if (matchesPrefix(input[i], prefix)) {
@@ -243,7 +243,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return output;
     }
 
-    function getKMSInfo(string _kmsID, byte[] prefix) public view returns (string, string) {
+    function getKMSInfo(string _kmsID, bytes prefix) public view returns (string, string) {
         bytes[] memory locators = kmsMapping[_kmsID];
         string memory publicKey = kmsPublicKeys[_kmsID];
 

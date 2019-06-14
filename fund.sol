@@ -14,9 +14,9 @@ contract ElvFund is Ownable {
     uint256 constant oneKToken = 1000000000000000000000;
     uint256 constant twoKToken = 2000000000000000000000;
     uint256 constant fiveKToken = 5000000000000000000000;
-    uint256 constant oneHours = 1 hours;
-    uint256 constant twoHours = 2 hours;
-    uint256 constant fiveHours = 5 hours;
+    uint256 constant oneHours = 1 minutes;
+    uint256 constant twoHours = 2 minutes;
+    uint256 constant fiveHours = 5 minutes;
     
     string public faucetName;
     bool public faucetStatus;
@@ -41,42 +41,43 @@ contract ElvFund is Ownable {
 
     // withdrawal - sends "_withdraw_amount" wei to caller of this function
     // checks if the faucet has sufficient balance.
-    function withdrawal(uint _withdraw_amount) internal {
+    function withdrawal(address _to, uint _withdraw_amount) internal {
         require(address(this).balance >= _withdraw_amount,
             "Insufficient balance in faucet for withdrawal request");
-
-        msg.sender.transfer(_withdraw_amount);
+        _to.transfer(_withdraw_amount);
         emit Withdrawal(msg.sender, _withdraw_amount);
     }
 
+// TODO as of now any one can give the _to address, should it be restricted to onlyOwner??
+
     // drip1000Token - sends 1000 ether to the caller 
     // with time lock of 1 hour
-    function drip1000Token() public faucetOn() {
-        require(checkStatus(msg.sender));
-        withdrawal(oneKToken);
-        updateStatus(msg.sender, oneHours);
+    function drip1000Token(address _to) public faucetOn() {
+        require(checkStatus(_to));
+        withdrawal(_to, oneKToken);
+        updateStatus(_to, oneHours);
 
-        emit OneKTokenSent(msg.sender);
+        emit OneKTokenSent(_to);
     }
 
     // drip2000Token - sends 2000 ether to the caller 
     // with time lock of 2 hours
-    function drip2000Token() public faucetOn(){
-        require(checkStatus(msg.sender));
-        withdrawal(twoKToken);
-        updateStatus(msg.sender, twoHours);
+    function drip2000Token(address _to) public faucetOn(){
+        require(checkStatus(_to));
+        withdrawal(_to, twoKToken);
+        updateStatus(_to, twoHours);
 
-        emit TwoKTokenSent(msg.sender);
+        emit TwoKTokenSent(_to);
     }
 
     // drip5000Token - sends 5000 ether to the caller 
     // with time lock of 5 hours
-    function drip5000Token() public faucetOn(){
-        require(checkStatus(msg.sender));
-        withdrawal(fiveKToken);
-        updateStatus(msg.sender, fiveHours);
+    function drip5000Token(address _to) public faucetOn(){
+        require(checkStatus(_to));
+        withdrawal(_to, fiveKToken);
+        updateStatus(_to, fiveHours);
 
-        emit FiveKTokenSent(msg.sender);
+        emit FiveKTokenSent(_to);
     }
 
     // get balance of the faucet

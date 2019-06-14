@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 
-contract ElvFund is Ownable {
+contract Faucet is Ownable {
 
     event Withdrawal(address to, uint amount);
     event OneKTokenSent(address receiver);

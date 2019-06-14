@@ -14,9 +14,9 @@ contract Faucet is Ownable {
     uint256 constant oneKToken = 1000000000000000000000;
     uint256 constant twoKToken = 2000000000000000000000;
     uint256 constant fiveKToken = 5000000000000000000000;
-    uint256 constant oneHours = 1 minutes;
-    uint256 constant twoHours = 2 minutes;
-    uint256 constant fiveHours = 5 minutes;
+    uint256 constant oneHours = 1 hours;
+    uint256 constant twoHours = 2 hours;
+    uint256 constant fiveHours = 5 hours;
     
     string public faucetName;
     bool public faucetStatus;

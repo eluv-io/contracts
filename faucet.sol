@@ -41,10 +41,10 @@ contract Faucet is Ownable {
 
     // withdrawal - sends "_withdraw_amount" wei to caller of this function
     // checks if the faucet has sufficient balance.
-    function withdrawal(address _to, uint _withdraw_amount) internal {
+    function withdrawal(uint _withdraw_amount) internal {
         require(address(this).balance >= _withdraw_amount,
             "Insufficient balance in faucet for withdrawal request");
-        _to.transfer(_withdraw_amount);
+        msg.sender.transfer(_withdraw_amount);
         emit Withdrawal(msg.sender, _withdraw_amount);
     }
 
@@ -52,32 +52,32 @@ contract Faucet is Ownable {
 
     // drip1000Token - sends 1000 ether to the caller 
     // with time lock of 1 hour
-    function drip1000Token(address _to) public faucetOn() {
-        require(checkStatus(_to));
-        withdrawal(_to, oneKToken);
-        updateStatus(_to, oneHours);
+    function drip1000Token() public faucetOn() {
+        require(checkStatus(msg.sender));
+        withdrawal(oneKToken);
+        updateStatus(msg.sender, oneHours);
 
-        emit OneKTokenSent(_to);
+        emit OneKTokenSent(msg.sender);
     }
 
     // drip2000Token - sends 2000 ether to the caller 
     // with time lock of 2 hours
-    function drip2000Token(address _to) public faucetOn(){
-        require(checkStatus(_to));
-        withdrawal(_to, twoKToken);
-        updateStatus(_to, twoHours);
+    function drip2000Token() public faucetOn(){
+        require(checkStatus(msg.sender));
+        withdrawal(twoKToken);
+        updateStatus(msg.sender, twoHours);
 
-        emit TwoKTokenSent(_to);
+        emit TwoKTokenSent(msg.sender);
     }
 
     // drip5000Token - sends 5000 ether to the caller 
     // with time lock of 5 hours
-    function drip5000Token(address _to) public faucetOn(){
-        require(checkStatus(_to));
-        withdrawal(_to, fiveKToken);
-        updateStatus(_to, fiveHours);
+    function drip5000Token() public faucetOn(){
+        require(checkStatus(msg.sender));
+        withdrawal(fiveKToken);
+        updateStatus(msg.sender, fiveHours);
 
-        emit FiveKTokenSent(_to);
+        emit FiveKTokenSent(msg.sender);
     }
 
     // get balance of the faucet

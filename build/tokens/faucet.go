@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package tokens
+package contracts
 
 import (
 	"math/big"
@@ -28,10 +28,10 @@ var (
 )
 
 // FaucetABI is the input ABI used to generate the binding from.
-const FaucetABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"}],\"name\":\"drip1000Token\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"creator\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"faucetStatus\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"faucetName\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"kill\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"}],\"name\":\"drip2000Token\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newCreator\",\"type\":\"address\"}],\"name\":\"transferCreatorship\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"contentSpace\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"turnFaucetOff\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"}],\"name\":\"drip5000Token\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"turnFaucetOn\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_faucetName\",\"type\":\"string\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"receiver\",\"type\":\"address\"}],\"name\":\"OneKTokenSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"receiver\",\"type\":\"address\"}],\"name\":\"TwoKTokenSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"receiver\",\"type\":\"address\"}],\"name\":\"FiveKTokenSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"status\",\"type\":\"bool\"}],\"name\":\"FaucetOn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"status\",\"type\":\"bool\"}],\"name\":\"FaucetOff\",\"type\":\"event\"}]"
+const FaucetABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"creator\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"faucetStatus\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"faucetName\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"kill\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"drip2000Token\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newCreator\",\"type\":\"address\"}],\"name\":\"transferCreatorship\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"drip5000Token\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"contentSpace\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"turnFaucetOff\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"drip1000Token\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"turnFaucetOn\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_faucetName\",\"type\":\"string\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"receiver\",\"type\":\"address\"}],\"name\":\"OneKTokenSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"receiver\",\"type\":\"address\"}],\"name\":\"TwoKTokenSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"receiver\",\"type\":\"address\"}],\"name\":\"FiveKTokenSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"status\",\"type\":\"bool\"}],\"name\":\"FaucetOn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"status\",\"type\":\"bool\"}],\"name\":\"FaucetOff\",\"type\":\"event\"}]"
 
 // FaucetBin is the compiled bytecode used for deploying new contracts.
-const FaucetBin = `0x608060408190527f4f776e61626c6532303139303532383139333830304d4c000000000000000000600055610a8e388190039081908339810160405280516001805432600160a060020a031991821681179092556002805490911690911790550180516100739060049060208401906100c2565b506005805460ff1916600117908190556040805160ff9290921615158252517fd2a3a2d721c242e2bb5894f541c2a05972d28379a5ae20423a5419a42da3bf639181900360200190a15061015d565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061010357805160ff1916838001178555610130565b82800160010185558215610130579182015b82811115610130578251825591602001919060010190610115565b5061013c929150610140565b5090565b61015a91905b8082111561013c5760008155600101610146565b90565b6109228061016c6000396000f3006080604052600436106100da5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166301b8eb6081146100dc57806302d05d3f146100fd5780630dfec7961461012e57806312065fe014610157578063400207071461017e57806341c0e1b51461020857806354fd4d501461021d57806359a24294146102325780636d2e4b1b146102535780638da5cb5b14610274578063af570c0414610289578063b412506b1461029e578063cc230322146102b3578063ee8734d0146102d4578063f2fde38b146102e9575b005b3480156100e857600080fd5b506100da600160a060020a036004351661030a565b34801561010957600080fd5b5061011261038d565b60408051600160a060020a039092168252519081900360200190f35b34801561013a57600080fd5b5061014361039c565b604080519115158252519081900360200190f35b34801561016357600080fd5b5061016c6103a5565b60408051918252519081900360200190f35b34801561018a57600080fd5b506101936103aa565b6040805160208082528351818301528351919283929083019185019080838360005b838110156101cd5781810151838201526020016101b5565b50505050905090810190601f1680156101fa5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561021457600080fd5b506100da610438565b34801561022957600080fd5b5061016c610474565b34801561023e57600080fd5b506100da600160a060020a036004351661047a565b34801561025f57600080fd5b506100da600160a060020a03600435166104fc565b34801561028057600080fd5b50610112610557565b34801561029557600080fd5b50610112610566565b3480156102aa57600080fd5b506100da610575565b3480156102bf57600080fd5b506100da600160a060020a03600435166105f4565b3480156102e057600080fd5b506100da610678565b3480156102f557600080fd5b506100da600160a060020a0360043516610700565b60055460ff16151561031b57600080fd5b61032481610772565b151561032f57600080fd5b61034281683635c9adc5dea000006107c9565b61034e81610e106108d5565b60408051600160a060020a038316815290517fb451b2fb4e1bc44234460580d26a4f71a2693d5c5a72e515b233f2e20235386c9181900360200190a150565b600154600160a060020a031681565b60055460ff1681565b303190565b6004805460408051602060026001851615610100026000190190941693909304601f810184900484028201840190925281815292918301828280156104305780601f1061040557610100808354040283529160200191610430565b820191906000526020600020905b81548152906001019060200180831161041357829003601f168201915b505050505081565b600254600160a060020a031632148061045b5750600254600160a060020a031633145b151561046657600080fd5b600254600160a060020a0316ff5b60005481565b60055460ff16151561048b57600080fd5b61049481610772565b151561049f57600080fd5b6104b281686c6b935b8bbd4000006107c9565b6104be81611c206108d5565b60408051600160a060020a038316815290517eaacc7878c456f81effdd03a5982712003474ea96fceb9ded19748a0160a60c9181900360200190a150565b600154600160a060020a0316321461051357600080fd5b600160a060020a038116151561052857600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600254600160a060020a031681565b600354600160a060020a031681565b600254600160a060020a03163214806105985750600254600160a060020a031633145b15156105a357600080fd5b60055460ff1615156105b457600080fd5b6005805460ff19169055604080516000815290517f1f2881e73120325370afe6da38205f10340d474ae88deced4da5b739ca650bcf9181900360200190a1565b60055460ff16151561060557600080fd5b61060e81610772565b151561061957600080fd5b61062d8169010f0cf064dd592000006107c9565b610639816146506108d5565b60408051600160a060020a038316815290517f0cecbc87a45437e3e1904e0a78549073436f9ce37badc9b8619e01328a0999929181900360200190a150565b600254600160a060020a031632148061069b5750600254600160a060020a031633145b15156106a657600080fd5b60055460ff16156106b657600080fd5b6005805460ff1916600117908190556040805160ff9290921615158252517fd2a3a2d721c242e2bb5894f541c2a05972d28379a5ae20423a5419a42da3bf639181900360200190a1565b600254600160a060020a03163214806107235750600254600160a060020a031633145b151561072e57600080fd5b600160a060020a038116151561074357600080fd5b6002805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600160a060020a0381166000908152600660205260408120541515610799575060016107c4565b600160a060020a03821660009081526006602052604090205442106107c0575060016107c4565b5060005b919050565b303181111561085f57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603560248201527f496e73756666696369656e742062616c616e636520696e20666175636574206660448201527f6f72207769746864726177616c20726571756573740000000000000000000000606482015290519081900360840190fd5b604051600160a060020a0383169082156108fc029083906000818181858888f19350505050158015610895573d6000803e3d6000fd5b50604080513381526020810183905281517f7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65929181900390910190a15050565b600160a060020a0390911660009081526006602052604090204290910190555600a165627a7a723058201330977380c2bc325f6d0a91881208c9c98256f3669fa2573b32c9638a98e59c0029`
+const FaucetBin = `0x608060408190527f4f776e61626c6532303139303532383139333830304d4c000000000000000000600055610a3f388190039081908339810160405280516001805432600160a060020a031991821681179092556002805490911690911790550180516100739060049060208401906100c2565b506005805460ff1916600117908190556040805160ff9290921615158252517fd2a3a2d721c242e2bb5894f541c2a05972d28379a5ae20423a5419a42da3bf639181900360200190a15061015d565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061010357805160ff1916838001178555610130565b82800160010185558215610130579182015b82811115610130578251825591602001919060010190610115565b5061013c929150610140565b5090565b61015a91905b8082111561013c5760008155600101610146565b90565b6108d38061016c6000396000f3006080604052600436106100da5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166302d05d3f81146100dc5780630dfec7961461010d57806312065fe014610136578063400207071461015d57806341c0e1b5146101e757806354fd4d50146101fc578063582b8511146102115780636d2e4b1b146102265780638da5cb5b146102475780639fef1ce21461025c578063af570c0414610271578063b412506b14610286578063cbf706fd1461029b578063ee8734d0146102b0578063f2fde38b146102c5575b005b3480156100e857600080fd5b506100f16102e6565b60408051600160a060020a039092168252519081900360200190f35b34801561011957600080fd5b506101226102f5565b604080519115158252519081900360200190f35b34801561014257600080fd5b5061014b6102fe565b60408051918252519081900360200190f35b34801561016957600080fd5b50610172610303565b6040805160208082528351818301528351919283929083019185019080838360005b838110156101ac578181015183820152602001610194565b50505050905090810190601f1680156101d95780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b3480156101f357600080fd5b506100da610391565b34801561020857600080fd5b5061014b6103cd565b34801561021d57600080fd5b506100da6103d3565b34801561023257600080fd5b506100da600160a060020a036004351661044a565b34801561025357600080fd5b506100f16104a5565b34801561026857600080fd5b506100da6104b4565b34801561027d57600080fd5b506100f161052d565b34801561029257600080fd5b506100da61053c565b3480156102a757600080fd5b506100da6105bb565b3480156102bc57600080fd5b506100da610633565b3480156102d157600080fd5b506100da600160a060020a03600435166106bb565b600154600160a060020a031681565b60055460ff1681565b303190565b6004805460408051602060026001851615610100026000190190941693909304601f810184900484028201840190925281815292918301828280156103895780601f1061035e57610100808354040283529160200191610389565b820191906000526020600020905b81548152906001019060200180831161036c57829003601f168201915b505050505081565b600254600160a060020a03163214806103b45750600254600160a060020a031633145b15156103bf57600080fd5b600254600160a060020a0316ff5b60005481565b60055460ff1615156103e457600080fd5b6103ed3361072d565b15156103f857600080fd5b61040a686c6b935b8bbd400000610784565b61041633611c20610886565b6040805133815290517eaacc7878c456f81effdd03a5982712003474ea96fceb9ded19748a0160a60c9181900360200190a1565b600154600160a060020a0316321461046157600080fd5b600160a060020a038116151561047657600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600254600160a060020a031681565b60055460ff1615156104c557600080fd5b6104ce3361072d565b15156104d957600080fd5b6104ec69010f0cf064dd59200000610784565b6104f833614650610886565b6040805133815290517f0cecbc87a45437e3e1904e0a78549073436f9ce37badc9b8619e01328a0999929181900360200190a1565b600354600160a060020a031681565b600254600160a060020a031632148061055f5750600254600160a060020a031633145b151561056a57600080fd5b60055460ff16151561057b57600080fd5b6005805460ff19169055604080516000815290517f1f2881e73120325370afe6da38205f10340d474ae88deced4da5b739ca650bcf9181900360200190a1565b60055460ff1615156105cc57600080fd5b6105d53361072d565b15156105e057600080fd5b6105f2683635c9adc5dea00000610784565b6105fe33610e10610886565b6040805133815290517fb451b2fb4e1bc44234460580d26a4f71a2693d5c5a72e515b233f2e20235386c9181900360200190a1565b600254600160a060020a03163214806106565750600254600160a060020a031633145b151561066157600080fd5b60055460ff161561067157600080fd5b6005805460ff1916600117908190556040805160ff9290921615158252517fd2a3a2d721c242e2bb5894f541c2a05972d28379a5ae20423a5419a42da3bf639181900360200190a1565b600254600160a060020a03163214806106de5750600254600160a060020a031633145b15156106e957600080fd5b600160a060020a03811615156106fe57600080fd5b6002805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600160a060020a03811660009081526006602052604081205415156107545750600161077f565b600160a060020a038216600090815260066020526040902054421061077b5750600161077f565b5060005b919050565b303181111561081a57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603560248201527f496e73756666696369656e742062616c616e636520696e20666175636574206660448201527f6f72207769746864726177616c20726571756573740000000000000000000000606482015290519081900360840190fd5b604051339082156108fc029083906000818181858888f19350505050158015610847573d6000803e3d6000fd5b50604080513381526020810183905281517f7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65929181900390910190a150565b600160a060020a0390911660009081526006602052604090204290910190555600a165627a7a72305820a4d295f44dc958ee20defe204e46d0c6fab77841c43b581756595d67468c1cbb0029`
 
 // DeployFaucet deploys a new Ethereum contract, binding an instance of Faucet to it.
 func DeployFaucet(auth *bind.TransactOpts, backend bind.ContractBackend, _faucetName string) (common.Address, *types.Transaction, *Faucet, error) {
@@ -370,67 +370,67 @@ func (_Faucet *FaucetCallerSession) Version() ([32]byte, error) {
 	return _Faucet.Contract.Version(&_Faucet.CallOpts)
 }
 
-// Drip1000Token is a paid mutator transaction binding the contract method 0x01b8eb60.
+// Drip1000Token is a paid mutator transaction binding the contract method 0xcbf706fd.
 //
-// Solidity: function drip1000Token(address _to) returns()
-func (_Faucet *FaucetTransactor) Drip1000Token(opts *bind.TransactOpts, _to common.Address) (*types.Transaction, error) {
-	return _Faucet.contract.Transact(opts, "drip1000Token", _to)
+// Solidity: function drip1000Token() returns()
+func (_Faucet *FaucetTransactor) Drip1000Token(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Faucet.contract.Transact(opts, "drip1000Token")
 }
 
-// Drip1000Token is a paid mutator transaction binding the contract method 0x01b8eb60.
+// Drip1000Token is a paid mutator transaction binding the contract method 0xcbf706fd.
 //
-// Solidity: function drip1000Token(address _to) returns()
-func (_Faucet *FaucetSession) Drip1000Token(_to common.Address) (*types.Transaction, error) {
-	return _Faucet.Contract.Drip1000Token(&_Faucet.TransactOpts, _to)
+// Solidity: function drip1000Token() returns()
+func (_Faucet *FaucetSession) Drip1000Token() (*types.Transaction, error) {
+	return _Faucet.Contract.Drip1000Token(&_Faucet.TransactOpts)
 }
 
-// Drip1000Token is a paid mutator transaction binding the contract method 0x01b8eb60.
+// Drip1000Token is a paid mutator transaction binding the contract method 0xcbf706fd.
 //
-// Solidity: function drip1000Token(address _to) returns()
-func (_Faucet *FaucetTransactorSession) Drip1000Token(_to common.Address) (*types.Transaction, error) {
-	return _Faucet.Contract.Drip1000Token(&_Faucet.TransactOpts, _to)
+// Solidity: function drip1000Token() returns()
+func (_Faucet *FaucetTransactorSession) Drip1000Token() (*types.Transaction, error) {
+	return _Faucet.Contract.Drip1000Token(&_Faucet.TransactOpts)
 }
 
-// Drip2000Token is a paid mutator transaction binding the contract method 0x59a24294.
+// Drip2000Token is a paid mutator transaction binding the contract method 0x582b8511.
 //
-// Solidity: function drip2000Token(address _to) returns()
-func (_Faucet *FaucetTransactor) Drip2000Token(opts *bind.TransactOpts, _to common.Address) (*types.Transaction, error) {
-	return _Faucet.contract.Transact(opts, "drip2000Token", _to)
+// Solidity: function drip2000Token() returns()
+func (_Faucet *FaucetTransactor) Drip2000Token(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Faucet.contract.Transact(opts, "drip2000Token")
 }
 
-// Drip2000Token is a paid mutator transaction binding the contract method 0x59a24294.
+// Drip2000Token is a paid mutator transaction binding the contract method 0x582b8511.
 //
-// Solidity: function drip2000Token(address _to) returns()
-func (_Faucet *FaucetSession) Drip2000Token(_to common.Address) (*types.Transaction, error) {
-	return _Faucet.Contract.Drip2000Token(&_Faucet.TransactOpts, _to)
+// Solidity: function drip2000Token() returns()
+func (_Faucet *FaucetSession) Drip2000Token() (*types.Transaction, error) {
+	return _Faucet.Contract.Drip2000Token(&_Faucet.TransactOpts)
 }
 
-// Drip2000Token is a paid mutator transaction binding the contract method 0x59a24294.
+// Drip2000Token is a paid mutator transaction binding the contract method 0x582b8511.
 //
-// Solidity: function drip2000Token(address _to) returns()
-func (_Faucet *FaucetTransactorSession) Drip2000Token(_to common.Address) (*types.Transaction, error) {
-	return _Faucet.Contract.Drip2000Token(&_Faucet.TransactOpts, _to)
+// Solidity: function drip2000Token() returns()
+func (_Faucet *FaucetTransactorSession) Drip2000Token() (*types.Transaction, error) {
+	return _Faucet.Contract.Drip2000Token(&_Faucet.TransactOpts)
 }
 
-// Drip5000Token is a paid mutator transaction binding the contract method 0xcc230322.
+// Drip5000Token is a paid mutator transaction binding the contract method 0x9fef1ce2.
 //
-// Solidity: function drip5000Token(address _to) returns()
-func (_Faucet *FaucetTransactor) Drip5000Token(opts *bind.TransactOpts, _to common.Address) (*types.Transaction, error) {
-	return _Faucet.contract.Transact(opts, "drip5000Token", _to)
+// Solidity: function drip5000Token() returns()
+func (_Faucet *FaucetTransactor) Drip5000Token(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Faucet.contract.Transact(opts, "drip5000Token")
 }
 
-// Drip5000Token is a paid mutator transaction binding the contract method 0xcc230322.
+// Drip5000Token is a paid mutator transaction binding the contract method 0x9fef1ce2.
 //
-// Solidity: function drip5000Token(address _to) returns()
-func (_Faucet *FaucetSession) Drip5000Token(_to common.Address) (*types.Transaction, error) {
-	return _Faucet.Contract.Drip5000Token(&_Faucet.TransactOpts, _to)
+// Solidity: function drip5000Token() returns()
+func (_Faucet *FaucetSession) Drip5000Token() (*types.Transaction, error) {
+	return _Faucet.Contract.Drip5000Token(&_Faucet.TransactOpts)
 }
 
-// Drip5000Token is a paid mutator transaction binding the contract method 0xcc230322.
+// Drip5000Token is a paid mutator transaction binding the contract method 0x9fef1ce2.
 //
-// Solidity: function drip5000Token(address _to) returns()
-func (_Faucet *FaucetTransactorSession) Drip5000Token(_to common.Address) (*types.Transaction, error) {
-	return _Faucet.Contract.Drip5000Token(&_Faucet.TransactOpts, _to)
+// Solidity: function drip5000Token() returns()
+func (_Faucet *FaucetTransactorSession) Drip5000Token() (*types.Transaction, error) {
+	return _Faucet.Contract.Drip5000Token(&_Faucet.TransactOpts)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.

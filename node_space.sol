@@ -89,7 +89,7 @@ contract NodeSpace is Ownable {
     }
 
     function checkRedundantEntry(address[] _addrs, bytes[] _locators, address _nodeAddr, bytes _nodeLocator)
-    public pure internal returns (bool) {
+    internal pure returns (bool) {
         require(_addrs.length == _locators.length);
         for (uint i = 0; i < _addrs.length; i++) {
             // right now we assume that neither the address or the locator can be used redundantly

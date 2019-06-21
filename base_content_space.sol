@@ -42,8 +42,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     mapping(address => address) public nodeMapping;
 
-    mapping(string => bytes[]) public kmsMapping;
-    mapping(string => string)  public kmsPublicKeys;
+    mapping(string => bytes[]) kmsMapping;
+    mapping(string => string) kmsPublicKeys;
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);

@@ -7,8 +7,8 @@ Node20190315105100ML: First versioned released
 */
 
 contract Node is Ownable {
-
-    bytes32 public version ="Node20190315105100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Node20190315105100ML";
 
     event Log(string label);
     event LogBool(string label, bool b);

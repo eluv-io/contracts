@@ -2,7 +2,6 @@ pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 
-
 /* -- Revision history --
 Editable20190222140100ML: First versioned released
 Editable20190315141800ML: Migrated to 0.4.24
@@ -11,10 +10,10 @@ Editable20190522154000SS: Changed hash bytes32 to string
 Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the case of the content-objects
 */
 
-
 contract Editable is Ownable {
 
-    bytes32 public version ="Editable20190607105600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20190607105600PO";
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -22,7 +21,7 @@ contract Editable is Ownable {
 
     string public objectHash;
     string[] public versionHashes;
-    string pendingHash;
+    string public pendingHash;
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
@@ -38,13 +37,13 @@ contract Editable is Ownable {
     }
 
     // overridden in BaseContent to return library
-    function parentAddress() returns (address) {
+    function parentAddress() public returns (address) {
         return contentSpace;
     }
 
     function commit(string _objectHash) public {
         require(canCommit());
-	    require(bytes(_objectHash).length < 128);
+        require(bytes(_objectHash).length < 128);
         pendingHash = _objectHash;
         emit CommitPending(contentSpace, parentAddress(), pendingHash);
     }

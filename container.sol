@@ -3,20 +3,20 @@ import {Editable} from "./editable.sol";
 import {BaseContent} from "./base_content.sol";
 import {NodeSpace} from "./node_space.sol";
 
-/**
- * Container
- * The Container contract provides the interface required for an entity to be used as a library of content objects
- */
-
 /* -- Revision history --
 Container20190528144600ML: First versioned released
 Container20190529091800ML: Remove warning on hasAccess
 */
 
-
+/**
+ * Container
+ * The Container contract provides the interface required for an entity to be
+ * used as a library of content objects
+ */
 contract Container is Editable {
 
-    bytes32 public version = "Container20190529091800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "Container20190529091800ML";
 
     address public addressKMS;
 
@@ -28,12 +28,9 @@ contract Container is Editable {
     event ContentTypeAdded(address contentType, address contentContract);
     event ContentTypeRemoved(address contentType);
 
-
     function setAddressKMS(address address_KMS) public onlyOwner {
         addressKMS = address_KMS;
     }
-
-
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
         if ((contentTypeContracts[content_type] == 0x0) && (whitelistedType(content_type) == false)) {
@@ -67,7 +64,7 @@ contract Container is Editable {
     }
 
     function validType(address content_type) public view returns (bool) {
-        if (contentTypesLength == 0){
+        if (contentTypesLength == 0) {
             return true;
         }
         return whitelistedType(content_type);
@@ -82,7 +79,6 @@ contract Container is Editable {
         }
         return isValidType;
     }
-
 
     function findTypeByHash(bytes32 typeHash) public view returns (address) {
         for (uint i = 0; i < contentTypes.length; i++) {
@@ -115,13 +111,11 @@ contract Container is Editable {
         return false;
     }
 
-
     // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
     function canNodePublish(address candidate) public view returns (bool) {
         NodeSpace bcs = NodeSpace(contentSpace);
         return bcs.canNodePublish(candidate);
     }
-
 
     function publish(address contentObj) public returns (bool) {
         require(msg.sender == contentObj);
@@ -129,5 +123,4 @@ contract Container is Editable {
         content.updateStatus(0); //update status to published
         return (content.statusCode() == 0);
     }
-
 }

@@ -11,16 +11,15 @@ import "./access_indexor.sol";
 BaseContentType20190222145700ML: First versioned released
 BaseContentType20190318101200ML: Migrated to 0.4.24
 BaseContentType20190506153900ML: Adds access indexing
-BaseContentType20190515104000ML: Overloads canPublish to take into account EDIT privilege granted for update request and commit
+BaseContentType20190515104000ML: Overloads canPublish to take into account EDIT privilege granted
+for update request and commit
 BaseContentType20190528194000ML: Removes contentSpace is field as it is now inherited from Ownable
 BaseContentType20190604112500ML: Fixes setGroupRights to use the right index.
 BaseContentType20190605150100ML: Splits out canConfirm from canPublish
 */
-
-
 contract BaseContentType is Accessible, Editable {
-
-    bytes32 public version ="BaseContentType20190605150100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20190605150100ML";
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
@@ -39,11 +38,10 @@ contract BaseContentType is Accessible, Editable {
         return spc.canNodePublish(msg.sender);
     }
 
-
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(stakeholder);
-        if (walletAddress == 0x0){
+        if (walletAddress == 0x0) {
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);
         } else {

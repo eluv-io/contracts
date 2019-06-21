@@ -7,13 +7,15 @@ import {BaseContent} from "./base_content.sol";
 Content20190221101700ML: First versioned released
 Content20190301121800ML: Adds stub for runAccessInfo
 Content20190315171500ML: Migrated to 0.4.24
-Content20190506155000ML: Makes the default for runAccess match content object behavior that does not have custom contract
+Content20190506155000ML: Makes the default for runAccess match content object behavior that
+does not have custom contract
 Content20190510151600ML: Modified API for runAccessInfo to add Access information
 */
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20190510151600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20190510151600ML";
 
     uint8 public constant DEFAULT_SEE  = 1;
     uint8 public constant DEFAULT_ACCESS  = 2;
@@ -54,7 +56,6 @@ contract Content is Ownable {
         return proposed_status_code;
     }
 
-
     function runAccessInfo(
         uint8, /*level*/
         bytes32[], /*customValues*/
@@ -62,7 +63,8 @@ contract Content is Ownable {
     )
     public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
     {
-        return (7, 0, 0, 0); //7 is DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, hence the 3 tailing values are ignored
+        //7 is DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, hence the 3 tailing values are ignored
+        return (7, 0, 0, 0);
     }
 
     /* DEPRECATED - runAccessInfo is used instead
@@ -79,7 +81,6 @@ contract Content is Ownable {
         return -1;
     }
     */
-
     //0 indicates that access request can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
@@ -90,7 +91,7 @@ contract Content is Ownable {
     )
         public payable returns(uint)
     {
-            return 0;
+        return 0;
     }
 
     //0 indicates that access grant can proceed.
@@ -108,7 +109,9 @@ contract Content is Ownable {
     // behavior is currently unchanged regardless of result.
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
-    function runFinalize(uint256 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
+    // @param : request_ID
+    // @param : score_pct
+    function runFinalize(uint256, uint256 /*score_pct*/) public payable returns (uint) {
         return 0;
     }
 

@@ -2,10 +2,11 @@ pragma solidity 0.4.24;
 
 import "./ownable.sol";
 
+
 contract MetaObject is Ownable {
 
-    mapping(bytes32 => bytes) mapSmallKeys;
-    mapping(bytes => bytes) mapBigKeys;
+    mapping(bytes32 => bytes) public mapSmallKeys;
+    mapping(bytes => bytes) public mapBigKeys;
 
     function putMeta(bytes key, bytes value) public onlyOwner {
         if (key.length <= 32) {

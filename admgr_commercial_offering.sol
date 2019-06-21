@@ -6,11 +6,9 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 
 //
 // This contract can be used to indicate a relationship with a Campaign manager
-// When campaignManager is left blank, the campaign manager can be selected 
+// When campaignManager is left blank, the campaign manager can be selected
 //  individually for each sponsored content object.
 //
-
-
 /* -- Revision history --
 AdmgrCommOfferng20190228164900ML: First versioned released
 AdmgrCommOfferng20190301124200ML: Adds stub for runAccessInfo to replace runAccessCharge
@@ -19,7 +17,8 @@ AdmgrCommOfferng20190510152300ML: updated for new runAccessInfo API
 
 contract AdmgrCommercialOffering is Content {
 
-    bytes32 public version ="AdmgrCommOfferng20190510152300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrCommOfferng20190510152300ML";
 
     address public commercialOfferingManagerAddress;
     address public campaignManager;
@@ -38,7 +37,7 @@ contract AdmgrCommercialOffering is Content {
 
     mapping(address => AvailabilityData) public availability; // Indexed using Commercial Offering BaseContent address
 
-    function setAvailability(address content, bool sd,bool hd, uint start, uint end, address r ) public {
+    function setAvailability(address content, bool sd, bool hd, uint start, uint end, address r ) public {
         BaseContent c = BaseContent(content);
         require(tx.origin == c.owner());
         uint startDate = start;
@@ -105,7 +104,6 @@ contract AdmgrCommercialOffering is Content {
         return available;
     }
 
-
     function runAccessInfo(
         uint8 level,
         bytes32[], /*customValues*/
@@ -113,7 +111,7 @@ contract AdmgrCommercialOffering is Content {
     )
     public view returns (uint8, uint8, uint8, uint256)
     {
-        if (level == 0){
+        if (level == 0) {
             return (0, 0, 0, 0);
         }
         uint8 availCode = isAvailable(msg.sender, tx.origin);
@@ -145,7 +143,6 @@ contract AdmgrCommercialOffering is Content {
         }
     }
     */
-
     function runAccess(
         uint256, /*request_ID*/
         uint8 level, /*level*/
@@ -154,15 +151,15 @@ contract AdmgrCommercialOffering is Content {
     )
     public payable returns(uint)
     {
-        if (level != 0){
+        if (level != 0) {
             validateAvailability();
         }
         return 0;
     }
 
-
-
-    function runFinalize(uint256 /*request_ID*/,  uint256 score_pct) public payable returns(uint) {
+    // @param /*request_ID*/
+    // @param score_pct
+    function runFinalize(uint256, uint256 score_pct) public payable returns(uint) {
         //BaseContent contentObj = BaseContent(msg.sender);
         // Amount paid for content should still be in escrow. Unless bad quality is reported, owner is remitted escrow
         if (score_pct >= 95) {
@@ -177,8 +174,8 @@ contract AdmgrCommercialOffering is Content {
 
 contract AdmgrCommercialOfferingManager is Content {
 
-    bytes32 public version ="AdmgrCommOffrMgr20190226134600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrCommOffrMgr20190226134600ML";
 
     function runCreate() public payable returns (uint) {
         address commercialOfferingAddress = new AdmgrCommercialOffering();
@@ -192,4 +189,3 @@ contract AdmgrCommercialOfferingManager is Content {
     }
 
 }
-

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.24;
 
 import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
@@ -8,23 +8,23 @@ import {BaseContentSpace} from "./base_content_space.sol";
 import "./access_indexor.sol";
 import "./meta_object.sol";
 
-
 /* -- Revision history --
 BaseLibrary20190221101700ML: First versioned released
 BaseLibrary20190318101300ML: Migrated to 0.4.24
 BaseLibrary20190506153700ML: Adds access indexing
 BaseLibrary20190510151800ML: Modified createContent to use contentspace factory
-BaseLibrary20190515103800ML: Overloads canPublish to take into account EDIT privilege granted for update request and commit
+BaseLibrary20190515103800ML: Overloads canPublish to take into account EDIT privilege
+granted for update request and commit
 BaseLibrary20190522154000SS: Changed hash bytes32 to string
 BaseLibrary20190523121700ML: Fixes logic of add/remove of groups to revert to compact arrays
 BaseLibrary20190528151200ML: Uses Container abstraction
 BaseLibrary20190605150200ML: Splits out canConfirm from canPublish
 */
 
-
 contract BaseLibrary is MetaObject, Accessible, Container {
 
-    bytes32 public version ="BaseLibrary20190605150200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190605150200ML";
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -72,34 +72,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return false;
     }
 
-    function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
-        for (uint256 i = 0; i < _groupListLength; i++) {
-            if (_addGroup == _groupList[i]) {
-                return _groupListLength;
-            }
-        }
-        if (_groupListLength < _groupList.length) {
-            _groupList[_groupListLength] = _addGroup;
-        } else {
-            _groupList.push(_addGroup);
-        }
-        return (_groupListLength + 1);
-    }
-
-    function removeFromGroupList(address _removeGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
-        for (uint256 i = 0; i < _groupListLength; i++) {
-            if (_removeGroup == _groupList[i]) {
-                delete _groupList[i];
-                if (i != _groupListLength - 1) {
-                    _groupList[i] = _groupList[_groupListLength - 1];
-                    delete _groupList[_groupListLength - 1];
-                }
-                return (_groupListLength - 1);
-            }
-        }
-        return _groupListLength;
-    }
-
     function addContributorGroup(address group) public onlyOwner {
         uint256 prevLen = contributorGroupsLength;
         contributorGroupsLength = addToGroupList(group, contributorGroups, prevLen);
@@ -115,7 +87,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         contributorGroupsLength = removeFromGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength < prevLen) {
             emit ContributorGroupRemoved(group);
-	    AccessIndexor accessIndex = AccessIndexor(group);
+            AccessIndexor accessIndex = AccessIndexor(group);
             accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
             return true;
         }
@@ -167,20 +139,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return false;
     }
 
-
-
-    function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
-        for (uint i = 0; i < _groupList.length; i++) {
-            if (_groupList[i] != 0x0) {
-                BaseAccessControlGroup groupContract = BaseAccessControlGroup(_groupList[i]);
-                if (groupContract.hasAccess(_candidate)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     // Current implementation ignores rights provided directly to individual
     function hasAccess(address _candidate) public constant returns (bool) {
         if (accessorGroupsLength == 0) {
@@ -204,7 +162,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         }
         return hasGroupAccess(_candidate, reviewerGroups);
     }
-
 
     function requiresReview() public view returns (bool) {
         return (reviewerGroupsLength > 0);
@@ -283,8 +240,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         }
     }
 
-
-
     function createContent(address content_type) public  returns (address) {
         address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
@@ -300,7 +255,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(stakeholder);
-        if (walletAddress == 0x0){
+        if (walletAddress == 0x0) {
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);
         } else {
@@ -326,5 +281,45 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return submitStatus;
     }
 
-}
+    function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength)
+    internal returns (uint256) {
+        for (uint256 i = 0; i < _groupListLength; i++) {
+            if (_addGroup == _groupList[i]) {
+                return _groupListLength;
+            }
+        }
+        if (_groupListLength < _groupList.length) {
+            _groupList[_groupListLength] = _addGroup;
+        } else {
+            _groupList.push(_addGroup);
+        }
+        return (_groupListLength + 1);
+    }
 
+    function removeFromGroupList(address _removeGroup, address[] storage _groupList, uint256 _groupListLength)
+    internal returns (uint256) {
+        for (uint256 i = 0; i < _groupListLength; i++) {
+            if (_removeGroup == _groupList[i]) {
+                delete _groupList[i];
+                if (i != _groupListLength - 1) {
+                    _groupList[i] = _groupList[_groupListLength - 1];
+                    delete _groupList[_groupListLength - 1];
+                }
+                return (_groupListLength - 1);
+            }
+        }
+        return _groupListLength;
+    }
+
+    function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
+        for (uint i = 0; i < _groupList.length; i++) {
+            if (_groupList[i] != 0x0) {
+                BaseAccessControlGroup groupContract = BaseAccessControlGroup(_groupList[i]);
+                if (groupContract.hasAccess(_candidate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}

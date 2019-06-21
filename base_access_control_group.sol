@@ -5,8 +5,6 @@ import {BaseFactory} from "./base_content_space.sol";
 import {BaseContentSpace} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 
-
-
 /* -- Revision history --
 BsAccessCtrlGrp20190222140700ML: First versioned released
 BsAccessCtrlGrp20190315172900ML: Migrated to 0.4.24
@@ -14,10 +12,10 @@ BsAccessCtrlGrp20190506153800ML: Adds access indexing
 BsAccessCtrlGrp20190510150700ML: Fixes bug (wrong index was used for group rights)
 */
 
-
 contract BaseAccessControlGroup is AccessIndexor {
 
-    bytes32 public version ="BsAccessCtrlGrp20190510150700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20190510150700ML";
 
     mapping (address => bool) public members;
     mapping (address => bool) public managers;

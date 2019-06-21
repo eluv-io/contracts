@@ -5,7 +5,6 @@ import {BaseContent} from "./base_content.sol";
 import {BaseLibrary} from "./base_library.sol";
 import {Certifyer} from "./lib_certifyer.sol";
 import {AdmgrCampaign} from "./admgr_campaign_manager.sol";
-
 //
 // This contract implements a "free" watch-ads to access model.
 // When an ad is served this custom contract is called.
@@ -14,7 +13,6 @@ import {AdmgrCampaign} from "./admgr_campaign_manager.sol";
 // for watching the ad.
 //
 
-
 /* -- Revision history --
 AdmgrAdvertismnt20190222152600ML: First versioned released
 AdmgrAdvertismnt20190318103000ML: Migrated to 0.4.24
@@ -22,14 +20,13 @@ AdmgrAdvertismnt20190404103100ML: Made 0.4.24 explicit
 AdmgrAdvertismnt20190510152200ML: updated for new runAccessInfo API
 */
 
-
 contract AdmgrAdvertisement is Content {
 
-    bytes32 public version ="AdmgrAdvertismnt20190510152200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrAdvertismnt20190510152200ML";
 
     event MaxCreditPerAd(uint256 maxCreditPerAd);
     event BitcodeAddress(address bitcode);
-
 
     event dbgBool(string msg, bool flag);
     event dbgAddress(string msg, address addr);
@@ -53,12 +50,10 @@ contract AdmgrAdvertisement is Content {
 
     uint256 public maxCreditPerAd = 0; //By default no maximum is set
 
-
     function dbgRequest(uint256 request_ID, address ad_address) public pure returns (bytes32)
     {
         return keccak256(abi.encodePacked(ad_address, request_ID));
     }
-
 
     function setMaxCreditPerAd(uint256 creditPerAd) public onlyOwner {
         maxCreditPerAd = creditPerAd;
@@ -80,7 +75,7 @@ contract AdmgrAdvertisement is Content {
     }
 
     function getAmount(bytes32 request_data_ID) public view returns (uint256) {
-        require((requestMap[request_data_ID].content != 0x0)  && (requestMap[request_data_ID].status == 0));
+        require((requestMap[request_data_ID].content != 0x0) && (requestMap[request_data_ID].status == 0));
         return requestMap[request_data_ID].amount;
     }
 
@@ -94,8 +89,8 @@ contract AdmgrAdvertisement is Content {
         return bitcodeAddress;
     }
 
-
-    function createMessage(address content_address, address campaign_address, address ad_address, bytes32 amount) pure public returns (bytes) {
+    function createMessage(address content_address, address campaign_address, address ad_address, bytes32 amount)
+    public pure returns (bytes) {
         bytes memory b = new bytes(96);
         b[0] = byte(32);
         b[21] = byte(32);
@@ -118,7 +113,53 @@ contract AdmgrAdvertisement is Content {
         return b;
     }
 
-    function verifyMessage(address content_address, address campaign_address, bytes32 amount, uint8 v, bytes32 r, bytes32 s) private view {
+    function runAccess(
+        uint256 request_ID,
+        uint8,
+        // amount to be paid, signature v, signature r, signature s, tag1, tag1_match, tag2, tag2_matc, ...
+        bytes32[] custom_values,
+        address[] stake_holders // @content being accessed, @campaign
+    )
+        public payable returns(uint)
+    {
+        if (stake_holders.length == 0) {
+            return 0;
+        }
+
+        address contentAddress = stake_holders[0];
+        if (contentAddress != 0x0) {
+            address campaignAddress = stake_holders[1];
+            bytes32 amount = custom_values[0];
+            uint8 v = uint8(custom_values[1][0]);
+            bytes32 r = custom_values[2];
+            bytes32 s = custom_values[3];
+            if (bitcodeAddress != 0x0) {
+                verifyMessage(contentAddress, campaignAddress, amount, v, r, s);
+            }
+            require((maxCreditPerAd == 0) || (uint256(amount) <= maxCreditPerAd));
+            BaseContent campaignObj = BaseContent(campaignAddress);
+            AdmgrCampaign campaign = AdmgrCampaign(campaignObj.contentContractAddress());
+            campaign.validateRequest(msg.sender, uint256(amount));
+            insertRequest(request_ID, contentAddress, msg.sender, campaignAddress, uint256(amount));
+        }
+        return 0;
+    }
+
+    // Upon completion, the promised amount is divided between the library owner and the viewer and paid off.
+    function runFinalize(uint256 request_ID, uint256 /*score_pct*/) public payable returns(uint) {
+        bytes32 reqDataId = keccak256(abi.encodePacked(msg.sender, request_ID));
+        RequestData storage req = requestMap[reqDataId];
+        require((req.originator == tx.origin) && (req.status == 0));
+        BaseContent campaignObj = BaseContent(requestMap[reqDataId].campaign);
+        AdmgrCampaign campaign = AdmgrCampaign(campaignObj.contentContractAddress());
+        campaign.payout(reqDataId);
+        delete requestMap[reqDataId];
+        emit RunFinalize(request_ID, 0);
+        return 0;
+    }
+
+    function verifyMessage(address content_address, address campaign_address, bytes32 amount,
+    uint8 v, bytes32 r, bytes32 s) private view {
         bytes memory messageStr = createMessage(content_address, campaign_address, msg.sender, amount);
         bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n96", messageStr));
         address signee = ecrecover(messageHash, v, r, s);
@@ -137,57 +178,10 @@ contract AdmgrAdvertisement is Content {
     )
         private
     {
-        bytes32 req_data_id = keccak256(abi.encodePacked(ad_address, request_ID));
+        bytes32 reqDataId = keccak256(abi.encodePacked(ad_address, request_ID));
         RequestData memory req = RequestData(tx.origin, content_address, ad_address, campaign_address, amount, 0);
-        requestMap[req_data_id] = req;
+        requestMap[reqDataId] = req;
     }
-
-    function runAccess(
-        uint256 request_ID,
-        uint8,
-        bytes32[] custom_values, // amount to be paid, signature v, signature r, signature s, tag1, tag1_match, tag2, tag2_matc, ...
-        address[] stake_holders // @content being accessed, @campaign
-    )
-        public payable returns(uint)
-    {
-        if (stake_holders.length == 0) {
-            return 0;
-        }
-
-        address contentAddress = stake_holders[0];
-        if (contentAddress != 0x0) {
-            address campaignAddress = stake_holders[1];
-            bytes32 amount = custom_values[0];
-            uint8 v = uint8(custom_values[1][0]);
-            bytes32 r = custom_values[2];
-            bytes32 s = custom_values[3];
-            if (bitcodeAddress != 0x0) {
-               verifyMessage(contentAddress, campaignAddress, amount, v, r, s);
-            }
-            require((maxCreditPerAd == 0) || (uint256(amount) <= maxCreditPerAd));
-            BaseContent campaignObj = BaseContent(campaignAddress);
-            AdmgrCampaign campaign = AdmgrCampaign(campaignObj.contentContractAddress());
-            campaign.validateRequest(msg.sender, uint256(amount));
-            insertRequest(request_ID, contentAddress, msg.sender, campaignAddress, uint256(amount));
-        }
-        return 0;
-    }
-
-    // Upon completion, the promised amount is divided between the library owner and the viewer and paid off.
-    function runFinalize(uint256 request_ID, uint256 /*score_pct*/) public payable returns(uint) {
-        bytes32 req_data_id = keccak256(abi.encodePacked(msg.sender, request_ID));
-        RequestData storage req = requestMap[req_data_id];
-        require((req.originator == tx.origin) && (req.status == 0));
-        BaseContent campaignObj = BaseContent(requestMap[req_data_id].campaign);
-        AdmgrCampaign campaign = AdmgrCampaign(campaignObj.contentContractAddress());
-        campaign.payout(req_data_id);
-        delete requestMap[req_data_id];
-        emit RunFinalize(request_ID, 0);
-        return 0;
-    }
-
-
-
 
 /* Unused
 

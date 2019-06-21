@@ -3,26 +3,23 @@ pragma solidity 0.4.24;
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
 import {BaseLibrary} from "./base_library.sol";
-
 //
-// This contract implements an approval process in which after a 60%  
+// This contract implements an approval process in which after a 60%
 // completion of the submission, a partial payment of 40% of the licensing
 // fee is paid to the contributor, with the remaining balance paid upon
 // full, final approval.
 //
 
-
 /* -- Revision history --
 SplContLicensing20190318105700ML: First versioned released, Migrated to 0.4.24
 */
-
 
 contract SampleContentLicensing is Content {
 
     event PayCredit(address payee, address content, uint256 amount);
 
-    bytes32 public version ="SplContLicensing20190318105700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="SplContLicensing20190318105700ML";
 
     uint256 public licensingFee = 10000000000000000000; //defaulted to 10 ethers
     uint8 public percentPartial = 60; // percentage threshold for content to trigger partial payment
@@ -84,7 +81,7 @@ contract SampleContentLicensing is Content {
         delete (licensingStatus[contentContract]);
         return 0;
     }
-
+    
     //on publish-0 payoff remainder, so that licensing is honored regardless of how submission was done
     // deny publishing unless percentComplete is 100
     function runStatusChange(int proposed_status_code) public payable returns (int) {
@@ -187,4 +184,3 @@ contract SampleContentLicensing is Content {
     }
 
 }
-

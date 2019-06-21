@@ -10,7 +10,6 @@ AccessIndexor20190528194200ML: Removes contentSpace is field as it is now inheri
 AccessIndexor20190605162000ML: Adds cleanUp functions to remove references to dead objects
 */
 
-
 contract AccessIndexor is Ownable {
 
     bytes32 public version = "AccessIndexor20190528194200ML";
@@ -18,11 +17,11 @@ contract AccessIndexor is Ownable {
     event RightsChanged(address principal, address entity, uint8 aggregate);
     //event dbUint8(string label, uint8 value);
 
-    uint8 public CATEGORY_CONTENT_OBJECT = 1;
-    uint8 public CATEGORY_GROUP = 2;
-    uint8 public CATEGORY_LIBRARY = 3;
-    uint8 public CATEGORY_CONTENT_TYPE = 4;
-    uint8 public CATEGORY_CONTRACT = 5;
+    uint8 public constant CATEGORY_CONTENT_OBJECT = 1;
+    uint8 public constant CATEGORY_GROUP = 2;
+    uint8 public constant CATEGORY_LIBRARY = 3;
+    uint8 public constant CATEGORY_CONTENT_TYPE = 4;
+    uint8 public constant CATEGORY_CONTRACT = 5;
 
     uint8 public constant TYPE_SEE = 0;
     uint8 public constant TYPE_ACCESS = 1;
@@ -30,7 +29,7 @@ contract AccessIndexor is Ownable {
     uint8 public constant ACCESS_NONE = 0; // No access
     uint8 public constant ACCESS_TENTATIVE = 1; //access was granted, but not accepted by recipient
     uint8 public constant ACCESS_CONFIRMED = 2; //access was granted and accepted by recipient
-    uint8[3] ranking = [1,10,100];
+    uint8[3] ranking = [1, 10, 100];
 
     struct AccessIndex {
         uint8 category;
@@ -60,7 +59,6 @@ contract AccessIndexor is Ownable {
         return (libraries[lib] >= TYPE_EDIT);
     }
 */
-
     constructor() public payable {
         libraries.category = CATEGORY_LIBRARY;
         accessGroups.category = CATEGORY_GROUP;
@@ -73,23 +71,23 @@ contract AccessIndexor is Ownable {
         contentSpace = content_space;
     }
 
-    function setLibraryRights(address lib, uint8 access_type, uint8 access) public  {
+    function setLibraryRights(address lib, uint8 access_type, uint8 access) public {
         setRights(libraries, lib, access_type, access);
     }
 
-    function setAccessGroupRights(address group, uint8 access_type, uint8 access) public  {
+    function setAccessGroupRights(address group, uint8 access_type, uint8 access) public {
         setRights(accessGroups, group, access_type, access);
     }
 
-    function setContentObjectRights(address obj, uint8 access_type, uint8 access) public  {
+    function setContentObjectRights(address obj, uint8 access_type, uint8 access) public {
         setRights(contentObjects, obj, access_type, access);
     }
 
-    function setContentTypeRights(address obj, uint8 access_type, uint8 access) public  {
+    function setContentTypeRights(address obj, uint8 access_type, uint8 access) public {
         setRights(contentTypes, obj, access_type, access);
     }
 
-    function setContractRights(address obj, uint8 access_type, uint8 access) public  {
+    function setContractRights(address obj, uint8 access_type, uint8 access) public {
         setRights(contracts, obj, access_type, access);
     }
 
@@ -179,7 +177,7 @@ contract AccessIndexor is Ownable {
 
     function checkDirectRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
         Ownable instance = Ownable(obj);
-        if (instance.owner() == owner){
+        if (instance.owner() == owner) {
             return true;
         }
         if (index_type == CATEGORY_CONTENT_OBJECT) {
@@ -197,11 +195,6 @@ contract AccessIndexor is Ownable {
         if (index_type == CATEGORY_CONTENT_TYPE) {
             return checkRawRights(contentTypes, obj, access_type);
         }
-    }
-
-    function checkRawRights(AccessIndex storage index, address obj, uint8 access_type) private view returns(bool) {
-        uint8 currentAggregate = index.rights[obj];
-        return (currentAggregate >= ranking[access_type]);
     }
 
     function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
@@ -225,14 +218,48 @@ contract AccessIndexor is Ownable {
         return (owner == instance.owner());
     }
 
+    function contractExists(address addr) public view returns (bool) {
+        uint size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return (size > 0);
+    }
+
+    function cleanUpLibraries() public returns (uint) {
+        return cleanUp(libraries);
+    }
+
+    function cleanUpAccessGroups() public returns (uint) {
+        return cleanUp(accessGroups);
+    }
+
+    function cleanUpContentObjects() public returns (uint) {
+        return cleanUp(contentObjects);
+    }
+
+    function cleanUpContentTypes() public returns (uint) {
+        return cleanUp(contentTypes);
+    }
+
+    function cleanUpAll() public returns (uint, uint, uint, uint, uint) {
+        return (cleanUp(libraries), cleanUp(accessGroups), cleanUp(contentObjects),
+        cleanUp(contentTypes), cleanUp(contracts));
+    }
+
+    function checkRawRights(AccessIndex storage index, address obj, uint8 access_type) private view returns(bool) {
+        uint8 currentAggregate = index.rights[obj];
+        return (currentAggregate >= ranking[access_type]);
+    }
+
     //event dbAddress(string label, address addr);
     //event dbUint8(string label, uint8 i);
     //event dbbool(string label, bool b);
-    function setRights(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private  {
+    function setRights(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private {
         if (access != ACCESS_NONE) {
             UserSpace space = UserSpace(contentSpace);
             address walletAddress = space.userWallets(tx.origin);
-            if  (walletAddress == 0x0) {
+            if (walletAddress == 0x0) {
                 Ownable instance = Ownable(obj);
                 require(tx.origin == instance.owner());
             }
@@ -270,7 +297,7 @@ contract AccessIndexor is Ownable {
             }
 
             //to be discussed, manager can also adds itself viewing privileges, acting as a bookmark.
-            if ((access_type == TYPE_SEE)  && (access != ACCESS_NONE)) {
+            if ((access_type == TYPE_SEE) && (access != ACCESS_NONE)) {
                 currentRights[access_type] = ACCESS_CONFIRMED;
             }
         } else {
@@ -325,15 +352,8 @@ contract AccessIndexor is Ownable {
         return false;
     }
 
-    function contractExists(address addr) public view returns (bool) {
-        uint size;
-        assembly {
-            size := extcodesize(addr)
-        }
-        return (size > 0);
-    }
-
     event dbgAddress(string label, uint index, address a);
+
     function cleanUp(AccessIndex storage index) private returns (uint) {
         uint cleansedCount = 0;
         uint i = 0;
@@ -354,24 +374,4 @@ contract AccessIndexor is Ownable {
         }
         return cleansedCount;
     }
-
-    function cleanUpLibraries() public returns (uint) {
-        return cleanUp(libraries);
-    }
-
-    function cleanUpAccessGroups() public returns (uint) {
-        return cleanUp(accessGroups);
-    }
-
-    function cleanUpContentObjects() public returns (uint) {
-        return cleanUp(contentObjects);
-    }
-
-    function cleanUpContentTypes() public returns (uint) {
-        return cleanUp(contentTypes);
-    }
-    
-    function cleanUpAll() public returns (uint, uint, uint, uint, uint) {
-        return (cleanUp(libraries), cleanUp(accessGroups), cleanUp(contentObjects), cleanUp(contentTypes), cleanUp(contracts));
-   }
 }

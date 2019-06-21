@@ -1,8 +1,7 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.24;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
-
 
 //
 // This contract implements a "free" watch-ads to access model.
@@ -12,16 +11,14 @@ import {BaseContent} from "./base_content.sol";
 // for watching the ad.
 //
 
-
 /* -- Revision history --
 SplContAdvertsng20190226115400ML: First versioned released
 SplContAdvertsng20190318114600ML: Migrated to 0.4.24
 */
-
-
 contract SampleContentAdvertising is Content {
 
-    bytes32 public version ="SplContAdvertsng20190226115400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="SplContAdvertsng20190226115400ML";
 
     event TokenCreditPerAd(uint256 tokenCreditPerAd);
 

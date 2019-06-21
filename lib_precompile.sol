@@ -1,24 +1,22 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
+
 
 library Precompile {
 
-    address constant elv_precomp_addr = 255;
-
-    bytes4 constant sigIdString = bytes4(keccak256("makeIDString(int,address)"));
-
+    address public constant ELV_PRECOMP_ADDR = 255;
+    bytes4 public constant SIG_ID_STRING = bytes4(keccak256("makeIDString(int,address)"));
+    uint public constant ID_STR_LEN = 32;
     int public constant KMS = 11;
 
-    function CodeKMS() internal constant returns (int) {
+    function codeKMS() internal constant returns (int) {
         return KMS;
     }
 
-    uint constant idStrLen = 32;
-
     function makeIDString(int _code, address _addr) internal constant returns (string ret) {
 
-        bytes4 sig = sigIdString;
+        bytes4 sig = SIG_ID_STRING;
         bytes4 codeBytes = bytes4(_code);
-        address callAddr = elv_precomp_addr;
+        address callAddr = ELV_PRECOMP_ADDR;
 
         assembly {
             let x := mload(0x40)

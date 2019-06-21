@@ -4,24 +4,20 @@ import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 
-
 //
 // Following features are implemented:
 //      - ensure that only owner and accessor registered in a specified group can view the content
 //      - ensure that non-owner can only download the package within the availability window
 //
 
-
 /* -- Revision history --
 AvlDelivery20190404103300ML: First versioned released
 AvlDelivery20190510152500ML: updated for new runAccessInfo API
 */
-
-
 contract AvailsDelivery is Content {
 
-
-    bytes32 public version ="AvlDelivery20190510152500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AvlDelivery20190510152500ML";
 
     struct AvailabilityData {
         bool clearedSD; // cleared for SD
@@ -34,8 +30,7 @@ contract AvailsDelivery is Content {
     mapping(address => address) public accessors;  // Indexed using OTT Delivery BaseContent address
     mapping(address => AvailabilityData) public availability; // Indexed using OTT Delivery BaseContent address
 
-
-    function setAvailability(address content, bool sd,bool hd, uint start, uint end, address region ) public {
+    function setAvailability(address content, bool sd, bool hd, uint start, uint end, address region ) public {
         BaseContent c = BaseContent(content);
         require(tx.origin == c.owner());
         uint startDate = start;
@@ -88,7 +83,6 @@ contract AvailsDelivery is Content {
         return available;
     }
 
-
     function runAccessInfo(
         uint8 level,
         bytes32[], /*customValues*/
@@ -96,7 +90,7 @@ contract AvailsDelivery is Content {
     )
     public view returns (uint8, uint8, uint8, uint256)
     {
-        if (level == 0){
+        if (level == 0) {
             if (hasAccess(msg.sender, tx.origin)) {
                 return (0, 0, 0, 0);
             } else {
@@ -110,7 +104,6 @@ contract AvailsDelivery is Content {
         return (DEFAULT_SEE + DEFAULT_ACCESS, 0, 0, 0);
     }
 
-
     function runAccess(
         uint256, /*request_ID*/
         uint8 level, /*level*/
@@ -119,7 +112,7 @@ contract AvailsDelivery is Content {
     )
     public payable returns(uint)
     {
-        if (level != 0){
+        if (level != 0) {
             validateAvailability();
         }
         return 0;

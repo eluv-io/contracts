@@ -17,10 +17,10 @@ BaseContent20190528193400ML: Modified to support non-library containers
 BaseContent20190605203200ML: Split publish and confirm logic
 */
 
-
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190611120000PO";
 
     address public contentType;
     address public addressKMS;
@@ -38,9 +38,9 @@ contract BaseContent is Editable {
     uint256 public requestID = 0;
 
     uint8 public visibility = 0;
-    uint8 public CAN_SEE = 1;
-    uint8 public CAN_ACCESS = 10;
-    uint8 public CAN_EDIT = 100;
+    uint8 public constant CAN_SEE = 1;
+    uint8 public constant CAN_ACCESS = 10;
+    uint8 public constant CAN_EDIT = 100;
 
     struct RequestData {
         address originator; // client address requesting
@@ -61,6 +61,7 @@ contract BaseContent is Editable {
         string pkeRequestor,
         string pkeAFGH
     );
+
     event LogPayment(uint256 requestID, string label, address payee, uint256 amount);
     event AccessGrant(uint256 requestID, bool access_granted, string reKey, string encryptedAESKey);
     event AccessRequestValue(bytes32 customValue);
@@ -96,7 +97,6 @@ contract BaseContent is Editable {
         */
         emit ContentObjectCreate(libraryAddress);
     }
-
 
     function setVisibility(uint8 visibility_code) public onlyOwner {
         visibility = visibility_code;
@@ -186,63 +186,47 @@ contract BaseContent is Editable {
         emit SetContentContract(contentContractAddress);
     }
 
-    // Visibility codes
-    //      0   -> visible
-    //      10  -> content not published
-    //      100 -> calculation of price exceeds specified cap (accessCharge)
-    //      255 -> unset
-    // Access codes
-    //      0   -> paid for
-    //      10  -> content not published
-    //      255 -> unset
+    function setAccessCharge(uint256 charge) public onlyOwner returns (uint256) {
+        accessCharge = charge;
+        emit SetAccessCharge(accessCharge);
+        return accessCharge;
+    }
 
-    function getWIPAccessInfo() private view returns (uint8, uint8, uint256) {
-        if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
-            return (0, 0, accessCharge);
-        }
+    function canEdit() public view returns (bool) {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address userWallet = contentSpaceObj.userWallets(tx.origin);
-        if (userWallet != 0x0) {
-            AccessIndexor wallet = AccessIndexor(userWallet);
-            if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
-                return (0, 0, accessCharge);
-            }
-        }
-        if (Container(libraryAddress).canReview(tx.origin) == true) { //special case of pre-publish review
-            return (0, 0, accessCharge);
-        }
-        return (10, 10, accessCharge);
+        address walletAddress = contentSpaceObj.getAccessWallet();
+        AccessIndexor wallet = AccessIndexor(walletAddress);
+        return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
     }
 
-    function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) private view returns (uint8, uint8, uint256) {
-        uint256 levelAccessCharge = accessCharge;
-        uint8 visibilityCode = (visibility >= CAN_SEE) ? 0 : 255;
-        uint8 accessCode = (visibility >= CAN_ACCESS) ? 0 :255;
-        if (contentContractAddress != 0x0) {
-            uint8 customMask;
-            uint8 customVisibility;
-            uint8 customAccess;
-            uint256 customCharge;
-            Content c = Content(contentContractAddress);
-            (customMask, customVisibility, customAccess, customCharge) = c.runAccessInfo(level, custom_values, stakeholders);
-            if (customCharge > accessCharge) {
-                visibilityCode = 100;
-            } else {
-                if ((customMask & c.DEFAULT_SEE()) == 0) {
-                    visibilityCode = customVisibility;
-                }
-                if ((customMask & c.DEFAULT_ACCESS()) == 0) {
-                    accessCode = customAccess;
-                }
-                if ((customMask & c.DEFAULT_CHARGE()) == 0) {
-                    levelAccessCharge = customCharge;
-                }
-            }
-        }
-        return (visibilityCode, accessCode, levelAccessCharge);
+    function canPublish() public view returns (bool) {
+        return (canEdit() || msg.sender == libraryAddress);
     }
 
-    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
+    function canCommit() public view returns (bool) {
+        return canEdit();
+    }
+
+    function canConfirm() public view returns (bool) {
+        Container lib = Container(libraryAddress);
+        return lib.canNodePublish(msg.sender);
+    }
+
+    // override from Editable
+    function parentAddress() public returns (address) {
+        return libraryAddress;
+    }
+
+    // TODO: why payable?
+    function publish() public payable returns (bool) {
+        bool submitStatus = Container(libraryAddress).publish(address(this));
+        // Log event
+        emit Publish(submitStatus, statusCode, objectHash); // TODO: confirm?
+        return submitStatus;
+    }
+
+    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view
+    returns (uint8, uint8, uint256) {
 
         if (statusCode != 0) {
             return getWIPAccessInfo(); //broken out to reduce complexity (compiler failed)
@@ -250,9 +234,10 @@ contract BaseContent is Editable {
         uint256 levelAccessCharge;
         uint8 visibilityCode;
         uint8 accessCode;
-        (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo( level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
+        //broken out to reduce complexity (compiler failed)
+        (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo(level, custom_values, stakeholders);
 
-        if ((visibilityCode == 255) || (accessCode == 255) ) {
+        if ((visibilityCode == 255) || (accessCode == 255)) {
             BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
             address userWallet = contentSpaceObj.userWallets(tx.origin);
             if (userWallet != 0x0) {
@@ -276,7 +261,8 @@ contract BaseContent is Editable {
     }
 
 /* Full before split
-    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
+    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders)
+    public view returns (uint8, uint8, uint256) {
         uint256 levelAccessCharge = accessCharge;
         uint8 visibilityCode = (visibility >= CAN_SEE) ? 0 : 255;
         uint8 accessCode = (visibility >= CAN_ACCESS) ? 0 :255;
@@ -304,7 +290,8 @@ contract BaseContent is Editable {
             uint8 customAccess;
             uint256 customCharge;
             Content c = Content(contentContractAddress);
-            (customMask, customVisibility, customAccess, customCharge) = c.runAccessInfo(level, custom_values, stakeholders);
+            (customMask, customVisibility, customAccess, customCharge) = c.runAccessInfo(level,
+            custom_values, stakeholders);
             if (customCharge > accessCharge) {
                 visibilityCode = 100;
             } else {
@@ -341,49 +328,6 @@ contract BaseContent is Editable {
     }
 
     */
-
-
-
-    function setAccessCharge(uint256 charge) public onlyOwner returns (uint256) {
-        accessCharge = charge;
-        emit SetAccessCharge(accessCharge);
-        return accessCharge;
-    }
-
-
-    function canEdit() public view returns (bool) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.getAccessWallet();
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
-    }
-
-    function canPublish() public view returns (bool) {
-        return (canEdit() || msg.sender == libraryAddress);
-    }
-
-    function canCommit() public view returns (bool) {
-        return canEdit();
-    }
-
-    function canConfirm() public view returns (bool) {
-        Container lib = Container(libraryAddress);
-        return lib.canNodePublish(msg.sender);
-    }
-
-    // override from Editable
-    function parentAddress() returns (address) {
-        return libraryAddress;
-    }
-
-    // TODO: why payable?
-    function publish() public payable returns (bool) {
-        bool submitStatus = Container(libraryAddress).publish(address(this));
-        // Log event
-        emit Publish(submitStatus, statusCode, objectHash); // TODO: confirm?
-        return submitStatus;
-    }
-
     function updateStatus(int status_code) public returns (int) {
         // require((tx.origin == owner) || (msg.sender == owner) || (msg.sender == libraryAddress));
         require(canPublish());
@@ -403,22 +347,12 @@ contract BaseContent is Editable {
         return statusCode;
     }
 
-
     //this function allows custom content contract to call makeRequestPayment
-    function processRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) public returns (bool) {
+    function processRequestPayment(uint256 request_ID, address payee, string label, uint256 amount)
+    public returns (bool) {
         require((contentContractAddress != 0x0) && (msg.sender == contentContractAddress));
         return makeRequestPayment(request_ID, payee, label, amount);
     }
-
-    function makeRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) private returns (bool) {
-        RequestData storage r = requestMap[request_ID];
-        if ((r.settled + amount) <= r.amountPaid) {
-            payee.transfer(amount);
-            r.settled = r.settled + amount;
-            emit LogPayment(request_ID, label, payee, amount);
-        }
-    }
-
 
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)
@@ -515,8 +449,6 @@ contract BaseContent is Editable {
         return result;
     }
 
-
-
     // sender passes the quality score as pct of best possible (converted to 1-100 scale)
     // the fabric provides to this access,
     // hash of the version of the ML-computed segment matrix used (stored as a'part'),
@@ -539,11 +471,11 @@ contract BaseContent is Editable {
             success = (result == 0);
         }
         if (msg.sender == r.originator) {//Owner direct call can't modify status to avoid premature clearing of escrow
-            if (success){
-             r.status = 2; //access completeted, by default score_pct is not taken into account
+            if (success) {
+                r.status = 2; //access completeted, by default score_pct is not taken into account
             } else {
-             r.status = -2; //access error, only if finalize is returning non-zero code
-          }
+                r.status = -2; //access error, only if finalize is returning non-zero code
+            }
         }
         // Delete request from map after customContract in case it was needed for execution of custom wrap-up
         if (r.settled < r.amountPaid) {
@@ -579,7 +511,7 @@ contract BaseContent is Editable {
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(stakeholder);
-        if (walletAddress == 0x0){
+        if (walletAddress == 0x0) {
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);
         } else {
@@ -592,4 +524,71 @@ contract BaseContent is Editable {
         indexor.setContentObjectRights(address(this), access_type, access);
     }
 
+    function makeRequestPayment(uint256 request_ID, address payee, string label, uint256 amount)
+    private returns (bool) {
+        RequestData storage r = requestMap[request_ID];
+        if ((r.settled + amount) <= r.amountPaid) {
+            payee.transfer(amount);
+            r.settled = r.settled + amount;
+            emit LogPayment(request_ID, label, payee, amount);
+        }
+    }
+
+    // Visibility codes
+    //      0   -> visible
+    //      10  -> content not published
+    //      100 -> calculation of price exceeds specified cap (accessCharge)
+    //      255 -> unset
+    // Access codes
+    //      0   -> paid for
+    //      10  -> content not published
+    //      255 -> unset
+    function getWIPAccessInfo() private view returns (uint8, uint8, uint256) {
+        if ((tx.origin == owner) || (visibility >= CAN_EDIT)) {
+            return (0, 0, accessCharge);
+        }
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        address userWallet = contentSpaceObj.userWallets(tx.origin);
+        if (userWallet != 0x0) {
+            AccessIndexor wallet = AccessIndexor(userWallet);
+            if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
+                return (0, 0, accessCharge);
+            }
+        }
+        if (Container(libraryAddress).canReview(tx.origin) == true) { //special case of pre-publish review
+            return (0, 0, accessCharge);
+        }
+        return (10, 10, accessCharge);
+    }
+
+    function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders)
+    private view returns (uint8, uint8, uint256) {
+        uint256 levelAccessCharge = accessCharge;
+        uint8 visibilityCode = (visibility >= CAN_SEE) ? 0 : 255;
+        uint8 accessCode = (visibility >= CAN_ACCESS) ? 0 : 255;
+        if (contentContractAddress != 0x0) {
+            uint8 customMask;
+            uint8 customVisibility;
+            uint8 customAccess;
+            uint256 customCharge;
+            Content c = Content(contentContractAddress);
+            (customMask, customVisibility, customAccess, customCharge) = c.runAccessInfo(level,
+            custom_values, stakeholders);
+
+            if (customCharge > accessCharge) {
+                visibilityCode = 100;
+            } else {
+                if ((customMask & c.DEFAULT_SEE()) == 0) {
+                    visibilityCode = customVisibility;
+                }
+                if ((customMask & c.DEFAULT_ACCESS()) == 0) {
+                    accessCode = customAccess;
+                }
+                if ((customMask & c.DEFAULT_CHARGE()) == 0) {
+                    levelAccessCharge = customCharge;
+                }
+            }
+        }
+        return (visibilityCode, accessCode, levelAccessCharge);
+    }
 }

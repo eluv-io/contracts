@@ -2,14 +2,14 @@ pragma solidity 0.4.24;
 
 import {Content} from "./content.sol";
 
-
 /* -- Revision history --
 PaymentService20190318102800ML: First versioned released, migrated to 0.4.24, made a Content object
 */
 
 contract PaymentService is Content {
 
-    bytes32 public version ="PaymentService20190318102800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="PaymentService20190318102800ML";
 
     struct RedeemRequest {
         address id; // client address requesting
@@ -19,17 +19,17 @@ contract PaymentService is Content {
         string nonce;
         bool valid; // to distinguish non-existing objects
     }
-    RedeemRequest[]  redeemRequests;
-    uint256 redeemRequestsLength = 0;
 
-    string tokenCurrency = "USD";
-    uint256 tokenValue = 1;
+    RedeemRequest[] public redeemRequests;
+    uint256 public redeemRequestsLength = 0;
+
+    string public tokenCurrency = "USD";
+    uint256 public tokenValue = 1;
     address public payerAddress;
 
     event RedeemTokenRequest(uint256 numtokens, string pay_to, string nonce);
     event RedeemTokenExecuted(string currency, uint256 value, string payment_proof, string nonce);
     event SetTokenValue(string currency, uint256 value);
-
 
     function redeemTokenRequest(string payment_account, string tx_nonce) public payable returns (uint) {
         //If the request is not backed by a balance
@@ -42,7 +42,8 @@ contract PaymentService is Content {
         } else {
             redeemRequests.push(request);
         }
-        redeemRequestsLength ++;
+
+        redeemRequestsLength++;
         emit RedeemTokenRequest(msg.value, payment_account, tx_nonce);
         return 0;
     }
@@ -55,13 +56,14 @@ contract PaymentService is Content {
         return (req.id, req.redeemCurrency, req.numTokens, req.payTo, req.nonce);
     }
 
-    function redeemTokenExecuted(string currency, uint256 value, string payment_proof, string tx_nonce) public returns (uint) {
+    function redeemTokenExecuted(string currency, uint256 value, string payment_proof, string tx_nonce)
+    public returns (uint) {
         if ((msg.sender != creator) && (msg.sender != payerAddress)) {
             return 3;
         }
         if (keccak256(abi.encodePacked(redeemRequests[0].nonce)) == keccak256(abi.encodePacked(tx_nonce))) {
             delete redeemRequests[0];
-            redeemRequestsLength --;
+            redeemRequestsLength--;
             if (redeemRequestsLength > 0) {
                 redeemRequests[0] = redeemRequests[redeemRequestsLength];
                 delete redeemRequests[redeemRequestsLength];
@@ -89,7 +91,5 @@ contract PaymentService is Content {
     function getTokenValue() public constant returns(string, uint256) {
         return (tokenCurrency, tokenValue);
     }
-
-
-
+    
 }

@@ -5,16 +5,15 @@ import {BaseContent} from "./base_content.sol";
 import {BaseLibrary} from "./base_library.sol";
 import {AdmgrAdvertisement} from "./admgr_advertisement.sol";
 
-
 /* -- Revision history --
 AdmgrCampaign20190222153200ML: First versioned released
 AdmgrCampaign20190318105100ML: Migrated to 0.4.24
 */
 
-
 contract AdmgrCampaign is Content {
 
-    bytes32 public version ="AdmgrCampaign20190318105100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrCampaign20190318105100ML";
 
     address public campaignManagerAddress;
 
@@ -65,8 +64,7 @@ contract AdmgrCampaign is Content {
         return ((duration == 0) || (startDate + duration >= timeNow));
     }
 
-
-    function validateRequest(address adAddress, uint256 amount) public view returns (bool){
+    function validateRequest(address adAddress, uint256 amount) public view returns (bool) {
         require(isActive());
         //emit LogBool("isActive", isActive());
         AdData storage adData = adDataMap[adAddress];
@@ -92,15 +90,16 @@ contract AdmgrCampaign is Content {
         if ((adData.budget != 0) && (adDataMap[ad].paidOut == adData.budget)) {
             adDataMap[ad].status = -1;
         }
-        uint256 amount_library = amount / 100 * libraryRetrocession;
-        if (amount_library != 0){
+        uint256 amountLibrary = amount / 100 * libraryRetrocession;
+        if (amount_library != 0) {
             BaseContent content = BaseContent(advertisementMgr.getContent(requestDataID));
-            BaseLibrary lib = BaseLibrary(content.libraryAddress()); //debatable: pay library (add pull function) or owner
-            lib.owner().transfer(amount_library);
-            emit LogPayment("Retrocession", lib.owner(), amount_library);
+            //debatable: pay library (add pull function) or owner
+            BaseLibrary lib = BaseLibrary(content.libraryAddress());
+            lib.owner().transfer(amountLibrary);
+            emit LogPayment("Retrocession", lib.owner(), amountLibrary);
         }
-        tx.origin.transfer(amount - amount_library);
-        emit LogPayment("Reward", tx.origin, amount - amount_library);
+        tx.origin.transfer(amount - amountLibrary);
+        emit LogPayment("Reward", tx.origin, amount - amountLibrary);
         return true;
     }
 
@@ -116,7 +115,7 @@ contract AdmgrCampaign is Content {
         return true;
     }
 
-    function removeAd(address adAddress) public onlyOwner returns (bool){
+    function removeAd(address adAddress) public onlyOwner returns (bool) {
         delete adDataMap[adAddress];
         for (uint i = 0; i < campaignAdsLength; i++) {
             if (campaignAds[i] == adAddress) {
@@ -137,8 +136,8 @@ contract AdmgrCampaign is Content {
 
 contract AdmgrCampaignManager is Content {
 
-    bytes32 public version ="AdmgrCampaignMgr20190222153600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrCampaignMgr20190222153600ML";
     uint8 public libraryRetrocession = 0;
 
     address public campaignLibraryAddress;
@@ -159,7 +158,7 @@ contract AdmgrCampaignManager is Content {
     }
 
     function runCreate() public payable returns (uint) {
-        if (initializedAsCampaignMgr == false){
+        if (initializedAsCampaignMgr == false) {
             initializedAsCampaignMgr = true;
             return 0;
         }
@@ -174,14 +173,12 @@ contract AdmgrCampaignManager is Content {
         return 0;
     }
 
-
-
 }
 
 
 contract AdmgrMarketPlace is Content {
-
-    bytes32 public version ="AdmgrMarketPlace20190222153700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrMarketPlace20190222153700ML";
 
     function runCreate() public payable returns (uint) {
         address campaignMgrAddress = new AdmgrCampaignManager();

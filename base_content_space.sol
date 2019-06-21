@@ -28,10 +28,10 @@ BaseContentSpace20190528193500ML: Moves node management to a parent class (NodeS
 BaseContentSpace20190605144600ML: Implements canConfirm to overloads default from Editable
 */
 
-
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
 
-    bytes32 public version ="BaseContentSpace20190612120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20190612120000PO";
 
     string public name;
     string public description;
@@ -42,8 +42,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     mapping(address => address) public nodeMapping;
 
-    mapping(string => bytes[]) kmsMapping;
-    mapping(string => string)  kmsPublicKeys;
+    mapping(string => bytes[]) public kmsMapping;
+    mapping(string => string)  public kmsPublicKeys;
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
@@ -57,7 +57,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event RegisterNode(address nodeObjAddr);
     event UnregisterNode(address nodeObjAddr);
 
-    event AddKMSLocator(address sender,uint status);
+    event AddKMSLocator(address sender, uint status);
     event RemoveKMSLocator(address sender, uint status);
 
     event CreateSpace(bytes32 version, address owner);
@@ -116,7 +116,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         emit UnregisterNode(nodeAddr);
     }
 
-
     function createContentType() public returns (address) {
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
@@ -163,20 +162,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return true;
     }
 
-    //This methods revert when attempting to transfer ownership, so for now we make it private
-    // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWallet(address user) private returns (address) {
-        require(userWallets[user] == 0x0);
-        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-        if (user != tx.origin) {
-            BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-            wallet.transferOwnership(user);
-        }
-        emit CreateAccessWallet(walletAddress);
-        userWallets[user] = walletAddress;
-        return walletAddress;
-    }
-
     function getAccessWallet() public returns(address) {
         if (userWallets[tx.origin] == 0x0) {
             return createAccessWallet();
@@ -185,22 +170,10 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         }
     }
 
-    /* removed as the createUserWallet does not work for creating wallet on behalf of a user
-    // Not sure we want that, if so it might have to be restricted -- to be thought through
-    function getUserWallet(address user) public returns(address) {
-        if (userWallets[user] == 0x0) {
-            return createUserWallet(user);
-        } else {
-            return userWallets[user];
-        }
+    function getKMSID(address _kmsAddr) public view returns (string) {
+        return Precompile.makeIDString(Precompile.codeKMS(), _kmsAddr);
     }
-    */
 
-    // TODO kmsAddr => kmsID
-    function getKMSID(address _kmsAddr) public view returns (string){
-        return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
-    }
-    
     function checkKMS(string _kmsIdStr) public view returns (uint) {
         return kmsMapping[_kmsIdStr].length;
     }
@@ -215,34 +188,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         kmsPublicKeys[_kmsID] = _pubKey;
     }
 
-    function matchesPrefix(bytes input, bytes prefix) pure internal returns (bool) {
-        uint len = prefix.length;
-        if (len > input.length) len = input.length;
-        for (uint x = 0; x < len; x++) {
-            if (input[x] != prefix[x]) return false;
-        }
-        return true;
-    }
-
-    function filterPrefix(bytes[] input, bytes prefix) view internal returns (bytes[]) {
-        uint countMatch = 0;
-        for (uint i = 0; i < input.length; i++) {
-            if (matchesPrefix(input[i], prefix)) {
-                countMatch++;
-            }
-        }
-        bytes[] memory output = new bytes[](countMatch);
-        if (countMatch == 0) return output;
-        countMatch = 0;
-        for (i = 0; i < input.length; i++) {
-            if (matchesPrefix(input[i], prefix)) {
-                output[countMatch] = input[i];
-                countMatch++;
-            }
-        }
-        return output;
-    }
-
     function getKMSInfo(string _kmsID, bytes prefix) public view returns (string, string) {
         bytes[] memory locators = kmsMapping[_kmsID];
         string memory publicKey = kmsPublicKeys[_kmsID];
@@ -252,7 +197,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
         string memory output;
         for (uint i = 0; i < filtered.length; i++) {
-            if (i == filtered.length -1) {
+            if (i == filtered.length-1) {
                 output = string(abi.encodePacked(output, string(filtered[i])));
             } else {
                 output = string(abi.encodePacked(output, string(filtered[i]), ","));
@@ -261,14 +206,13 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return (output, publicKey);
     }
 
-
     // KMS mappings
     // mapping(address => string[]) public kmsMapping;
     // status -> 0 added
     // status -> 1 not added
     function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
-        
+
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
                 emit AddKMSLocator(msg.sender, 1);
@@ -291,19 +235,21 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
                 }
                 delete kmsMapping[_kmsID][kmsLocators.length - 1];
                 kmsMapping[_kmsID].length -= 1;
-                emit RemoveKMSLocator(msg.sender,0);
+                emit RemoveKMSLocator(msg.sender, 0);
                 return true;
             }
         }
-        emit RemoveKMSLocator(msg.sender,1);
+        emit RemoveKMSLocator(msg.sender, 1);
         return false;
     }
 
-    function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public {
+    function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest,
+    uint256[] _value, uint256[] _ts) public {
 
         require(msg.sender == owner || checkKMSAddr(msg.sender) > 0);
 
-        // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly, which is the same as a revert...?
+        // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly,
+        // which is the same as a revert...?
         require(_v.length == _r.length);
         require(_r.length == _s.length);
         require(_s.length == _from.length);
@@ -321,6 +267,59 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
             }
         }
     }
+
+    function matchesPrefix(bytes input, bytes prefix) internal pure returns (bool) {
+        uint len = prefix.length;
+        if (len > input.length) len = input.length;
+        for (uint x = 0; x < len; x++) {
+            if (input[x] != prefix[x]) return false;
+        }
+        return true;
+    }
+
+    function filterPrefix(bytes[] input, bytes prefix) internal view returns (bytes[]) {
+        uint countMatch = 0;
+        for (uint i = 0; i < input.length; i++) {
+            if (matchesPrefix(input[i], prefix)) {
+                countMatch++;
+            }
+        }
+        bytes[] memory output = new bytes[](countMatch);
+        if (countMatch == 0) return output;
+        countMatch = 0;
+        for (i = 0; i < input.length; i++) {
+            if (matchesPrefix(input[i], prefix)) {
+                output[countMatch] = input[i];
+                countMatch++;
+            }
+        }
+        return output;
+    }
+
+    //This methods revert when attempting to transfer ownership, so for now we make it private
+    // Hence it will be assumed, that user are responsible for creating their wallet.
+    function createUserWallet(address user) private returns (address) {
+        require(userWallets[user] == 0x0);
+        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
+        if (user != tx.origin) {
+            BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
+            wallet.transferOwnership(user);
+        }
+        emit CreateAccessWallet(walletAddress);
+        userWallets[user] = walletAddress;
+        return walletAddress;
+    }
+
+    /* removed as the createUserWallet does not work for creating wallet on behalf of a user
+    // Not sure we want that, if so it might have to be restricted -- to be thought through
+    function getUserWallet(address user) public returns(address) {
+        if (userWallets[user] == 0x0) {
+            return createUserWallet(user);
+        } else {
+            return userWallets[user];
+        }
+    }
+    */
 }
 
 /* -- Revision history --
@@ -332,7 +331,8 @@ BaseFactory20190506153000ML: Split createLibrary out, adds access indexing
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20190506153000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20190506153000ML";
 
     function createContentType() public returns (address) {
         address newType = (new BaseContentType(msg.sender));
@@ -365,10 +365,10 @@ contract BaseFactory is Ownable {
 /* -- Revision history --
 BaseFactory20190506153100ML: Split out of BaseFactory, adds access indexing
 */
-
 contract BaseLibraryFactory is Ownable {
 
-    bytes32 public version ="BaseLibFactory20190506153200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibFactory20190506153200ML";
 
     function createLibrary(address address_KMS) public returns (address) {
         address newLib = (new BaseLibrary(address_KMS, msg.sender));
@@ -385,10 +385,10 @@ contract BaseLibraryFactory is Ownable {
 /* -- Revision history --
 BaseCtFactory20190509171900ML: Split out of BaseLibraryFactory
 */
-
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20190509171900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20190509171900ML";
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);

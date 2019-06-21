@@ -3,7 +3,6 @@ pragma solidity 0.4.24;
 import "./ownable.sol";
 import "./node.sol";
 
-
 /**
  * NodeSpace
  * Seperated from content_space to avoid circular dependencies.
@@ -12,11 +11,10 @@ import "./node.sol";
 /* -- Revision history --
 NodeSpace20190528170100ML: First versioned released
 */
-
-
 contract NodeSpace is Ownable {
 
-    bytes32 public version ="NodeSpace20190528170100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="NodeSpace20190528170100ML";
 
     address[] public activeNodeAddresses;
     bytes[] public activeNodeLocators;
@@ -24,19 +22,10 @@ contract NodeSpace is Ownable {
     address[] public pendingNodeAddresses;
     bytes[] public pendingNodeLocators;
 
-
-    function checkRedundantEntry(address[] _addrs, bytes[] _locators, address _nodeAddr, bytes _nodeLocator) pure internal returns (bool) {
-        require(_addrs.length == _locators.length);
-        for (uint i = 0; i < _addrs.length; i++) {
-            // right now we assume that neither the address or the locator can be used redundantly
-            if (keccak256(_locators[i]) == keccak256(_nodeLocator) || _addrs[i] == _nodeAddr) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     event NodeSubmitted(address addr, bytes locator);
+    event NodeApproved(address addr, bytes locator);
+    event AddNode(address ownerAddr, address nodeAddr);
+    event RemoveNode (address ownerAddr, address nodeAddr);
 
     function numActiveNodes() public view returns (uint) {
         return activeNodeLocators.length;
@@ -56,20 +45,6 @@ contract NodeSpace is Ownable {
         emit NodeSubmitted(msg.sender, _locator);
     }
 
-    event NodeApproved(address addr, bytes locator);
-
-    function removeNodeInternal(uint nodeOrd, address[] storage _nodeAddresses, bytes[] storage _nodeLocators) internal {
-        require(nodeOrd < _nodeAddresses.length && nodeOrd < _nodeLocators.length);
-        if (nodeOrd != _nodeAddresses.length - 1) {
-            _nodeLocators[nodeOrd] = _nodeLocators[_nodeLocators.length - 1];
-            _nodeAddresses[nodeOrd] = _nodeAddresses[_nodeAddresses.length - 1];
-        }
-        delete _nodeLocators[_nodeLocators.length - 1];
-        _nodeLocators.length--;
-        delete _nodeAddresses[_nodeAddresses.length - 1];
-        _nodeAddresses.length--;
-    }
-
     function approveNode(address _nodeAddr) public onlyOwner {
         bool found = false;
         for (uint i = 0; i < pendingNodeAddresses.length; i++) {
@@ -85,8 +60,6 @@ contract NodeSpace is Ownable {
         require(found);
     }
 
-    event AddNode(address ownerAddr, address nodeAddr);
-
     // direct method for owner to add node(s)
     function addNode(address _nodeAddr, bytes _locator) public onlyOwner {
         require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, _nodeAddr, _locator));
@@ -94,8 +67,6 @@ contract NodeSpace is Ownable {
         activeNodeLocators.push(_locator);
         emit AddNode(msg.sender, _nodeAddr);
     }
-
-    event RemoveNode (address ownerAddr, address nodeAddr);
 
     // direct method for owner to remove node(s)
     function removeNode(address _nodeAddr) public onlyOwner {
@@ -117,8 +88,29 @@ contract NodeSpace is Ownable {
         return false;
     }
 
+    function checkRedundantEntry(address[] _addrs, bytes[] _locators, address _nodeAddr, bytes _nodeLocator)
+    public pure internal returns (bool) {
+        require(_addrs.length == _locators.length);
+        for (uint i = 0; i < _addrs.length; i++) {
+            // right now we assume that neither the address or the locator can be used redundantly
+            if (keccak256(_locators[i]) == keccak256(_nodeLocator) || _addrs[i] == _nodeAddr) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-
-
+    function removeNodeInternal(uint nodeOrd, address[] storage _nodeAddresses, bytes[] storage _nodeLocators)
+    internal {
+        require(nodeOrd < _nodeAddresses.length && nodeOrd < _nodeLocators.length);
+        if (nodeOrd != _nodeAddresses.length - 1) {
+            _nodeLocators[nodeOrd] = _nodeLocators[_nodeLocators.length - 1];
+            _nodeAddresses[nodeOrd] = _nodeAddresses[_nodeAddresses.length - 1];
+        }
+        delete _nodeLocators[_nodeLocators.length - 1];
+        _nodeLocators.length--;
+        delete _nodeAddresses[_nodeAddresses.length - 1];
+        _nodeAddresses.length--;
+    }
 
 }

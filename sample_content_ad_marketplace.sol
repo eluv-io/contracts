@@ -5,7 +5,6 @@ import {BaseContent} from "./base_content.sol";
 import {BaseLibrary} from "./base_library.sol";
 import {Certifyer} from "./lib_certifyer.sol";
 
-
 //
 // This contract implements a "free" watch-ads to access model.
 // When an ad is served this custom contract is called.
@@ -14,17 +13,14 @@ import {Certifyer} from "./lib_certifyer.sol";
 // for watching the ad.
 //
 
-
 /* -- Revision history --
 SplContAdMktplce20190226115400ML: First versioned released
 SplContAdMktplce20190318103100ML: Migrated to 0.4.24
 */
-
-
 contract SampleContentAdMarketplace is Content {
 
-    bytes32 public version ="SplContAdMktplce20190318103100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
+    //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="SplContAdMktplce20190318103100ML";
 
     event MaxCreditPerAd(uint256 maxCreditPerAd);
     event BitcodeAddress(address bitcode);
@@ -61,13 +57,14 @@ contract SampleContentAdMarketplace is Content {
         return bitcodeAddress;
     }
 
-    function setRetrocession(address library_addr, uint8 max_ads_per_item, uint8 percent, bool active) public onlyOwner returns(bool) {
+    function setRetrocession(address library_addr, uint8 max_ads_per_item, uint8 percent, bool active)
+    public onlyOwner returns(bool) {
         RetrocessionData memory r = RetrocessionData(active, max_ads_per_item, percent);
         retrocessions[library_addr] = r;
         return active;
     }
 
-    function createMessage(address content_address, address ad_address, bytes32 amount) pure public returns (bytes) {
+    function createMessage(address content_address, address ad_address, bytes32 amount) public pure returns (bytes) {
         bytes memory b = new bytes(75);
         b[0] = byte(32);
         b[21] = byte(32); //space separator
@@ -87,26 +84,11 @@ contract SampleContentAdMarketplace is Content {
         return b;
     }
 
-    function verifyMessage(address content_address, bytes32 amount, uint8 v, bytes32 r, bytes32 s) private view {
-        bytes memory messageStr =  createMessage(content_address, msg.sender, amount);
-        bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n75", messageStr));
-        address signee = ecrecover(messageHash, v, r, s);
-        //emit LogUint256("amount", uint256(amount));
-        require(signee == bitcodeAddress);
-    }
-
-
-
-    function insertRequest(uint256 request_ID, address content_address, uint256 amount) private {
-        bytes32 adRequestID = keccak256(abi.encodePacked(request_ID, msg.sender)); //Hash of ads object and content request ID
-        RequestData memory req = RequestData(tx.origin, content_address, amount, 0);
-        requestMap[adRequestID] = req;
-    }
-
     function runAccess(
         uint256 request_ID,
         uint8,
-        bytes32[] custom_values, // amount to be paid, signature v, signature r, signature s, tag1, tag1_match, tag2, tag2_matc, ...
+        // amount to be paid, signature v, signature r, signature s, tag1, tag1_match, tag2, tag2_matc, ...
+        bytes32[] custom_values,
         address[] stake_holders // @content being accessed
     )
         public payable returns(uint)
@@ -128,7 +110,8 @@ contract SampleContentAdMarketplace is Content {
 
     // Upon completion, the promised amount is divided between the library owner and the viewer and paid off.
     function runFinalize(uint256 request_ID, uint256 /*score_pct*/) public payable returns(uint) {
-        bytes32 adRequestID = keccak256(abi.encodePacked(request_ID, msg.sender)); //Hash of ads object and content request ID
+        //Hash of ads object and content request ID
+        bytes32 adRequestID = keccak256(abi.encodePacked(request_ID, msg.sender));
         RequestData storage req = requestMap[adRequestID];
         require((req.originator == tx.origin) && (req.status == 0));
         //emit LogInt256("req.status", int256(req.status));
@@ -147,12 +130,22 @@ contract SampleContentAdMarketplace is Content {
         return 0;
     }
 
+    function verifyMessage(address content_address, bytes32 amount, uint8 v, bytes32 r, bytes32 s) private view {
+        bytes memory messageStr =  createMessage(content_address, msg.sender, amount);
+        bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n75", messageStr));
+        address signee = ecrecover(messageHash, v, r, s);
+        //emit LogUint256("amount", uint256(amount));
+        require(signee == bitcodeAddress);
+    }
 
-
+    function insertRequest(uint256 request_ID, address content_address, uint256 amount) private {
+        //Hash of ads object and content request ID
+        bytes32 adRequestID = keccak256(abi.encodePacked(request_ID, msg.sender));
+        RequestData memory req = RequestData(tx.origin, content_address, amount, 0);
+        requestMap[adRequestID] = req;
+    }
 
 /* Unused
-
-
     function uint2str(uint i) pure public returns (bytes){
         if (i == 0) return "0";
         uint j = i;

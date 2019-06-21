@@ -290,8 +290,8 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return content;
     }
 
-    // TODO: not sure about access privileges so - for now - owner only
-    function deleteContent(address _contentAddr) public onlyOwner {
+    // content can be deleted by content owner
+    function deleteContent(address _contentAddr) public {
         BaseContent content = BaseContent(_contentAddr);
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);

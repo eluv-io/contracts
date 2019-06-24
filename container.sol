@@ -2,17 +2,17 @@ pragma solidity 0.4.24;
 import {Editable} from "./editable.sol";
 import {BaseContent} from "./base_content.sol";
 import {NodeSpace} from "./node_space.sol";
+/**
+ * Container
+ * The Container contract provides the interface required for an entity to be
+ * used as a library of content objects
+ */
 
 /* -- Revision history --
 Container20190528144600ML: First versioned released
 Container20190529091800ML: Remove warning on hasAccess
 */
 
-/**
- * Container
- * The Container contract provides the interface required for an entity to be
- * used as a library of content objects
- */
 contract Container is Editable {
 
     //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX

@@ -91,7 +91,7 @@ contract AdmgrCampaign is Content {
             adDataMap[ad].status = -1;
         }
         uint256 amountLibrary = amount / 100 * libraryRetrocession;
-        if (amount_library != 0) {
+        if (amountLibrary != 0) {
             BaseContent content = BaseContent(advertisementMgr.getContent(requestDataID));
             //debatable: pay library (add pull function) or owner
             BaseLibrary lib = BaseLibrary(content.libraryAddress());

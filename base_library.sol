@@ -38,6 +38,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     mapping (address => uint256) private approvalRequestsMap; //index offset by 1 to avoid confusing 0 for removed
 
     event ContentObjectCreated(address contentAddress, address content_type, address spaceAddress);
+    event ContentObjectDeleted(address contentAddress, address spaceAddress);
     event ContributorGroupAdded(address group);
     event ContributorGroupRemoved(address group);
     event ReviewerGroupAdded(address group);
@@ -283,12 +284,17 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         }
     }
 
-
-
     function createContent(address content_type) public  returns (address) {
         address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
         return content;
+    }
+
+    // content can be deleted by content owner
+    function deleteContent(address _contentAddr) public {
+        BaseContent content = BaseContent(_contentAddr);
+        content.kill();
+        emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
 
     function accessRequest() public returns (bool) {

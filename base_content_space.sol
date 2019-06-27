@@ -61,6 +61,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event RemoveKMSLocator(address sender, uint status);
 
     event CreateSpace(bytes32 version, address owner);
+    event GetAccessWallet(address walletAddress);
 
     constructor(string memory content_space_name) public {
         name = content_space_name;
@@ -178,11 +179,15 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
 
     function getAccessWallet() public returns(address) {
+        address walletAddress;
         if (userWallets[tx.origin] == 0x0) {
-            return createAccessWallet();
+            walletAddress = createAccessWallet();
         } else {
-            return userWallets[tx.origin];
+            walletAddress = userWallets[tx.origin];
         }
+
+        emit GetAccessWallet(walletAddress);
+        return walletAddress;
     }
 
     /* removed as the createUserWallet does not work for creating wallet on behalf of a user
@@ -268,7 +273,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     // status -> 1 not added
     function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
-        require(kmsLocators.length < 3);
+        
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
                 emit AddKMSLocator(msg.sender, 1);

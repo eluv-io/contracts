@@ -48,6 +48,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     event UnauthorizedOperation(uint operationCode, address candidate);
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
+    event UpdateKmsAddress(address addressKms);
 
     constructor(address address_KMS, address content_space) public payable {
         contentSpace = content_space;
@@ -330,6 +331,11 @@ contract BaseLibrary is MetaObject, Accessible, Container {
             submitStatus = submitApprovalRequest();
         }
         return submitStatus;
+    }
+
+    function updateAddressKMS(address address_KMS) public onlyOwner {
+        addressKMS = address_KMS;
+        emit UpdateKmsAddress(addressKMS);
     }
 
 }

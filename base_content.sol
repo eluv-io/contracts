@@ -79,6 +79,11 @@ contract BaseContent is Editable {
     event ReturnCustomHook(address custom_contract, uint256 result);
     event InvokeCustomPostHook(address custom_contract);
 
+    modifier onlyFromLibrary() {
+        require(msg.sender == libraryAddress);
+        _;
+    }
+
     constructor(address content_space, address lib, address content_type) public payable {
         contentSpace = content_space;
         libraryAddress = lib;
@@ -561,7 +566,7 @@ contract BaseContent is Editable {
         return success;
     }
 
-    function kill() public onlyOwner {
+    function kill() public onlyFromLibrary {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
             require(c.runKill() == 0);

@@ -294,7 +294,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     // content can be deleted by content owner
     function deleteContent(address _contentAddr) public {
         BaseContent content = BaseContent(_contentAddr);
-        require(content.owner == msg.sender);
+        require(content.owner() == msg.sender);
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }

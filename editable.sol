@@ -19,7 +19,7 @@ contract Editable is Ownable {
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
     event VersionConfirm(string objectHash);
-    event VersionDelete(string versionHash, uint256 index);
+    event VersionDelete(string versionHash, int256 index);
 
     string public objectHash;
     string[] public versionHashes;
@@ -30,15 +30,15 @@ contract Editable is Ownable {
     }
 
     // if _versionHash is present returns the index of the versionHash else length(versionHashes)+1
-    function getVersionIndex(string _versionHash) public view returns (uint256) {
-        uint256 versionHashesLength = countVersionHashes();
-        //bytes32 vh = keccak256(abi.encode(_versionHash));
-        for(uint256 i=0; i< versionHashesLength; i++ ){
-            if (keccak256(bytes(versionHashes[1])) == keccak256(bytes(_versionHash)) ) {
-                return i;
+    function getVersionIndex(string _versionHash) public view returns (int256) {
+       
+        bytes32 vh = keccak256(abi.encode(_versionHash));
+        for(uint256 i=0; i < versionHashes.length; i++){
+            if (keccak256(bytes(versionHashes[i])) == vh) {
+                return int256(i);
             }
         }
-        return versionHashesLength+1;
+        return -1;
     }
 
     // intended to be overridden
@@ -78,15 +78,15 @@ contract Editable is Ownable {
         emit UpdateRequest(objectHash);
     }
 
-    function deleteVersion(string _versionHash) public returns (uint256) {
+    function deleteVersion(string _versionHash) public returns (int256) {
         require(canCommit());
-        uint versionHashesLength = countVersionHashes();
-        uint256 index = getVersionIndex(_versionHash);
+        
+        int256 index = getVersionIndex(_versionHash);
 
-        require(index != versionHashesLength+1);
+        require(index != -1);
 
         // reset index value to default
-        delete versionHashes[index];
+        delete versionHashes[uint256(index)];
         emit VersionDelete(_versionHash, index);
         return index;
     }

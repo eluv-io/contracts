@@ -19,26 +19,21 @@ contract Editable is Ownable {
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
     event VersionConfirm(string objectHash);
-    event VersionDelete(string versionHash, int256 index);
+    event VersionDelete(string versionHash, uint256 index);
 
     string public objectHash;
     string[] public versionHashes;
-    string pendingHash;
+    string public pendingHash;
+
+    struct VersionHashInfo {
+        bool exists;
+        uint256 index;
+    }
+
+    mapping (string => VersionHashInfo) versionHashInfos;
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
-    }
-
-    // if _versionHash is present returns the index of the versionHash else length(versionHashes)+1
-    function getVersionIndex(string _versionHash) public view returns (int256) {
-       
-        bytes32 vh = keccak256(abi.encode(_versionHash));
-        for(uint256 i=0; i < versionHashes.length; i++){
-            if (keccak256(bytes(versionHashes[i])) == vh) {
-                return int256(i);
-            }
-        }
-        return -1;
     }
 
     // intended to be overridden
@@ -67,6 +62,7 @@ contract Editable is Ownable {
 
         if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
+            versionHashInfos[objectHash] = VersionHashInfo(true, versionHashes.length-1);
         }
         objectHash = pendingHash;
         pendingHash = "";
@@ -78,15 +74,16 @@ contract Editable is Ownable {
         emit UpdateRequest(objectHash);
     }
 
-    function deleteVersion(string _versionHash) public returns (int256) {
+    function deleteVersion(string _versionHash) public returns (uint256) {
         require(canCommit());
-        
-        int256 index = getVersionIndex(_versionHash);
+        require(versionHashInfos[_versionHash].exists);
 
-        require(index != -1);
+        uint256 index = versionHashInfos[_versionHash].index;
 
-        // reset index value to default
-        delete versionHashes[uint256(index)];
+        // reset to default value 
+        delete versionHashes[index];
+        delete versionHashInfos[_versionHash];
+
         emit VersionDelete(_versionHash, index);
         return index;
     }

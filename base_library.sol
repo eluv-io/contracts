@@ -169,8 +169,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return false;
     }
 
-
-
     function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
         for (uint i = 0; i < _groupList.length; i++) {
             if (_groupList[i] != 0x0) {

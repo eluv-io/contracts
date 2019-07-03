@@ -19,18 +19,11 @@ contract Editable is Ownable {
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
     event VersionConfirm(string objectHash);
-    event VersionDelete(string versionHash, uint256 index);
+    event VersionDelete(string versionHash, int256 index);
 
     string public objectHash;
     string[] public versionHashes;
     string public pendingHash;
-
-    struct VersionHashInfo {
-        bool exists;
-        uint256 index;
-    }
-
-    mapping (string => VersionHashInfo) versionHashInfos;
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
@@ -62,7 +55,6 @@ contract Editable is Ownable {
 
         if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
-            versionHashInfos[objectHash] = VersionHashInfo(true, versionHashes.length-1);
         }
         objectHash = pendingHash;
         pendingHash = "";
@@ -74,18 +66,27 @@ contract Editable is Ownable {
         emit UpdateRequest(objectHash);
     }
 
-    function deleteVersion(string _versionHash) public returns (uint256) {
+    function deleteVersion(string _versionHash) public returns (int256) {
         require(canCommit());
-        require(versionHashInfos[_versionHash].exists);
 
-        uint256 index = versionHashInfos[_versionHash].index;
+        bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
+        int256 foundIdx = -1;
+        for (uint256 i = 0; i < versionHashes.length; i++) {
+            bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));
+            if (findHash == checkHash) {
+                delete versionHashes[i];
+                if (i != (versionHashes.length - 1)) {
+                    versionHashes[i] = versionHashes[versionHashes.length - 1];
+                }
+                versionHashes.length--;
+                foundIdx = int256(i);
+                break;
+            }
+        }
+        require(foundIdx != -1);
 
-        // reset to default value 
-        delete versionHashes[index];
-        delete versionHashInfos[_versionHash];
-
-        emit VersionDelete(_versionHash, index);
-        return index;
+        emit VersionDelete(_versionHash, foundIdx);
+        return foundIdx;
     }
 
 }

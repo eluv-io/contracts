@@ -261,7 +261,7 @@ contract BaseContent is Editable {
                     if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
                         visibilityCode = 0;
                     }
-                    return (visibilityCode, accessCode, accessCharge);
+                    // return (visibilityCode, accessCode, accessCharge);
                 }
                 if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
                     if (accessCode == 255) {

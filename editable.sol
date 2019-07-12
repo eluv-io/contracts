@@ -70,6 +70,13 @@ contract Editable is Ownable {
         require(canCommit());
 
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
+        bytes32 objHash = keccak256(abi.encodePacked(objectHash));
+        if ((findHash == objHash) && (versionHashes.length == 0)) {
+            objectHash = "";
+            emit VersionDelete(_versionHash, 0);
+            return 0;
+        }
+        
         int256 foundIdx = -1;
         for (uint256 i = 0; i < versionHashes.length; i++) {
             bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));

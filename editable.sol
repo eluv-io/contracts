@@ -18,8 +18,8 @@ contract Editable is Ownable {
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
-    event VersionConfirm(string objectHash);
-    event VersionDelete(string versionHash, int256 index);
+    event VersionConfirm(address spaceAddress, string objectHash);
+    event VersionDelete(address spaceAddress, string versionHash, int256 index);
 
     string public objectHash;
     string[] public versionHashes;
@@ -58,7 +58,7 @@ contract Editable is Ownable {
         }
         objectHash = pendingHash;
         pendingHash = "";
-        emit VersionConfirm(objectHash);
+        emit VersionConfirm(contentSpace, objectHash);
     }
 
     function updateRequest() public {
@@ -85,7 +85,7 @@ contract Editable is Ownable {
         }
         require(foundIdx != -1);
 
-        emit VersionDelete(_versionHash, foundIdx);
+        emit VersionDelete(contentSpace, _versionHash, foundIdx);
         return foundIdx;
     }
 

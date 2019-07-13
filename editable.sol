@@ -67,8 +67,7 @@ contract Editable is Ownable {
     }
 
     function deleteVersion(string _versionHash) public returns (int256) {
-        require(canCommit());
-
+        
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
         bytes32 objHash = keccak256(abi.encodePacked(objectHash));
         if ((findHash == objHash) && (versionHashes.length == 0)) {

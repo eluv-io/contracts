@@ -14,7 +14,7 @@ Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the c
 
 contract Editable is Ownable {
 
-    bytes32 public version ="Editable20190607105600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20190715105600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -22,8 +22,9 @@ contract Editable is Ownable {
     event VersionDelete(string versionHash, int256 index);
 
     string public objectHash;
+    uint objectTimestamp;
     string[] public versionHashes;
-    uint[] public versionTimeStamp;
+    uint[] public versionTimestamp;
 
     string public pendingHash;
 
@@ -57,9 +58,10 @@ contract Editable is Ownable {
 
         if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
-            versionTimeStamp.push(block.timestamp);
+            versionTimestamp.push(objectTimestamp);
         }
         objectHash = pendingHash;
+        objectTimestamp = block.timestamp;
         pendingHash = "";
         emit VersionConfirm(objectHash);
         return true;
@@ -77,6 +79,7 @@ contract Editable is Ownable {
         bytes32 objHash = keccak256(abi.encodePacked(objectHash));
         if (findHash == objHash) {
             objectHash = "";
+            objectTimestamp = 0;
             emit VersionDelete(_versionHash, 0);
             return 0;
         }
@@ -86,12 +89,13 @@ contract Editable is Ownable {
             bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));
             if (findHash == checkHash) {
                 delete versionHashes[i];
+                delete versionTimestamp[i];
                 if (i != (versionHashes.length - 1)) {
                     versionHashes[i] = versionHashes[versionHashes.length - 1];
-                    versionTimeStamp[i] = versionTimeStamp[versionTimeStamp.length - 1];
+                    versionTimestamp[i] = versionTimestamp[versionTimestamp.length - 1];
                 }
                 versionHashes.length--;
-                versionTimeStamp.length--;
+                versionTimestamp.length--;
                 foundIdx = int256(i);
                 break;
             }
@@ -101,7 +105,4 @@ contract Editable is Ownable {
         emit VersionDelete(_versionHash, foundIdx);
         return foundIdx;
     }
-
-
-
 }

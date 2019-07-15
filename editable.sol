@@ -23,6 +23,8 @@ contract Editable is Ownable {
 
     string public objectHash;
     string[] public versionHashes;
+    uint[] public versionTimeStamp;
+
     string public pendingHash;
 
     function countVersionHashes() public view returns (uint256) {
@@ -55,6 +57,7 @@ contract Editable is Ownable {
 
         if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
+            versionTimeStamp.push(block.timestamp);
         }
         objectHash = pendingHash;
         pendingHash = "";
@@ -85,8 +88,10 @@ contract Editable is Ownable {
                 delete versionHashes[i];
                 if (i != (versionHashes.length - 1)) {
                     versionHashes[i] = versionHashes[versionHashes.length - 1];
+                    versionTimeStamp[i] = versionTimeStamp[versionTimeStamp.length - 1];
                 }
                 versionHashes.length--;
+                versionTimeStamp.length--;
                 foundIdx = int256(i);
                 break;
             }
@@ -96,5 +101,7 @@ contract Editable is Ownable {
         emit VersionDelete(_versionHash, foundIdx);
         return foundIdx;
     }
+
+
 
 }

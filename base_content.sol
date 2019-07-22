@@ -20,7 +20,7 @@ BaseContent20190605203200ML: Split publish and confirm logic
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190605203200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -78,6 +78,11 @@ contract BaseContent is Editable {
     event InvokeCustomPreHook(address custom_contract);
     event ReturnCustomHook(address custom_contract, uint256 result);
     event InvokeCustomPostHook(address custom_contract);
+
+    modifier onlyFromLibrary() {
+        require(msg.sender == libraryAddress);
+        _;
+    }
 
     constructor(address content_space, address lib, address content_type) public payable {
         contentSpace = content_space;
@@ -159,6 +164,14 @@ contract BaseContent is Editable {
 
     function setAddressKMS(address address_KMS) public onlyOwner {
         addressKMS = address_KMS;
+    }
+
+    function getKMSInfo(bytes prefix) public view returns (string, string) {
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        if (addressKMS == 0x0 || contentSpaceObj.checkKMSAddr(addressKMS) == 0) {
+            return ("", "");
+        }
+        return contentSpaceObj.getKMSInfo(contentSpaceObj.getKMSID(addressKMS), prefix);
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.
@@ -253,7 +266,7 @@ contract BaseContent is Editable {
                     if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
                         visibilityCode = 0;
                     }
-                    return (visibilityCode, accessCode, accessCharge);
+                    // return (visibilityCode, accessCode, accessCharge);
                 }
                 if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
                     if (accessCode == 255) {
@@ -361,6 +374,11 @@ contract BaseContent is Editable {
     function canConfirm() public view returns (bool) {
         Container lib = Container(libraryAddress);
         return lib.canNodePublish(msg.sender);
+    }
+
+    // override from Editable
+    function parentAddress() returns (address) {
+        return libraryAddress;
     }
 
     // TODO: why payable?
@@ -548,7 +566,7 @@ contract BaseContent is Editable {
         return success;
     }
 
-    function kill() public onlyOwner {
+    function kill() public onlyFromLibrary {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
             require(c.runKill() == 0);

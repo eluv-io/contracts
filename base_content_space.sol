@@ -15,6 +15,8 @@ import "./user_space.sol";
 import "./node_space.sol";
 import "./node.sol";
 import "./meta_object.sol";
+import "./transactable.sol";
+import "./lib_precompile.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -29,7 +31,7 @@ BaseContentSpace20190605144600ML: Implements canConfirm to overloads default fro
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
 
-    bytes32 public version ="BaseContentSpace20190605144600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20190703120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -38,10 +40,10 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     address public libraryFactory;
     address public contentFactory;
 
-    address public guarantor;
-
     mapping(address => address) public nodeMapping;
 
+    mapping(string => bytes[]) kmsMapping;
+    mapping(string => string)  kmsPublicKeys;
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
@@ -55,10 +57,16 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event RegisterNode(address nodeObjAddr);
     event UnregisterNode(address nodeObjAddr);
 
+    event AddKMSLocator(address sender,uint status);
+    event RemoveKMSLocator(address sender, uint status);
+
+    event CreateSpace(bytes32 version, address owner);
+    event GetAccessWallet(address walletAddress);
 
     constructor(string memory content_space_name) public {
         name = content_space_name;
         contentSpace = address(this);
+        emit CreateSpace(version, owner);
     }
 
     function setFactory(address new_factory) public onlyOwner {
@@ -75,10 +83,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     function setContentFactory(address new_factory) public onlyOwner {
         contentFactory = new_factory;
-    }
-
-    function setGuarantor(address _guarantor) public onlyOwner {
-        guarantor = _guarantor;
     }
 
     function setDescription(string memory content_space_description) public onlyOwner {
@@ -146,6 +150,20 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return createUserWallet(tx.origin);
     }
 
+    // TODO: TESTING
+    function createUserGuarantorWallet(address _user) public returns (bool) {
+        if (userWallets[_user] != 0x0) {
+            return false;
+        }
+        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
+        BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
+        // wallet.setGuarantor(msg.sender);
+        wallet.transferOwnership(_user);
+        userWallets[_user] = walletAddress;
+        emit CreateAccessWallet(walletAddress); // TODO: different event here?
+        return true;
+    }
+
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
     function createUserWallet(address user) private returns (address) {
@@ -161,11 +179,15 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
 
     function getAccessWallet() public returns(address) {
+        address walletAddress;
         if (userWallets[tx.origin] == 0x0) {
-            return createAccessWallet();
+            walletAddress = createAccessWallet();
         } else {
-            return userWallets[tx.origin];
+            walletAddress = userWallets[tx.origin];
         }
+
+        emit GetAccessWallet(walletAddress);
+        return walletAddress;
     }
 
     /* removed as the createUserWallet does not work for creating wallet on behalf of a user
@@ -179,7 +201,131 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
     */
 
+    // TODO kmsAddr => kmsID
+    function getKMSID(address _kmsAddr) public view returns (string){
+        return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
+    }
+    
+    function checkKMS(string _kmsIdStr) public view returns (uint) {
+        return kmsMapping[_kmsIdStr].length;
+    }
 
+    function checkKMSAddr(address _kmsAddr) public view returns (uint) {
+        string memory kmsID = getKMSID(_kmsAddr);
+        return kmsMapping[kmsID].length;
+    }
+
+    // can be used to add or remove - i.e. set to ""
+    function setKMSPublicKey(string _kmsID, string _pubKey) public onlyOwner {
+        kmsPublicKeys[_kmsID] = _pubKey;
+    }
+
+    function matchesPrefix(bytes input, bytes prefix) pure internal returns (bool) {
+        uint len = prefix.length;
+        if (len > input.length) len = input.length;
+        for (uint x = 0; x < len; x++) {
+            if (input[x] != prefix[x]) return false;
+        }
+        return true;
+    }
+
+    function filterPrefix(bytes[] input, bytes prefix) view internal returns (bytes[]) {
+        uint countMatch = 0;
+        for (uint i = 0; i < input.length; i++) {
+            if (matchesPrefix(input[i], prefix)) {
+                countMatch++;
+            }
+        }
+        bytes[] memory output = new bytes[](countMatch);
+        if (countMatch == 0) return output;
+        countMatch = 0;
+        for (i = 0; i < input.length; i++) {
+            if (matchesPrefix(input[i], prefix)) {
+                output[countMatch] = input[i];
+                countMatch++;
+            }
+        }
+        return output;
+    }
+
+    function getKMSInfo(string _kmsID, bytes prefix) public view returns (string, string) {
+        bytes[] memory locators = kmsMapping[_kmsID];
+        string memory publicKey = kmsPublicKeys[_kmsID];
+
+        if (locators.length == 0) return ("", publicKey);
+        bytes[] memory filtered = filterPrefix(locators, prefix);
+
+        string memory output;
+        for (uint i = 0; i < filtered.length; i++) {
+            if (i == filtered.length -1) {
+                output = string(abi.encodePacked(output, string(filtered[i])));
+            } else {
+                output = string(abi.encodePacked(output, string(filtered[i]), ","));
+            }
+        }
+        return (output, publicKey);
+    }
+
+
+    // KMS mappings
+    // mapping(address => string[]) public kmsMapping;
+    // status -> 0 added
+    // status -> 1 not added
+    function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+        bytes[] memory kmsLocators = kmsMapping[_kmsID];
+        
+        for (uint i = 0; i < kmsLocators.length; i++) {
+            if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
+                emit AddKMSLocator(msg.sender, 1);
+                return false;
+            }
+        }
+        kmsMapping[_kmsID].push(_locator);
+        emit AddKMSLocator(msg.sender, 0);
+        return true;
+    }
+
+    // status -> 0 removed
+    // status -> 1 not removed
+    function removeKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+        bytes[] memory kmsLocators = kmsMapping[_kmsID];
+        for (uint i = 0; i < kmsLocators.length; i++) {
+            if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
+                if (i != kmsLocators.length - 1) {
+                    kmsMapping[_kmsID][i] = kmsLocators[kmsLocators.length - 1];
+                }
+                delete kmsMapping[_kmsID][kmsLocators.length - 1];
+                kmsMapping[_kmsID].length -= 1;
+                emit RemoveKMSLocator(msg.sender,0);
+                return true;
+            }
+        }
+        emit RemoveKMSLocator(msg.sender,1);
+        return false;
+    }
+
+    function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public {
+
+        require(msg.sender == owner || checkKMSAddr(msg.sender) > 0);
+
+        // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly, which is the same as a revert...?
+        require(_v.length == _r.length);
+        require(_r.length == _s.length);
+        require(_s.length == _from.length);
+        require(_from.length == _dest.length);
+        require(_dest.length == _value.length);
+        require(_value.length == _ts.length);
+
+        for (uint i = 0; i < _v.length; i++) {
+            Transactable t = Transactable(_from[i]);
+            bool success = t.execute(msg.sender, _v[i], _r[i], _s[i], _dest[i], _value[i], _ts[i]);
+
+            if (!success) {
+                // we failed to get the target wallet to pay so - in this scenario - we have to pay!
+                // _dest[i].send(_value[i]); // TODO: transfer? error handling?
+            }
+        }
+    }
 }
 
 /* -- Revision history --

@@ -15,12 +15,13 @@ BsAccessCtrlGrp20190506153800ML: Adds access indexing
 BsAccessCtrlGrp20190510150700ML: Fixes bug (wrong index was used for group rights)
 BsAccessCtrlGrp20190722161600ML: Made editable
 BsAccessCtrlGrp20190722214400ML: Provides the list of members and managers
+BsAccessCtrlGrp20190723130500ML: Fix typo in managersNum
 */
 
 
 contract BaseAccessControlGroup is AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20190722214400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20190723130500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     //mapping (address => bool) public members;
     //mapping (address => bool) public managers;
@@ -28,7 +29,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     address[] public membersList;
     uint256 public membersNum;
     address[] public managersList;
-    uint256 public mamagersNum;
+    uint256 public managersNum;
 
     event MemberAdded(address candidate);
     event ManagerAccessGranted(address candidate);
@@ -40,12 +41,12 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
         contentSpace = content_space;
         membersNum = 0;
         managersList.push(creator);
-        mamagersNum = 1;
+        managersNum = 1;
     }
 
     function grantManagerAccess(address manager) public onlyOwner {
         bool already = false;
-        for (uint i = 0; i < mamagersNum; i++) {
+        for (uint i = 0; i < managersNum; i++) {
             if (managersList[i] == manager) {
                 already = true;
                 break;
@@ -53,7 +54,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
         }
         if (already == false) {
             managersList.push(manager);
-            mamagersNum++;
+            managersNum++;
         }
         emit ManagerAccessGranted(manager);
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
@@ -64,14 +65,14 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
 
     function revokeManagerAccess(address manager) public {
         require((msg.sender == owner) || (msg.sender == manager));
-        for (uint i = 0; i < mamagersNum; i++) {
+        for (uint i = 0; i < managersNum; i++) {
             if (managersList[i] == manager) {
                 delete managersList[i];
-                if (i != (mamagersNum - 1)) {
-                    managersList[i] = managersList[mamagersNum - 1];
-                    delete managersList[mamagersNum - 1];
+                if (i != (managersNum - 1)) {
+                    managersList[i] = managersList[managersNum - 1];
+                    delete managersList[managersNum - 1];
                 }
-                mamagersNum--;
+                managersNum--;
                 break;
             }
         }

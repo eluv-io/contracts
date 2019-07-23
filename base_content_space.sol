@@ -338,7 +338,7 @@ BaseFactory20190722161600ML: No changes, updated to provide generation for BsAcc
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20190722161600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20190722224500SS"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContentType() public returns (address) {
         address newType = (new BaseContentType(msg.sender));

@@ -27,6 +27,7 @@ contract Editable is Ownable {
     uint[] public versionTimestamp;
 
     string public pendingHash;
+    bool commitPending;
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
@@ -48,13 +49,16 @@ contract Editable is Ownable {
 
     function commit(string _objectHash) public {
         require(canCommit());
+        require(!commitPending); // don't allow two possibly different commits to step on each other - one always wins
 	    require(bytes(_objectHash).length < 128);
         pendingHash = _objectHash;
+        commitPending = true;
         emit CommitPending(contentSpace, parentAddress(), pendingHash);
     }
 
     function confirmCommit() public payable returns (bool) {
         require(canConfirm());
+        require(commitPending);
 
         if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
@@ -63,6 +67,7 @@ contract Editable is Ownable {
         objectHash = pendingHash;
         objectTimestamp = block.timestamp;
         pendingHash = "";
+        commitPending = false;
         emit VersionConfirm(contentSpace, objectHash);
         return true;
     }

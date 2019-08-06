@@ -398,7 +398,7 @@ contract BaseContent is Editable {
             accessCode = 0;
         }
         emit DbgAccessCode(accessCode);
-        //require(accessCode == 0);
+        require(accessCode == 0);
 
 
         RequestData memory r = RequestData(msg.sender, msg.value, 0, 0);

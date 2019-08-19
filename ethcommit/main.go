@@ -147,7 +147,7 @@ func readConfig(cmd *cobra.Command, args []string) error {
 }
 
 func getCommit(cmd *cobra.Command, args []string) error {
-	err := gitutils.GetContractFile()
+	err := gitutils.GetContractGitCommit()
 	if err != nil {
 		return err
 	}

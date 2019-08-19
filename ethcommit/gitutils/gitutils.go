@@ -1,14 +1,31 @@
 package gitutils
 
 import (
-"fmt"
-"gopkg.in/src-d/go-git.v4"
-"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"regexp"
+	"context"
+	"encoding/hex"
+	"fmt"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
-func GetContractFile() error {
+func GetContractGitCommit() error {
+
+	address := "0x2f603b833d64fca173b4e4880b9f7935d1acc07f"
+	clientUrl := "http://localhost:8545"
+
+	conn,err := ethclient.Dial(clientUrl)
+	if err != nil {
+		return err
+	}
+
+	RuntimeBytecode, err := conn.CodeAt(context.Background(), common.HexToAddress(address), nil)
+	if err != nil {
+		return err
+	}
 
 	projRootDir := "/Users/preethi/Desktop/qluvio/elv-io/contracts"
 	r, err := git.PlainOpen(projRootDir)
@@ -26,55 +43,31 @@ func GetContractFile() error {
 	if err != nil {
 		return err
 	}
-	//commitIter, err := r.Log(&git.LogOptions{From: commit.Hash})
-	//if err != nil {
-	//	return err
-	//}
-
-	f, err := commit.File("build/base_content_space.go")
-	if err != object.ErrFileNotFound {
-		content, _ := f.Contents()
-
-		re := regexp.MustCompile("([\"'`])(?:(?=(\\?))\2.)*?\1")
-		fmt.Printf("Pattern: %v\n", re.String())      // print pattern
-		fmt.Println("Matched:", re.MatchString(content)) // true
-
-		fmt.Println("\nText between square brackets:")
-		submatchall := re.FindAllString(content, -1)
-		fmt.Println(submatchall)
-		//for _, element := range submatchall {
-		//	element = strings.Trim(element, "[")
-		//	element = strings.Trim(element, "]")
-		//	fmt.Println(element)
-		//}
-
-
-		//if strings.Contains(content, "BaseContentSpaceBin = ") {
-		//	fmt.Println("FOUND")
-		//}
-
+	commitIter, err := r.Log(&git.LogOptions{From: commit.Hash})
+	if err != nil {
+		return err
 	}
 
-	//err = commitIter.ForEach(func(c *object.Commit) error {
-	//	hash := c.Hash.String()
-	//	line := strings.Split(c.Message, "\n")
-	//	fmt.Println(hash, line)
-	//	f, err := c.File("build/base_content_space.go")
-	//	if err != object.ErrFileNotFound {
-	//		content, _ := f.Contents()
-	//		fmt.Println("CONTENT:",content)
-	//
-	//		if strings.Index(content, "BaseContentSpaceBin = ") != -1 {
-	//			fmt.Println("FOUND")
-	//		}
-	//
-	//	}
-	//
-	//	return nil
-	//})
-	//if err != nil {
-	//	return err
-	//}
+	err = commitIter.ForEach(func(c *object.Commit) error {
+		hash := c.Hash.String()
+		//line := strings.Split(c.Message, "\n")
+		fmt.Println(hash)
+		f, err := c.File("build/base_content_space.go")
+		if err != object.ErrFileNotFound {
+			content, _ := f.Contents()
+			fmt.Println("CONTENT:", len(content))
+			RuntimeBytecodePresent := strings.Contains(content, hex.EncodeToString(RuntimeBytecode))
+			fmt.Println("RuntimeBytecode", RuntimeBytecodePresent)
+			if RuntimeBytecodePresent {
+				fmt.Println(commit.Hash, "bytehash is present")
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

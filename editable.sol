@@ -9,21 +9,26 @@ Editable20190315141800ML: Migrated to 0.4.24
 Editable20190515103600ML: Modified rights restriction on update to match the one on commit
 Editable20190522154000SS: Changed hash bytes32 to string
 Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the case of the content-objects
+Editable20190715105600PO
+Editable20190801135500ML: Made explicit the definition of parentAddress method
 */
 
 
 contract Editable is Ownable {
     using strings for *;
 
-    bytes32 public version ="Editable20190607105600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20190801135500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
-    event VersionConfirm(string objectHash);
-    event VersionDelete(string versionHash, int256 index);
+    event VersionConfirm(address spaceAddress, string objectHash);
+    event VersionDelete(address spaceAddress, string versionHash, int256 index);
 
     string public objectHash;
+    uint objectTimestamp;
     string[] public versionHashes;
+    uint[] public versionTimestamp;
+
     string public pendingHash;
 
     function migrate(string _objectHash, string _versionHashesConcat) internal onlyOwner {
@@ -58,7 +63,7 @@ contract Editable is Ownable {
     }
 
     // overridden in BaseContent to return library
-    function parentAddress() returns (address) {
+    function parentAddress() public view returns (address) {
         return contentSpace;
     }
 
@@ -74,10 +79,13 @@ contract Editable is Ownable {
 
         if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
+            versionTimestamp.push(objectTimestamp);
         }
         objectHash = pendingHash;
+        objectTimestamp = block.timestamp;
         pendingHash = "";
-        emit VersionConfirm(objectHash);
+        emit VersionConfirm(contentSpace, objectHash);
+        return true;
     }
 
     function updateRequest() public {
@@ -87,25 +95,35 @@ contract Editable is Ownable {
 
     function deleteVersion(string _versionHash) public returns (int256) {
         require(canCommit());
-
+        
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
+        bytes32 objHash = keccak256(abi.encodePacked(objectHash));
+        if (findHash == objHash) {
+            objectHash = "";
+            objectTimestamp = 0;
+            emit VersionDelete(contentSpace, _versionHash, 0);
+            return 0;
+        }
+        
         int256 foundIdx = -1;
         for (uint256 i = 0; i < versionHashes.length; i++) {
             bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));
             if (findHash == checkHash) {
                 delete versionHashes[i];
+                delete versionTimestamp[i];
                 if (i != (versionHashes.length - 1)) {
                     versionHashes[i] = versionHashes[versionHashes.length - 1];
+                    versionTimestamp[i] = versionTimestamp[versionTimestamp.length - 1];
                 }
                 versionHashes.length--;
+                versionTimestamp.length--;
                 foundIdx = int256(i);
                 break;
             }
         }
         require(foundIdx != -1);
 
-        emit VersionDelete(_versionHash, foundIdx);
+        emit VersionDelete(contentSpace, _versionHash, foundIdx);
         return foundIdx;
     }
-
 }

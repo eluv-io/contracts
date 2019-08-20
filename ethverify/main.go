@@ -29,35 +29,44 @@ var (
 	config  string
 
 	cmdRoot = &cobra.Command{
-		Use:   "ethverify",
+		Use:               "ethverify",
+		Short:             "Management and verification of contracts",
+		PersistentPreRunE: readConfig,
+	}
+
+	cmdGitFind = &cobra.Command{
+		Use:   "git-find",
 		Short: "Manage and retrieve the contract's git version",
 		Long: `This tool helps to retrieve the git version at which the contract bytecode is present. 
 The parameters can be set using flags or config file.`,
-		PersistentPreRunE: readConfig,
-		RunE:              runEthVerify,
+		RunE: runGitFind,
 	}
+
+	cmdAbiDiff = &cobra.Command{}
 )
 
 func init() {
 
 	// cmd flags
-	cmdRoot.Flags().Int("verbosity", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
-	cmdRoot.Flags().String("log-file", "", "Output log file")
-	cmdRoot.Flags().StringVar(&config, "config", "", "Config file path (default=<Homedir>/.eluvio/ethverify/config.toml")
-	cmdRoot.Flags().String("ethurl", "http://localhost:8545", "HTTP-RPC server listening interface")
-	cmdRoot.Flags().String("rootdir", "", "git root directory")
-	cmdRoot.Flags().String("contract", "", "provide contract address")
+	cmdRoot.PersistentFlags().Int("verbosity", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
+	cmdRoot.PersistentFlags().String("log-file", "", "Output log file")
+	cmdRoot.PersistentFlags().StringVar(&config, "config", "", "Config file path (default=<Homedir>/.eluvio/ethverify/config.toml")
+	cmdGitFind.Flags().String("ethurl", "http://localhost:8545", "HTTP-RPC server listening interface")
+	cmdGitFind.Flags().String("rootdir", "", "git root directory")
+	cmdGitFind.Flags().String("contract", "", "provide contract address")
 
-	_ = viper.BindPFlag("verbosity", cmdRoot.Flags().Lookup("verbosity"))
-	_ = viper.BindPFlag("log_file", cmdRoot.Flags().Lookup("log-file"))
-	_ = viper.BindPFlag("ethurl", cmdRoot.Flags().Lookup("ethurl"))
-	_ = viper.BindPFlag("rootdir", cmdRoot.Flags().Lookup("rootdir"))
-	_ = viper.BindPFlag("contract", cmdRoot.Flags().Lookup("contract"))
+	_ = viper.BindPFlag("verbosity", cmdRoot.PersistentFlags().Lookup("verbosity"))
+	_ = viper.BindPFlag("log_file", cmdRoot.PersistentFlags().Lookup("log-file"))
+	_ = viper.BindPFlag("git_find.ethurl", cmdGitFind.Flags().Lookup("ethurl"))
+	_ = viper.BindPFlag("git_find.rootdir", cmdGitFind.Flags().Lookup("rootdir"))
+	_ = viper.BindPFlag("git_find.contract", cmdGitFind.Flags().Lookup("contract"))
 
 	// for env variable
 	replacer := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv()
+
+	cmdRoot.AddCommand(cmdGitFind)
 
 }
 
@@ -149,14 +158,14 @@ func readConfig(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func runEthVerify(cmd *cobra.Command, args []string) error {
+func runGitFind(cmd *cobra.Command, args []string) error {
 
-	ethUrl := viper.GetString("ethurl")
-	rootDir := viper.GetString("rootdir")
+	ethUrl := viper.GetString("git_find.ethurl")
+	rootDir := viper.GetString("git_find.rootdir")
 	if rootDir == "" {
 		return fmt.Errorf("root directory is nil")
 	}
-	contractAddr := viper.GetString("contract")
+	contractAddr := viper.GetString("git_find.contract")
 	if !common.IsHexAddress(contractAddr) || contractAddr == "" {
 		return fmt.Errorf("contract address provided is invalid, contract addr = %v", contractAddr)
 	}

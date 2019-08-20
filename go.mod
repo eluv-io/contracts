@@ -23,6 +23,7 @@ require (
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
+	github.com/olekukonko/tablewriter v0.0.1
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect

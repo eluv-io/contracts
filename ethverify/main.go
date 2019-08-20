@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/eluv-io/contracts/ethcommit/gitutils"
+	"github.com/eluv-io/contracts/ethverify/gitutils"
 	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/mitchellh/go-homedir"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"io"
@@ -18,7 +20,7 @@ import (
 )
 
 const (
-	DefaultElvFolder = ".eluvio/ethcommit"
+	DefaultElvFolder = ".eluvio/ethverify"
 )
 
 var (
@@ -27,34 +29,33 @@ var (
 	config  string
 
 	cmdRoot = &cobra.Command{
-		Use:               "ethcommit",
-		Short:             "Manage and retrieve contract version",
+		Use:               "ethverify",
+		Short:             "Manage and retrieve the contract's git version",
 		PersistentPreRunE: readConfig,
-	}
-
-	cmdGet = &cobra.Command{
-		Use:   "get",
-		Short: "get content version",
-		RunE:  getCommit,
+		RunE:              runEthVerify,
 	}
 )
 
 func init() {
 
 	// cmd flags
-	cmdRoot.PersistentFlags().Int("verbosity", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
-	cmdRoot.PersistentFlags().String("log-file", "", "Output log file")
-	cmdRoot.PersistentFlags().StringVar(&config, "config", "", "Config file path")
+	cmdRoot.Flags().Int("verbosity", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
+	cmdRoot.Flags().String("log-file", "", "Output log file")
+	cmdRoot.Flags().StringVar(&config, "config", "", "Config file path")
+	cmdRoot.Flags().String("ethurl", "http://localhost:8545", "HTTP-RPC server listening interface")
+	cmdRoot.Flags().String("rootdir", "", "git root directory")
+	cmdRoot.Flags().String("contract", "", "provide contract address")
 
-	_ = viper.BindPFlag("node.verbosity", cmdRoot.PersistentFlags().Lookup("verbosity"))
-	_ = viper.BindPFlag("node.log_file", cmdRoot.PersistentFlags().Lookup("log-file"))
+	_ = viper.BindPFlag("verbosity", cmdRoot.Flags().Lookup("verbosity"))
+	_ = viper.BindPFlag("log_file", cmdRoot.Flags().Lookup("log-file"))
+	_ = viper.BindPFlag("ethurl", cmdRoot.Flags().Lookup("ethurl"))
+	_ = viper.BindPFlag("rootdir", cmdRoot.Flags().Lookup("rootdir"))
+	_ = viper.BindPFlag("contract", cmdRoot.Flags().Lookup("contract"))
 
 	// for env variable
 	replacer := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv()
-
-	cmdRoot.AddCommand(cmdGet)
 
 }
 
@@ -106,8 +107,8 @@ func readConfig(cmd *cobra.Command, args []string) error {
 
 	var output io.Writer
 	usecolor := (isatty.IsTerminal(os.Stderr.Fd()) || isatty.IsCygwinTerminal(os.Stderr.Fd())) && os.Getenv("TERM") != "dumb"
-	logFile := viper.GetString("node.log_file")
-	verbosity := viper.GetInt("node.verbosity")
+	logFile := viper.GetString("log_file")
+	verbosity := viper.GetInt("verbosity")
 
 	var lvl log.Lvl
 	switch verbosity {
@@ -146,11 +147,33 @@ func readConfig(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getCommit(cmd *cobra.Command, args []string) error {
-	err := gitutils.GetContractGitCommit()
+func runEthVerify(cmd *cobra.Command, args []string) error {
+
+	ethUrl := viper.GetString("ethurl")
+	rootDir := viper.GetString("rootdir")
+	if rootDir == "" {
+		return fmt.Errorf("root directory is nil")
+	}
+	contractAddr := viper.GetString("contract")
+	if !common.IsHexAddress(contractAddr) || contractAddr == "" {
+		return fmt.Errorf("contract address provided is invalid, contract addr = %v", contractAddr)
+	}
+	gitCommits, err := gitutils.GetContractGitCommit(rootDir, ethUrl, common.HexToAddress(contractAddr))
 	if err != nil {
 		return err
 	}
+
+	if len(gitCommits) > 0 {
+		var table *tablewriter.Table
+		table = tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Git Contract Info"})
+		table.SetRowLine(true)
+		for _, v := range gitCommits {
+			table.Append([]string{v})
+		}
+		table.Render()
+	}
+
 	return nil
 }
 
@@ -166,11 +189,11 @@ func Execute() error {
 
 func main() {
 
-	log.Info("EXECUTING elv-master daemon...")
+	log.Info("EXECUTING eth-verify daemon...")
 
 	if err := Execute(); err != nil {
 		os.Exit(1)
 	}
 
-	log.Info("LEAVING elv-master daemon...")
+	log.Info("LEAVING eth-verify daemon...")
 }

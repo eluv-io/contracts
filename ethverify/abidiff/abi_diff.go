@@ -5,15 +5,18 @@ import (
 	"fmt"
 	contracts "github.com/eluv-io/contracts/build"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/log"
+
 	"io/ioutil"
 	"os"
+	"path"
 	"sort"
 	"strings"
 )
 
 type ContractInfo struct {
-	Name      string
-	ABI       string
+	Name string
+	ABI  string
 }
 
 // if someone knows how to find all the constants in a package, let me know...
@@ -23,15 +26,15 @@ var checkContracts = []ContractInfo{
 	{"BaseContent", contracts.BaseContentABI},
 	{"BaseAccessControlGroup", contracts.BaseAccessControlGroupABI},
 	{"BaseContentType", contracts.BaseContentABI},
-	{"BaseAccessWallet", contracts.BaseAccessWalletABI},
+	//{"BaseAccessWallet", contracts.BaseAccessWalletABI},
 }
 
 type DiffItem struct {
 	Breaking bool
-	Report string
+	Report   string
 }
 
- func mergeCompareKeyLists(lkeys, rkeys []string, cmpFunc func(string), diffFunc func(key string, leftDiff bool)) {
+func mergeCompareKeyLists(lkeys, rkeys []string, cmpFunc func(string), diffFunc func(key string, leftDiff bool)) {
 	lidx := 0
 	ridx := 0
 	for {
@@ -62,12 +65,12 @@ type DiffItem struct {
 	}
 }
 
-func VerifyAllABI() ([]DiffItem, error) {
+func VerifyAllABI(overwrite bool) ([]DiffItem, error) {
 
 	allDiffs := make([]DiffItem, 0)
 
 	for _, ci := range checkContracts {
-		diffs, err := diffABIStore(ci.Name, ci.ABI)
+		diffs, err := diffABIStore(ci.Name, ci.ABI, overwrite)
 		if err != nil {
 			return nil, err
 		}
@@ -77,15 +80,26 @@ func VerifyAllABI() ([]DiffItem, error) {
 	return allDiffs, nil
 }
 
-const ConfigStoreDir = "../store" // TODO: actually config'd
-func diffABIStore(contractName, jsonCurrentABI string) ([]DiffItem, error) {
+const ConfigStoreDir = "./store" // TODO: actually config'd
+func diffABIStore(contractName, jsonCurrentABI string, overwrite bool) ([]DiffItem, error) {
 
-	storeFileName := fmt.Sprintf("%v/%v.json", ConfigStoreDir, contractName)
+	if _, err := os.Stat(ConfigStoreDir); err != nil {
+		if os.IsNotExist(err) {
+			os.MkdirAll(ConfigStoreDir, os.ModePerm)
+		}
+	}
+
+	storeFileName := path.Join(ConfigStoreDir, fmt.Sprintf("%v.json", contractName))
 	if _, err := os.Stat(storeFileName); err != nil {
 		if os.IsNotExist(err) {
 			return nil, ioutil.WriteFile(storeFileName, []byte(jsonCurrentABI), os.ModePerm)
 		}
 		return nil, err
+	}
+
+	log.Debug("overwrite", "value", overwrite)
+	if overwrite {
+		return nil, ioutil.WriteFile(storeFileName, []byte(jsonCurrentABI), os.ModePerm)
 	}
 
 	storeABIStr, err := ioutil.ReadFile(storeFileName)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/eluv-io/contracts/ethverify/abidiff"
 	"github.com/eluv-io/contracts/ethverify/gitutils"
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
@@ -42,7 +43,12 @@ The parameters can be set using flags or config file.`,
 		RunE: runGitFind,
 	}
 
-	cmdAbiDiff = &cobra.Command{}
+	cmdAbiDiff = &cobra.Command{
+		Use:   "abi-diff",
+		Short: "To identify changes made to contracts",
+		Long:  `<Todo>`,
+		RunE:  runAbiDiff,
+	}
 )
 
 func init() {
@@ -51,15 +57,19 @@ func init() {
 	cmdRoot.PersistentFlags().Int("verbosity", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
 	cmdRoot.PersistentFlags().String("log-file", "", "Output log file")
 	cmdRoot.PersistentFlags().StringVar(&config, "config", "", "Config file path (default=<Homedir>/.eluvio/ethverify/config.toml")
+
 	cmdGitFind.Flags().String("ethurl", "http://localhost:8545", "HTTP-RPC server listening interface")
 	cmdGitFind.Flags().String("rootdir", "", "git root directory")
 	cmdGitFind.Flags().String("contract", "", "provide contract address")
+
+	cmdAbiDiff.Flags().Bool("overwrite", false, "overwrite 'store' directory with new abi, even if abi-diff throws breaking changes")
 
 	_ = viper.BindPFlag("verbosity", cmdRoot.PersistentFlags().Lookup("verbosity"))
 	_ = viper.BindPFlag("log_file", cmdRoot.PersistentFlags().Lookup("log-file"))
 	_ = viper.BindPFlag("git_find.ethurl", cmdGitFind.Flags().Lookup("ethurl"))
 	_ = viper.BindPFlag("git_find.rootdir", cmdGitFind.Flags().Lookup("rootdir"))
 	_ = viper.BindPFlag("git_find.contract", cmdGitFind.Flags().Lookup("contract"))
+	_ = viper.BindPFlag("abi_diff.overwrite", cmdAbiDiff.Flags().Lookup("overwrite"))
 
 	// for env variable
 	replacer := strings.NewReplacer(".", "_")
@@ -67,6 +77,7 @@ func init() {
 	viper.AutomaticEnv()
 
 	cmdRoot.AddCommand(cmdGitFind)
+	cmdRoot.AddCommand(cmdAbiDiff)
 
 }
 
@@ -183,6 +194,42 @@ func runGitFind(cmd *cobra.Command, args []string) error {
 			table.Append([]string{v})
 		}
 		table.Render()
+	}
+
+	return nil
+}
+
+func runAbiDiff(cmd *cobra.Command, args []string) error {
+
+	overwrite := viper.GetBool("abi_diff.overwrite")
+
+	diffItem, err := abidiff.VerifyAllABI(overwrite)
+	if err != nil {
+		return err
+	}
+
+	if len(diffItem) == 0 {
+		log.Info("NO difference in abi")
+		return nil
+	}
+
+	checkForBreakingChanges := false
+	for _, v := range diffItem {
+		if v.Breaking {
+			checkForBreakingChanges = true
+			log.Info("BREAKING Changes", "report", v.Report)
+		} else {
+			log.Info("Changes", "report", v.Report)
+		}
+	}
+
+	// No Breaking changes, replace the stored abi
+	if !checkForBreakingChanges {
+		_, err = abidiff.VerifyAllABI(true)
+		if err != nil {
+			return err
+		}
+		log.Info("No Breaking changes are made, replacing the STORED abi to NEW abi")
 	}
 
 	return nil

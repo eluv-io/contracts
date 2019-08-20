@@ -1,4 +1,4 @@
-package tools
+package abidiff
 
 import (
 	"github.com/eluv-io/contracts/build"
@@ -23,10 +23,10 @@ func TestABIDiff(t *testing.T) {
 	require.True(t, len(diffs) > 0)
 
 	cntBreaking := 0
-	for _, diff := range diffs {
-		if diff.Breaking {
+	for _, d := range diffs {
+		if d.Breaking {
 			cntBreaking++
-			println(diff.Report)
+			println(d.Report)
 		}
 	}
 	require.True(t, cntBreaking > 0)

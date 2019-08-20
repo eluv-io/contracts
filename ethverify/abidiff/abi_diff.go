@@ -3,11 +3,28 @@ package abidiff
 import (
 	"bytes"
 	"fmt"
+	contracts "github.com/eluv-io/contracts/build"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 )
+
+type ContractInfo struct {
+	Name      string
+	ABI       string
+}
+
+// if someone knows how to find all the constants in a package, let me know...
+var checkContracts = []ContractInfo{
+	{"BaseContentSpace", contracts.BaseContentSpaceABI},
+	{"BaseLibrary", contracts.BaseLibraryABI},
+	{"BaseContent", contracts.BaseContentABI},
+	{"BaseAccessControlGroup", contracts.BaseAccessControlGroupABI},
+	{"BaseContentType", contracts.BaseContentABI},
+	{"BaseAccessWallet", contracts.BaseAccessWalletABI},
+}
 
 type DiffItem struct {
 	Breaking bool
@@ -45,21 +62,43 @@ type DiffItem struct {
 	}
 }
 
-const ConfigStoreDir = "../store" // TODO: actually config'd
-func DiffABIStore(contractName, jsonCurrentABI string) ([]DiffItem, error) {
+func VerifyAllABI() ([]DiffItem, error) {
 
-	currentABI, err := abi.JSON(strings.NewReader(jsonCurrentABI))
-	if err != nil {
+	allDiffs := make([]DiffItem, 0)
+
+	for _, ci := range checkContracts {
+		diffs, err := diffABIStore(ci.Name, ci.ABI)
+		if err != nil {
+			return nil, err
+		}
+		allDiffs = append(allDiffs, diffs...)
+	}
+
+	return allDiffs, nil
+}
+
+const ConfigStoreDir = "../store" // TODO: actually config'd
+func diffABIStore(contractName, jsonCurrentABI string) ([]DiffItem, error) {
+
+	storeFileName := fmt.Sprintf("%v/%v.json", ConfigStoreDir, contractName)
+	if _, err := os.Stat(storeFileName); err != nil {
+		if os.IsNotExist(err) {
+			return nil, ioutil.WriteFile(storeFileName, []byte(jsonCurrentABI), os.ModePerm)
+		}
 		return nil, err
 	}
 
-	storeFileName := fmt.Sprintf("%v/%v.json", ConfigStoreDir, contractName)
 	storeABIStr, err := ioutil.ReadFile(storeFileName)
 	if err != nil {
 		return nil, err
 	}
 
 	storeABI, err := abi.JSON(strings.NewReader(string(storeABIStr)))
+	if err != nil {
+		return nil, err
+	}
+
+	currentABI, err := abi.JSON(strings.NewReader(jsonCurrentABI))
 	if err != nil {
 		return nil, err
 	}

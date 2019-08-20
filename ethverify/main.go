@@ -29,8 +29,10 @@ var (
 	config  string
 
 	cmdRoot = &cobra.Command{
-		Use:               "ethverify",
-		Short:             "Manage and retrieve the contract's git version",
+		Use:   "ethverify",
+		Short: "Manage and retrieve the contract's git version",
+		Long: `This tool helps to retrieve the git version at which the contract bytecode is present. 
+The parameters can be set using flags or config file.`,
 		PersistentPreRunE: readConfig,
 		RunE:              runEthVerify,
 	}
@@ -41,7 +43,7 @@ func init() {
 	// cmd flags
 	cmdRoot.Flags().Int("verbosity", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
 	cmdRoot.Flags().String("log-file", "", "Output log file")
-	cmdRoot.Flags().StringVar(&config, "config", "", "Config file path")
+	cmdRoot.Flags().StringVar(&config, "config", "", "Config file path (default=<Homedir>/.eluvio/ethverify/config.toml")
 	cmdRoot.Flags().String("ethurl", "http://localhost:8545", "HTTP-RPC server listening interface")
 	cmdRoot.Flags().String("rootdir", "", "git root directory")
 	cmdRoot.Flags().String("contract", "", "provide contract address")

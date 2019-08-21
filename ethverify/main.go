@@ -38,16 +38,24 @@ var (
 	cmdGitFind = &cobra.Command{
 		Use:   "git-find",
 		Short: "Manage and retrieve the contract's git version",
-		Long: `This tool helps to retrieve the git version at which the contract bytecode is present. 
+		Long: `git-find helps to retrieve the git version at which the contract bytecode is present. 
 The parameters can be set using flags or config file.`,
-		RunE: runGitFind,
+		RunE:    runGitFind,
+		Example: `ethverify git-find --contract 0x123 --ethurl http://localhost:8545 --rootdir <Path/to/contracts/folder>`,
 	}
 
 	cmdAbiDiff = &cobra.Command{
 		Use:   "abi-diff",
 		Short: "To identify changes made to contracts",
-		Long:  `<Todo>`,
-		RunE:  runAbiDiff,
+		Long: `abi-diff compares the new abi with stored abi and specifies any critical changes are present. 
+If the changes made are not critical, the store dir has new set of abi. 
+Also, the stored abi can be overwritten with new abi using --overwrite flag.
+The default path for storedir is "./store", which can be changed using --storedir flag.
+`,
+		RunE: runAbiDiff,
+		Example: `if run from 'contracts' repo, "ethverify abi-diff"
+else "ethverify abi-diff --storedir <Path/to/stored/abi/dir>"
+`,
 	}
 )
 

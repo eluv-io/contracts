@@ -3,6 +3,8 @@ package abidiff
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
+
 	contracts "github.com/eluv-io/contracts/build"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/log"
@@ -26,7 +28,7 @@ var checkContracts = []ContractInfo{
 	{"BaseContent", contracts.BaseContentABI},
 	{"BaseAccessControlGroup", contracts.BaseAccessControlGroupABI},
 	{"BaseContentType", contracts.BaseContentABI},
-	//{"BaseAccessWallet", contracts.BaseAccessWalletABI},
+	{"BaseAccessWallet", contracts.BaseAccessWalletABI},
 }
 
 type DiffItem struct {
@@ -65,12 +67,12 @@ func mergeCompareKeyLists(lkeys, rkeys []string, cmpFunc func(string), diffFunc 
 	}
 }
 
-func VerifyAllABI(overwrite bool) ([]DiffItem, error) {
+func VerifyAllABI(overwrite bool, storeDir string) ([]DiffItem, error) {
 
 	allDiffs := make([]DiffItem, 0)
 
 	for _, ci := range checkContracts {
-		diffs, err := diffABIStore(ci.Name, ci.ABI, overwrite)
+		diffs, err := diffABIStore(ci.Name, ci.ABI, overwrite, storeDir)
 		if err != nil {
 			return nil, err
 		}
@@ -80,16 +82,21 @@ func VerifyAllABI(overwrite bool) ([]DiffItem, error) {
 	return allDiffs, nil
 }
 
-const ConfigStoreDir = "./store" // TODO: actually config'd
-func diffABIStore(contractName, jsonCurrentABI string, overwrite bool) ([]DiffItem, error) {
+func diffABIStore(contractName, jsonCurrentABI string, overwrite bool, storeDir string) ([]DiffItem, error) {
 
-	if _, err := os.Stat(ConfigStoreDir); err != nil {
+	storeDirPath, err := filepath.Abs(storeDir)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := os.Stat(storeDirPath); err != nil {
 		if os.IsNotExist(err) {
-			os.MkdirAll(ConfigStoreDir, os.ModePerm)
+			log.Warn(fmt.Sprintf("store dir is not present, creating at %s", storeDirPath))
+			os.MkdirAll(storeDirPath, os.ModePerm)
 		}
 	}
 
-	storeFileName := path.Join(ConfigStoreDir, fmt.Sprintf("%v.json", contractName))
+	storeFileName := path.Join(storeDirPath, fmt.Sprintf("%v.json", contractName))
 	if _, err := os.Stat(storeFileName); err != nil {
 		if os.IsNotExist(err) {
 			return nil, ioutil.WriteFile(storeFileName, []byte(jsonCurrentABI), os.ModePerm)
@@ -97,6 +104,7 @@ func diffABIStore(contractName, jsonCurrentABI string, overwrite bool) ([]DiffIt
 		return nil, err
 	}
 
+	// if overwrite is enabled, replace the existing files in store dir with new abi
 	log.Debug("overwrite", "value", overwrite)
 	if overwrite {
 		return nil, ioutil.WriteFile(storeFileName, []byte(jsonCurrentABI), os.ModePerm)

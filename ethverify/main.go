@@ -63,6 +63,7 @@ func init() {
 	cmdGitFind.Flags().String("contract", "", "provide contract address")
 
 	cmdAbiDiff.Flags().Bool("overwrite", false, "overwrite 'store' directory with new abi, even if abi-diff throws breaking changes")
+	cmdAbiDiff.Flags().String("storedir", "./store", "directory for stored abi files")
 
 	_ = viper.BindPFlag("verbosity", cmdRoot.PersistentFlags().Lookup("verbosity"))
 	_ = viper.BindPFlag("log_file", cmdRoot.PersistentFlags().Lookup("log-file"))
@@ -70,6 +71,7 @@ func init() {
 	_ = viper.BindPFlag("git_find.rootdir", cmdGitFind.Flags().Lookup("rootdir"))
 	_ = viper.BindPFlag("git_find.contract", cmdGitFind.Flags().Lookup("contract"))
 	_ = viper.BindPFlag("abi_diff.overwrite", cmdAbiDiff.Flags().Lookup("overwrite"))
+	_ = viper.BindPFlag("abi_diff.storedir", cmdAbiDiff.Flags().Lookup("storedir"))
 
 	// for env variable
 	replacer := strings.NewReplacer(".", "_")
@@ -202,8 +204,9 @@ func runGitFind(cmd *cobra.Command, args []string) error {
 func runAbiDiff(cmd *cobra.Command, args []string) error {
 
 	overwrite := viper.GetBool("abi_diff.overwrite")
+	storeDir := viper.GetString("abi_diff.storedir")
 
-	diffItem, err := abidiff.VerifyAllABI(overwrite)
+	diffItem, err := abidiff.VerifyAllABI(overwrite, storeDir)
 	if err != nil {
 		return err
 	}
@@ -225,7 +228,7 @@ func runAbiDiff(cmd *cobra.Command, args []string) error {
 
 	// No Breaking changes, replace the stored abi
 	if !checkForBreakingChanges {
-		_, err = abidiff.VerifyAllABI(true)
+		_, err = abidiff.VerifyAllABI(true, storeDir)
 		if err != nil {
 			return err
 		}

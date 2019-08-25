@@ -24,6 +24,9 @@ contract LvRecordableStream is Content {
     address public recordingStream; //the content object for the recordable stream
 
     event CreateRecording(address recObj, address recContract);
+    event SetRecordingTime(address recObj, uint recStartTime, uint recEndTime);
+    event SetRecordingStatus(address recObj, uint8 recStatus);
+
     event StartStream();
     event StopStream();
 
@@ -89,9 +92,11 @@ contract LvRecording is Content {
     address public recordingStreamContract;
 
     event SetTimes(uint startTime, uint endTime);
+    event UpdateRecordingStatus(uint8 status);
 
     constructor() public payable {
-        startTime = now;
+        startTime = 0;
+        endTime = 0;
         recordingStreamContract = msg.sender;
         recordingStatus = 0;
     }
@@ -117,8 +122,15 @@ contract LvRecording is Content {
         emit SetTimes(startTime, endTime);
     }
 
+    function setTimes(uint _startTime, uint _endTime) public {
+        startTime = _startTime;
+        endTime = _endTime;
+        emit SetTimes(startTime, endTime);
+    }
+
     function updateRecordingStatus(uint8 _recordingStatus) public onlyOwner {
         recordingStatus = _recordingStatus;
+        emit UpdateRecordingStatus(recordingStatus);
     }
 
 

@@ -14,6 +14,22 @@ library Precompile {
 
     uint constant idStrLen = 32;
 
+    function getOp(string _opParams) internal constant returns (uint8) {
+        return 0;
+    }
+
+    function getOpTimestamp(string _opParams) internal constant returns (uint) {
+        return 0;
+    }
+
+    function getOpValue(string _opParams) internal constant returns (uint) {
+        return 0;
+    }
+
+    function getOpParam(string _opParams, int _ord) internal constant returns (uint) {
+        return 0;
+    }
+
     function makeIDString(int _code, address _addr) internal constant returns (string ret) {
 
         bytes4 sig = sigIdString;

@@ -1,4 +1,5 @@
 pragma solidity 0.4.24;
+pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
@@ -7,6 +8,7 @@ import {BaseContent} from "./base_content.sol";
 import {BaseContentSpace} from "./base_content_space.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
+import "./lib_precompile.sol";
 
 /* -- Revision history --
 BaseAccessWallet20190320114000ML: First versioned released
@@ -18,7 +20,11 @@ BsAccessWallet20190611120000PO: State channel support
 
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
-contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable {
+interface OpBatchable {
+    function executeOp(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, string _params) external returns (bool);
+}
+
+contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable, OpBatchable {
     bytes32 public version = "BsAccessWallet20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {
@@ -117,6 +123,16 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
         return true;
     }
 
+    function validateOperation(uint8 _v, bytes32 _r, bytes32 _s, string _params)
+    public
+    view
+    returns (bool) {
+        bytes32 checkHash = keccak256(abi.encodePacked(address(this), _params));
+        address checkAddr = ecrecover(checkHash, _v, _r, _s);
+        if (checkAddr != owner) return false;
+        return true;
+    }
+
     event ExecStatus(address guarantor, int code);
 
     int public constant execStatusOk = 0;
@@ -143,8 +159,6 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
             return false;
         }
 
-        // this check should not really fail because the _guarantor should have at least validated the transaction before
-        //  accepting it into a batch.
         bool checkTrans = validateTransaction(_v, _r, _s, _dest, _value, _ts);
         if (!checkTrans) {
             emit ExecStatus(_guarantor, execStatusSigFail);
@@ -164,14 +178,58 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
 
         return true;
     }
+
+    function executeOp(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, string _params)
+    external
+    returns (bool) {
+
+        BaseContentSpace spc = BaseContentSpace(contentSpace);
+        require(msg.sender == contentSpace || msg.sender == spc.walletFactory() || spc.checkKMSAddr(msg.sender) > 0);
+        require(spc.checkKMSAddr(_guarantor) > 0);
+
+        uint ts = Precompile.getOpTimestamp(_params);
+
+        if (ts <= currentTimestamp) {
+            emit ExecStatus(_guarantor, execStatusNonceFail);
+            return false;
+        }
+
+        uint value = Precompile.getOpValue(_params);
+        if (address(this).balance < value) {
+            emit ExecStatus(_guarantor, execStatusBalanceFail);
+            return false;
+        }
+
+        // this check should not really fail because the _guarantor should have at least validated the transaction before
+        //  accepting it into a batch.
+        bool checkTrans = validateOperation(_v, _r, _s, _params);
+        if (!checkTrans) {
+            emit ExecStatus(_guarantor, execStatusSigFail);
+            return false;
+        }
+
+        currentTimestamp = ts;
+
+        // call through the interface?
+        OpExecutable opExec = OpExecutable(msg.sender);
+        opExec.executeOp(owner, _params);
+        // require(msg.sender.delegatecall(bytes4(keccak256("executeOp(address,string)")), owner, _params));
+
+        emit ExecStatus(_guarantor, execStatusOk);
+
+        return true;
+    }
 }
 
+interface OpExecutable{
+    function executeOp(address _owner, string _params) external returns (bool);
+}
 
 /* -- Revision history --
 BsAccWltFactory20190506154200ML: First versioned released
 */
 
-contract BaseAccessWalletFactory is Ownable {
+contract BaseAccessWalletFactory is Ownable, OpExecutable {
 
     bytes32 public version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -179,5 +237,29 @@ contract BaseAccessWalletFactory is Ownable {
         return  (new BaseAccessWallet(msg.sender));
     }
 
+    function executeOpBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, string[] _params) public {
 
+        BaseContentSpace spc = BaseContentSpace(contentSpace);
+        require(msg.sender == owner || spc.checkKMSAddr(msg.sender) > 0);
+
+        uint requireLength = _v.length;
+        require(requireLength == _r.length);
+        require(requireLength == _s.length);
+        require(requireLength == _from.length);
+        require(requireLength == _params.length);
+
+        for (uint i = 0; i < _v.length; i++) {
+            OpBatchable op = OpBatchable(_from[i]);
+            bool success = op.executeOp(msg.sender, _v[i], _r[i], _s[i], _params[i]);
+
+            if (!success) {
+                // we failed to get the target wallet to pay so - in this scenario - we have to pay!
+                // _dest[i].send(_value[i]); // TODO: transfer? error handling?
+            }
+        }
+    }
+
+    function executeOp(address _owner, string _params) external returns (bool) {
+        return true;
+    }
 }

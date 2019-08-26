@@ -9,12 +9,13 @@ import {BaseLibrary} from "./base_library.sol";
 /* -- Revision history --
 LvRecStream20190812201700ML: First versioned released
 LvRecStream20190823104800ML: Adding fields to store stream handle, and exposing start to stop time.
+LvRecStream20190825165500ML: Adding stream-wide event logging of recordings.
 */
 
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20190823104800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20190825165500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -24,8 +25,8 @@ contract LvRecordableStream is Content {
     address public recordingStream; //the content object for the recordable stream
 
     event CreateRecording(address recObj, address recContract);
-    event SetRecordingTime(address recObj, uint recStartTime, uint recEndTime);
-    event SetRecordingStatus(address recObj, uint8 recStatus);
+    event SetRecordingTimes(address recObj, uint recStartTime, uint recEndTime);
+    event SetRecordingStatus(address recObj, string recStatus);
 
     event StartStream();
     event StopStream();
@@ -42,13 +43,14 @@ contract LvRecordableStream is Content {
 
         if (recordingEnabled) {
             address instanceAddress = new LvRecording();
-            //LvRecording rec = LvRecording(instanceAddress);
+            LvRecording rec = LvRecording(instanceAddress);
+            rec.setContentAddress(msg.sender);
             BaseContent obj = BaseContent(msg.sender);
             obj.setContentContractAddress(instanceAddress);
             emit CreateRecording(msg.sender, instanceAddress);
             return 0;
         }
-        emit LogBool("Recording is not enabled", recordingEnabled);
+        //emit LogBool("Recording is not enabled", recordingEnabled);
         return 0; // To allow for creation of Provider --- debatable. We might want to prevent use and instead create a factory contract used to create a new provider
     }
 
@@ -69,11 +71,30 @@ contract LvRecordableStream is Content {
         emit StopStream();
     }
 
+    function logRecordingStatus() public returns (uint8){
+        LvRecording rec = LvRecording(msg.sender);
+        uint8 recStatus = rec.recordingStatus();
+        if ( recStatus == 10) {
+            emit SetRecordingStatus(rec.contentAddress(), "recording");
+            return recStatus;
+        }
+        if ( recStatus == 100) {
+            emit SetRecordingStatus(rec.contentAddress(), "complete");
+        }
+        return recStatus;
+    }
+
+    function logRecordingTimes() public {
+        LvRecording rec = LvRecording(msg.sender);
+        emit SetRecordingTimes(rec.contentAddress(), rec.startTime(), rec.endTime());
+    }
+
 }
 
 
 /* -- Revision history --
 LvRecording20190812210100ML: First versioned released
+LvRecording20190825165500ML: Adding stream-wide event logging of recordings.
 */
 
 
@@ -82,7 +103,7 @@ LvRecording20190812210100ML: First versioned released
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20190812210100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20190825165500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -90,6 +111,7 @@ contract LvRecording is Content {
     uint8 public recordingStatus; //0: not started, 10: started, 100: completed
 
     address public recordingStreamContract;
+    address public contentAddress;
 
     event SetTimes(uint startTime, uint endTime);
     event UpdateRecordingStatus(uint8 status);
@@ -101,6 +123,10 @@ contract LvRecording is Content {
         recordingStatus = 0;
     }
 
+    function setContentAddress(address _contentAddress) public onlyOwner {
+         contentAddress = _contentAddress;
+    }
+
     function setStartTime(uint _startTime) public onlyOwner { //whether start and end time can be modified is debatable
         //modification is restricted to owner of recording content object or someone with editor privilege
         if (_startTime == 0) {
@@ -110,6 +136,8 @@ contract LvRecording is Content {
             startTime = _startTime;
         }
         emit SetTimes(startTime, endTime);
+        LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
+        stream.logRecordingTimes();
     }
 
     function setEndTime(uint _endTime) public { //whether start and end time can be modified is debatable
@@ -120,17 +148,23 @@ contract LvRecording is Content {
             endTime = _endTime;
         }
         emit SetTimes(startTime, endTime);
+        LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
+        stream.logRecordingTimes();
     }
 
     function setTimes(uint _startTime, uint _endTime) public {
         startTime = _startTime;
         endTime = _endTime;
         emit SetTimes(startTime, endTime);
+        LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
+        stream.logRecordingTimes();
     }
 
     function updateRecordingStatus(uint8 _recordingStatus) public onlyOwner {
         recordingStatus = _recordingStatus;
         emit UpdateRecordingStatus(recordingStatus);
+        LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
+        stream.logRecordingStatus();
     }
 
 

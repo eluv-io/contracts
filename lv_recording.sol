@@ -2,17 +2,18 @@ pragma solidity 0.4.24;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
-import {BaseLibrary} from "./base_library.sol";
+//import {BaseLibrary} from "./base_library.sol";
 
 
 /* -- Revision history --
 LvProvider20190907122400ML: First versioned released
 LvProvider20190910171300ML: Makes recordingStreams public.
+LvProvider20190923175500ML: Adds support for split ownership of streams and provider
 */
 
 contract LvProvider is Content {
 
-    bytes32 public version = "LvProvider20190910171300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvProvider20190923175500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping (address => bool) public recordingStreams;
 
@@ -24,6 +25,13 @@ contract LvProvider is Content {
         bool decision = recordingStreams[stream];
         emit AuthorizeRecording(stream, accessor, decision);
         return decision;
+    }
+
+    function registerStream(address stream) public {
+        BaseContent streamObj = BaseContent(stream);
+        require(streamObj.owner() == tx.origin);
+        recordingStreams[stream] = true;
+        emit EnableRecording(stream);
     }
 
     function enableRecording(address stream) onlyOwner {
@@ -45,11 +53,13 @@ LvRecStream20190823104800ML: Adding fields to store stream handle, and exposing 
 LvRecStream20190825165500ML: Adding stream-wide event logging of recordings.
 LvRecStream20190907125000ML: Adding provider control
 LvRecStream20190910192800ML: Adding recordingStream override
+LvRecStream20190922145400ML: Adding mechanism to check authorization to record before attempting it
+LvRecStream20190923175600ML: Adds support for split ownership of streams and provider
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20190910192800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20190923175600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -86,9 +96,7 @@ contract LvRecordableStream is Content {
         if (recordingEnabled) {
             if (provider != 0x0) {
                 LvProvider provObj = LvProvider(provider);
-                if (provObj.authorizeRecording(recordingStream, tx.origin) == false){
-                    return 1; //Unauthorized recording, this will cause the content object to not be created, hence the denial event won't be committed to the blockchain
-                }
+                require(provObj.authorizeRecording(recordingStream, tx.origin));
             }
             address instanceAddress = new LvRecording();
             LvRecording rec = LvRecording(instanceAddress);
@@ -106,10 +114,32 @@ contract LvRecordableStream is Content {
         recordingEnabled = true;
     }
 
+
+    function canRecord() public view returns (bool) {
+        if (recordingEnabled) {
+            if (provider != 0x0) {
+                LvProvider provObj = LvProvider(provider);
+                return provObj.recordingStreams(recordingStream);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    //Can be used to generate a transaction to indicate authorization failure as otherwise negative event a rolled back and thus never emitted
+    function authorizeRecording() public {
+        if (recordingEnabled) {
+            if (provider != 0x0) {
+                LvProvider provObj = LvProvider(provider);
+                provObj.authorizeRecording(recordingStream, tx.origin);
+            }
+        }
+    }
+
     function setProvider(address _provider) public onlyOwner  {
         provider = _provider;
         LvProvider provObj = LvProvider(provider);
-        provObj.enableRecording(recordingStream);
+        provObj.registerStream(recordingStream);
     }
 
     function startStream(string _handle) public onlyOwner  {
@@ -220,6 +250,15 @@ contract LvRecording is Content {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
         stream.logRecordingStatus();
     }
+
+    /* does not work, as the destroyed object can't return a value.
+    To make this work we need to change API to allow a special return value, that would upon receipt, instruct base object to kill its custom contract
+    function runKill() public payable returns (uint) {
+        kill(); //when base content object is destroyed,
+        return 0;
+    }
+    */
+
 
 
 }

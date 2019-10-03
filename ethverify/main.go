@@ -228,7 +228,7 @@ func runAbiDiff(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(diffItem) == 0 {
-		log.Info("NO difference in abi")
+		log.Info("NO DIFFERENCES in abi")
 		return nil
 	}
 
@@ -266,11 +266,9 @@ func Execute() error {
 
 func main() {
 
-	log.Info("EXECUTING eth-verify daemon...")
-
 	if err := Execute(); err != nil {
 		os.Exit(1)
 	}
 
-	log.Info("LEAVING eth-verify daemon...")
+	log.Info("LEAVING eth-verify...")
 }

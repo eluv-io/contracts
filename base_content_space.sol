@@ -404,11 +404,12 @@ contract BaseLibraryFactory is Ownable {
 
 /* -- Revision history --
 BaseCtFactory20190509171900ML: Split out of BaseLibraryFactory
+BaseCtFactory20191017165200ML: Updated to reflect change in BaseContent20190801141600ML
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20190509171900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20191017165200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);

@@ -515,7 +515,11 @@ contract BaseContent is Editable {
     function kill() public onlyFromLibrary {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            require(c.runKill() == 0);
+            uint canKill = c.runKill();
+            require((canKill == 0) || (canKill == 100));
+            if (canKill == 100) {
+                c.kill();
+            }
         }
         super.kill();
     }

@@ -106,8 +106,12 @@ contract LvRecordableStream is Content {
             emit CreateRecording(msg.sender, instanceAddress);
             return 0;
         }
-        //emit LogBool("Recording is not enabled", recordingEnabled);
-        return 0; // To allow for creation of Provider --- debatable. We might want to prevent use and instead create a factory contract used to create a new provider
+        if (recordingStream == 0x0) {
+            setRecordingStream(msg.sender);
+            return 0;
+        }
+
+        return 10; //contract should be used only for one stream before being used to generate recordings
     }
 
     function enableRecording() public onlyOwner  {
@@ -251,13 +255,10 @@ contract LvRecording is Content {
         stream.logRecordingStatus();
     }
 
-    /* does not work, as the destroyed object can't return a value.
-    To make this work we need to change API to allow a special return value, that would upon receipt, instruct base object to kill its custom contract
+
     function runKill() public payable returns (uint) {
-        kill(); //when base content object is destroyed,
-        return 0;
+        return 100; //when base content object is destroyed, custom contract should be too
     }
-    */
 
 
 

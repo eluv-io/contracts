@@ -34,7 +34,7 @@ library Precompile {
             x,          // Inputs are stored at location x
             0x28,       // Inputs are 40 bytes long
             x,          // Store output over input
-            0x60)       // Outputs are 96 bytes long
+            0x20)       // Outputs are 96 bytes long
 
             if eq(res, 0) {
                 revert(0, 0)

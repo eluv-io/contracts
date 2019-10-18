@@ -4,6 +4,7 @@ import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
+import {BaseAccessPolicy} from "./base_access_policy.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
 import {BaseContent} from "./base_content.sol";
@@ -17,6 +18,7 @@ import "./node.sol";
 import "./meta_object.sol";
 import "./transactable.sol";
 import "./lib_precompile.sol";
+import "./lib_accessmanager.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -52,6 +54,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event CreateGroup(address groupAddress);
     event CreateContent(address contentAddress);
     event CreateAccessWallet(address wallet);
+    event CreatePolicy(address policyAddress);
 
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
@@ -99,29 +102,29 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return canNodePublish(msg.sender);
     }
 
-    // used to create a node contract instance. should be called by the address of the node that wishes to register.
-    function registerSpaceNode() public returns (address) {
-        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
-        uint i = 0;
-        for (; i < activeNodeAddresses.length; i++) {
-            if (activeNodeAddresses[i] == msg.sender) {
-                break;
-            }
-        }
-        require(i < activeNodeAddresses.length); // node should be in active list
-        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
-        nodeMapping[msg.sender] = nodeAddr;
-        emit RegisterNode(nodeAddr);
-        return nodeAddr;
-    }
-
-    function unregisterSpaceNode() public returns (bool) {
-        require(nodeMapping[msg.sender] != 0x0);
-        address nodeAddr = nodeMapping[msg.sender];
-        delete nodeMapping[msg.sender];
-        Node(nodeAddr).kill();
-        emit UnregisterNode(nodeAddr);
-    }
+//    // used to create a node contract instance. should be called by the address of the node that wishes to register.
+//    function registerSpaceNode() public returns (address) {
+//        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
+//        uint i = 0;
+//        for (; i < activeNodeAddresses.length; i++) {
+//            if (activeNodeAddresses[i] == msg.sender) {
+//                break;
+//            }
+//        }
+//        require(i < activeNodeAddresses.length); // node should be in active list
+//        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
+//        nodeMapping[msg.sender] = nodeAddr;
+//        emit RegisterNode(nodeAddr);
+//        return nodeAddr;
+//    }
+//
+//    function unregisterSpaceNode() public returns (bool) {
+//        require(nodeMapping[msg.sender] != 0x0);
+//        address nodeAddr = nodeMapping[msg.sender];
+//        delete nodeMapping[msg.sender];
+//        Node(nodeAddr).kill();
+//        emit UnregisterNode(nodeAddr);
+//    }
 
 
     function createContentType() public returns (address) {
@@ -130,8 +133,10 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return contentTypeAddress;
     }
 
-    function createLibrary(address address_KMS) public returns (address) {
-        address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
+    function createLibrary(address _kmsAddr) public returns (address) {
+        // address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(_kmsAddr);
+        address libraryAddress = BaseLibraryFactory(libraryFactory).createLibraryAuth(_kmsAddr, msg.sender);
+
         emit CreateLibrary(libraryAddress);
         return libraryAddress;
     }
@@ -146,6 +151,12 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         address groupAddress = BaseGroupFactory(groupFactory).createGroup();
         emit CreateGroup(groupAddress);
         return groupAddress;
+    }
+
+    function createPolicy() public returns (address) {
+        address policyAddress = BaseGroupFactory(groupFactory).createPolicy();
+        emit CreatePolicy(policyAddress);
+        return policyAddress;
     }
 
     function engageAccountLibrary() public returns (address) {
@@ -381,12 +392,22 @@ contract BaseGroupFactory is Ownable {
         userWallet.setAccessGroupRights(newGroup, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
         return newGroup;
     }
+
+    function createPolicy() public returns (address) {
+        address policyAddress = new BaseAccessPolicy(contentSpace);
+        return policyAddress;
+    }
 }
+
 /* -- Revision history --
 BaseFactory20190506153100ML: Split out of BaseFactory, adds access indexing
 */
 
 contract BaseLibraryFactory is Ownable {
+
+    constructor(address _spcAddr) {
+        contentSpace = _spcAddr;
+    }
 
     bytes32 public version ="BaseLibFactory20190506153200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -397,6 +418,13 @@ contract BaseLibraryFactory is Ownable {
         address walletAddress = contentSpaceObj.getAccessWallet();
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
         userWallet.setLibraryRights(newLib, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
+        return newLib;
+    }
+
+    function createLibraryAuth(address _kmsAddr, address _authAddr) public returns (address) {
+        // TODO: still need some concept of tenancy - don't want to auth against content space !
+        require(msg.sender == contentSpace && AccessManager.isAllowed(_authAddr, contentSpace, AccessManager.constCreateLibrary())); // or just 'create'?
+        address newLib = (new BaseLibrary(_kmsAddr, _authAddr));
         return newLib;
     }
 }

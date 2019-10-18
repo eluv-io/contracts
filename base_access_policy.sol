@@ -24,8 +24,13 @@ contract BaseAccessPolicy is Ownable, MetaObject {
     address[] public resources;
     // conditions can be stored as part of metadata - i.e. in MetaObject
 
+    string public constant EFFECT_ALLOW = "allow";
+    string public constant EFFECT_DENY = "deny";
+    string public effect;
+
     constructor(address _contentSpace)  public payable {
         contentSpace = _contentSpace; // TODO: why isn't content space in constructor of Ownable?
+        effect = EFFECT_ALLOW; // default is allow
     }
 
     function addBasicPolicy(address _subject, address _resource, string _action) public returns (bool) {

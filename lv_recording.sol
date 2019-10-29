@@ -88,7 +88,8 @@ contract LvRecordableStream is Content {
     event DeleteRecording(uint256 timestamp, address accessor, address recObj, address recContract);
     event SetRecordingTimes(uint256 timestamp, address accessor, address recObj, uint recStartTime, uint recEndTime);
     event SetRecordingStatus(uint256 timestamp, address accessor, address recObj, string recStatus);
-    event RecordingPlayback(uint256 timestamp, address accessor, address recObj, uint256 requestID, string status);
+    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, uint256 requestID);
+    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, uint256 requestID, uint8 percentPlayed);
     event RecordedProgramId(uint256 timestamp, address accessor, address recObj, string programId);
 
     event MembershipGroupRemoved(uint256 timestamp, address group);
@@ -282,9 +283,14 @@ contract LvRecordableStream is Content {
         emit SetRecordingTimes(now, tx.origin, rec.contentAddress(), rec.startTime(), rec.endTime());
     }
 
-    function logRecordingPlayback(uint256 requestID, string status) public {
+    function logRecordingPlaybackStarted(uint256 requestID) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlayback(now, tx.origin, rec.contentAddress(), requestID, status);
+        emit RecordingPlaybackStarted(now, tx.origin, rec.contentAddress(), requestID);
+    }
+
+    function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed) public {
+        LvRecording rec = LvRecording(msg.sender);
+        emit RecordingPlaybackCompleted(now, tx.origin, rec.contentAddress(), requestID, percentPlayed);
     }
 
     function logRecordingDeletion() public {
@@ -380,14 +386,14 @@ contract LvRecording is Content {
     function runAccess(uint256 requestID, uint8 level, bytes32[]custom_values, address[] stakeholders) public payable returns(uint) {
         if (level > 0) {
             LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-            stream.logRecordingPlayback(requestID, "started");
+            stream.logRecordingPlaybackStarted(requestID);
         }
         return 0;
     }
 
-    function runFinalize(uint256 requestID, uint256 /*score_pct*/) public payable returns (uint) {
+    function runFinalize(uint256 requestID, uint256 score_pct) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-        stream.logRecordingPlayback(requestID, "completed");
+        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct));
         return 0;
     }
 

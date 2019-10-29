@@ -66,11 +66,12 @@ LvRecStream20190923175600ML: Adds support for split ownership of streams and pro
 LvRecStream20191022112900ML: Adds membership and authorization reporting of all controls (RH, Provider, membership)
 LvRecStream20191025153500ML: Adds reporting only function for authorization
 LvRecStream20191029121700ML: Adds recording deletion event and timestamps to all events
+LvRecStream20191029150600ML: Changes playback event to report score
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20191029121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20191029150600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -310,6 +311,7 @@ LvRecording20190812210100ML: First versioned released
 LvRecording20190825165500ML: Adds stream-wide event logging of recordings.
 LvRecording20191022104400ML: Adds runAccess, runFinalize and (un-used) runEdit hook for future use.
 LvRecording20191029123400ML: Adds timestamps to all events, adds programId reporting
+LvRecording20191029150500ML: Adds score to playback events
 */
 
 
@@ -318,7 +320,7 @@ LvRecording20191029123400ML: Adds timestamps to all events, adds programId repor
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20191029123400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20191029150500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;

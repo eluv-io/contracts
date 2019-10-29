@@ -66,11 +66,12 @@ LvRecStream20190923175600ML: Adds support for split ownership of streams and pro
 LvRecStream20191022112900ML: Adds membership and authorization reporting of all controls (RH, Provider, membership)
 LvRecStream20191025153500ML: Adds reporting only function for authorization
 LvRecStream20191029121700ML: Adds recording deletion event and timestamps to all events
+LvRecStream20191029150600ML: Changes playback event to report score
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20191029121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20191029150600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -88,7 +89,8 @@ contract LvRecordableStream is Content {
     event DeleteRecording(uint256 timestamp, address accessor, address recObj, address recContract);
     event SetRecordingTimes(uint256 timestamp, address accessor, address recObj, uint recStartTime, uint recEndTime);
     event SetRecordingStatus(uint256 timestamp, address accessor, address recObj, string recStatus);
-    event RecordingPlayback(uint256 timestamp, address accessor, address recObj, uint256 requestID, string status);
+    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, uint256 requestID);
+    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, uint256 requestID, uint8 percentPlayed);
     event RecordedProgramId(uint256 timestamp, address accessor, address recObj, string programId);
 
     event MembershipGroupRemoved(uint256 timestamp, address group);
@@ -282,9 +284,14 @@ contract LvRecordableStream is Content {
         emit SetRecordingTimes(now, tx.origin, rec.contentAddress(), rec.startTime(), rec.endTime());
     }
 
-    function logRecordingPlayback(uint256 requestID, string status) public {
+    function logRecordingPlaybackStarted(uint256 requestID) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlayback(now, tx.origin, rec.contentAddress(), requestID, status);
+        emit RecordingPlaybackStarted(now, tx.origin, rec.contentAddress(), requestID);
+    }
+
+    function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed) public {
+        LvRecording rec = LvRecording(msg.sender);
+        emit RecordingPlaybackCompleted(now, tx.origin, rec.contentAddress(), requestID, percentPlayed);
     }
 
     function logRecordingDeletion() public {
@@ -304,6 +311,7 @@ LvRecording20190812210100ML: First versioned released
 LvRecording20190825165500ML: Adds stream-wide event logging of recordings.
 LvRecording20191022104400ML: Adds runAccess, runFinalize and (un-used) runEdit hook for future use.
 LvRecording20191029123400ML: Adds timestamps to all events, adds programId reporting
+LvRecording20191029150500ML: Adds score to playback events
 */
 
 
@@ -312,7 +320,7 @@ LvRecording20191029123400ML: Adds timestamps to all events, adds programId repor
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20191029123400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20191029150500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -380,14 +388,14 @@ contract LvRecording is Content {
     function runAccess(uint256 requestID, uint8 level, bytes32[]custom_values, address[] stakeholders) public payable returns(uint) {
         if (level > 0) {
             LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-            stream.logRecordingPlayback(requestID, "started");
+            stream.logRecordingPlaybackStarted(requestID);
         }
         return 0;
     }
 
-    function runFinalize(uint256 requestID, uint256 /*score_pct*/) public payable returns (uint) {
+    function runFinalize(uint256 requestID, uint256 score_pct) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-        stream.logRecordingPlayback(requestID, "completed");
+        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct));
         return 0;
     }
 

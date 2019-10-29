@@ -89,6 +89,7 @@ contract LvRecordableStream is Content {
     event SetRecordingTimes(uint256 timestamp, address accessor, address recObj, uint recStartTime, uint recEndTime);
     event SetRecordingStatus(uint256 timestamp, address accessor, address recObj, string recStatus);
     event RecordingPlayback(uint256 timestamp, address accessor, address recObj, uint256 requestID, string status);
+    event RecordedProgramId(uint256 timestamp, address accessor, address recObj, string programId);
 
     event MembershipGroupRemoved(uint256 timestamp, address group);
     event MembershipGroupAdded(uint256 timestamp, address group);
@@ -291,6 +292,11 @@ contract LvRecordableStream is Content {
         emit DeleteRecording(now, tx.origin, rec.contentAddress(), msg.sender);
     }
 
+    function logRecordedProgramId(string programId){
+        LvRecording rec = LvRecording(msg.sender);
+        emit RecordedProgramId(now, tx.origin, rec.contentAddress(), programId);
+    }
+
 }
 
 /* -- Revision history --
@@ -402,8 +408,9 @@ contract LvRecording is Content {
     }
 
     function logProgramId(string programId, byte[] signature) public onlyOwner {
+        LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
+        stream.logRecordedProgramId(programId);
         emit RecordProgramId(now, programId);
     }
-
 
 }

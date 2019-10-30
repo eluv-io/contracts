@@ -29,8 +29,8 @@ contract BaseContentFactoryExt is BaseContentFactory {
 
     function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
-        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
-        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
+//        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
+//        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
 
         uint paramsLen = _opCodes.length;
 
@@ -42,7 +42,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
         for (uint i = 0; i < paramsLen; i++) {
             BaseContent cobj = BaseContent(_contentAddrs[i]);
             Content c;
-            require(msg.sender == owner || cobj.addressKMS() == msg.sender);
+            // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
             if (_opCodes[i] == OP_ACCESS_REQUEST) {
                 emit AccessRequest(cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
                 if (cobj.contentContractAddress() != 0x0) {

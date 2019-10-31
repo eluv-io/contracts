@@ -487,7 +487,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
                 emit AccessComplete(cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
                 if (cobj.contentContractAddress() != 0x0) {
                     c = Content(cobj.contentContractAddress());
-                    c.runFinalize(_ts[i], _amt[i]);
+                    c.runFinalizeExt(_ts[i], _amt[i], _userAddrs[i]);
                 }
             } else {
                 require(false);

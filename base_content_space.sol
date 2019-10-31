@@ -433,7 +433,7 @@ contract BaseContentFactory is Ownable {
 
 contract BaseContentFactoryExt is BaseContentFactory {
 
-    bytes32 public version ="BaseCtFactory20191017165200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactoryXt20191031115100PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     // TODO: naming this the same as the event in BaseContentObject ...?
     event AccessRequest(

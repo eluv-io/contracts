@@ -67,11 +67,12 @@ LvRecStream20191022112900ML: Adds membership and authorization reporting of all 
 LvRecStream20191025153500ML: Adds reporting only function for authorization
 LvRecStream20191029121700ML: Adds recording deletion event and timestamps to all events
 LvRecStream20191029150600ML: Changes playback event to report score
+LvRecStream20191030161000ML: Adds right-holder permission check function
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20191029150600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20191030161000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -139,14 +140,17 @@ contract LvRecordableStream is Content {
         return 0;
     }
 
+    function hasRightsHolderPermission() public view returns (bool) {
+        if (rightsHolder != 0x0) {
+            LvStreamRightsHolder provObj = LvStreamRightsHolder(rightsHolder);
+            return provObj.recordingStreams(recordingStream);
+        }
+        return true;
+    }
 
     function canRecord() public view returns (bool) {
         if (recordingEnabled && hasMembership(tx.origin)) {
-            if (rightsHolder != 0x0) {
-                LvStreamRightsHolder provObj = LvStreamRightsHolder(rightsHolder);
-                return provObj.recordingStreams(recordingStream);
-            }
-            return true;
+            return hasRightsHolderPermission();
         }
         return false;
     }

@@ -477,7 +477,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
                     c = Content(cobj.contentContractAddress());
                     c.runAccess(_ts[i], 100, emptyVals, emptyAddrs); // TODO: level?
                 }
-            } else if (_opCodes[i] == OP_ACCESS_REQUEST) {
+            } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
                 emit AccessComplete(cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
                 if (cobj.contentContractAddress() != 0x0) {
                     c = Content(cobj.contentContractAddress());

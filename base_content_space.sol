@@ -431,9 +431,12 @@ contract BaseContentFactory is Ownable {
     }
 }
 
+//BaseCtFactoryXt20191031115100PO: adds support for custom contract
+//BaseCtFactoryXt20191031153200ML: passes accessor to the runAccess via the addresses array
+
 contract BaseContentFactoryExt is BaseContentFactory {
 
-    bytes32 public version ="BaseCtFactoryXt20191031115100PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactoryXt20191031153200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     // TODO: naming this the same as the event in BaseContentObject ...?
     event AccessRequest(
@@ -475,9 +478,10 @@ contract BaseContentFactoryExt is BaseContentFactory {
                 emit AccessRequest(cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
                 if (cobj.contentContractAddress() != 0x0) {
                     bytes32[] memory emptyVals;
-                    address[] memory emptyAddrs;
+                    address[] storage paramAddrs;
+                    paramAddrs.push( _userAddrs[i]);
                     c = Content(cobj.contentContractAddress());
-                    c.runAccess(_ts[i], 100, emptyVals, emptyAddrs); // TODO: level?
+                    c.runAccess(_ts[i], 100, emptyVals, paramAddrs); // TODO: level?
                 }
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
                 emit AccessComplete(cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));

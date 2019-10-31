@@ -68,11 +68,12 @@ LvRecStream20191025153500ML: Adds reporting only function for authorization
 LvRecStream20191029121700ML: Adds recording deletion event and timestamps to all events
 LvRecStream20191029150600ML: Changes playback event to report score
 LvRecStream20191030161000ML: Adds right-holder permission check function
+LvRecStream20191031162800ML: Adds originator in playback reporting
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20191030161000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20191031162800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -288,14 +289,14 @@ contract LvRecordableStream is Content {
         emit SetRecordingTimes(now, tx.origin, rec.contentAddress(), rec.startTime(), rec.endTime());
     }
 
-    function logRecordingPlaybackStarted(uint256 requestID) public {
+    function logRecordingPlaybackStarted(uint256 requestID, address originator) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlaybackStarted(now, tx.origin, rec.contentAddress(), requestID);
+        emit RecordingPlaybackStarted(now, originator, rec.contentAddress(), requestID);
     }
 
-    function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed) public {
+    function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed, address originator) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlaybackCompleted(now, tx.origin, rec.contentAddress(), requestID, percentPlayed);
+        emit RecordingPlaybackCompleted(now, originator, rec.contentAddress(), requestID, percentPlayed);
     }
 
     function logRecordingDeletion() public {
@@ -316,6 +317,7 @@ LvRecording20190825165500ML: Adds stream-wide event logging of recordings.
 LvRecording20191022104400ML: Adds runAccess, runFinalize and (un-used) runEdit hook for future use.
 LvRecording20191029123400ML: Adds timestamps to all events, adds programId reporting
 LvRecording20191029150500ML: Adds score to playback events
+LvRecording20191031162800ML: Adds originator to playback events in case of state channel originated transactions
 */
 
 
@@ -324,7 +326,7 @@ LvRecording20191029150500ML: Adds score to playback events
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20191029150500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20191031162800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -392,14 +394,24 @@ contract LvRecording is Content {
     function runAccess(uint256 requestID, uint8 level, bytes32[]custom_values, address[] stakeholders) public payable returns(uint) {
         if (level > 0) {
             LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-            stream.logRecordingPlaybackStarted(requestID);
+            if (stakeholders[0] == 0x0){
+                stream.logRecordingPlaybackStarted(requestID, tx.origin);
+            } else {
+                stream.logRecordingPlaybackStarted(requestID, stakeholders[0]);
+            }
         }
         return 0;
     }
 
     function runFinalize(uint256 requestID, uint256 score_pct) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct));
+        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct), tx.origin);
+        return 0;
+    }
+
+    function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint) {
+        LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
+        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct), originator);
         return 0;
     }
 

@@ -69,11 +69,12 @@ LvRecStream20191029121700ML: Adds recording deletion event and timestamps to all
 LvRecStream20191029150600ML: Changes playback event to report score
 LvRecStream20191030161000ML: Adds right-holder permission check function
 LvRecStream20191031162800ML: Adds originator in playback reporting
+LvRecStream20191031174500ML: Adds reporting or program details and original request timestamps
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20191031162800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20191031174500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -91,9 +92,9 @@ contract LvRecordableStream is Content {
     event DeleteRecording(uint256 timestamp, address accessor, address recObj, address recContract);
     event SetRecordingTimes(uint256 timestamp, address accessor, address recObj, uint recStartTime, uint recEndTime);
     event SetRecordingStatus(uint256 timestamp, address accessor, address recObj, string recStatus);
-    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, uint256 requestID);
-    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, uint256 requestID, uint8 percentPlayed);
-    event RecordedProgramId(uint256 timestamp, address accessor, address recObj, string programId);
+    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, uint256 requestID, uint256 accessTimestamp);
+    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, uint256 requestID, uint8 percentPlayed, uint256 finalizeTimestamp);
+    event RecordedProgramId(uint256 timestamp, address accessor, address recObj, string programId, uint256 programStart, uint256 programEnd, string programTitle);
 
     event MembershipGroupRemoved(uint256 timestamp, address group);
     event MembershipGroupAdded(uint256 timestamp, address group);
@@ -289,14 +290,14 @@ contract LvRecordableStream is Content {
         emit SetRecordingTimes(now, tx.origin, rec.contentAddress(), rec.startTime(), rec.endTime());
     }
 
-    function logRecordingPlaybackStarted(uint256 requestID, address originator) public {
+    function logRecordingPlaybackStarted(uint256 requestID, address originator, uint256 requestTimestamp) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlaybackStarted(now, originator, rec.contentAddress(), requestID);
+        emit RecordingPlaybackStarted(now, originator, rec.contentAddress(), requestID, requestTimestamp);
     }
 
-    function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed, address originator) public {
+    function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed, address originator, uint256 requestTimestamp) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlaybackCompleted(now, originator, rec.contentAddress(), requestID, percentPlayed);
+        emit RecordingPlaybackCompleted(now, originator, rec.contentAddress(), requestID, percentPlayed, requestTimestamp);
     }
 
     function logRecordingDeletion() public {
@@ -304,9 +305,9 @@ contract LvRecordableStream is Content {
         emit DeleteRecording(now, tx.origin, rec.contentAddress(), msg.sender);
     }
 
-    function logRecordedProgramId(string programId){
+    function logRecordedProgramId(string programId, uint256 programStart, uint256 programEnd, string programTitle){
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordedProgramId(now, tx.origin, rec.contentAddress(), programId);
+        emit RecordedProgramId(now, tx.origin, rec.contentAddress(), programId, programStart,  programEnd, programTitle);
     }
 
 }
@@ -318,6 +319,7 @@ LvRecording20191022104400ML: Adds runAccess, runFinalize and (un-used) runEdit h
 LvRecording20191029123400ML: Adds timestamps to all events, adds programId reporting
 LvRecording20191029150500ML: Adds score to playback events
 LvRecording20191031162800ML: Adds originator to playback events in case of state channel originated transactions
+LvRecording20191031174500ML: Adds playback ID and reporting of program details
 */
 
 
@@ -326,7 +328,7 @@ LvRecording20191031162800ML: Adds originator to playback events in case of state
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20191031162800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20191031174500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -335,6 +337,10 @@ contract LvRecording is Content {
 
     address public recordingStreamContract;
     address public contentAddress;
+
+    uint256 playbackId;
+    uint256[] playbacks;
+    uint256 playbacksLength;
 
     event SetTimes(uint256 timestamp, uint startTime, uint endTime);
     event UpdateRecordingStatus(uint256 timestamp, uint8 status);
@@ -345,6 +351,8 @@ contract LvRecording is Content {
         endTime = 0;
         recordingStreamContract = msg.sender;
         recordingStatus = 0;
+        playbackId = 0;
+        playbacksLength = 0;
     }
 
     function setContentAddress(address _contentAddress) public onlyOwner {
@@ -391,13 +399,23 @@ contract LvRecording is Content {
         stream.logRecordingStatus();
     }
 
+    //timestamp of original request is passed in request ID for state-channel
     function runAccess(uint256 requestID, uint8 level, bytes32[]custom_values, address[] stakeholders) public payable returns(uint) {
         if (level > 0) {
             LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
             if (stakeholders[0] == 0x0){
-                stream.logRecordingPlaybackStarted(requestID, tx.origin);
+                stream.logRecordingPlaybackStarted(requestID, tx.origin, now);
             } else {
-                stream.logRecordingPlaybackStarted(requestID, stakeholders[0]);
+                playbackId = playbackId + 1;
+                uint256[] playbacks;
+
+                if (playbacksLength < playbacks.length) {
+                    playbacks[playbacksLength] = playbackId;
+                } else {
+                    playbacks.push(playbackId);
+                }
+                playbacksLength = playbacksLength + 1;
+                stream.logRecordingPlaybackStarted(playbackId, stakeholders[0], requestID);
             }
         }
         return 0;
@@ -405,13 +423,19 @@ contract LvRecording is Content {
 
     function runFinalize(uint256 requestID, uint256 score_pct) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct), tx.origin);
+        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct), tx.origin, now);
         return 0;
     }
 
     function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct), originator);
+        if (playbacksLength > 0) {
+            stream.logRecordingPlaybackCompleted(playbacks[playbacksLength - 1], uint8(score_pct), originator, requestID);
+            delete playbacks[playbacksLength - 1];
+            playbacksLength = playbacksLength - 1;
+        } else {
+            stream.logRecordingPlaybackCompleted(0, uint8(score_pct), originator, requestID);
+        }
         return 0;
     }
 
@@ -431,9 +455,9 @@ contract LvRecording is Content {
         }
     }
 
-    function logProgramId(string programId, byte[] signature) public onlyOwner {
+    function logProgramId(string programId, uint256 programStart, uint256 programEnd, string programTitle, byte[] signature) public onlyOwner {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-        stream.logRecordedProgramId(programId);
+        stream.logRecordedProgramId(programId, programStart, programEnd, programTitle);
         emit RecordProgramId(now, programId);
     }
 

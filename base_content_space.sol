@@ -462,6 +462,12 @@ contract BaseContentFactoryExt is BaseContentFactory {
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;
 
+    function isContract(address addr) returns (bool) {
+        uint size;
+        assembly { size := extcodesize(addr) }
+        return size > 0;
+    }
+
     function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
         //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
@@ -476,11 +482,14 @@ contract BaseContentFactoryExt is BaseContentFactory {
 
         for (uint i = 0; i < paramsLen; i++) {
             BaseContent cobj = BaseContent(_contentAddrs[i]);
+            // guard against race condition where content object is deleted before batch is executed.
+            if (!isContract(_contentAddrs[i]))
+                continue;
             Content c;
             // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
             if (_opCodes[i] == OP_ACCESS_REQUEST) {
                 emit AccessRequest(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
-                if (cobj.contentContractAddress() != 0x0) {
+                if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
                     bytes32[] memory emptyVals;
                     address[] memory paramAddrs =  new address[](1);
                     paramAddrs[0] = _userAddrs[i];
@@ -489,7 +498,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
                 }
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
                 emit AccessComplete(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
-                if (cobj.contentContractAddress() != 0x0) {
+                if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
                     c = Content(cobj.contentContractAddress());
                     c.runFinalizeExt(_ts[i], _amt[i], _userAddrs[i]);
                 }

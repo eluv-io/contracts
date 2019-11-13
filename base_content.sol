@@ -38,8 +38,6 @@ contract BaseContent is Editable {
     bytes32 public constant STATUS_DRAFT = "Draft";
     bytes32 public constant STATUS_REVIEW = "Draft in review";
 
-    uint256 public requestID = 0;
-
     uint8 public visibility = 0;
     uint8 public constant CAN_SEE = 1;
     uint8 public constant CAN_ACCESS = 10;
@@ -71,7 +69,7 @@ contract BaseContent is Editable {
 
         accessCharge = _accessCharge;
         statusCode = _statusCode;
-        requestID = _requestID;
+        // requestID = _requestID;
         visibility = _visibility;
 
         super.migrate(_objectHash, _versionHashes);
@@ -79,23 +77,16 @@ contract BaseContent is Editable {
         return;
     }
 
+    // TODO: remove?
     mapping(uint256 => RequestData) public requestMap;
 
     event ContentObjectCreate(address containingLibrary);
     event SetContentType(address contentType, address contentContractAddress);
 
-    event AccessRequest(
-        uint256 requestID,
-        uint8 level,
-        string contentHash,
-        string pkeRequestor,
-        string pkeAFGH
-    );
     event LogPayment(uint256 requestID, string label, address payee, uint256 amount);
     event AccessGrant(uint256 requestID, bool access_granted, string reKey, string encryptedAESKey);
     event AccessRequestValue(bytes32 customValue);
     event AccessRequestStakeholder(address stakeholder);
-    event AccessComplete(uint256 requestID, uint256 scorePct, bool customContractResult);
     event SetContentContract(address contentContractAddress);
 
     event SetAccessCharge(uint256 accessCharge);
@@ -387,6 +378,7 @@ contract BaseContent is Editable {
             r.settled = r.settled + amount;
             emit LogPayment(request_ID, label, payee, amount);
         }
+        return true;
     }
 
     event DbgAccess(
@@ -397,27 +389,61 @@ contract BaseContent is Editable {
     );
     event DbgAccessCode(uint8 code);
 
+    function accessRequestContext(
+        bytes32 requestNonce,
+        bytes32 contextHash,
+        address accessor,
+        uint256 request_timestamp
+    ) public payable {
+        bytes32[] memory emptyVals;
+        address[] memory emptyAddrs;
+        return accessRequestInternal(requestNonce, 0, "", emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
+    }
+
+    event AccessRequest(
+        bytes32 requestNonce,
+        // uint8 level, TODO: WHY?
+        // string contentHash, TODO: WHY?
+        // string pkeRequestor, TODO: not used
+        address libraryAddress, // likely will need for tenancy - but could be something else ...?
+        string pkeAFGH,
+        bytes32 contextHash,
+        address accessor,           // I've called this 'userAddress' - don't care too much but ideally it's the same name wherever it means the same thing!
+        uint256 request_timestamp // always millis - either set from context or with blockchain now()
+    );
+
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)
     //  pkeAFGH - ephemeral public key of the requestor (AFGH)
     //  customValues - an array of custom values used to convey additional information
     //  stakeholders - an array of additional address used to provide additional relevant addresses
     function accessRequest(
+        bytes32 requestNonce,
         uint8 level,
-        string pke_requestor,
-        string pke_AFGH,
+        string pkeAFGH,
         bytes32[] custom_values,
         address[] stakeholders
     )
-        public payable returns (uint256)
-    {
-        requestID = requestID + 1;
+        public payable returns (bytes32) {
+        return accessRequestInternal(requestNonce, level, pkeAFGH, custom_values, stakeholders, 0x0, msg.sender, now * 1000);
+    }
+
+    function accessRequestInternal(
+        bytes32 requestNonce,
+        uint8 level,
+        string pke_AFGH,
+        bytes32[] custom_values,
+        address[] stakeholders,
+        bytes32 contextHash,
+        address accessor,
+        uint256 request_timestamp
+    )
+    internal returns (bytes32) {
         uint256 requiredFund;
         uint8 visibilityCode;
         uint8 accessCode;
 
         (visibilityCode, accessCode, requiredFund) = getAccessInfo(level, custom_values, stakeholders);
-        //emit DbgAccessCode(accessCode);
 
         if (accessCode == 100) { //Check if request is funded, except if user is owner or has paid already
             require(msg.value >= uint(requiredFund));
@@ -425,20 +451,17 @@ contract BaseContent is Editable {
             setPaidRights();
             accessCode = 0;
         }
-        //emit DbgAccessCode(accessCode);
         require(accessCode == 0);
 
-
-        RequestData memory r = RequestData(msg.sender, msg.value, 0, 0);
-        // status of 0 indicates the payment received is in escrow in the content contract
-        requestMap[requestID] = r;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            uint result = c.runAccess(requestID, level, custom_values, stakeholders);
+            uint result = c.runAccess(requestNonce, level, custom_values, stakeholders);
             require(result == 0);
         }
+
         // Raise Event
-        emit AccessRequest(requestID, level, objectHash, pke_requestor, pke_AFGH);
+        emit AccessRequest(requestNonce, libraryAddress, pke_AFGH, contextHash, accessor, request_timestamp);
+
         // Logs custom key/value pairs
         uint256 i;
         for (i = 0; i < custom_values.length; i++) {
@@ -447,12 +470,12 @@ contract BaseContent is Editable {
             }
         }
         for (i = 0; i < stakeholders.length; i++) {
-            if (custom_values[i] != 0x0) {
+            if (stakeholders[i] != 0x0) {
                 emit AccessRequestStakeholder(stakeholders[i]);
             }
         }
 
-        return requestID;
+        return requestNonce;
     }
 
     //The rekey provided is encrypted with the pkeRequestor
@@ -494,7 +517,34 @@ contract BaseContent is Editable {
         return result;
     }
 
+    // FROM will be context address?
+    event AccessComplete(
+        bytes32 requestID,
+        uint256 scorePct,
+        bool customContractResult,
+        address libraryAddress,
+        bytes32 contextHash,
+        address accessor,           // I've called this 'userAddress' - don't care too much but ideally it's the same name wherever it means the same thing!
+        uint256 request_timestamp   // always millis - either set from context or with blockchain now()
+    );
 
+    function accessCompleteContext(
+        bytes32 requestID,
+        uint256 score_pct,
+        bytes32 contextHash,
+        address accessor,
+        uint256 request_timestamp
+        ) public payable returns (bool) {
+
+        bool success = (score_pct != 0);
+        if (contentContractAddress != 0x0) {
+            Content c = Content(contentContractAddress);
+            uint256 result = uint256(c.runFinalize(requestID, score_pct));
+            success = (result == 0);
+        }
+        emit AccessComplete(requestID, score_pct, success, libraryAddress, contextHash, accessor, request_timestamp);
+        return success;
+    }
 
     // sender passes the quality score as pct of best possible (converted to 1-100 scale)
     // the fabric provides to this access,
@@ -507,36 +557,16 @@ contract BaseContent is Editable {
     // to the sender
     //
     // add a state variable in the contract indicating whether to credit back based on quality score
-    function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) public payable returns (bool) {
+    function accessComplete(bytes32 request_ID, uint256 score_pct, bytes32 ml_out_hash) public payable returns (bool) {
         require(ml_out_hash == ml_out_hash); //placeholder for verification of signature
-        RequestData storage r = requestMap[request_ID];
-        require((r.originator != 0x0) && ((msg.sender == r.originator) || (msg.sender == owner)));
         bool success = (score_pct != 0);
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
             uint256 result = uint256(c.runFinalize(request_ID, score_pct));
             success = (result == 0);
         }
-        if (msg.sender == r.originator) {//Owner direct call can't modify status to avoid premature clearing of escrow
-            if (success){
-             r.status = 2; //access completeted, by default score_pct is not taken into account
-            } else {
-             r.status = -2; //access error, only if finalize is returning non-zero code
-          }
-        }
-        // Delete request from map after customContract in case it was needed for execution of custom wrap-up
-        if (r.settled < r.amountPaid) {
-            if (r.status <= 0) {
-                //if access was not granted, payment is returned to originator
-                makeRequestPayment(request_ID, r.originator, "refund", r.amountPaid - r.settled);
-            } else {
-                //if access was not granted and no error was registered, escrow is released to the owner
-                makeRequestPayment(request_ID, owner, "release escrow", r.amountPaid - r.settled);
-            }
-        }
-        delete requestMap[request_ID];
         // record to event
-        emit AccessComplete(request_ID, score_pct, success);
+        emit AccessComplete(request_ID, score_pct, success, libraryAddress, 0x0, msg.sender, now * 1000);
         return success;
     }
 

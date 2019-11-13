@@ -85,7 +85,7 @@ contract Content is Ownable {
     //0 indicates that access request can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
-        uint256, /*request_ID*/
+        bytes32, /*request_ID*/
         uint8, /*level*/
         bytes32[], /*custom_values*/
         address[] /*stake_holders*/
@@ -110,7 +110,7 @@ contract Content is Ownable {
     // behavior is currently unchanged regardless of result.
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
-    function runFinalize(uint256 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
+    function runFinalize(bytes32 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
         return 0;
     }
 

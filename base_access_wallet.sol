@@ -57,7 +57,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
         string pke_AFGH,
         bytes32[] custom_values,
         address[] stakeholders
-    ) public returns (uint256) {
+    ) public returns (bytes32) {
         /*
         //Signature should be valid for requested operation
         bytes32 message = accessRequestMsg(content_address,  level, pke_requestor, pke_AFGH, custom_values, stakeholders);
@@ -70,7 +70,8 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
         uint8 accessCode;
         (visibilityCode, accessCode, requiredFund) = content.getAccessInfo( level, custom_values, stakeholders);
         require(visibilityCode == 0);
-        uint256 requestID = content.accessRequest.value((accessCode != 0) ? requiredFund : 0)(level, pke_requestor, pke_AFGH, custom_values, stakeholders);
+        // TODO: requestID !!!
+        bytes32 requestID = content.accessRequest.value((accessCode != 0) ? requiredFund : 0)(0x0, level, pke_requestor, pke_AFGH, custom_values, stakeholders);
         return requestID;
 
     }
@@ -78,7 +79,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     function contentAccessComplete(
         address content_address,
         bytes /*signature*/,
-        uint256 request_ID,
+        bytes32 request_ID,
         uint256 score_pct,
         bytes32 ml_out_hash
     ) public payable returns (bool) {

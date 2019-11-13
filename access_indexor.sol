@@ -196,6 +196,7 @@ contract AccessIndexor is Ownable {
         if (index_type == CATEGORY_CONTENT_TYPE) {
             return checkRawRights(contentTypes, obj, access_type);
         }
+        return false;
     }
 
     function checkRawRights(AccessIndex storage index, address obj, uint8 access_type) private view returns(bool) {

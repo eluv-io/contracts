@@ -56,7 +56,7 @@ contract BaseContent is Editable {
             // address _libraryAddress,
             uint256 _accessCharge,
             int _statusCode,
-            uint256 _requestID,
+            // uint256 _requestID,
             uint8 _visibility,
             string _objectHash,
             string _versionHashes
@@ -394,7 +394,7 @@ contract BaseContent is Editable {
         bytes32 contextHash,
         address accessor,
         uint256 request_timestamp
-    ) public payable {
+    ) public payable returns (bytes32) {
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
         return accessRequestInternal(requestNonce, 0, "", emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
@@ -428,17 +428,7 @@ contract BaseContent is Editable {
         return accessRequestInternal(requestNonce, level, pkeAFGH, custom_values, stakeholders, 0x0, msg.sender, now * 1000);
     }
 
-    function accessRequestInternal(
-        bytes32 requestNonce,
-        uint8 level,
-        string pke_AFGH,
-        bytes32[] custom_values,
-        address[] stakeholders,
-        bytes32 contextHash,
-        address accessor,
-        uint256 request_timestamp
-    )
-    internal returns (bytes32) {
+    function validateAccess(uint8 level, bytes32[] custom_values, address[] stakeholders) internal {
         uint256 requiredFund;
         uint8 visibilityCode;
         uint8 accessCode;
@@ -452,6 +442,21 @@ contract BaseContent is Editable {
             accessCode = 0;
         }
         require(accessCode == 0);
+    }
+
+    function accessRequestInternal(
+        bytes32 requestNonce,
+        uint8 level,
+        string pke_AFGH,
+        bytes32[] custom_values,
+        address[] stakeholders,
+        bytes32 contextHash,
+        address accessor,
+        uint256 request_timestamp
+    )
+    internal returns (bytes32) {
+
+        // validateAccess(level, custom_values, stakeholders); TODO: get working !!!
 
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);

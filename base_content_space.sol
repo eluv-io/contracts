@@ -457,6 +457,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
         uint paramsLen = _opCodes.length;
 
         require(_contentAddrs.length == paramsLen);
+        require(_requestNonces.length == paramsLen);
         require(_userAddrs.length == paramsLen);
         require(_ctxHashes.length == paramsLen);
         require(_ts.length == paramsLen);
@@ -468,13 +469,9 @@ contract BaseContentFactoryExt is BaseContentFactory {
                 continue;
             // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
             if (_opCodes[i] == OP_ACCESS_REQUEST) {
-                if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
-                    cobj.accessRequestContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
-                }
+                cobj.accessRequestContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
-                if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
-                    cobj.accessComplete(_requestNonces[i], _amt[i], 0x0);
-                }
+                cobj.accessComplete(_requestNonces[i], _amt[i], 0x0);
             } else {
                 require(false);
             }

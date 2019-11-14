@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 import {Editable} from "./editable.sol";
-import {BaseContent} from "./base_content.sol";
+import {Publishable} from "./publishable.sol";
 import {NodeSpace} from "./node_space.sol";
 
 /**
@@ -10,13 +10,14 @@ import {NodeSpace} from "./node_space.sol";
 
 /* -- Revision history --
 Container20190528144600ML: First versioned released
-Container20190529091800ML: Remove warning on hasAccess
+Container20190529091800ML: Removes warning on hasAccess
+Container20191107152400ML: Loosens management to allow all user with EDIT privilege instead of just owner
 */
 
 
 contract Container is Editable {
 
-    bytes32 public version = "Container20190529091800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "Container20191107152400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public addressKMS;
 
@@ -29,13 +30,13 @@ contract Container is Editable {
     event ContentTypeRemoved(address contentType);
 
 
-    function setAddressKMS(address address_KMS) public onlyOwner {
+    function setAddressKMS(address address_KMS) public onlyEditor {
         addressKMS = address_KMS;
     }
 
 
 
-    function addContentType(address content_type, address content_contract) public onlyOwner {
+    function addContentType(address content_type, address content_contract) public onlyEditor {
         if ((contentTypeContracts[content_type] == 0x0) && (whitelistedType(content_type) == false)) {
             if (contentTypesLength < contentTypes.length) {
                 contentTypes[contentTypesLength] = content_type;
@@ -48,7 +49,7 @@ contract Container is Editable {
         emit ContentTypeAdded(content_type, content_contract);
     }
 
-    function removeContentType(address content_type) public onlyOwner returns (bool) {
+    function removeContentType(address content_type) public onlyEditor returns (bool) {
         uint256 latestIndex = contentTypesLength - 1;
         for (uint256 i = 0; i < contentTypesLength; i++) {
             if (contentTypes[i] == content_type) {
@@ -122,12 +123,12 @@ contract Container is Editable {
         return bcs.canNodePublish(candidate);
     }
 
-
     function publish(address contentObj) public returns (bool) {
         require(msg.sender == contentObj);
-        BaseContent content = BaseContent(contentObj);
+        Publishable content = Publishable(contentObj);
         content.updateStatus(0); //update status to published
         return (content.statusCode() == 0);
     }
+
 
 }

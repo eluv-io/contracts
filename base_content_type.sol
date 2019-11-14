@@ -16,18 +16,19 @@ BaseContentType20190528194000ML: Removes contentSpace is field as it is now inhe
 BaseContentType20190604112500ML: Fixes setGroupRights to use the right index.
 BaseContentType20190605150100ML: Splits out canConfirm from canPublish
 BaseContentType20190813105000ML: Modifies canCommit to ensure it is a view
+BaseContentType20191107151900ML: Extends editing ability to all user granted EDIT privilege
 */
 
 
 contract BaseContentType is Accessible, Editable {
 
-    bytes32 public version ="BaseContentType20190813105000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20191107151900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
     }
 
-    function canCommit() public view returns (bool) {
+    function canEdit() public view returns (bool) {
         BaseContentSpace spc = BaseContentSpace(contentSpace);
         address walletAddress = spc.userWallets(tx.origin);
         if (walletAddress != 0x0) {
@@ -36,7 +37,6 @@ contract BaseContentType is Accessible, Editable {
         } else {
             return false;
         }
-
     }
 
     function canConfirm() public view returns (bool) {

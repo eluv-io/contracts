@@ -3,8 +3,10 @@ pragma solidity 0.4.24;
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {Container} from "./container.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
+import {KMSSpace} from "./kms_space.sol";
+import {UserSpace} from "./user_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
+import {Publishable} from "./publishable.sol";
 
 /* -- Revision history --
 BaseContent20190221101600ML: First versioned released
@@ -18,12 +20,13 @@ BaseContent20190605203200ML: Splits publish and confirm logic
 BaseContent20190724203300ML: Enforces access rights in access request
 BaseContent20190801141600ML: Fixes the access rights grant for paid content
 BaseContent20191029161700ML: Removed debug statements for accessRequest
+BaseContent20191107151400ML: Differentiates onlyEditor from onlyOwner
 */
 
 
-contract BaseContent is Editable {
+contract BaseContent is Editable, Publishable {
 
-    bytes32 public version ="BaseContent20191029161700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20191107151400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -32,8 +35,7 @@ contract BaseContent is Editable {
 
     uint256 public accessCharge;
     //bool refundable;
-    int public statusCode; // 0: accessible, - in draft, + in review
-                           // application have discretion to make up their own status codes to represent their workflow
+
     bytes32 public constant STATUS_PUBLISHED = "Published";
     bytes32 public constant STATUS_DRAFT = "Draft";
     bytes32 public constant STATUS_REVIEW = "Draft in review";
@@ -51,7 +53,8 @@ contract BaseContent is Editable {
         int8 status; //0 access requested, 1 access granted, -1 access refused, 2 access completed, -2 access error
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
     }
-
+   /* //ML: removing for now as this enables the editing of field that are not meant to be edited
+      //   this method should be limited to object that are in the process of being duplicated
     function migrate(address _contentType,
             address _addressKMS,
             address _contentContractAddress,
@@ -78,6 +81,7 @@ contract BaseContent is Editable {
 
         return;
     }
+    */
 
     mapping(uint256 => RequestData) public requestMap;
 
@@ -101,7 +105,6 @@ contract BaseContent is Editable {
     event SetAccessCharge(uint256 accessCharge);
     event GetAccessCharge(uint8 level, uint256 accessCharge);
     event InsufficientFunds(uint256 accessCharge, uint256 amountProvided);
-    event SetStatusCode(int statusCode);
     event Publish(bool requestStatus, int statusCode, string objectHash);
 
     // Debug events
@@ -135,7 +138,7 @@ contract BaseContent is Editable {
     }
 
 
-    function setVisibility(uint8 visibility_code) public onlyOwner {
+    function setVisibility(uint8 visibility_code) public onlyEditor { //debatable whether this should be kept onlyOwner as visibility influence who can edit
         visibility = visibility_code;
     }
 
@@ -194,12 +197,12 @@ contract BaseContent is Editable {
         return statusCode;
     }
 
-    function setAddressKMS(address address_KMS) public onlyOwner {
+    function setAddressKMS(address address_KMS) public onlyEditor {
         addressKMS = address_KMS;
     }
 
     function getKMSInfo(bytes prefix) public view returns (string, string) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        KMSSpace contentSpaceObj = KMSSpace(contentSpace);
         if (addressKMS == 0x0 || contentSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");
         }
@@ -207,7 +210,7 @@ contract BaseContent is Editable {
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.
-    function setContentContractAddress(address addr) public onlyOwner {
+    function setContentContractAddress(address addr) public onlyEditor {
         Content c;
         if (contentContractAddress != 0x0) {
             c = Content(contentContractAddress);
@@ -238,7 +241,7 @@ contract BaseContent is Editable {
         if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
             return (0, 0, accessCharge);
         }
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address userWallet = contentSpaceObj.userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
@@ -291,7 +294,7 @@ contract BaseContent is Editable {
         (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo( level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
-            BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+            UserSpace contentSpaceObj = UserSpace(contentSpace);
             address userWallet = contentSpaceObj.userWallets(tx.origin);
             if (userWallet != 0x0) {
                 AccessIndexor wallet = AccessIndexor(userWallet);
@@ -315,26 +318,27 @@ contract BaseContent is Editable {
         return (visibilityCode, accessCode, levelAccessCharge);
     }
 
-    function setAccessCharge(uint256 charge) public onlyOwner returns (uint256) {
+    function setAccessCharge(uint256 charge) public onlyEditor returns (uint256) {
         accessCharge = charge;
         emit SetAccessCharge(accessCharge);
         return accessCharge;
     }
 
     function canEdit() public view returns (bool) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(tx.origin);
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
     }
 
+    /*
     function canPublish() public view returns (bool) {
         return (canEdit() || msg.sender == libraryAddress);
     }
 
     function canCommit() public view returns (bool) {
         return canEdit();
-    }
+    }*/
 
     function canConfirm() public view returns (bool) {
         Container lib = Container(libraryAddress);
@@ -356,10 +360,10 @@ contract BaseContent is Editable {
 
     function updateStatus(int status_code) public returns (int) {
         // require((tx.origin == owner) || (msg.sender == owner) || (msg.sender == libraryAddress));
-        require(canPublish());
+        require(canEdit() || msg.sender == libraryAddress);
         int newStatusCode;
         if (contentContractAddress == 0x0) {
-            if (((tx.origin == owner) || (msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {
+            if (canEdit() && ((status_code == -1) || (status_code == 1))) {
                 newStatusCode = status_code; //owner can change status back to draft or to in-review
             } else if ((msg.sender == libraryAddress) && (statusCode >= 0)) {
                 newStatusCode = status_code; //library can change status of content in review to any status
@@ -389,6 +393,7 @@ contract BaseContent is Editable {
         }
     }
 
+    /*
     event DbgAccess(
         uint256 charged,
         uint received,
@@ -396,6 +401,23 @@ contract BaseContent is Editable {
         bool enough
     );
     event DbgAccessCode(uint8 code);
+    */
+
+
+    function updateRequest() public {
+        if (contentContractAddress == 0x0) {
+            super.updateRequest();
+        } else {
+            Content c = Content(contentContractAddress);
+            uint editCode = c.runEdit();
+            if (editCode == 100) {
+                super.updateRequest();
+            } else {
+                require(editCode == 0);
+                emit UpdateRequest(objectHash);
+            }
+        }
+    }
 
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)
@@ -553,14 +575,14 @@ contract BaseContent is Editable {
     }
 
     function setPaidRights() private {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.getAccessWallet();
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)

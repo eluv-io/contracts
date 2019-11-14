@@ -1,8 +1,9 @@
 pragma solidity 0.4.24;
 
 //import "./ownable.sol";
-import {BaseFactory} from "./base_content_space.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
+import {BaseFactory} from "./base_factory.sol";
+import {UserSpace} from "./user_space.sol";
+import {NodeSpace} from "./node_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";
@@ -17,12 +18,13 @@ BsAccessCtrlGrp20190722161600ML: Made editable
 BsAccessCtrlGrp20190722214400ML: Provides the list of members and managers
 BsAccessCtrlGrp20190723130500ML: Fixes typo in managersNum
 BsAccessCtrlGrp20190723165900ML: Fixes deletion/adding to groups
+BsAccessCtrlGrp20191107152100ML: Extends ability to modify (including granting membership) to all users with EDIT rights
 */
 
 
 contract BaseAccessControlGroup is AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20190723165900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20191107152100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     //mapping (address => bool) public members;
     //mapping (address => bool) public managers;
@@ -62,7 +64,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             managersNum++;
         }
         emit ManagerAccessGranted(manager);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_TENTATIVE());
@@ -82,7 +84,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         emit ManagerAccessRevoked(manager);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_NONE());
@@ -93,7 +95,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     }
 
     function hasAccessRight(address candidate, bool mgr) public view returns (bool) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         if (mgr==true) {
@@ -103,7 +105,10 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
         }
     }
 
-    //event dbg_setAccessGroupRights(address a, uint8 b, uint8 c);
+    function canEdit() public view returns (bool) {
+        return hasManagerAccess(tx.origin);
+    }
+
     function grantAccess(address candidate) public {
         require(hasManagerAccess(msg.sender) == true);
         bool already = false;
@@ -124,12 +129,10 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
 
         emit MemberAdded(candidate);
 
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
-        //emit dbg_setAccessGroupRights(walletAddress, userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
-        //emit dbg_setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
     }
 
     function revokeAccess(address candidate) public {
@@ -146,7 +149,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         emit MemberRevoked(candidate);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        UserSpace contentSpaceObj = UserSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_NONE());
@@ -157,7 +160,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     }
 
     function canConfirm() public view returns (bool) {
-        BaseContentSpace bcs = BaseContentSpace(contentSpace);
+        NodeSpace bcs = NodeSpace(contentSpace);
         return bcs.canNodePublish(msg.sender);
     }
 

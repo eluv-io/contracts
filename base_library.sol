@@ -5,7 +5,7 @@ import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
 import {BaseContentSpace} from "./base_content_space.sol";
-import "./access_indexor.sol";
+import {AccessIndexor} from "./access_indexor.sol";
 import "./meta_object.sol";
 
 
@@ -61,18 +61,22 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function canPublish() public view returns (bool) {
+        return  canEdit();
+    }
+
+    function canEdit() public view returns (bool) {
         if ((tx.origin == owner) || (msg.sender == owner)) {
             return true;
         }
-
-        address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
-        if (userWallet != 0x0) {
-            AccessIndexor wallet = AccessIndexor(userWallet);
-            if (wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT()) == true) {
-                return true;
-            }
+        BaseContentSpace spc = BaseContentSpace(contentSpace);
+        address walletAddress = spc.userWallets(tx.origin);
+        if (walletAddress != 0x0) {
+            AccessIndexor wallet = AccessIndexor(walletAddress);
+            return wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT());
+        } else {
+            return false;
         }
-        return false;
+
     }
 
     function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
@@ -103,7 +107,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return _groupListLength;
     }
 
-    function addContributorGroup(address group) public onlyOwner {
+    function addContributorGroup(address group) public onlyEditor {
         uint256 prevLen = contributorGroupsLength;
         contributorGroupsLength = addToGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength > prevLen) {
@@ -113,7 +117,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         }
     }
 
-    function removeContributorGroup(address group) public onlyOwner returns (bool) {
+    function removeContributorGroup(address group) public onlyEditor returns (bool) {
         uint256 prevLen = contributorGroupsLength;
         contributorGroupsLength = removeFromGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength < prevLen) {
@@ -125,7 +129,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return false;
     }
 
-    function addReviewerGroup(address group) public onlyOwner {
+    function addReviewerGroup(address group) public onlyEditor {
         uint256 prevLen = reviewerGroupsLength;
         reviewerGroupsLength = addToGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength > prevLen) {
@@ -135,7 +139,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         }
     }
 
-    function removeReviewerGroup(address group) public onlyOwner returns (bool) {
+    function removeReviewerGroup(address group) public onlyEditor returns (bool) {
         uint256 prevLen = reviewerGroupsLength;
         reviewerGroupsLength = removeFromGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength < prevLen) {
@@ -148,7 +152,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
 
     }
 
-    function addAccessorGroup(address group) public onlyOwner {
+    function addAccessorGroup(address group) public onlyEditor {
         uint256 prevLen = accessorGroupsLength;
         accessorGroupsLength = addToGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength > prevLen) {
@@ -158,7 +162,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         }
     }
 
-    function removeAccessorGroup(address group) public onlyOwner returns (bool) {
+    function removeAccessorGroup(address group) public onlyEditor returns (bool) {
         uint256 prevLen = accessorGroupsLength;
         accessorGroupsLength = removeFromGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength < prevLen) {
@@ -187,7 +191,13 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         if (accessorGroupsLength == 0) {
             return true;
         }
-        return hasGroupAccess(_candidate, accessorGroups);
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        address walletAddress = contentSpaceObj.userWallets(_candidate);
+        if (walletAddress == 0x0) {
+            return false;
+        }
+        AccessIndexor wallet = AccessIndexor(walletAddress);
+        return wallet.checkLibraryRights(address(this), wallet.TYPE_SEE());
     }
 
     // Current implementation ignores rights provided directly to individual
@@ -195,7 +205,13 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         if (contributorGroupsLength == 0) {
             return true;
         }
-        return hasGroupAccess(_candidate, contributorGroups);
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        address walletAddress = contentSpaceObj.userWallets(_candidate);
+        if (walletAddress == 0x0) {
+            return false;
+        }
+        AccessIndexor wallet = AccessIndexor(walletAddress);
+        return wallet.checkLibraryRights(address(this), wallet.TYPE_ACCESS());
     }
 
     // Current implementation ignores rights provided directly to individual
@@ -333,10 +349,12 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return submitStatus;
     }
 
-    function updateAddressKMS(address address_KMS) public onlyOwner {
+    function updateAddressKMS(address address_KMS) public onlyEditor {
         addressKMS = address_KMS;
         emit UpdateKmsAddress(addressKMS);
     }
+
+
 
 }
 

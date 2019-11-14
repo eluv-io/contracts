@@ -2,11 +2,13 @@ pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
+import {AccessIndexor} from "./access_indexor.sol";
 import {Container} from "./container.sol";
-import {BaseContent} from "./base_content.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
-import "./access_indexor.sol";
+//import {BaseContent} from "./base_content.sol";
+import {KMSSpace} from "./kms_space.sol";
+
 import "./transactable.sol";
+import {Factory} from "./factory.sol";
 
 /* -- Revision history --
 BaseAccessWallet20190320114000ML: First versioned released
@@ -28,7 +30,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     function canConfirm() public view returns (bool) {
         return canNodePublish(msg.sender);
     }
-
+/*
     function accessRequestMsg(
         address content_address,
         uint8 level,
@@ -51,18 +53,18 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
 
     function contentAccessRequest(
         address content_address,
-        bytes /*signature*/,
+        bytes signature,
         uint8 level,
         string pke_requestor,
         string pke_AFGH,
         bytes32[] custom_values,
         address[] stakeholders
     ) public returns (uint256) {
-        /*
+
         //Signature should be valid for requested operation
-        bytes32 message = accessRequestMsg(content_address,  level, pke_requestor, pke_AFGH, custom_values, stakeholders);
-        require(owner == recoverSignerFromMessage(message,signature));
-        */
+        //bytes32 message = accessRequestMsg(content_address,  level, pke_requestor, pke_AFGH, custom_values, stakeholders);
+        //require(owner == recoverSignerFromMessage(message,signature));
+
 
         BaseContent content = BaseContent(content_address);
         uint256 requiredFund;
@@ -77,21 +79,22 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
 
     function contentAccessComplete(
         address content_address,
-        bytes /*signature*/,
+        bytes signature,
         uint256 request_ID,
         uint256 score_pct,
         bytes32 ml_out_hash
     ) public payable returns (bool) {
-        /*
+
         //Signature should be valid for requested operation
-        bytes32  message = accessCompleteMsg(content_address, request_ID, score_pct, ml_out_hash);
-        require(owner == recoverSignerFromMessage(message,signature));
-        */
+        //bytes32  message = accessCompleteMsg(content_address, request_ID, score_pct, ml_out_hash);
+        //require(owner == recoverSignerFromMessage(message,signature));
+
 
         BaseContent content = BaseContent(content_address);
         return content.accessComplete(request_ID, score_pct, ml_out_hash);
 
     }
+*/
 
     // WIP - state channel support
 
@@ -129,7 +132,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     external
     returns (bool) {
 
-        BaseContentSpace spc = BaseContentSpace(contentSpace);
+        KMSSpace spc = KMSSpace(contentSpace);
         require(msg.sender == contentSpace || spc.checkKMSAddr(msg.sender) > 0);
         require(spc.checkKMSAddr(_guarantor) > 0);
 
@@ -171,11 +174,15 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
 BsAccWltFactory20190506154200ML: First versioned released
 */
 
-contract BaseAccessWalletFactory is Ownable {
+contract BaseAccessWalletFactory is Ownable, Factory {
 
     bytes32 public version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createAccessWallet() public returns (address) {
+        return  create();
+    }
+
+    function create() public returns (address) {
         return  (new BaseAccessWallet(msg.sender));
     }
 

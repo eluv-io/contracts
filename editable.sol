@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
-import "strings.sol";
+import "./strings.sol";
 
 /* -- Revision history --
 Editable20190222140100ML: First versioned released
@@ -11,13 +11,14 @@ Editable20190522154000SS: Changed hash bytes32 to string
 Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the case of the content-objects
 Editable20190715105600PO
 Editable20190801135500ML: Made explicit the definition of parentAddress method
+Editable20191107151700ML: Added onlyEditor modifier to lower dependence on onlyOwner
 */
 
 
 contract Editable is Ownable {
     using strings for *;
 
-    bytes32 public version ="Editable20190801135500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20191107151700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -31,6 +32,12 @@ contract Editable is Ownable {
 
     string public pendingHash;
     bool commitPending;
+
+
+    modifier onlyEditor() {
+        require(canEdit());
+        _;
+    }
 
     function migrate(string _objectHash, string _versionHashesConcat) internal onlyOwner {
 
@@ -59,17 +66,18 @@ contract Editable is Ownable {
         return false;
     }
 
+    /* //deprecated - use canEdit instead
     function canCommit() public view returns (bool) {
         return (tx.origin == owner);
     }
+    */
 
     // overridden in BaseContent to return library
     function parentAddress() public view returns (address) {
         return contentSpace;
     }
 
-    function commit(string _objectHash) public {
-        require(canCommit());
+    function commit(string _objectHash) public onlyEditor {
         require(!commitPending); // don't allow two possibly different commits to step on each other - one always wins
 	    require(bytes(_objectHash).length < 128);
         pendingHash = _objectHash;
@@ -94,13 +102,11 @@ contract Editable is Ownable {
     }
 
     function updateRequest() public {
-        require(msg.sender == owner || canConfirm());
+        require(canEdit() || canConfirm());
         emit UpdateRequest(objectHash);
     }
 
-    function deleteVersion(string _versionHash) public returns (int256) {
-        require(canCommit());
-        
+    function deleteVersion(string _versionHash) public onlyEditor returns (int256) {
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
         bytes32 objHash = keccak256(abi.encodePacked(objectHash));
         if (findHash == objHash) {
@@ -130,5 +136,11 @@ contract Editable is Ownable {
 
         emit VersionDelete(contentSpace, _versionHash, foundIdx);
         return foundIdx;
+    }
+
+
+    //This function is meant to be overloaded. By default the owner is the only editor
+    function canEdit() public view returns (bool) {
+        return (tx.origin == owner);
     }
 }

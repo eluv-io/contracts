@@ -12,6 +12,7 @@ BaseContent20190301121900ML: Adds support for getAccessInfo, to replace getAcces
 BaseContent20190315175100ML: Migrated to 0.4.24
 BaseContent20190321122100ML: accessRequest returns requestID, removed ml_hash from access_complete event
 BaseContent20190510151500ML: creation via ContentSpace factory, modified getAccessInfo API
+BaseContent20190510151500ML: creation via ContentSpace factory, modified getAccessInfo API
 BaseContent20190522154000SS: Changed hash bytes32 to string
 BaseContent20190528193400ML: Modified to support non-library containers
 BaseContent20190605203200ML: Splits publish and confirm logic
@@ -225,19 +226,19 @@ contract BaseContent is Editable {
     //      100 -> content available if paid for
     //      255 -> unset
 
-    function getWIPAccessInfo() private view returns (uint8, uint8, uint256) {
-        if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
+    function getWIPAccessInfo(address accessor) private view returns (uint8, uint8, uint256) {
+        if ((accessor == owner) || (visibility >= CAN_EDIT) ){
             return (0, 0, accessCharge);
         }
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address userWallet = contentSpaceObj.userWallets(tx.origin);
+        address userWallet = contentSpaceObj.userWallets(accessor);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
                 return (0, 0, accessCharge);
             }
         }
-        if (Container(libraryAddress).canReview(tx.origin) == true) { //special case of pre-publish review
+        if (Container(libraryAddress).canReview(accessor) == true) { //special case of pre-publish review
             return (0, 0, accessCharge);
         }
         return (10, 10, accessCharge);
@@ -271,10 +272,10 @@ contract BaseContent is Editable {
         return (visibilityCode, accessCode, levelAccessCharge);
     }
 
-    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
+    function getAccessInfo(address accessor, uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
 
         if (statusCode != 0) {
-            return getWIPAccessInfo(); //broken out to reduce complexity (compiler failed)
+            return getWIPAccessInfo(accessor); //broken out to reduce complexity (compiler failed)
         }
         uint256 levelAccessCharge;
         uint8 visibilityCode;
@@ -283,14 +284,13 @@ contract BaseContent is Editable {
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
             BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-            address userWallet = contentSpaceObj.userWallets(tx.origin);
+            address userWallet = contentSpaceObj.userWallets(accessor);
             if (userWallet != 0x0) {
-                AccessIndexor wallet = AccessIndexor(userWallet);
+                AccessIndexor wallet = AccessIndexor(accessor);
                 if (visibilityCode == 255) { //No custom calculations
                     if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
                         visibilityCode = 0;
                     }
-                    // return (visibilityCode, accessCode, accessCharge);
                 }
                 if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
                     if (accessCode == 255) {
@@ -428,12 +428,12 @@ contract BaseContent is Editable {
         return accessRequestInternal(requestNonce, level, pkeAFGH, custom_values, stakeholders, 0x0, msg.sender, now * 1000);
     }
 
-    function validateAccess(uint8 level, bytes32[] custom_values, address[] stakeholders) internal {
+    function validateAccess(address accessor, uint8 level, bytes32[] custom_values, address[] stakeholders) internal {
         uint256 requiredFund;
         uint8 visibilityCode;
         uint8 accessCode;
 
-        (visibilityCode, accessCode, requiredFund) = getAccessInfo(level, custom_values, stakeholders);
+        (visibilityCode, accessCode, requiredFund) = getAccessInfo(accessor, level, custom_values, stakeholders);
 
         if (accessCode == 100) { //Check if request is funded, except if user is owner or has paid already
             require(msg.value >= uint(requiredFund));
@@ -456,7 +456,7 @@ contract BaseContent is Editable {
     )
     internal returns (bytes32) {
 
-        // validateAccess(level, custom_values, stakeholders); TODO: get working !!!
+        validateAccess(accessor, level, custom_values, stakeholders);
 
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);

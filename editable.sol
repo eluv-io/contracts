@@ -31,7 +31,7 @@ contract Editable is Ownable {
     uint[] public versionTimestamp;
 
     string public pendingHash;
-    bool commitPending;
+    bool public commitPending;
 
 
     modifier onlyEditor() {
@@ -75,6 +75,12 @@ contract Editable is Ownable {
     // overridden in BaseContent to return library
     function parentAddress() public view returns (address) {
         return contentSpace;
+    }
+
+    function clearPending() public {
+        require(canCommit());
+        pendingHash = "";
+        commitPending = false;
     }
 
     function commit(string _objectHash) public onlyEditor {

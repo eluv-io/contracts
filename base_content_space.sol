@@ -215,3 +215,51 @@ contract BaseContentFactory is Ownable {
         return address(content);
     }
 }
+
+//BaseCtFactoryXt20191031115100PO: adds support for custom contract
+//BaseCtFactoryXt20191031153200ML: passes accessor to the runAccess via the addresses array
+//BaseCtFactoryXt20191031170400ML: adds request timestamp to event
+//BaseCtFactoryXt20191031203100ML: change initialization of array
+
+contract BaseContentFactoryExt is BaseContentFactory {
+
+    bytes32 public version ="BaseCtFactoryXt20191031203100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
+    uint32 public constant OP_ACCESS_REQUEST = 1;
+    uint32 public constant OP_ACCESS_COMPLETE = 2;
+
+    function isContract(address addr) returns (bool) {
+        uint size;
+        assembly { size := extcodesize(addr) }
+        return size > 0;
+    }
+
+    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+
+        //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
+        //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
+
+        uint paramsLen = _opCodes.length;
+
+        require(_contentAddrs.length == paramsLen);
+        require(_requestNonces.length == paramsLen);
+        require(_userAddrs.length == paramsLen);
+        require(_ctxHashes.length == paramsLen);
+        require(_ts.length == paramsLen);
+
+        for (uint i = 0; i < paramsLen; i++) {
+            BaseContent cobj = BaseContent(_contentAddrs[i]);
+            // guard against race condition where content object is deleted before batch is executed.
+            if (!isContract(_contentAddrs[i]))
+                continue;
+            // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
+            if (_opCodes[i] == OP_ACCESS_REQUEST) {
+                cobj.accessRequestContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
+            } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
+                cobj.accessComplete(_requestNonces[i], _amt[i], 0x0);
+            } else {
+                require(false);
+            }
+        }
+    }
+}

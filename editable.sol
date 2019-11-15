@@ -66,19 +66,12 @@ contract Editable is Ownable {
         return false;
     }
 
-    /* //deprecated - use canEdit instead
-    function canCommit() public view returns (bool) {
-        return (tx.origin == owner);
-    }
-    */
-
     // overridden in BaseContent to return library
     function parentAddress() public view returns (address) {
         return contentSpace;
     }
 
-    function clearPending() public {
-        require(canCommit());
+    function clearPending() public onlyEditor {
         pendingHash = "";
         commitPending = false;
     }

@@ -233,13 +233,9 @@ contract BaseContent is Editable, Publishable {
         if ((accessor == owner) || (visibility >= CAN_EDIT) ){
             return (0, 0, accessCharge);
         }
-<<<<<<< HEAD
         UserSpace contentSpaceObj = UserSpace(contentSpace);
-        address userWallet = contentSpaceObj.userWallets(tx.origin);
-=======
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address userWallet = contentSpaceObj.userWallets(accessor);
->>>>>>> dev-access-req-redux
+
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {

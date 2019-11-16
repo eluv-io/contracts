@@ -36,18 +36,16 @@ contract Editable is Ownable {
 
         objectHash = _objectHash;
 
-        if (bytes(_versionHashesConcat).length == 0)
-            return;
-
-        var s = _versionHashesConcat.toSlice();
-        var delim = ":".toSlice();
-        var hashes = new string[](s.count(delim) + 1);
-        for(uint i = 0; i < hashes.length; i++) {
-            hashes[i] = s.split(delim).toString();
+        if (bytes(_versionHashesConcat).length != 0) {
+            var s = _versionHashesConcat.toSlice();
+            var delim = ":".toSlice();
+            var hashes = new string[](s.count(delim) + 1);
+            for(uint i = 0; i < hashes.length; i++) {
+                hashes[i] = s.split(delim).toString();
+            }
+            versionHashes = hashes;
+            versionTimestamp = _versionTimestamps;
         }
-        versionHashes = hashes;
-
-        versionTimestamp = _versionTimestamps;
 
         super.migrate(_owner, _creator);
 

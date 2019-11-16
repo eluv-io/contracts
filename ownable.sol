@@ -49,12 +49,15 @@ contract Ownable {
         _;
     }
 
+    event OwnershipTransferred(address prevOwner);
+
     /**
      * Allows the current owner to transfer control of the contract to a newOwner.
      *  newOwner: The address to transfer ownership to.
      */
     function transferOwnership(address newOwner) public onlyOwner {
         require(newOwner != address(0));
+        emit OwnershipTransferred(owner);
         owner = newOwner;
     }
 

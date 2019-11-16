@@ -52,8 +52,11 @@ contract BaseContent is Editable {
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
     }
 
-    function migrate(address _contentType,
-            address _addressKMS,
+    event ContentMigrate();
+
+    function migrate(
+            address _owner,
+            address _creator,
             address _contentContractAddress,
             // address _libraryAddress,
             uint256 _accessCharge,
@@ -61,11 +64,12 @@ contract BaseContent is Editable {
             uint256 _requestID,
             uint8 _visibility,
             string _objectHash,
-            string _versionHashes
+            string _versionHashes,
+            uint[] _versionTimestamps
         ) public onlyOwner {
 
-        contentType = _contentType;
-        addressKMS = _addressKMS;
+        // contentType = _contentType; *** already set in create
+        // addressKMS = _addressKMS; *** already set (inherited) from library
         contentContractAddress = _contentContractAddress;
         // libraryAddress = _libraryAddress; // TODO: set by library factory method?
 
@@ -74,7 +78,9 @@ contract BaseContent is Editable {
         requestID = _requestID;
         visibility = _visibility;
 
-        super.migrate(_objectHash, _versionHashes);
+        super.migrate(_owner, _creator, _objectHash, _versionHashes, _versionTimestamps);
+
+        emit ContentMigrate();
 
         return;
     }

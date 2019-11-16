@@ -25,7 +25,13 @@ contract Ownable {
         owner = tx.origin;
     }
 
-    // "Fallback" function - necessary if this contract needs to be paid
+    // TODO: content space?
+    function migrate(address _owner, address _creator) internal onlyOwner {
+        owner = _owner;
+        creator = _creator;
+    }
+
+        // "Fallback" function - necessary if this contract needs to be paid
     function () public payable { }
 
     /**

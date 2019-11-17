@@ -32,7 +32,9 @@ contract Editable is Ownable {
     string public pendingHash;
     bool public commitPending;
 
-    function migrate(address _owner, address _creator, string _objectHash, string _versionHashesConcat, uint[] _versionTimestamps) internal onlyOwner {
+    event EditableMigrate();
+
+    function migrateEditable(address _owner, address _creator, string _objectHash, string _versionHashesConcat, uint[] _versionTimestamps) onlyOwner {
 
         objectHash = _objectHash;
 
@@ -48,6 +50,8 @@ contract Editable is Ownable {
         }
 
         super.migrate(_owner, _creator);
+
+        emit EditableMigrate();
 
         return;
     }

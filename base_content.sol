@@ -78,7 +78,7 @@ contract BaseContent is Editable {
         requestID = _requestID;
         visibility = _visibility;
 
-        super.migrate(_owner, _creator, _objectHash, _versionHashes, _versionTimestamps);
+        super.migrateEditable(_owner, _creator, _objectHash, _versionHashes, _versionTimestamps);
 
         emit ContentMigrate();
 

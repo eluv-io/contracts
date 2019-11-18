@@ -49,7 +49,10 @@ contract Editable is Ownable {
             versionTimestamp = _versionTimestamps;
         }
 
-        super.migrate(_owner, _creator);
+        // during migration msg.sender should always be owner + creator
+        // super.migrate(_owner, _creator);
+        transferOwnership(_owner);
+        transferCreatorship(_creator);
 
         emit EditableMigrate();
 

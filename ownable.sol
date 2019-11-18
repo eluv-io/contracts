@@ -25,12 +25,6 @@ contract Ownable {
         owner = tx.origin;
     }
 
-    // TODO: content space?
-    function migrate(address _owner, address _creator) internal onlyOwner {
-        owner = _owner;
-        creator = _creator;
-    }
-
         // "Fallback" function - necessary if this contract needs to be paid
     function () public payable { }
 
@@ -49,15 +43,12 @@ contract Ownable {
         _;
     }
 
-    event OwnershipTransferred(address prevOwner);
-
     /**
      * Allows the current owner to transfer control of the contract to a newOwner.
      *  newOwner: The address to transfer ownership to.
      */
     function transferOwnership(address newOwner) public onlyOwner {
         require(newOwner != address(0));
-        emit OwnershipTransferred(owner);
         owner = newOwner;
     }
 

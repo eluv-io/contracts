@@ -34,7 +34,7 @@ contract Editable is Ownable {
 
     event EditableMigrate();
 
-    function migrateEditable(address _owner, address _creator, string _objectHash, string _versionHashesConcat, uint[] _versionTimestamps) onlyOwner {
+    function migrateE(address _owner, address _creator, string _objectHash, string _versionHashesConcat, uint[] _versionTimestamps) onlyOwner {
 
         objectHash = _objectHash;
 
@@ -50,7 +50,6 @@ contract Editable is Ownable {
         }
 
         // during migration msg.sender should always be owner + creator
-        // super.migrate(_owner, _creator);
         transferOwnership(_owner);
         transferCreatorship(_creator);
 

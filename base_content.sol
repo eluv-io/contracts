@@ -58,7 +58,6 @@ contract BaseContent is Editable {
             address _owner,
             address _creator,
             address _contentContractAddress,
-            // address _libraryAddress,
             uint256 _accessCharge,
             int _statusCode,
             uint256 _requestID,
@@ -68,17 +67,14 @@ contract BaseContent is Editable {
             uint[] _versionTimestamps
         ) public onlyOwner {
 
-        // contentType = _contentType; *** already set in create
-        // addressKMS = _addressKMS; *** already set (inherited) from library
         contentContractAddress = _contentContractAddress;
-        // libraryAddress = _libraryAddress; // TODO: set by library factory method?
 
         accessCharge = _accessCharge;
         statusCode = _statusCode;
         requestID = _requestID;
         visibility = _visibility;
 
-        super.migrateEditable(_owner, _creator, _objectHash, _versionHashes, _versionTimestamps);
+        super.migrateE(_owner, _creator, _objectHash, _versionHashes, _versionTimestamps);
 
         emit ContentMigrate();
 

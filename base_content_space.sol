@@ -54,7 +54,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event CreateGroup(address groupAddress);
     event CreateContent(address contentAddress);
     event CreateAccessWallet(address wallet);
-    event CreatePolicy(address policyAddress);
 
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
@@ -154,8 +153,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
 
     function createPolicy() public returns (address) {
-        address policyAddress = BaseGroupFactory(groupFactory).createPolicy();
-        emit CreatePolicy(policyAddress);
+        address policyAddress = BaseFactory(factory).createPolicy(msg.sender);
         return policyAddress;
     }
 
@@ -356,6 +354,10 @@ BaseFactory20190801140700ML: Removed access group creation to its own factory
 
 contract BaseFactory is Ownable {
 
+    constructor(address _spcAddr) {
+        contentSpace = _spcAddr;
+    }
+
     bytes32 public version ="BaseFactory20190801140700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContentType() public returns (address) {
@@ -368,10 +370,15 @@ contract BaseFactory is Ownable {
         return newType;
     }
 
-    function createNode(address _owner) public returns (address) {
-        Node n = new Node(); // this sets owner to tx.origin?
-        require(n.owner() == _owner);
-        return address(n);
+    // might have to define and emit this here if we can't change the content space ...?
+    event CreatePolicy(address contentSpace, address policyAddress);
+
+    function createPolicy(address _authAddr) public returns (address) {
+        require(msg.sender == owner ||
+            (msg.sender == contentSpace && AccessManager.isAllowed(_authAddr, contentSpace, "create-policy"))); // or just 'create'?
+        address policyAddress = new BaseAccessPolicy(contentSpace);
+        emit CreatePolicy(contentSpace, policyAddress);
+        return policyAddress;
     }
 }
 
@@ -391,11 +398,6 @@ contract BaseGroupFactory is Ownable {
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
         userWallet.setAccessGroupRights(newGroup, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
         return newGroup;
-    }
-
-    function createPolicy() public returns (address) {
-        address policyAddress = new BaseAccessPolicy(contentSpace);
-        return policyAddress;
     }
 }
 

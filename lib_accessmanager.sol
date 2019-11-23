@@ -23,7 +23,7 @@ library AccessManager {
             mstore(x, sig)
             mstore(add(x, 0x04), _subject)
             mstore(add(x, 0x24), _resource)
-            truncAction := mload(add(_action, 32)) // TODO: huh?
+            truncAction := mload(add(_action, 32))
             mstore(add(x, 0x44), truncAction)
             // input is now [4 bytes][32 bytes][32 bytes][32 bytes] = 100 bytes
 
@@ -32,16 +32,16 @@ library AccessManager {
             callAddr,   // To addr
             0,          // No value - i.e. tokens
             x,          // Inputs are stored at location x
-            0x64,       // Inputs are 76 bytes long
+            0x64,       // Inputs are 100 bytes long
             x,          // Store output over input
-            0x01)       // Output is 1 byte bool
+            0x20)       // Output is 32 byte bool
 
             if eq(res, 0) {
                 revert(0, 0)
             }
 
-            ret := x
-            mstore(0x40, add(x, 0x01))  // Set storage pointer to empty space - i.e. after returned storage
+            ret := mload(x)
+            mstore(0x40, add(x, 0x20))  // Set storage pointer to empty space - i.e. after returned storage
         }
     }
 }

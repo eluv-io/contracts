@@ -23,7 +23,6 @@ contract BaseAccessPolicy is Ownable, MetaObject {
     constructor(address _contentSpace)  public payable {
         contentSpace = _contentSpace; // TODO: why isn't content space in constructor of Ownable?
         effect = EFFECT_ALLOW; // default is allow
-        // emit AccessPolicyCreated(_contentSpace);
     }
 
     int public constant OP_ADD_SUBJECT = 1;
@@ -35,12 +34,15 @@ contract BaseAccessPolicy is Ownable, MetaObject {
     int public constant OP_SET_EFFECT = 7;
 
     // same as AccessIndexor ...?
+    uint8 public constant CATEGORY_MIN = 1;
     uint8 public constant CATEGORY_CONTENT_OBJECT = 1;
     uint8 public constant CATEGORY_GROUP = 2;
     uint8 public constant CATEGORY_LIBRARY = 3;
     uint8 public constant CATEGORY_CONTENT_TYPE = 4;
     uint8 public constant CATEGORY_CONTRACT = 5;
     uint8 public constant CATEGORY_POLICY = 6;
+    uint8 public constant CATEGORY_SPACE = 7;
+    uint8 public constant CATEGORY_MAX = 7;
 
     uint8 public constant SUBJECT_ACCOUNT = 100;
     uint8 public constant SUBJECT_GROUP = 101;
@@ -82,14 +84,14 @@ contract BaseAccessPolicy is Ownable, MetaObject {
 
     function addResource(address _resource, uint8 _category) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        require(_category >= CATEGORY_CONTENT_OBJECT && _category <= CATEGORY_POLICY);
+        require(_category >= CATEGORY_MIN && _category <= CATEGORY_MAX);
         emit AccessPolicyChanged(contentSpace, OP_ADD_RESOURCE, _resource, _category);
         return true;
     }
 
     function removeResource(address _resource, uint8 _category) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        require(_category >= CATEGORY_CONTENT_OBJECT && _category <= CATEGORY_POLICY);
+        require(_category >= CATEGORY_MIN && _category <= CATEGORY_MAX);
         emit AccessPolicyChanged(contentSpace, OP_REMOVE_RESOURCE, _resource, _category);
         return true;
     }

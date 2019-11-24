@@ -426,7 +426,7 @@ contract BaseLibraryFactory is Ownable {
     function createLibraryAuth(address _kmsAddr, address _authAddr) public returns (address) {
         // TODO: still need some concept of tenancy - don't want to auth against content space !
         require(msg.sender == contentSpace && AccessManager.isAllowed(_authAddr, contentSpace, AccessManager.constCreateLibrary())); // or just 'create'?
-        address newLib = (new BaseLibrary(_kmsAddr, _authAddr));
+        address newLib = (new BaseLibrary(_kmsAddr, contentSpace));
         return newLib;
     }
 }

@@ -8,8 +8,6 @@ contract BaseAccessPolicy is Ownable, MetaObject {
 
     string public description;
 
-    string[] public actions;
-
     // conditions can be stored as part of metadata - i.e. in MetaObject ???
 
     string public constant EFFECT_ALLOW = "allow";
@@ -47,80 +45,80 @@ contract BaseAccessPolicy is Ownable, MetaObject {
     uint8 public constant SUBJECT_ACCOUNT = 100;
     uint8 public constant SUBJECT_GROUP = 101;
 
-    event AccessPolicyChanged(address space, int op, address relTarget, uint8 relType);
+    event AccessPolicyChanged(address space, int op, bytes32 relTarget, uint8 relType);
 
     function setEffect(string _newEffect) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
         require(keccak256(abi.encodePacked(_newEffect)) == keccak256(abi.encodePacked(EFFECT_ALLOW)) ||
             keccak256(abi.encodePacked(_newEffect)) == keccak256(abi.encodePacked(EFFECT_DENY)));
         effect = _newEffect;
-        emit AccessPolicyChanged(contentSpace, OP_SET_EFFECT, 0x0, 0);
+        bytes32 result;
+        assembly {
+            result := mload(add(_newEffect, 32))
+        }
+        emit AccessPolicyChanged(contentSpace, OP_SET_EFFECT, result, 0);
         return true;
     }
 
     function addUser(address _subject) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, _subject, SUBJECT_ACCOUNT);
+        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, bytes32(_subject), SUBJECT_ACCOUNT);
         return true;
     }
 
     function removeUser(address _subject) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_SUBJECT, _subject, SUBJECT_ACCOUNT);
+        emit AccessPolicyChanged(contentSpace, OP_REMOVE_SUBJECT, bytes32(_subject), SUBJECT_ACCOUNT);
         return true;
     }
 
     function addGroup(address _subject) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, _subject, SUBJECT_GROUP);
+        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, bytes32(_subject), SUBJECT_GROUP);
         return true;
     }
 
     function removeGroup(address _subject) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_SUBJECT, _subject, SUBJECT_GROUP);
+        emit AccessPolicyChanged(contentSpace, OP_REMOVE_SUBJECT, bytes32(_subject), SUBJECT_GROUP);
         return true;
     }
 
     function addResource(address _resource, uint8 _category) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
         require(_category >= CATEGORY_MIN && _category <= CATEGORY_MAX);
-        emit AccessPolicyChanged(contentSpace, OP_ADD_RESOURCE, _resource, _category);
+        emit AccessPolicyChanged(contentSpace, OP_ADD_RESOURCE, bytes32(_resource), _category);
         return true;
     }
 
     function removeResource(address _resource, uint8 _category) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
         require(_category >= CATEGORY_MIN && _category <= CATEGORY_MAX);
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_RESOURCE, _resource, _category);
+        emit AccessPolicyChanged(contentSpace, OP_REMOVE_RESOURCE, bytes32(_resource), _category);
         return true;
     }
 
     function addAction(string _action) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        for (uint i = 0; i < actions.length; i++) {
-            if (keccak256(abi.encodePacked(actions[i])) == keccak256(abi.encodePacked(_action))) {
-                return false; // already there ...
-            }
+        bytes memory testAction = bytes(_action);
+        require(testAction.length > 0 && testAction.length <= 32);
+        bytes32 result;
+        assembly {
+            result := mload(add(_action, 32))
         }
-        actions.push(_action);
-        emit AccessPolicyChanged(contentSpace, OP_ADD_ACTION, 0x0, 0);
+        emit AccessPolicyChanged(contentSpace, OP_ADD_ACTION, result, 0);
         return true;
     }
 
     function removeAction(string _action) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        for (uint i = 0; i < actions.length; i++) {
-            if (keccak256(abi.encodePacked(actions[i])) == keccak256(abi.encodePacked(_action))) {
-                if (i != actions.length - 1) {
-                    actions[i] = actions[actions.length - 1];
-                }
-                delete actions[actions.length - 1];
-                actions.length -= 1;
-                emit AccessPolicyChanged(contentSpace, OP_REMOVE_ACTION, 0x0, 0);
-                return true;
-            }
+        bytes memory testAction = bytes(_action);
+        require(testAction.length > 0 && testAction.length <= 32);
+        bytes32 result;
+        assembly {
+            result := mload(add(_action, 32))
         }
-        return false;
+        emit AccessPolicyChanged(contentSpace, OP_REMOVE_ACTION, result, 0);
+        return true;
     }
 }

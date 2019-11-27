@@ -45,6 +45,9 @@ contract BaseAccessPolicy is Ownable, MetaObject {
     uint8 public constant SUBJECT_ACCOUNT = 100;
     uint8 public constant SUBJECT_GROUP = 101;
 
+    uint8 public constant REL_EFFECT = 200;
+    uint8 public constant REL_ACTION = 201;
+
     event AccessPolicyChanged(address space, int op, bytes32 relTarget, uint8 relType);
 
     function setEffect(string _newEffect) public returns (bool) {
@@ -56,7 +59,7 @@ contract BaseAccessPolicy is Ownable, MetaObject {
         assembly {
             result := mload(add(_newEffect, 32))
         }
-        emit AccessPolicyChanged(contentSpace, OP_SET_EFFECT, result, 0);
+        emit AccessPolicyChanged(contentSpace, OP_SET_EFFECT, result, REL_EFFECT);
         return true;
     }
 
@@ -106,7 +109,7 @@ contract BaseAccessPolicy is Ownable, MetaObject {
         assembly {
             result := mload(add(_action, 32))
         }
-        emit AccessPolicyChanged(contentSpace, OP_ADD_ACTION, result, 0);
+        emit AccessPolicyChanged(contentSpace, OP_ADD_ACTION, result, REL_ACTION);
         return true;
     }
 
@@ -118,7 +121,7 @@ contract BaseAccessPolicy is Ownable, MetaObject {
         assembly {
             result := mload(add(_action, 32))
         }
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_ACTION, result, 0);
+        emit AccessPolicyChanged(contentSpace, OP_REMOVE_ACTION, result, REL_ACTION);
         return true;
     }
 }

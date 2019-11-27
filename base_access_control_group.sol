@@ -126,8 +126,11 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
 
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(candidate);
-        AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
+        // TODO: pretty sure we don't want this in general, but for now trying to test ...
+        if (walletAddress != 0x0) {
+            AccessIndexor userWallet = AccessIndexor(walletAddress);
+            userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
+        }
         //emit dbg_setAccessGroupRights(walletAddress, userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
         //emit dbg_setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
     }

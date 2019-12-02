@@ -1,5 +1,6 @@
 pragma solidity 0.4.24;
 
+import {Ownable} from "./ownable.sol";
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {Container} from "./container.sol";
@@ -52,6 +53,11 @@ contract BaseContent is Editable {
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
     }
 
+     modifier onlyEditor() {
+        require(canEdit());
+        _;
+    }
+
     function migrate(address _contentType,
             address _addressKMS,
             address _contentContractAddress,
@@ -62,8 +68,10 @@ contract BaseContent is Editable {
             uint8 _visibility,
             string _objectHash,
             string _versionHashes
-        ) public onlyOwner {
+        ) public {
 
+        Ownable space = Ownable(contentSpace);
+	require(tx.origin == space.owner());
         contentType = _contentType;
         addressKMS = _addressKMS;
         contentContractAddress = _contentContractAddress;
@@ -135,7 +143,7 @@ contract BaseContent is Editable {
     }
 
 
-    function setVisibility(uint8 visibility_code) public onlyOwner {
+    function setVisibility(uint8 visibility_code) public onlyEditor {
         visibility = visibility_code;
     }
 
@@ -163,20 +171,7 @@ contract BaseContent is Editable {
         }
     }
 
-    /* should be deprecated
-    function setContentType(address content_type) public onlyOwner {
-        contentType = content_type;
-        //get custom contract address associated with content_type from hash
-        BaseLibrary lib = BaseLibrary(libraryAddress);
-        contentContractAddress = lib.contentTypeContracts(content_type);
-        addressKMS = lib.addressKMS();
-        if (contentContractAddress != 0x0) {
 
-        }
-        emit SetContentType(content_type, contentContractAddress);
-    }
-
-    */
     function setStatusCode(int status_code) public returns (int) {
         if ((tx.origin == owner) && ((status_code < 0) || ((status_code > 0) && (statusCode < 0)))) {
 
@@ -194,7 +189,7 @@ contract BaseContent is Editable {
         return statusCode;
     }
 
-    function setAddressKMS(address address_KMS) public onlyOwner {
+    function setAddressKMS(address address_KMS) public onlyEditor {
         addressKMS = address_KMS;
     }
 
@@ -207,7 +202,7 @@ contract BaseContent is Editable {
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.
-    function setContentContractAddress(address addr) public onlyOwner {
+    function setContentContractAddress(address addr) public onlyEditor {
         Content c;
         if (contentContractAddress != 0x0) {
             c = Content(contentContractAddress);
@@ -299,7 +294,6 @@ contract BaseContent is Editable {
                     if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
                         visibilityCode = 0;
                     }
-                    // return (visibilityCode, accessCode, accessCharge);
                 }
                 if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
                     if (accessCode == 255) {
@@ -315,7 +309,7 @@ contract BaseContent is Editable {
         return (visibilityCode, accessCode, levelAccessCharge);
     }
 
-    function setAccessCharge(uint256 charge) public onlyOwner returns (uint256) {
+    function setAccessCharge(uint256 charge) public onlyEditor returns (uint256) {
         accessCharge = charge;
         emit SetAccessCharge(accessCharge);
         return accessCharge;

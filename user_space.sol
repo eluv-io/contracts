@@ -1,5 +1,6 @@
 pragma solidity 0.4.24;
 
+import "./base_space_interfaces.sol";
 
 /**
  * UserSpace
@@ -9,10 +10,6 @@ pragma solidity 0.4.24;
 /* -- Revision history --
 UserSpace20190506155300ML: First versioned released
 */
-
-interface UserSpace {
-    function getUserWallet(address _userAddr) external view returns (address);
-}
 
 contract UserSpaceImpl is UserSpace {
 

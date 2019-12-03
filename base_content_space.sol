@@ -3,6 +3,7 @@ pragma solidity 0.4.24;
 import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
+import "./base_space_interfaces.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
@@ -30,8 +31,7 @@ BaseContentSpace20190605144600ML: Implements canConfirm to overloads default fro
 BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 */
 
-
-contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, NodeSpace {
+contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, NodeSpaceImpl, KmsSpace, FactorySpace {
 
     bytes32 public version ="BaseContentSpace20190801140400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -208,7 +208,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
     }
     */
 
-    // TODO kmsAddr => kmsID
     function getKMSID(address _kmsAddr) public view returns (string){
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
     }
@@ -255,7 +254,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
         return output;
     }
 
-    function getKMSInfo(string _kmsID, bytes prefix) public view returns (string, string) {
+    function getKMSInfo(string _kmsID, bytes prefix) external view returns (string, string) {
         bytes[] memory locators = kmsMapping[_kmsID];
         string memory publicKey = kmsPublicKeys[_kmsID];
 

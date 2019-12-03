@@ -2,11 +2,11 @@ pragma solidity 0.4.24;
 
 //import "./ownable.sol";
 import {BaseFactory} from "./base_content_space.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";
 import {UserSpace} from "./user_space.sol";
+import {NodeSpace} from "./node_space.sol";
 
 
 /* -- Revision history --
@@ -151,8 +151,8 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     }
 
     function canConfirm() public view returns (bool) {
-        BaseContentSpace bcs = BaseContentSpace(contentSpace);
-        return bcs.canNodePublish(msg.sender);
+        NodeSpace ns = NodeSpace(contentSpace);
+        return ns.canNodePublish(msg.sender);
     }
 
 }

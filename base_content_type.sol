@@ -5,6 +5,7 @@ import {Editable} from "./editable.sol";
 import "./accessible.sol";
 import "./access_indexor.sol";
 import "./user_space.sol";
+import "./node_space.sol";
 
 
 /* -- Revision history --
@@ -40,9 +41,8 @@ contract BaseContentType is Accessible, Editable {
     }
 
     function canConfirm() public view returns (bool) {
-//        BaseContentSpace spc = BaseContentSpace(contentSpace);
-//        return spc.canNodePublish(msg.sender);
-        return true; // TODO !!!
+        NodeSpace spc = NodeSpace(contentSpace);
+        return spc.canNodePublish(msg.sender);
     }
 
 

@@ -4,10 +4,9 @@ import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
+import {FactorySpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./meta_object.sol";
-
 
 /* -- Revision history --
 BaseLibrary20190221101700ML: First versioned released
@@ -285,7 +284,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function createContent(address content_type) public  returns (address) {
-        address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
+        address content = FactorySpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
         return content;
     }

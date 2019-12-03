@@ -5,7 +5,6 @@ import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {Container} from "./container.sol";
 import {AccessIndexor} from "./access_indexor.sol";
-import "./base_content_space.sol";
 import "./user_space.sol";
 
 /* -- Revision history --
@@ -196,11 +195,11 @@ contract BaseContent is Editable {
     }
 
     function getKMSInfo(bytes prefix) public view returns (string, string) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        if (addressKMS == 0x0 || contentSpaceObj.checkKMSAddr(addressKMS) == 0) {
+        KmsSpace kmsSpaceObj = KmsSpace(contentSpace);
+        if (addressKMS == 0x0 || kmsSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");
         }
-        return contentSpaceObj.getKMSInfo(contentSpaceObj.getKMSID(addressKMS), prefix);
+        return kmsSpaceObj.getKMSInfo(kmsSpaceObj.getKMSID(addressKMS), prefix);
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.
@@ -549,15 +548,13 @@ contract BaseContent is Editable {
     }
 
     function setPaidRights() private {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.getAccessWallet();
+        address walletAddress = UserSpace(contentSpace).getUserWallet(msg.sender);
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        UserSpace userSpaceObj = UserSpace(contentSpace);
-        address walletAddress = userSpaceObj.getUserWallet(stakeholder);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

@@ -24,7 +24,7 @@ BaseContent20191029161700ML: Removed debug statements for accessRequest
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20191029161700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20191202161700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;

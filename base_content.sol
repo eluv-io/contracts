@@ -71,7 +71,8 @@ contract BaseContent is Editable {
         ) public {
 
         Ownable space = Ownable(contentSpace);
-	require(tx.origin == space.owner());
+	    require(msg.sender == space.owner());
+
         contentType = _contentType;
         addressKMS = _addressKMS;
         contentContractAddress = _contentContractAddress;

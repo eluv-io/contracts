@@ -31,7 +31,7 @@ BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 */
 
 
-contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
+contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, NodeSpace {
 
     bytes32 public version ="BaseContentSpace20190801140400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

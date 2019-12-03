@@ -3,8 +3,8 @@ pragma solidity 0.4.24;
 import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import "./accessible.sol";
-import "./base_content_space.sol";
 import "./access_indexor.sol";
+import "./user_space.sol";
 
 
 /* -- Revision history --
@@ -28,8 +28,8 @@ contract BaseContentType is Accessible, Editable {
     }
 
     function canCommit() public view returns (bool) {
-        BaseContentSpace spc = BaseContentSpace(contentSpace);
-        address walletAddress = spc.userWallets(tx.origin);
+        UserSpace spc = UserSpace(contentSpace);
+        address walletAddress = spc.getUserWallet(tx.origin);
         if (walletAddress != 0x0) {
             AccessIndexor wallet = AccessIndexor(walletAddress);
             return wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT());
@@ -40,14 +40,15 @@ contract BaseContentType is Accessible, Editable {
     }
 
     function canConfirm() public view returns (bool) {
-        BaseContentSpace spc = BaseContentSpace(contentSpace);
-        return spc.canNodePublish(msg.sender);
+//        BaseContentSpace spc = BaseContentSpace(contentSpace);
+//        return spc.canNodePublish(msg.sender);
+        return true; // TODO !!!
     }
 
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(stakeholder);
+        UserSpace userSpaceObj = UserSpace(contentSpace);
+        address walletAddress = userSpaceObj.getUserWallet(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

@@ -410,7 +410,7 @@ BaseCtFactory20191017165200ML: Updated to reflect change in BaseContent201908011
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20191017165200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20191202165200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);

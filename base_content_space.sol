@@ -26,12 +26,12 @@ BaseContentSpace20190319194900ML: Requires 0.4.24
 BaseContentSpace20190320114200ML: Adding support for user-wallet
 BaseContentSpace20190506153400ML: Moves dependant creation to factories, requires factory to be set after instantiation
 BaseContentSpace20190510150900ML: Moves content creation from library to a dedicated content space factory
-BaseContentSpace20190528193500ML: Moves node management to a parent class (NodeSpace)
+BaseContentSpace20190528193500ML: Moves node management to a parent class (INodeSpace)
 BaseContentSpace20190605144600ML: Implements canConfirm to overloads default from Editable
 BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 */
 
-contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, NodeSpaceImpl, KmsSpace, FactorySpace {
+contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
     bytes32 public version ="BaseContentSpace20191203120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -98,7 +98,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
     }
 
     function canConfirm() public view returns (bool) {
-        return canNodePublish(msg.sender);
+        INodeSpace bcs = INodeSpace(address(this));
+        return bcs.canNodePublish(msg.sender);
     }
 
     // used to create a node contract instance. should be called by the address of the node that wishes to register.
@@ -201,7 +202,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
 
     /* removed as the createUserWallet does not work for creating wallet on behalf of a user
     // Not sure we want that, if so it might have to be restricted -- to be thought through
-    function getUserWallet(address user) public returns(address) {
+    function userWallets(address user) public returns(address) {
         if (userWallets[user] == 0x0) {
             return createUserWallet(user);
         } else {

@@ -11,7 +11,7 @@ interface IFactorySpace {
 }
 
 interface IUserSpace {
-    function getUserWallet(address _userAddr) external view returns (address);
+    function userWallets(address _userAddr) external view returns (address);
 }
 
 interface IKmsSpace {

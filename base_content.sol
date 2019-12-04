@@ -235,7 +235,7 @@ contract BaseContent is Editable {
             return (0, 0, accessCharge);
         }
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address userWallet = userSpaceObj.getUserWallet(tx.origin);
+        address userWallet = userSpaceObj.userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
@@ -288,7 +288,7 @@ contract BaseContent is Editable {
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
             IUserSpace userSpaceObj = IUserSpace(contentSpace);
-            address userWallet = userSpaceObj.getUserWallet(tx.origin);
+            address userWallet = userSpaceObj.userWallets(tx.origin);
             if (userWallet != 0x0) {
                 AccessIndexor wallet = AccessIndexor(userWallet);
                 if (visibilityCode == 255) { //No custom calculations
@@ -318,7 +318,7 @@ contract BaseContent is Editable {
 
     function canEdit() public view returns (bool) {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address walletAddress = userSpaceObj.getUserWallet(tx.origin);
+        address walletAddress = userSpaceObj.userWallets(tx.origin);
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
     }
@@ -548,13 +548,13 @@ contract BaseContent is Editable {
     }
 
     function setPaidRights() private {
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(msg.sender);
+        address walletAddress = IUserSpace(contentSpace).userWallets(msg.sender);
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(stakeholder);
+        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

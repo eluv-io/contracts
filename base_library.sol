@@ -65,7 +65,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
             return true;
         }
 
-        address userWallet = IUserSpace(contentSpace).getUserWallet(tx.origin);
+        address userWallet = IUserSpace(contentSpace).userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT()) == true) {
@@ -305,7 +305,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(stakeholder);
+        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

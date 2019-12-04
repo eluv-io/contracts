@@ -62,7 +62,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             managersNum++;
         }
         emit ManagerAccessGranted(manager);
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(manager);
+        address walletAddress = IUserSpace(contentSpace).userWallets(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_TENTATIVE());
     }
@@ -81,7 +81,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         emit ManagerAccessRevoked(manager);
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(manager);
+        address walletAddress = IUserSpace(contentSpace).userWallets(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_NONE());
     }
@@ -91,7 +91,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     }
 
     function hasAccessRight(address candidate, bool mgr) public view returns (bool) {
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(candidate);
+        address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         if (mgr==true) {
              return userWallet.checkAccessGroupRights(address(this), userWallet.TYPE_EDIT());
@@ -121,7 +121,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
 
         emit MemberAdded(candidate);
 
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(candidate);
+        address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
     }
@@ -140,7 +140,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         emit MemberRevoked(candidate);
-        address walletAddress = IUserSpace(contentSpace).getUserWallet(candidate);
+        address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_NONE());
     }

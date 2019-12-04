@@ -17,7 +17,8 @@ contract UserSpace is IUserSpace {
 
     mapping(address => address) public userWallets;
 
-    function getUserWallet(address _userAddr) external view returns (address) {
+    function userWallets(address _userAddr) external view returns (address) {
         return userWallets[_userAddr];
     }
+
 }

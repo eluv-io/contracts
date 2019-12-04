@@ -202,7 +202,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     /* removed as the createUserWallet does not work for creating wallet on behalf of a user
     // Not sure we want that, if so it might have to be restricted -- to be thought through
-    function getUserWallet(address user) public returns(address) {
+    function userWallets(address user) public returns(address) {
         if (userWallets[user] == 0x0) {
             return createUserWallet(user);
         } else {

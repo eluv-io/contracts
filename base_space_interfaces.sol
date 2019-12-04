@@ -12,6 +12,7 @@ interface FactorySpace {
 
 interface UserSpace {
     function getUserWallet(address _userAddr) external view returns (address);
+    function userWallets(address) external view returns (address);
 }
 
 interface KmsSpace {

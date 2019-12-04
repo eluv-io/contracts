@@ -20,5 +20,4 @@ contract UserSpace is IUserSpace {
     function getUserWallet(address _userAddr) external view returns (address) {
         return userWallets[_userAddr];
     }
-
 }

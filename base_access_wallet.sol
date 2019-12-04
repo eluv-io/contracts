@@ -4,7 +4,7 @@ import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseContent} from "./base_content.sol";
-import {KmsSpace} from "./user_space.sol";
+import {IKmsSpace, INodeSpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
 
@@ -27,7 +27,8 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     }
 
     function canConfirm() public view returns (bool) {
-        return canNodePublish(msg.sender);
+        INodeSpace bcs = INodeSpace(contentSpace);
+        return bcs.canNodePublish(msg.sender);
     }
 
     function accessRequestMsg(
@@ -130,7 +131,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     external
     returns (bool) {
 
-        KmsSpace spc = KmsSpace(contentSpace);
+        IKmsSpace spc = IKmsSpace(contentSpace);
         require(msg.sender == contentSpace || spc.checkKMSAddr(msg.sender) > 0);
         require(spc.checkKMSAddr(_guarantor) > 0);
 

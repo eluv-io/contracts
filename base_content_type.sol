@@ -29,7 +29,7 @@ contract BaseContentType is Accessible, Editable {
     }
 
     function canCommit() public view returns (bool) {
-        UserSpace spc = UserSpace(contentSpace);
+        IUserSpace spc = IUserSpace(contentSpace);
         address walletAddress = spc.getUserWallet(tx.origin);
         if (walletAddress != 0x0) {
             AccessIndexor wallet = AccessIndexor(walletAddress);
@@ -41,13 +41,13 @@ contract BaseContentType is Accessible, Editable {
     }
 
     function canConfirm() public view returns (bool) {
-        NodeSpace spc = NodeSpace(contentSpace);
+        INodeSpace spc = INodeSpace(contentSpace);
         return spc.canNodePublish(msg.sender);
     }
 
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        UserSpace userSpaceObj = UserSpace(contentSpace);
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address walletAddress = userSpaceObj.getUserWallet(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)

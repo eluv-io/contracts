@@ -195,7 +195,7 @@ contract BaseContent is Editable {
     }
 
     function getKMSInfo(bytes prefix) public view returns (string, string) {
-        KmsSpace kmsSpaceObj = KmsSpace(contentSpace);
+        IKmsSpace kmsSpaceObj = IKmsSpace(contentSpace);
         if (addressKMS == 0x0 || kmsSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");
         }
@@ -234,7 +234,7 @@ contract BaseContent is Editable {
         if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
             return (0, 0, accessCharge);
         }
-        UserSpace userSpaceObj = UserSpace(contentSpace);
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address userWallet = userSpaceObj.getUserWallet(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
@@ -287,7 +287,7 @@ contract BaseContent is Editable {
         (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo( level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
-            UserSpace userSpaceObj = UserSpace(contentSpace);
+            IUserSpace userSpaceObj = IUserSpace(contentSpace);
             address userWallet = userSpaceObj.getUserWallet(tx.origin);
             if (userWallet != 0x0) {
                 AccessIndexor wallet = AccessIndexor(userWallet);
@@ -317,7 +317,7 @@ contract BaseContent is Editable {
     }
 
     function canEdit() public view returns (bool) {
-        UserSpace userSpaceObj = UserSpace(contentSpace);
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address walletAddress = userSpaceObj.getUserWallet(tx.origin);
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
@@ -332,8 +332,8 @@ contract BaseContent is Editable {
     }
 
     function canConfirm() public view returns (bool) {
-        Container lib = Container(libraryAddress);
-        return lib.canNodePublish(msg.sender);
+        INodeSpace bcs = INodeSpace(contentSpace);
+        return bcs.canNodePublish(msg.sender);
     }
 
     // override from Editable
@@ -548,13 +548,13 @@ contract BaseContent is Editable {
     }
 
     function setPaidRights() private {
-        address walletAddress = UserSpace(contentSpace).getUserWallet(msg.sender);
+        address walletAddress = IUserSpace(contentSpace).getUserWallet(msg.sender);
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = UserSpace(contentSpace).getUserWallet(stakeholder);
+        address walletAddress = IUserSpace(contentSpace).getUserWallet(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

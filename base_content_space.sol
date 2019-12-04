@@ -33,7 +33,7 @@ BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, NodeSpaceImpl, KmsSpace, FactorySpace {
 
-    bytes32 public version ="BaseContentSpace20190801140400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20191203120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -52,7 +52,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
     event CreateLibrary(address libraryAddress);
     event CreateGroup(address groupAddress);
     event CreateContent(address contentAddress);
-    event CreateAccessWallet(address wallet);
+    event CreateAccessWallet(address wallet, address userAddr);
 
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
@@ -173,15 +173,15 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
 
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWallet(address user) private returns (address) {
-        require(userWallets[user] == 0x0);
+    function createUserWallet(address _user) private returns (address) {
+        require(userWallets[_user] == 0x0);
         address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-        if (user != tx.origin) {
+        if (_user != tx.origin) {
             BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-            wallet.transferOwnership(user);
+            wallet.transferOwnership(_user);
         }
-        emit CreateAccessWallet(walletAddress);
-        userWallets[user] = walletAddress;
+        emit CreateAccessWallet(walletAddress, _user);
+        userWallets[_user] = walletAddress;
         return walletAddress;
     }
 

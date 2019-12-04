@@ -52,7 +52,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
     event CreateLibrary(address libraryAddress);
     event CreateGroup(address groupAddress);
     event CreateContent(address contentAddress);
-    event CreateAccessWallet(address wallet, address userAddr);
+    event CreateAccessWallet(address wallet);
+    event BindUserWallet(address wallet, address userAddr);
 
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
@@ -180,7 +181,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, N
             BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
             wallet.transferOwnership(_user);
         }
-        emit CreateAccessWallet(walletAddress, _user);
+        emit CreateAccessWallet(walletAddress);
+        emit BindUserWallet(walletAddress, _user);
         userWallets[_user] = walletAddress;
         return walletAddress;
     }

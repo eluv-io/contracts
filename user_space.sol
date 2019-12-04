@@ -15,7 +15,7 @@ contract UserSpaceImpl is UserSpace {
 
     bytes32 public version ="UserSpace20190506155300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    mapping(address => address) userWallets;
+    mapping(address => address) public userWallets;
 
     function getUserWallet(address _userAddr) public view returns (address) {
         return userWallets[_userAddr];

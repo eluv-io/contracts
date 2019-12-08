@@ -21,11 +21,11 @@ contract AccessIndexor is Ownable {
     event RightsChanged(address principal, address entity, uint8 aggregate);
     //event dbUint8(string label, uint8 value);
 
-    uint8 public CATEGORY_CONTENT_OBJECT = 1;
-    uint8 public CATEGORY_GROUP = 2;
-    uint8 public CATEGORY_LIBRARY = 3;
-    uint8 public CATEGORY_CONTENT_TYPE = 4;
-    uint8 public CATEGORY_CONTRACT = 5;
+    uint8 public constant CATEGORY_CONTENT_OBJECT = 1;
+    uint8 public constant CATEGORY_GROUP = 2;
+    uint8 public constant CATEGORY_LIBRARY = 3;
+    uint8 public constant CATEGORY_CONTENT_TYPE = 4;
+    uint8 public constant CATEGORY_CONTRACT = 5;
 
     uint8 public constant TYPE_SEE = 0;
     uint8 public constant TYPE_ACCESS = 1;

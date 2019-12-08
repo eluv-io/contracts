@@ -276,21 +276,16 @@ contract BaseContent is Editable {
         return (visibilityCode, accessCode, levelAccessCharge);
     }
 
-    function checkWalletAccessInfo(address _checkAddress, uint8 _visibilityCode, uint8 _accessCode) view returns (uint8, uint8) {
-        IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address userWallet = userSpaceObj.userWallets(tx.origin);
-        if (userWallet != 0x0) {
-            AccessIndexor wallet = AccessIndexor(userWallet);
-            if (_visibilityCode == 255) { // No custom calculations
-                if (wallet.checkContentObjectRights(_checkAddress, wallet.TYPE_SEE())) {
-                    _visibilityCode = 0;
-                }
+    function checkWalletAccessInfo(AccessIndexor _userWallet, uint8 _indexType, address _checkAddress, uint8 _visibilityCode, uint8 _accessCode) view returns (uint8, uint8) {
+        if (_visibilityCode == 255) { // No custom calculations
+            if (_userWallet.checkRights(_indexType, _checkAddress, _userWallet.TYPE_SEE())) {
+                _visibilityCode = 0;
             }
-            if (_visibilityCode == 0) { // if content is not visible, no point in checking if it is accessible
-                if (_accessCode == 255) {
-                    if (wallet.checkContentObjectRights(_checkAddress, wallet.TYPE_ACCESS())) {
-                        _accessCode = 0;
-                    }
+        }
+        if (_visibilityCode == 0) { // if content is not visible, no point in checking if it is accessible
+            if (_accessCode == 255) {
+                if (_userWallet.checkRights(_indexType, _checkAddress, _userWallet.TYPE_ACCESS())) {
+                    _accessCode = 0;
                 }
             }
         }
@@ -305,13 +300,18 @@ contract BaseContent is Editable {
         uint256 levelAccessCharge;
         uint8 visibilityCode;
         uint8 accessCode;
-        (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo(level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
+        (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo(level, custom_values, stakeholders); //broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
-            (visibilityCode, accessCode) = checkWalletAccessInfo(address(this), visibilityCode, accessCode);
-            if (visibilityCode == 0 && accessCode != 0) {
-                // if content is visible but user does not have direct access rights, check for library-level permissions
-                (visibilityCode, accessCode) = checkWalletAccessInfo(libraryAddress, visibilityCode, accessCode);
+            IUserSpace userSpaceObj = IUserSpace(contentSpace);
+            address userWallet = userSpaceObj.userWallets(msg.sender);
+            if (userWallet != 0x0) {
+                AccessIndexor wallet = AccessIndexor(userWallet);
+                (visibilityCode, accessCode) = checkWalletAccessInfo(wallet, wallet.CATEGORY_CONTENT_OBJECT(), address(this), visibilityCode, accessCode);
+                if (visibilityCode == 0 && accessCode != 0) {
+                    // if content is visible but user does not have direct access rights, check for library-level permissions
+                    (visibilityCode, accessCode) = checkWalletAccessInfo(wallet, wallet.CATEGORY_LIBRARY(), libraryAddress, visibilityCode, accessCode);
+                }
             }
         }
         return (visibilityCode, accessCode, levelAccessCharge);

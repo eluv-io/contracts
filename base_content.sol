@@ -128,7 +128,7 @@ contract BaseContent is Editable {
         libraryAddress = lib;
         statusCode = -1;
         contentType = content_type;
-        visibility = CAN_ACCESS; //default could be made a function of the library.
+        visibility = CAN_SEE; //default could be made a function of the library.
 
         //get custom contract address associated with content_type from hash
         /*
@@ -251,7 +251,7 @@ contract BaseContent is Editable {
     function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
         uint256 levelAccessCharge = accessCharge;
         uint8 visibilityCode = (visibility >= CAN_SEE) ? 0 : 255;
-        uint8 accessCode = (visibility >= CAN_ACCESS) ? 0 :255;
+        uint8 accessCode = (visibility >= CAN_ACCESS) ? 0 : 255;
         if (contentContractAddress != 0x0) {
             uint8 customMask;
             uint8 customVisibility;
@@ -276,6 +276,27 @@ contract BaseContent is Editable {
         return (visibilityCode, accessCode, levelAccessCharge);
     }
 
+    function checkWalletAccessInfo(address _checkAddress, uint8 _visibilityCode, uint8 _accessCode) view returns (uint8, uint8) {
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address userWallet = userSpaceObj.userWallets(tx.origin);
+        if (userWallet != 0x0) {
+            AccessIndexor wallet = AccessIndexor(userWallet);
+            if (_visibilityCode == 255) { // No custom calculations
+                if (wallet.checkContentObjectRights(_checkAddress, wallet.TYPE_SEE())) {
+                    _visibilityCode = 0;
+                }
+            }
+            if (_visibilityCode == 0) { // if content is not visible, no point in checking if it is accessible
+                if (_accessCode == 255) {
+                    if (wallet.checkContentObjectRights(_checkAddress, wallet.TYPE_ACCESS())) {
+                        _accessCode = 0;
+                    }
+                }
+            }
+        }
+        return (_visibilityCode, _accessCode);
+    }
+
     function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
 
         if (statusCode != 0) {
@@ -284,27 +305,13 @@ contract BaseContent is Editable {
         uint256 levelAccessCharge;
         uint8 visibilityCode;
         uint8 accessCode;
-        (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo( level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
+        (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo(level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
-            IUserSpace userSpaceObj = IUserSpace(contentSpace);
-            address userWallet = userSpaceObj.userWallets(tx.origin);
-            if (userWallet != 0x0) {
-                AccessIndexor wallet = AccessIndexor(userWallet);
-                if (visibilityCode == 255) { //No custom calculations
-                    if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
-                        visibilityCode = 0;
-                    }
-                }
-                if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
-                    if (accessCode == 255) {
-                        if (wallet.checkContentObjectRights(address(this), wallet.TYPE_ACCESS()) == true) {
-                            accessCode = 0;
-                        } else {
-                            accessCode = 100; //content accessible if paid for
-                        }
-                    }
-                }
+            (visibilityCode, accessCode) = checkWalletAccessInfo(address(this), visibilityCode, accessCode);
+            if (visibilityCode == 0 && accessCode != 0) {
+                // if content is visible but user does not have direct access rights, check for library-level permissions
+                (visibilityCode, accessCode) = checkWalletAccessInfo(libraryAddress, visibilityCode, accessCode);
             }
         }
         return (visibilityCode, accessCode, levelAccessCharge);
@@ -368,7 +375,6 @@ contract BaseContent is Editable {
         return statusCode;
     }
 
-
     //this function allows custom content contract to call makeRequestPayment
     function processRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) public returns (bool) {
         require((contentContractAddress != 0x0) && (msg.sender == contentContractAddress));
@@ -382,6 +388,7 @@ contract BaseContent is Editable {
             r.settled = r.settled + amount;
             emit LogPayment(request_ID, label, payee, amount);
         }
+        return true;
     }
 
     event DbgAccess(
@@ -422,7 +429,6 @@ contract BaseContent is Editable {
         }
         //emit DbgAccessCode(accessCode);
         require(accessCode == 0);
-
 
         RequestData memory r = RequestData(msg.sender, msg.value, 0, 0);
         // status of 0 indicates the payment received is in escrow in the content contract

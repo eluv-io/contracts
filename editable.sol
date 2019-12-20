@@ -57,7 +57,7 @@ contract Editable is Ownable {
 
     //This function is meant to be overloaded. By default the owner is the only editor
     function canEdit() public view returns (bool) {
-        return (tx.origin == owner);
+        return (msg.sender == owner);
     }
 
     // intended to be overridden

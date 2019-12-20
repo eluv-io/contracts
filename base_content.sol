@@ -19,6 +19,7 @@ BaseContent20190605203200ML: Splits publish and confirm logic
 BaseContent20190724203300ML: Enforces access rights in access request
 BaseContent20190801141600ML: Fixes the access rights grant for paid content
 BaseContent20191029161700ML: Removed debug statements for accessRequest
+BaseContent20191219135200ML: Made content object updatable by non-owner
 */
 
 
@@ -391,6 +392,22 @@ contract BaseContent is Editable {
         bool enough
     );
     event DbgAccessCode(uint8 code);
+
+    function updateRequest() public {
+        if (contentContractAddress == 0x0) {
+            super.updateRequest();
+        } else {
+            Content c = Content(contentContractAddress);
+            uint editCode = c.runEdit();
+            if (editCode == 100) {
+                super.updateRequest();
+            } else {
+                require(editCode == 0);
+                emit UpdateRequest(objectHash);
+            }
+        }
+    }
+
 
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)

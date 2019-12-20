@@ -11,13 +11,14 @@ Editable20190522154000SS: Changed hash bytes32 to string
 Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the case of the content-objects
 Editable20190715105600PO
 Editable20190801135500ML: Made explicit the definition of parentAddress method
+Editable20191219134600ML: Made updateRequest contingent on canEdit rather than ownership
 */
 
 
 contract Editable is Ownable {
     using strings for *;
 
-    bytes32 public version ="Editable20190801135500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20191219134600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -52,6 +53,11 @@ contract Editable is Ownable {
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
+    }
+
+    //This function is meant to be overloaded. By default the owner is the only editor
+    function canEdit() public view returns (bool) {
+        return (msg.sender == owner);
     }
 
     // intended to be overridden
@@ -100,13 +106,13 @@ contract Editable is Ownable {
     }
 
     function updateRequest() public {
-        require(msg.sender == owner || canConfirm());
+        require(canEdit() || canConfirm());
         emit UpdateRequest(objectHash);
     }
 
     function deleteVersion(string _versionHash) public returns (int256) {
         require(canCommit());
-        
+
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
         bytes32 objHash = keccak256(abi.encodePacked(objectHash));
         if (findHash == objHash) {
@@ -115,7 +121,7 @@ contract Editable is Ownable {
             emit VersionDelete(contentSpace, _versionHash, 0);
             return 0;
         }
-        
+
         int256 foundIdx = -1;
         for (uint256 i = 0; i < versionHashes.length; i++) {
             bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));

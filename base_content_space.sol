@@ -214,7 +214,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     function getKMSID(address _kmsAddr) public view returns (string){
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
     }
-    
+
     function checkKMS(string _kmsIdStr) public view returns (uint) {
         return kmsMapping[_kmsIdStr].length;
     }
@@ -282,7 +282,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     // status -> 1 not added
     function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
-        
+
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
                 emit AddKMSLocator(msg.sender, 1);
@@ -408,11 +408,12 @@ contract BaseLibraryFactory is Ownable {
 /* -- Revision history --
 BaseCtFactory20190509171900ML: Split out of BaseLibraryFactory
 BaseCtFactory20191017165200ML: Updated to reflect change in BaseContent20190801141600ML
+BaseCtFactory20191219182100ML: Updated to reflect change in BaseContent20191219135200ML
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20191202165200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20191219182100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);

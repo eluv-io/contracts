@@ -1,6 +1,7 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
+import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {Container} from "./container.sol";
@@ -21,12 +22,13 @@ BaseContent20190801141600ML: Fixes the access rights grant for paid content
 BaseContent20191029161700ML: Removed debug statements for accessRequest
 BaseContent20191219135200ML: Made content object updatable by non-owner
 BaseContent20200102165900ML: Enforce visibility driven rights to edit
+BaseContent20200107161200ML: Moved Visibility filter from BaseContentObject to Accessible
 */
 
 
-contract BaseContent is Editable {
+contract BaseContent is Accessible, Editable {
 
-    bytes32 public version ="BaseContent20200102165900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200107161200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -43,10 +45,6 @@ contract BaseContent is Editable {
 
     uint256 public requestID = 0;
 
-    uint8 public visibility = 0;
-    uint8 public constant CAN_SEE = 1;
-    uint8 public constant CAN_ACCESS = 10;
-    uint8 public constant CAN_EDIT = 100;
 
     struct RequestData {
         address originator; // client address requesting
@@ -233,14 +231,14 @@ contract BaseContent is Editable {
     //      255 -> unset
 
     function getWIPAccessInfo() private view returns (uint8, uint8, uint256) {
-        if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
+        if ((tx.origin == owner) || (visibility >= CAN_ACCESS) ){
             return (0, 0, accessCharge);
         }
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address userWallet = userSpaceObj.userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
-            if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
+            if (wallet.checkContentObjectRights(address(this), wallet.TYPE_ACCESS()) == true) {
                 return (0, 0, accessCharge);
             }
         }
@@ -348,6 +346,7 @@ contract BaseContent is Editable {
 
     // TODO: why payable?
     function publish() public payable returns (bool) {
+        require(canEdit());
         bool submitStatus = Container(libraryAddress).publish(address(this));
         // Log event
         emit Publish(submitStatus, statusCode, objectHash); // TODO: confirm?

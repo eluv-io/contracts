@@ -29,6 +29,7 @@ BaseContentSpace20190510150900ML: Moves content creation from library to a dedic
 BaseContentSpace20190528193500ML: Moves node management to a parent class (INodeSpace)
 BaseContentSpace20190605144600ML: Implements canConfirm to overloads default from Editable
 BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
+BaseContentSpace20200107164800ML: Removes import of recording custom contract. To get all events, media_platform.sol should be used
 */
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {

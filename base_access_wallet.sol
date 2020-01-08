@@ -30,7 +30,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
         INodeSpace bcs = INodeSpace(contentSpace);
         return bcs.canNodePublish(msg.sender);
     }
-
+/*
     function accessRequestMsg(
         address content_address,
         uint8 level,
@@ -53,18 +53,16 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
 
     function contentAccessRequest(
         address content_address,
-        bytes /*signature*/,
+        bytes, //signature
         uint8 level,
         string pke_requestor,
         string pke_AFGH,
         bytes32[] custom_values,
         address[] stakeholders
     ) public returns (uint256) {
-        /*
         //Signature should be valid for requested operation
-        bytes32 message = accessRequestMsg(content_address,  level, pke_requestor, pke_AFGH, custom_values, stakeholders);
-        require(owner == recoverSignerFromMessage(message,signature));
-        */
+        //bytes32 message = accessRequestMsg(content_address,  level, pke_requestor, pke_AFGH, custom_values, stakeholders);
+        //require(owner == recoverSignerFromMessage(message,signature));
 
         BaseContent content = BaseContent(content_address);
         uint256 requiredFund;
@@ -79,22 +77,20 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
 
     function contentAccessComplete(
         address content_address,
-        bytes /*signature*/,
+        bytes, //signature
         uint256 request_ID,
         uint256 score_pct,
         bytes32 ml_out_hash
     ) public payable returns (bool) {
-        /*
         //Signature should be valid for requested operation
-        bytes32  message = accessCompleteMsg(content_address, request_ID, score_pct, ml_out_hash);
-        require(owner == recoverSignerFromMessage(message,signature));
-        */
+        //bytes32  message = accessCompleteMsg(content_address, request_ID, score_pct, ml_out_hash);
+        //require(owner == recoverSignerFromMessage(message,signature));
 
         BaseContent content = BaseContent(content_address);
         return content.accessComplete(request_ID, score_pct, ml_out_hash);
 
     }
-
+*/
     // WIP - state channel support
 
     // the most recent timestamp that has been recorded for this channel

@@ -11,15 +11,15 @@ AccessIndexor20190605162000ML: Adds cleanUp functions to remove references to de
 AccessIndexor20190722214200ML: Fix false positive for group-based rights when object owner match group owner
 AccessIndexor20190801141000ML: Adds method to provide ACCESS right to the caller object
 AccessIndexor20191113202400ML: Ensures accessor has at least access right to a group to benefit from group rights
+AccessIndexor20200110100200ML: Removes debug events
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20191113202400ML";
+    bytes32 public version = "AccessIndexor20200110100200ML";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
-    //event dbUint8(string label, uint8 value);
 
     uint8 public CATEGORY_CONTENT_OBJECT = 1;
     uint8 public CATEGORY_GROUP = 2;
@@ -50,19 +50,6 @@ contract AccessIndexor is Ownable {
     AccessIndex public contentTypes;
     AccessIndex public contracts;
 
-/*
-    function isLibraryVisible(address lib) public view returns (bool) {
-        return (libraries[lib] >= TYPE_SEE);
-    }
-
-    function isLibraryAccessible(address lib) public view returns (bool) {
-        return (libraries[lib] >= TYPE_ACCESS);
-    }
-
-    function isLibraryEditable(address lib) public view returns (bool) {
-        return (libraries[lib] >= TYPE_EDIT);
-    }
-*/
 
     constructor() public payable {
         libraries.category = CATEGORY_LIBRARY;
@@ -263,15 +250,6 @@ contract AccessIndexor is Ownable {
         bool isObjRightHolder = false;
         IUserSpace space = IUserSpace(contentSpace);
         address walletAddress = space.userWallets(tx.origin);
-        /*
-        if  (walletAddress == 0x0) {
-            Ownable instance = Ownable(obj);
-            isObjRightHolder = (tx.origin == instance.owner());
-        } else {
-            AccessIndexor wallet = AccessIndexor(walletAddress);
-            isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
-        }
-    */
         AccessIndexor wallet = AccessIndexor(walletAddress);
         isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
 
@@ -359,13 +337,13 @@ contract AccessIndexor is Ownable {
         return (size > 0);
     }
 
-    event dbgAddress(string label, uint index, address a);
+    //event dbgAddress(string label, uint index, address a);
     function cleanUp(AccessIndex storage index) private returns (uint) {
         uint cleansedCount = 0;
         uint i = 0;
         while (i < index.length) {
             if (contractExists(index.list[i]) == false) {
-                emit dbgAddress("dead", i, index.list[i]);
+                //emit dbgAddress("dead", i, index.list[i]);
                 delete index.list[i];
                 cleansedCount++;
                 if (i != (index.length - 1)) {
@@ -374,7 +352,7 @@ contract AccessIndexor is Ownable {
                 }
                 index.length--;
             } else {
-                emit dbgAddress("alive", i, index.list[i]);
+                //emit dbgAddress("alive", i, index.list[i]);
                 i++;
             }
         }
@@ -396,7 +374,7 @@ contract AccessIndexor is Ownable {
     function cleanUpContentTypes() public returns (uint) {
         return cleanUp(contentTypes);
     }
-    
+
     function cleanUpAll() public returns (uint, uint, uint, uint, uint) {
         return (cleanUp(libraries), cleanUp(accessGroups), cleanUp(contentObjects), cleanUp(contentTypes), cleanUp(contracts));
    }

@@ -22,13 +22,13 @@ BaseContent20190801141600ML: Fixes the access rights grant for paid content
 BaseContent20191029161700ML: Removed debug statements for accessRequest
 BaseContent20191219135200ML: Made content object updatable by non-owner
 BaseContent20200102165900ML: Enforce visibility driven rights to edit
-BaseContent20200107161200ML: Moved Visibility filter from BaseContentObject to Accessible
+BaseContent20200107175100ML: Moved Visibility filter from BaseContentObject to Accessible, default it to 0
 */
 
 
 contract BaseContent is Accessible, Editable {
 
-    bytes32 public version ="BaseContent20200107161200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200107175100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -51,11 +51,6 @@ contract BaseContent is Accessible, Editable {
         uint256 amountPaid; // number of token received
         int8 status; //0 access requested, 1 access granted, -1 access refused, 2 access completed, -2 access error
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
-    }
-
-     modifier onlyEditor() {
-        require(canEdit());
-        _;
     }
 
     function migrate(address _contentType,
@@ -128,7 +123,7 @@ contract BaseContent is Accessible, Editable {
         libraryAddress = lib;
         statusCode = -1;
         contentType = content_type;
-        visibility = CAN_ACCESS; //default could be made a function of the library.
+        visibility = 0; //default could be made a function of the library.
 
         //get custom contract address associated with content_type from hash
         /*
@@ -142,7 +137,6 @@ contract BaseContent is Accessible, Editable {
         */
         emit ContentObjectCreate(libraryAddress);
     }
-
 
     function setVisibility(uint8 visibility_code) public onlyEditor {
         visibility = visibility_code;
@@ -354,7 +348,6 @@ contract BaseContent is Accessible, Editable {
     }
 
     function updateStatus(int status_code) public returns (int) {
-        // require((tx.origin == owner) || (msg.sender == owner) || (msg.sender == libraryAddress));
         require(canPublish());
         int newStatusCode;
         if (contentContractAddress == 0x0) {
@@ -556,13 +549,17 @@ contract BaseContent is Accessible, Editable {
     }
 
     function kill() public onlyFromLibrary {
+        uint canKill = 0;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            uint canKill = c.runKill();
-            require((canKill == 0) || (canKill == 100));
-            if (canKill == 100) {
-                c.kill();
-            }
+            canKill = c.runKill();
+        }
+        require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
+        if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
+          require(canEdit() || (Container(libraryAddress).owner() == tx.origin));
+        }
+        if ((canKill == 100) || (canKill == 1100)){
+            c.kill();
         }
         super.kill();
     }

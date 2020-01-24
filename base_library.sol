@@ -19,12 +19,13 @@ BaseLibrary20190523121700ML: Fixes logic of add/remove of groups to revert to co
 BaseLibrary20190528151200ML: Uses Container abstraction
 BaseLibrary20190605150200ML: Splits out canConfirm from canPublish
 BaseLibrary20191010140800ML: Content can be deleted by content owner or the library owner
+BaseLibrary20200110162700ML: Adds support for visibility, differentiates rights to access and edit library object and content
 */
 
 
 contract BaseLibrary is MetaObject, Accessible, Container {
 
-    bytes32 public version ="BaseLibrary20191010140800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20200110162700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -53,6 +54,11 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     constructor(address address_KMS, address content_space) public payable {
         contentSpace = content_space;
         addressKMS = address_KMS;
+        visibility = 0;
+    }
+
+    function setVisibility(uint8 visibility_code) public onlyEditor {
+        visibility = visibility_code;
     }
 
     function canConfirm() public view returns (bool) {
@@ -61,18 +67,27 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function canPublish() public view returns (bool) {
-        if ((tx.origin == owner) || (msg.sender == owner)) {
+        if ((msg.sender == owner) || canEdit()) {
             return true;
         }
-
-        address userWallet = IUserSpace(contentSpace).userWallets(tx.origin);
-        if (userWallet != 0x0) {
-            AccessIndexor wallet = AccessIndexor(userWallet);
-            if (wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT()) == true) {
-                return true;
-            }
-        }
         return false;
+    }
+
+    function canCommit() public view returns (bool) {
+        return canEdit();
+    }
+
+    function canEdit() public view returns (bool) {
+        return hasEditorRight(tx.origin);
+    }
+
+    function hasEditorRight(address candidate) public view returns (bool) {
+        if ((visibility >= 100) || (candidate == owner)) {
+            return true;
+        }
+        address userWallet = IUserSpace(contentSpace).userWallets(candidate);
+        AccessIndexor wallet = AccessIndexor(userWallet);
+        return wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT());
     }
 
     function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
@@ -103,69 +118,81 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return _groupListLength;
     }
 
-    function addContributorGroup(address group) public onlyOwner {
+    function addContributorGroup(address group) public onlyEditor {
         uint256 prevLen = contributorGroupsLength;
         contributorGroupsLength = addToGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength > prevLen) {
             emit ContributorGroupAdded(group);
             AccessIndexor accessIndex = AccessIndexor(group);
-            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
         }
     }
 
-    function removeContributorGroup(address group) public onlyOwner returns (bool) {
+    function groupIsListed(address group, address[] groups) internal returns (bool) {
+       for (uint256 i = 0; i < groups.length; i++) {
+           if (group == groups[i]) {
+               return true;
+           }
+       }
+       return false;
+    }
+
+    function removeContributorGroup(address group) public onlyEditor returns (bool) {
         uint256 prevLen = contributorGroupsLength;
         contributorGroupsLength = removeFromGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength < prevLen) {
             emit ContributorGroupRemoved(group);
-	    AccessIndexor accessIndex = AccessIndexor(group);
-            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+            AccessIndexor accessIndex = AccessIndexor(group);
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
             return true;
         }
         return false;
     }
 
-    function addReviewerGroup(address group) public onlyOwner {
+    function addReviewerGroup(address group) public onlyEditor {
         uint256 prevLen = reviewerGroupsLength;
         reviewerGroupsLength = addToGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength > prevLen) {
             emit ReviewerGroupAdded(group);
             AccessIndexor accessIndex = AccessIndexor(group);
-            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
         }
     }
 
-    function removeReviewerGroup(address group) public onlyOwner returns (bool) {
+    function removeReviewerGroup(address group) public onlyEditor returns (bool) {
         uint256 prevLen = reviewerGroupsLength;
         reviewerGroupsLength = removeFromGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength < prevLen) {
             emit ReviewerGroupRemoved(group);
-            //AccessIndexor accessIndex = AccessIndexor(group);
-            //accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
+            if (!groupIsListed(group, accessorGroups)) {
+	              AccessIndexor accessIndex = AccessIndexor(group);
+                accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+            }
             return true;
         }
         return false;
 
     }
 
-    function addAccessorGroup(address group) public onlyOwner {
+    function addAccessorGroup(address group) public onlyEditor {
         uint256 prevLen = accessorGroupsLength;
         accessorGroupsLength = addToGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength > prevLen) {
             emit AccessorGroupAdded(group);
             AccessIndexor accessIndex = AccessIndexor(group);
-            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
+            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
         }
     }
 
-    function removeAccessorGroup(address group) public onlyOwner returns (bool) {
+    function removeAccessorGroup(address group) public onlyEditor returns (bool) {
         uint256 prevLen = accessorGroupsLength;
         accessorGroupsLength = removeFromGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength < prevLen) {
             emit AccessorGroupRemoved(group);
-            AccessIndexor accessIndex = AccessIndexor(group);
-            accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
-            return true;
+            if (!groupIsListed(group, reviewerGroups)) {
+                AccessIndexor accessIndex = AccessIndexor(group);
+                accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+            }
         }
         return false;
     }
@@ -182,20 +209,18 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return false;
     }
 
-    // Current implementation ignores rights provided directly to individual
+    //  hasGroupAccess(_candidate, accessorGroups) //not checking as it is also reflected in candidate wallet
     function hasAccess(address _candidate) public constant returns (bool) {
-        if (accessorGroupsLength == 0) {
+        if ((visibility >= 10) || (_candidate == owner)) {
             return true;
         }
-        return hasGroupAccess(_candidate, accessorGroups);
+        address userWallet = IUserSpace(contentSpace).userWallets(_candidate);
+        AccessIndexor wallet = AccessIndexor(userWallet);
+        return wallet.checkLibraryRights(address(this), wallet.TYPE_ACCESS());
     }
 
-    // Current implementation ignores rights provided directly to individual
     function canContribute(address _candidate) public constant returns (bool) {
-        if (contributorGroupsLength == 0) {
-            return true;
-        }
-        return hasGroupAccess(_candidate, contributorGroups);
+        return hasEditorRight(_candidate) || hasGroupAccess(_candidate, contributorGroups);
     }
 
     // Current implementation ignores rights provided directly to individual
@@ -290,16 +315,15 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return content;
     }
 
-    // content can be deleted by content owner or the library owner
+    // content can be deleted by content owner or the library owner - enforced inside the kill
     function deleteContent(address _contentAddr) public {
         BaseContent content = BaseContent(_contentAddr);
-        require((content.owner() == msg.sender) || (owner == msg.sender));
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
 
     function accessRequest() public returns (bool) {
-        require(hasAccess(tx.origin) || canContribute(tx.origin) || canReview(tx.origin));
+        require(hasAccess(tx.origin));
         emit AccessRequest();
         return true;
     }
@@ -332,10 +356,9 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return submitStatus;
     }
 
-    function updateAddressKMS(address address_KMS) public onlyOwner {
+    function updateAddressKMS(address address_KMS) public onlyEditor {
         addressKMS = address_KMS;
         emit UpdateKmsAddress(addressKMS);
     }
 
 }
-

@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
-import "strings.sol";
+import "./strings.sol";
 
 /* -- Revision history --
 Editable20190222140100ML: First versioned released
@@ -12,13 +12,15 @@ Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the c
 Editable20190715105600PO
 Editable20190801135500ML: Made explicit the definition of parentAddress method
 Editable20191219134600ML: Made updateRequest contingent on canEdit rather than ownership
+Editable20200109145900ML: Limited updateRequest to canEdit
+Editable20200124080600ML: Fixed deletion of latest version
 */
 
 
 contract Editable is Ownable {
     using strings for *;
 
-    bytes32 public version ="Editable20191219134600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20200124080600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -50,6 +52,13 @@ contract Editable is Ownable {
 
         return;
     }
+
+
+    modifier onlyEditor() {
+        require(canEdit());
+        _;
+    }
+
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
@@ -106,7 +115,7 @@ contract Editable is Ownable {
     }
 
     function updateRequest() public {
-        require(canEdit() || canConfirm());
+        require(canEdit());
         emit UpdateRequest(objectHash);
     }
 
@@ -116,8 +125,31 @@ contract Editable is Ownable {
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
         bytes32 objHash = keccak256(abi.encodePacked(objectHash));
         if (findHash == objHash) {
-            objectHash = "";
-            objectTimestamp = 0;
+           if (versionHashes.length == 0) {
+              objectHash = "";
+              objectTimestamp = 0;
+            } else {
+              //find the most recent
+              let mostRecent = 0;
+              let latestStamp = 0
+              for (uint256 i = 0; i < versionHashes.length; i++) {
+                  if (versionTimestamp[i] > latestStamp) {
+                      mostRecent = i;
+                      latestStamp = versionTimestamp[i]
+                  }
+              }
+              //assign most recent version as object version and delete from versions array
+              objectHash = versionHashes[mostRecent];
+              objectTimestamp = latestStamp;
+              delete versionHashes[mostRecent];
+              delete versionTimestamp[mostRecent];
+              if (mostRecent != (versionHashes.length - 1)) {
+                  versionHashes[mostRecent] = versionHashes[versionHashes.length - 1];
+                  versionTimestamp[mostRecent] = versionTimestamp[versionTimestamp.length - 1];
+              }
+              versionHashes.length--;
+              versionTimestamp.length--;
+            }
             emit VersionDelete(contentSpace, _versionHash, 0);
             return 0;
         }

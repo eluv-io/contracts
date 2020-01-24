@@ -72,6 +72,11 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         name = content_space_name;
         contentSpace = address(this);
         emit CreateSpace(version, owner);
+        visibility = 1;
+    }
+
+    function setVisibility(uint8 visibility_code) public onlyOwner {
+        visibility = visibility_code;
     }
 
     function setFactory(address new_factory) public onlyOwner {

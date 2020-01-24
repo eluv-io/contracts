@@ -119,6 +119,18 @@ contract Editable is Ownable {
         emit UpdateRequest(objectHash);
     }
 
+    function removeVersionIdx(uint idx) {
+        delete versionHashes[idx];
+        delete versionTimestamp[idx];
+        if (idx != (versionHashes.length - 1)) {
+            versionHashes[idx] = versionHashes[versionHashes.length - 1];
+            versionTimestamp[idx] = versionTimestamp[versionTimestamp.length - 1];
+        }
+        versionHashes.length--;
+        versionTimestamp.length--;
+        return;
+    }
+
     function deleteVersion(string _versionHash) public returns (int256) {
         require(canCommit());
 
@@ -130,25 +142,18 @@ contract Editable is Ownable {
               objectTimestamp = 0;
             } else {
               //find the most recent
-              let mostRecent = 0;
-              let latestStamp = 0
-              for (uint256 i = 0; i < versionHashes.length; i++) {
-                  if (versionTimestamp[i] > latestStamp) {
-                      mostRecent = i;
-                      latestStamp = versionTimestamp[i]
+               uint256 mostRecent = 0;
+               uint latestStamp = 0;
+                for (uint256 x = 0; x < versionHashes.length; x++) {
+                  if (versionTimestamp[x] > latestStamp) {
+                      mostRecent = x;
+                      latestStamp = versionTimestamp[x];
                   }
-              }
-              //assign most recent version as object version and delete from versions array
-              objectHash = versionHashes[mostRecent];
-              objectTimestamp = latestStamp;
-              delete versionHashes[mostRecent];
-              delete versionTimestamp[mostRecent];
-              if (mostRecent != (versionHashes.length - 1)) {
-                  versionHashes[mostRecent] = versionHashes[versionHashes.length - 1];
-                  versionTimestamp[mostRecent] = versionTimestamp[versionTimestamp.length - 1];
-              }
-              versionHashes.length--;
-              versionTimestamp.length--;
+                }
+                //assign most recent version as object version and delete from versions array
+                objectHash = versionHashes[mostRecent];
+                objectTimestamp = latestStamp;
+                removeVersionIdx(mostRecent);
             }
             emit VersionDelete(contentSpace, _versionHash, 0);
             return 0;
@@ -158,14 +163,7 @@ contract Editable is Ownable {
         for (uint256 i = 0; i < versionHashes.length; i++) {
             bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));
             if (findHash == checkHash) {
-                delete versionHashes[i];
-                delete versionTimestamp[i];
-                if (i != (versionHashes.length - 1)) {
-                    versionHashes[i] = versionHashes[versionHashes.length - 1];
-                    versionTimestamp[i] = versionTimestamp[versionTimestamp.length - 1];
-                }
-                versionHashes.length--;
-                versionTimestamp.length--;
+                removeVersionIdx(i);
                 foundIdx = int256(i);
                 break;
             }

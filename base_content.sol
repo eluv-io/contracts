@@ -26,12 +26,13 @@ BaseContent20200107175100ML: Moved Visibility filter from BaseContentObject to A
 BaseContent20200129211300ML: Restricts deletion to owner (not editor) or library owner, unless changed by custom contract
 BaseContent20200131120200ML: Adds support for default finalize behavior in runFinalize
 BaseContent20200205101900ML: Adds support for non-0 runkill codes in contract swap, allows library editors to delete objects
+BaseContent20200205142000ML: Closes vulnerability allowing alien external objects to kill a custom contract
 */
 
 
 contract BaseContent is Accessible, Editable {
 
-    bytes32 public version ="BaseContent20200205101900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200205142000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -204,7 +205,7 @@ contract BaseContent is Accessible, Editable {
         Content c;
         if (contentContractAddress != 0x0) {
             c = Content(contentContractAddress);
-            uint killStatus = c.runKill();
+            uint killStatus = c.runKillExt();
             if ((killStatus == 100) || (killStatus == 1100)) {
                c.commandKill();
             } else {
@@ -560,7 +561,7 @@ contract BaseContent is Accessible, Editable {
     function kill() public onlyFromLibrary {
         uint canKill = 0;
         if (contentContractAddress != 0x0) {
-            canKill = Content(contentContractAddress).runKill();
+            canKill = Content(contentContractAddress).runKillExt();
         }
         require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
         if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules

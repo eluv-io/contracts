@@ -555,15 +555,14 @@ contract BaseContent is Accessible, Editable {
     function kill() public onlyFromLibrary {
         uint canKill = 0;
         if (contentContractAddress != 0x0) {
-            Content c = Content(contentContractAddress);
-            canKill = c.runKill();
+            canKill = Content(contentContractAddress).runKill();
         }
         require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
         if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
           require((tx.origin == owner) || (Container(libraryAddress).owner() == tx.origin));
         }
         if ((canKill == 100) || (canKill == 1100)){
-            c.commandKill();
+            Content(contentContractAddress).commandKill();
         }
         selfdestruct(owner);
     }

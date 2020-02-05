@@ -19,7 +19,7 @@ contract SampleContentHelloWorld is Content {
     uint256 public credit = 1 * 1000000000000000000;
     bytes32 public constant STATUS_PUBLISHED = "Ready";
 
-    function runDescribeStatus(int status_code) public pure returns (bytes32) {
+    function runDescribeStatus(int status_code) public view returns (bytes32) {
         if (status_code == 0) {
             return STATUS_PUBLISHED;
         }

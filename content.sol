@@ -11,11 +11,12 @@ Content20190506155000ML: Makes the default for runAccess match content object be
 Content20190510151600ML: Modified API for runAccessInfo to add Access information
 Content20191031162000ML: Adds finalize method for state channel
 Content20191219134300ML: Adds hook to be used to override standard behavior for authorization to edit
+Content20200130164500ML: Allows kill to be commanded by other content object
 */
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20191219134300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20200130164500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint8 public constant DEFAULT_SEE  = 1;
     uint8 public constant DEFAULT_ACCESS  = 2;
@@ -35,7 +36,7 @@ contract Content is Ownable {
     event RunAccess(uint256 requestID, uint result);
     event RunFinalize(uint256 requestID, uint result);
 
-    function runDescribeStatus(int) public pure returns (bytes32) {
+    function runDescribeStatus(int) public view returns (bytes32) {
         return 0x0;
     }
 
@@ -52,14 +53,16 @@ contract Content is Ownable {
        return 100;
    }
 
-    //0 indicates that the deletion/inactivation can proceed.
-    //100 indicates that the deletion can proceed and the custom contract should be killed too
+    //0 indicates that normal behavior should apply
+    //100 indicates that normal behavior should apply and the custom contract should be killed too
+    //1000 indicates that the deletion/inactivation can proceed without further validations
+    //1100 indicates that the deletion can proceed without further validations and the custom contract should be killed too
     // Other numbers can be used as error codes and would stop the processing.
     function runKill() public payable returns (uint) {
         return 0;
     }
 
-    // a negative number returned indicates that the licending fee to be paid is the default
+    // a negative number returned indicates that the licensing fee to be paid is the default
     function runStatusChange(int proposed_status_code) public payable returns (int) {
         return proposed_status_code;
     }
@@ -117,13 +120,20 @@ contract Content is Ownable {
     //the status is logged in an event at the end of the accessComplete function
     // behavior is currently unchanged regardless of result.
     // 0 indicates that the finalization can proceed.
+    // 100 indicates that the default logic for finalization should be used
     // Other numbers can be used as error codes and would stop the processing.
     function runFinalize(uint256 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
-        return 0;
+        return 100;
     }
 
     function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint) {
-        return 0;
+        return 100;
     }
+
+    function commandKill() public  {
+       BaseContent baseContent = BaseContent(msg.sender);
+       require(baseContent.contentContractAddress() == address(this));
+       selfdestruct(owner);  // kills contract; send remaining funds back to owner
+   }
 
 }

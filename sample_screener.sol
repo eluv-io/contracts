@@ -10,11 +10,13 @@ import {AccessIndexor} from "./access_indexor.sol";
 /* -- Revision history --
 SmplScreener20191202201500ML: First versioned released
 SmplScreener20191204144100ML: Fixes the logic of access to check first for direct access and allows non editor access
+SmplScreener20200129174600ML: Allows editor from screener manager objec to modify avails
+
 */
 
 contract SampleScreener is Content {
 
-    bytes32 public version ="SmplScreener20191204144100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="SmplScreener20200129174600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event SetAvailability(address content, uint256 start, uint256 end, uint8 status);
 
@@ -32,11 +34,17 @@ contract SampleScreener is Content {
     address[] public assets;
     uint256 public assetsLength = 0;
 
-    function setScreeners(address group) public onlyOwner {
+    function setScreeners(address group) public onlyEditor {
         screeners = group;
     }
 
-    function setAvailability(address content, uint256 start, uint256 end) public onlyOwner {
+    modifier onlyEditor() {
+        BaseContent content  = BaseContent(screenerManager);
+        require((tx.origin == owner) || content.canEdit());
+        _;
+    }
+
+    function setAvailability(address content, uint256 start, uint256 end) public onlyEditor {
         //Could be changed to only allow content owner instead of screener contract owner to set availability
         availability[content].start = start;
         availability[content].end = end;
@@ -44,12 +52,12 @@ contract SampleScreener is Content {
         emit SetAvailability(content, start, end, 1);
     }
 
-    function makeUnavailable(address content) public onlyOwner {
+    function makeUnavailable(address content) public onlyEditor {
          availability[content].status = 0;
         emit SetAvailability(content, availability[content].start, availability[content].end, 0);
     }
 
-    function makeAvailable(address content) public onlyOwner {
+    function makeAvailable(address content) public onlyEditor {
         availability[content].status = 1;
         emit SetAvailability(content, availability[content].start, availability[content].end, 1);
     }

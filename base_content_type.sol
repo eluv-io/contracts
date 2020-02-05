@@ -30,7 +30,6 @@ contract BaseContentType is Accessible, Editable {
         visibility = 0;
     }
 
-
     function setVisibility(uint8 visibility_code) public onlyEditor {
         visibility = visibility_code;
     }
@@ -64,7 +63,6 @@ contract BaseContentType is Accessible, Editable {
         INodeSpace spc = INodeSpace(contentSpace);
         return spc.canNodePublish(msg.sender);
     }
-
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);

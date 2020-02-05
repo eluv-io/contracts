@@ -209,7 +209,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return false;
     }
 
-    //  hasGroupAccess(_candidate, accessorGroups) //not checking as it is also reflected in candidate wallet
     function hasAccess(address _candidate) public constant returns (bool) {
         if ((visibility >= 10) || (_candidate == owner)) {
             return true;
@@ -223,14 +222,12 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return hasEditorRight(_candidate) || hasGroupAccess(_candidate, contributorGroups);
     }
 
-    // Current implementation ignores rights provided directly to individual
     function canReview(address _candidate) public constant returns (bool) {
         if (_candidate == owner) {
             return true;
         }
         return hasGroupAccess(_candidate, reviewerGroups);
     }
-
 
     function requiresReview() public view returns (bool) {
         return (reviewerGroupsLength > 0);

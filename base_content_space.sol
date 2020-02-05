@@ -343,6 +343,8 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
 }
 
+
+
 /* -- Revision history --
 BaseFactory20190227170400ML: First versioned released
 BaseFactory20190301105700ML: No changes version bump to test
@@ -350,11 +352,12 @@ BaseFactory20190319195000ML: with  0.4.24 migration
 BaseFactory20190506153000ML: Split createLibrary out, adds access indexing
 BaseFactory20190722161600ML: No changes, updated to provide generation for BsAccessCtrlGrp20190722161600ML
 BaseFactory20190801140700ML: Removed access group creation to its own factory
+BaseFactory20200203112400ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 */
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20190801140700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20200203112400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContentType() public returns (address) {
         address newType = (new BaseContentType(msg.sender));
@@ -362,7 +365,7 @@ contract BaseFactory is Ownable {
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
-        userWallet.setContentTypeRights(newType, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
+        userWallet.setContentTypeRights(newType, userWallet.TYPE_SEE(), userWallet.ACCESS_CONFIRMED());
         return newType;
     }
 
@@ -373,13 +376,17 @@ contract BaseFactory is Ownable {
     }
 }
 
+
+
+
 /* -- Revision history --
 BaseGroupFactory20190729115200ML: First versioned released
+BaseGroupFactory20200203112000ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 */
 
 contract BaseGroupFactory is Ownable {
 
-    bytes32 public version ="BaseGroupFactory20190729115200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseGroupFactory20200203112000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createGroup() public returns (address) {
         address newGroup = (new BaseAccessControlGroup(msg.sender));
@@ -387,17 +394,21 @@ contract BaseGroupFactory is Ownable {
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
-        userWallet.setAccessGroupRights(newGroup, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
+        userWallet.setAccessGroupRights(newGroup, userWallet.TYPE_SEE(), userWallet.ACCESS_CONFIRMED());
         return newGroup;
     }
 }
+
+
+
 /* -- Revision history --
-BaseFactory20190506153100ML: Split out of BaseFactory, adds access indexing
+BaseLibFactory20190506153200ML: Split out of BaseFactory, adds access indexing
+BaseLibFactory20200203111800ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 */
 
 contract BaseLibraryFactory is Ownable {
 
-    bytes32 public version ="BaseLibFactory20190506153200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibFactory20200203111800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createLibrary(address address_KMS) public returns (address) {
         address newLib = (new BaseLibrary(address_KMS, msg.sender));
@@ -405,7 +416,7 @@ contract BaseLibraryFactory is Ownable {
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         BaseAccessWallet userWallet = BaseAccessWallet(walletAddress);
-        userWallet.setLibraryRights(newLib, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
+        userWallet.setLibraryRights(newLib, userWallet.TYPE_SEE(), userWallet.ACCESS_CONFIRMED());
         return newLib;
     }
 }
@@ -415,11 +426,12 @@ contract BaseLibraryFactory is Ownable {
 BaseCtFactory20190509171900ML: Split out of BaseLibraryFactory
 BaseCtFactory20191017165200ML: Updated to reflect change in BaseContent20190801141600ML
 BaseCtFactory20191219182100ML: Updated to reflect change in BaseContent20191219135200ML
+BaseCtFactory20200203112500ML: Set rights to SEE upon creation to avoid interfering with ownership transfer
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20191219182100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200203112500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);
@@ -434,7 +446,7 @@ contract BaseContentFactory is Ownable {
         BaseContentSpace contentSpaceObj = BaseContentSpace(msg.sender);
         address walletAddress = contentSpaceObj.getAccessWallet();
         AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setContentObjectRights(address(content), userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
+        userWallet.setContentObjectRights(address(content), userWallet.TYPE_SEE(), userWallet.ACCESS_CONFIRMED());
 
         return address(content);
     }

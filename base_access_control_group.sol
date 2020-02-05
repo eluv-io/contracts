@@ -17,15 +17,13 @@ BsAccessCtrlGrp20190722161600ML: Made editable
 BsAccessCtrlGrp20190722214400ML: Provides the list of members and managers
 BsAccessCtrlGrp20190723130500ML: Fixes typo in managersNum
 BsAccessCtrlGrp20190723165900ML: Fixes deletion/adding to groups
+BsAccessCtrlGrp20200204160600ML: Removes commented out sections
 */
 
 
 contract BaseAccessControlGroup is AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20190723165900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    //mapping (address => bool) public members;
-    //mapping (address => bool) public managers;
+    bytes32 public version ="BsAccessCtrlGrp20200204160600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public membersList;
     uint256 public membersNum;
@@ -100,7 +98,6 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
         }
     }
 
-    //event dbg_setAccessGroupRights(address a, uint8 b, uint8 c);
     function grantAccess(address candidate) public {
         require(hasManagerAccess(msg.sender) == true);
         bool already = false;

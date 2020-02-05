@@ -23,12 +23,14 @@ BaseContent20191029161700ML: Removed debug statements for accessRequest
 BaseContent20191219135200ML: Made content object updatable by non-owner
 BaseContent20200102165900ML: Enforce visibility driven rights to edit
 BaseContent20200107175100ML: Moved Visibility filter from BaseContentObject to Accessible, default it to 0
+BaseContent20200129211300ML: Restricts deletion to owner (not editor) or library owner, unless changed by custom contract
+BaseContent20200131120200ML: Adds support for default finalize behavior in runFinalize
 */
 
 
 contract BaseContent is Accessible, Editable {
 
-    bytes32 public version ="BaseContent20200107175100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200131120200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -311,7 +313,7 @@ contract BaseContent is Accessible, Editable {
     }
 
     function canEdit() public view returns (bool) {
-        if (visibility >= 100) {
+        if ((visibility >= 100) || (msg.sender == owner)) {
          return true;
         }
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
@@ -523,7 +525,9 @@ contract BaseContent is Accessible, Editable {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
             uint256 result = uint256(c.runFinalize(request_ID, score_pct));
-            success = (result == 0);
+            if (result != 100) {
+                success = (result == 0);
+            }
         }
         if (msg.sender == r.originator) {//Owner direct call can't modify status to avoid premature clearing of escrow
             if (success){
@@ -556,12 +560,12 @@ contract BaseContent is Accessible, Editable {
         }
         require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
         if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
-          require(canEdit() || (Container(libraryAddress).owner() == tx.origin));
+          require((tx.origin == owner) || (Container(libraryAddress).owner() == tx.origin));
         }
         if ((canKill == 100) || (canKill == 1100)){
-            c.kill();
+            c.commandKill();
         }
-        super.kill();
+        selfdestruct(owner);
     }
 
     function setPaidRights() private {

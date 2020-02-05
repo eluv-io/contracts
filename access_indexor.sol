@@ -12,12 +12,13 @@ AccessIndexor20190722214200ML: Fix false positive for group-based rights when ob
 AccessIndexor20190801141000ML: Adds method to provide ACCESS right to the caller object
 AccessIndexor20191113202400ML: Ensures accessor has at least access right to a group to benefit from group rights
 AccessIndexor20200110100200ML: Removes debug events
+AccessIndexor20200204144400ML: Fixes lookup of group based rights to check group membership vs. visitbility only
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20200110100200ML";
+    bytes32 public version = "AccessIndexor20200204144400ML";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
 
@@ -205,9 +206,10 @@ contract AccessIndexor is Ownable {
             address group;
             for (uint i = 0; i < accessGroups.length; i++) {
                 group = accessGroups.list[i];
-                if ((group != 0x0) && (accessGroups.rights[group] >= 10)) { //needs to be at least a member, seeing is not enough
+                if ((group != 0x0) && (accessGroups.rights[group] >= 1)) {
                     groupObj = AccessIndexor(group);
-                    if (groupObj.checkDirectRights(index_type, obj, access_type) == true) {
+                    //needs to be at least a member, seeing is not enough  (not using hasAccess on group to avoid circular reference)
+                    if (((groupObj.owner() == owner) || (accessGroups.rights[group] >= 10 )) && groupObj.checkDirectRights(index_type, obj, access_type) == true) {
                         return true;
                     }
                 }

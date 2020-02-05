@@ -54,7 +54,7 @@ contract SampleContentLicensing is Content {
         return partialPayment;
     }
 
-    function runDescribeStatus(int status_code) public pure returns (bytes32) {
+    function runDescribeStatus(int status_code) public view returns (bytes32) {
         if (status_code == -3) {
             return STATUS_DRAFT_APPROVED;
         }
@@ -137,10 +137,12 @@ contract SampleContentLicensing is Content {
             contentObj.transferOwnership(contentObj.creator());
         } else if (statusCode > 0) {
             //Ownership is transferred to the custom contract, to prevent editing during review
+            contentObj.setRights(contentObj.creator(), 1, 1); //creator retains access rights
             contentObj.transferOwnership(address(this));
         }
         return statusCode;
     }
+
 
     function reviewContent(
         address content_contract,

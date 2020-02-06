@@ -14,7 +14,12 @@ Content20191219134300ML: Adds hook to be used to override standard behavior for 
 Content20200130164500ML: Allows kill to be commanded by other content object
 */
 
-contract Content is Ownable {
+interface IContentAccessor {
+    function runAccess(uint256, uint8, bytes32[], address[]) public payable returns(uint);
+    function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint);
+}
+
+contract Content is Ownable, IContentAccessor {
 
     bytes32 public version ="Content20200130164500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

@@ -7,6 +7,7 @@ import "./base_space_interfaces.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
+import {IContentAccessor} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
 import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
@@ -471,14 +472,14 @@ contract BaseContentFactoryExt is BaseContentFactory {
         uint64 request_timestamp
     );
 
-    event AccessComplete(
-        uint256 timestamp,
-        address libraryAddress,
-        address contentAddress,
-        address userAddress,
-        bytes32 contextHash,
-        uint64 request_timestamp
-    );
+//    event AccessCompleteX(
+//        uint256 timestamp,
+//        address libraryAddress,
+//        address contentAddress,
+//        address userAddress,
+//        bytes32 contextHash,
+//        uint64 request_timestamp
+//    );
 
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;
@@ -506,7 +507,6 @@ contract BaseContentFactoryExt is BaseContentFactory {
             // guard against race condition where content object is deleted before batch is executed.
             if (!isContract(_contentAddrs[i]))
                 continue;
-            Content c;
             // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
             if (_opCodes[i] == OP_ACCESS_REQUEST) {
                 emit AccessRequest(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
@@ -514,14 +514,12 @@ contract BaseContentFactoryExt is BaseContentFactory {
                     bytes32[] memory emptyVals;
                     address[] memory paramAddrs =  new address[](1);
                     paramAddrs[0] = _userAddrs[i];
-                    c = Content(cobj.contentContractAddress());
-                    c.runAccess(_ts[i], 100, emptyVals, paramAddrs); // TODO: level?
+                    IContentAccessor(cobj.contentContractAddress()).runAccess(_ts[i], 100, emptyVals, paramAddrs); // TODO: level?
                 }
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
-                emit AccessComplete(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
+                // emit AccessCompleteX(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
                 if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
-                    c = Content(cobj.contentContractAddress());
-                    c.runFinalizeExt(_ts[i], _amt[i], _userAddrs[i]);
+                    IContentAccessor(cobj.contentContractAddress()).runFinalizeExt(_ts[i], _amt[i], _userAddrs[i]);
                 }
             } else {
                 require(false);

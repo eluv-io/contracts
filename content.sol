@@ -12,6 +12,7 @@ Content20190510151600ML: Modified API for runAccessInfo to add Access informatio
 Content20191031162000ML: Adds finalize method for state channel
 Content20191219134300ML: Adds hook to be used to override standard behavior for authorization to edit
 Content20200130164500ML: Allows kill to be commanded by other content object
+Content20200205141800ML: Closes vulnerability allowing alien external objects to kill the contract
 */
 
 interface IContentAccessor {
@@ -21,11 +22,13 @@ interface IContentAccessor {
 
 contract Content is Ownable, IContentAccessor {
 
-    bytes32 public version ="Content20200130164500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20200205141800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint8 public constant DEFAULT_SEE  = 1;
     uint8 public constant DEFAULT_ACCESS  = 2;
     uint8 public constant DEFAULT_CHARGE  = 4;
+
+    address authorizedKiller;
 
     event Log(string label);
     event LogBool(string label, bool b);
@@ -65,6 +68,17 @@ contract Content is Ownable, IContentAccessor {
     // Other numbers can be used as error codes and would stop the processing.
     function runKill() public payable returns (uint) {
         return 0;
+    }
+
+
+    function runKillExt() public payable returns (uint) {
+        uint result = runKill();
+        if ((result == 100) || (result == 1100)) {
+          authorizedKiller = msg.sender;
+        } else {
+          authorizedKiller = 0x0;
+        }
+        return result;
     }
 
     // a negative number returned indicates that the licensing fee to be paid is the default
@@ -136,6 +150,7 @@ contract Content is Ownable, IContentAccessor {
     }
 
     function commandKill() public  {
+       require(authorizedKiller == msg.sender);
        BaseContent baseContent = BaseContent(msg.sender);
        require(baseContent.contentContractAddress() == address(this));
        selfdestruct(owner);  // kills contract; send remaining funds back to owner

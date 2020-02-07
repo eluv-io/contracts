@@ -15,12 +15,7 @@ Content20200130164500ML: Allows kill to be commanded by other content object
 Content20200205141800ML: Closes vulnerability allowing alien external objects to kill the contract
 */
 
-interface IContentAccessor {
-    function runAccess(uint256, uint8, bytes32[], address[]) public payable returns(uint);
-    function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint);
-}
-
-contract Content is Ownable, IContentAccessor {
+contract Content is Ownable {
 
     bytes32 public version ="Content20200205141800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -141,8 +136,8 @@ contract Content is Ownable, IContentAccessor {
     // 0 indicates that the finalization can proceed.
     // 100 indicates that the default logic for finalization should be used
     // Other numbers can be used as error codes and would stop the processing.
-    function runFinalize(uint256 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
-        return 100;
+    function runFinalize(bytes32 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
+        return 0;
     }
 
     function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint) {

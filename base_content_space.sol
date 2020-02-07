@@ -7,7 +7,6 @@ import "./base_space_interfaces.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
-import {IContentAccessor} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
 import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
@@ -462,25 +461,6 @@ contract BaseContentFactoryExt is BaseContentFactory {
 
     bytes32 public version ="BaseCtFactoryXt20191031203100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    // TODO: naming this the same as the event in BaseContentObject ...?
-    event AccessRequest(
-        uint256 timestamp,
-        address libraryAddress,
-        address contentAddress,
-        address userAddress,
-        bytes32 contextHash,
-        uint64 request_timestamp
-    );
-
-//    event AccessCompleteX(
-//        uint256 timestamp,
-//        address libraryAddress,
-//        address contentAddress,
-//        address userAddress,
-//        bytes32 contextHash,
-//        uint64 request_timestamp
-//    );
-
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;
 
@@ -490,7 +470,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
         return size > 0;
     }
 
-    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
         //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
         //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
@@ -498,6 +478,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
         uint paramsLen = _opCodes.length;
 
         require(_contentAddrs.length == paramsLen);
+        require(_requestNonces.length == paramsLen);
         require(_userAddrs.length == paramsLen);
         require(_ctxHashes.length == paramsLen);
         require(_ts.length == paramsLen);
@@ -509,18 +490,9 @@ contract BaseContentFactoryExt is BaseContentFactory {
                 continue;
             // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
             if (_opCodes[i] == OP_ACCESS_REQUEST) {
-                emit AccessRequest(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
-                if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
-                    bytes32[] memory emptyVals;
-                    address[] memory paramAddrs =  new address[](1);
-                    paramAddrs[0] = _userAddrs[i];
-                    IContentAccessor(cobj.contentContractAddress()).runAccess(_ts[i], 100, emptyVals, paramAddrs); // TODO: level?
-                }
+                cobj.accessRequestContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
-                // emit AccessCompleteX(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
-                if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
-                    IContentAccessor(cobj.contentContractAddress()).runFinalizeExt(_ts[i], _amt[i], _userAddrs[i]);
-                }
+                cobj.accessComplete(_requestNonces[i], _amt[i], 0x0);
             } else {
                 require(false);
             }

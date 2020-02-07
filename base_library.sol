@@ -321,7 +321,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
 
     function accessRequest() public returns (bool) {
         require(hasAccess(tx.origin));
-        emit AccessRequest();
+        emit AccessRequest(0, 0, objectHash, 0x0, "", 0x0, msg.sender, now * 1000);
         return true;
     }
 

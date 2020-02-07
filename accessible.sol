@@ -15,10 +15,19 @@ contract Accessible {
     uint8 public constant CAN_ACCESS = 10;
     uint8 public constant CAN_EDIT = 100;
 
-    event AccessRequest();
+    event AccessRequest(
+        bytes32 requestNonce,
+        uint8 level,
+        string contentHash,
+        address libraryAddress, // likely will need for tenancy - but could be something else ...?
+        string pkeAFGH,
+        bytes32 contextHash,
+        address accessor,           // I've called this 'userAddress' - don't care too much but ideally it's the same name wherever it means the same thing!
+        uint256 request_timestamp   // always millis - either set from context or with blockchain now()
+    );
 
     function accessRequest() public returns (bool) { //to be overloaded
-        emit AccessRequest();
+        emit AccessRequest(0, 0, "", 0x0, "", 0x0, msg.sender, now * 1000);
         return true;
     }
 

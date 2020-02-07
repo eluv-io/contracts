@@ -51,7 +51,7 @@ contract BaseContentType is Accessible, Editable {
           AccessIndexor wallet = AccessIndexor(walletAddress);
           require(wallet.checkContentTypeRights(address(this), wallet.TYPE_ACCESS()));
         }
-        emit AccessRequest();
+        emit AccessRequest(0, 0, objectHash, 0x0, "", 0x0, msg.sender, now * 1000);
         return true;
     }
 

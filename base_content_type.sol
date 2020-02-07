@@ -44,14 +44,14 @@ contract BaseContentType is Accessible, Editable {
         return wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT());
     }
 
-    function accessRequest() public returns (bool) {
+    function accessRequestV3() public returns (bool) {
         if (visibility < 10 ) {
           IUserSpace userSpaceObj = IUserSpace(contentSpace);
           address walletAddress = userSpaceObj.userWallets(tx.origin);
           AccessIndexor wallet = AccessIndexor(walletAddress);
           require(wallet.checkContentTypeRights(address(this), wallet.TYPE_ACCESS()));
         }
-        emit AccessRequest(0, 0, objectHash, 0x0, "", 0x0, msg.sender, now * 1000);
+        emit AccessRequestV3(0, objectHash, 0x0, 0x0, msg.sender, now * 1000);
         return true;
     }
 

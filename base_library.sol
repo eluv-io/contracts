@@ -319,9 +319,9 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
 
-    function accessRequest() public returns (bool) {
+    function accessRequestV3(bytes32[] custom_values, address[] stakeholders) public returns (bool) {
         require(hasAccess(tx.origin));
-        emit AccessRequest(0, 0, objectHash, 0x0, "", 0x0, msg.sender, now * 1000);
+        emit AccessRequestV3(0, objectHash, 0x0, 0x0, msg.sender, now * 1000);
         return true;
     }
 

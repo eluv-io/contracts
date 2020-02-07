@@ -413,10 +413,18 @@ contract BaseContent is Accessible, Editable {
         address accessor,
         uint256 request_timestamp
     ) public payable returns (bytes32) {
-        require(msg.sender == addressKMS); // only my KMS is allowed to use this access request since 'accessor' is passed in
+        require(tx.origin == addressKMS);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
-        return accessRequestInternal(requestNonce, 0, "", emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
+        return accessRequestInternal(requestNonce, emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
+    }
+
+    function accessRequestV3(
+        bytes32[] custom_values,
+        address[] stakeholders
+    ) public returns (bool) {
+        accessRequest(0, "", "", custom_values, stakeholders);
+        return true;
     }
 
     //  level - the security group for which the access request is for
@@ -432,19 +440,20 @@ contract BaseContent is Accessible, Editable {
     )
     public payable returns (uint256) {
         requestID = requestID + 1;
-        bytes32 ret = accessRequestInternal(bytes32(requestID), level, pkeAFGH, custom_values, stakeholders, 0x0, msg.sender, now * 1000);
+        bytes32 ret = accessRequestInternal(bytes32(requestID), custom_values, stakeholders, 0x0, msg.sender, now * 1000);
         // status of 0 indicates the payment received is in escrow in the content contract
         RequestData memory r = RequestData(msg.sender, msg.value, 0, 0);
         requestMap[requestID] = r;
         return uint256(ret);
     }
 
-    function validateAccess(address accessor, uint8 level, bytes32[] custom_values, address[] stakeholders) internal {
+    function validateAccess(address accessor, bytes32[] custom_values, address[] stakeholders) internal {
         uint256 requiredFund;
         uint8 visibilityCode;
         uint8 accessCode;
 
-        (visibilityCode, accessCode, requiredFund) = getAccessInfo(accessor, level, custom_values, stakeholders);
+        // TODO: remove level ?
+        (visibilityCode, accessCode, requiredFund) = getAccessInfo(accessor, 0, custom_values, stakeholders);
 
         if (accessCode == 100) { //Check if request is funded, except if user is owner or has paid already
             require(msg.value >= uint(requiredFund));
@@ -457,8 +466,6 @@ contract BaseContent is Accessible, Editable {
 
     function accessRequestInternal(
         bytes32 requestNonce,
-        uint8 level,
-        string pke_AFGH,
         bytes32[] custom_values,
         address[] stakeholders,
         bytes32 contextHash,
@@ -467,16 +474,17 @@ contract BaseContent is Accessible, Editable {
     )
     internal returns (bytes32) {
 
-        validateAccess(accessor, level, custom_values, stakeholders);
+        validateAccess(accessor, custom_values, stakeholders);
 
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            uint result = c.runAccess(uint256(requestNonce), level, custom_values, stakeholders);
+            // TODO: remove level?
+            uint result = c.runAccess(uint256(requestNonce), 0, custom_values, stakeholders);
             require(result == 0);
         }
 
         // Raise Event
-        emit AccessRequest(requestNonce, 0, "", libraryAddress, pke_AFGH, contextHash, accessor, request_timestamp);
+        emit AccessRequestV3(requestNonce, objectHash, libraryAddress, contextHash, accessor, request_timestamp);
 
         // Logs custom key/value pairs
         uint256 i;
@@ -552,6 +560,7 @@ contract BaseContent is Accessible, Editable {
         uint256 _request_timestamp
         ) public payable returns (bool) {
 
+        require(tx.origin == addressKMS);
         bool success = (_score_pct != 0);
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);

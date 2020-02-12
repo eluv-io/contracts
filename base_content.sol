@@ -29,12 +29,13 @@ BaseContent20200131120200ML: Adds support for default finalize behavior in runFi
 BaseContent20200205101900ML: Adds support for non-0 runkill codes in contract swap, allows library editors to delete objects
 BaseContent20200205142000ML: Closes vulnerability allowing alien external objects to kill a custom contract
 BaseContent20200211163800ML: Modified to conform to authV3 API
+BaseContent20200212101200ML: Disambiguate getAccessInfo vs getAccessInfoV3 to reflect API changes
 */
 
 
 contract BaseContent is Accessible, Editable {
 
-    bytes32 public version ="BaseContent20200211163800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200212101200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -280,7 +281,11 @@ contract BaseContent is Accessible, Editable {
         return (codes[0], codes[1], calculatedCharge);
     }
 
-    function getAccessInfo(address accessor, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
+    function getAccessInfo(uint8 level, bytes32[] customValues, address[] stakeholders) public view returns (uint8, uint8, uint256) { //legacy
+        return getAccessInfoV3(msg.sender, customValues, stakeholders);
+    }
+
+    function getAccessInfoV3(address accessor, bytes32[] customValues, address[] stakeholders) public view returns (uint8, uint8, uint256) {
 
         if (statusCode != 0) {
             return getWIPAccessInfo(accessor); //broken out to reduce complexity (compiler failed)
@@ -288,7 +293,7 @@ contract BaseContent is Accessible, Editable {
         uint256 calculatedCharge;
         uint8 visibilityCode;
         uint8 accessCode;
-        (visibilityCode, accessCode, calculatedCharge) = getCustomInfo(accessor, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
+        (visibilityCode, accessCode, calculatedCharge) = getCustomInfo(accessor, customValues, stakeholders);//broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
             IUserSpace userSpaceObj = IUserSpace(contentSpace);
@@ -460,7 +465,7 @@ contract BaseContent is Accessible, Editable {
         uint8 visibilityCode;
         uint8 accessCode;
 
-        (visibilityCode, accessCode, requiredFund) = getAccessInfo(accessor, custom_values, stakeholders);
+        (visibilityCode, accessCode, requiredFund) = getAccessInfoV3(accessor, custom_values, stakeholders);
 
         if (accessCode == 100) { //Check if request is funded, except if user is owner or has paid already
             require(msg.value >= uint(requiredFund));

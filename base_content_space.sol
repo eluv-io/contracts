@@ -455,11 +455,12 @@ contract BaseContentFactory is Ownable {
 //BaseCtFactoryXt20191031115100PO: adds support for custom contract
 //BaseCtFactoryXt20191031153200ML: passes accessor to the runAccess via the addresses array
 //BaseCtFactoryXt20191031170400ML: adds request timestamp to event
-//BaseCtFactoryXt20191031203100ML: change initialization of array
+//BaseCtFactoryXt20191031203100ML: changes initialization of array
+//BaseCtFactoryXt20200211164000ML: Modified to conform with authV3 API
 
 contract BaseContentFactoryExt is BaseContentFactory {
 
-    bytes32 public version ="BaseCtFactoryXt20191031203100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactoryXt20200211164000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;
@@ -492,7 +493,7 @@ contract BaseContentFactoryExt is BaseContentFactory {
             if (_opCodes[i] == OP_ACCESS_REQUEST) {
                 cobj.accessRequestContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
-                cobj.accessComplete(_requestNonces[i], _amt[i], 0x0);
+                cobj.accessCompleteContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
             } else {
                 require(false);
             }

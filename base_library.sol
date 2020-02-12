@@ -20,12 +20,13 @@ BaseLibrary20190528151200ML: Uses Container abstraction
 BaseLibrary20190605150200ML: Splits out canConfirm from canPublish
 BaseLibrary20191010140800ML: Content can be deleted by content owner or the library owner
 BaseLibrary20200110162700ML: Adds support for visibility, differentiates rights to access and edit library object and content
+BaseLibrary20200211164300ML: Modified to conform to authV3 API
 */
 
 
 contract BaseLibrary is MetaObject, Accessible, Container {
 
-    bytes32 public version ="BaseLibrary20200110162700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20200211164300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -317,12 +318,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         BaseContent content = BaseContent(_contentAddr);
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
-    }
-
-    function accessRequestV3(bytes32[] custom_values, address[] stakeholders) public returns (bool) {
-        require(hasAccess(tx.origin));
-        emit AccessRequestV3(0, objectHash, 0x0, 0x0, msg.sender, now * 1000);
-        return true;
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {

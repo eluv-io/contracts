@@ -5,11 +5,12 @@ import {Content} from "./content.sol";
 
 /* -- Revision history --
 TstContent20200113172800ML: First versioned released
+TstContent20200211165300ML: Modified to conform to authV3 API
 */
 
 contract TstContent is Content {
 
-    bytes32 public version = "TstContent20200113172800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "TstContent20200211165300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping (int => bytes32) public statusCodeDescription;
     uint public runCreateCode = 0;
@@ -17,7 +18,6 @@ contract TstContent is Content {
     uint public runKillCode = 0;
     int public runStatusChangeCode=0;
     uint public runAccessCode = 0;
-    uint public runGrantCode = 0;
     uint public runFinalizeCode = 0;
 
     uint8 public maskCode = 7;
@@ -94,9 +94,9 @@ contract TstContent is Content {
 
 
     function runAccessInfo(
-        uint8, /*level*/
         bytes32[], /*customValues*/
-        address[] /*stakeholders*/
+        address[], /*stakeholders*/
+        address accessor
     )
     public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
     {
@@ -107,10 +107,10 @@ contract TstContent is Content {
     //0 indicates that access request can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
-        uint256, /*request_ID*/
-        uint8, /*level*/
-        bytes32[], /*custom_values*/
-        address[] /*stake_holders*/
+        bytes32, /*requestNonce*/
+        bytes32[], /*customValues*/
+        address[], /*stakeholders*/
+        address accessor
     )
         public payable returns(uint)
     {
@@ -121,32 +121,16 @@ contract TstContent is Content {
         runAccessCode = code;
     }
 
-    //0 indicates that access grant can proceed.
-    // Other numbers can be used as error codes and would stop the processing.
-    function runGrant(
-        uint256, /*request_ID */
-        bool /*access_granted */
-    )
-    public payable returns (uint)
-    {
-        return runGrantCode;
-    }
 
-    function setRunGrantCode(uint code) public onlyOwner {
-        runGrantCode = code;
-    }
 
     //the status is logged in an event at the end of the accessComplete function
     // behavior is currently unchanged regardless of result.
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
-    function runFinalize(uint256 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
+    function runFinalize(bytes32, bytes32[], address[], address) public payable returns (uint) {
         return runFinalizeCode;
     }
 
-    function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint) {
-        return runFinalizeCode;
-    }
 
     function setRunFinalizeCode(uint code) public onlyOwner {
         runFinalizeCode = code;
@@ -159,7 +143,7 @@ contract TstContentFactory is Ownable {
 
     bytes32 public version = "TstContentFctry20100113182100ML";
 
-    function instantiate() public onlyOwner returns (address) {
+    function instantiate() public returns (address) {
 	address instanceAddress = new TstContent();
         emit NewTstContent(instanceAddress);
         return instanceAddress;

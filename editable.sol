@@ -14,13 +14,14 @@ Editable20190801135500ML: Made explicit the definition of parentAddress method
 Editable20191219134600ML: Made updateRequest contingent on canEdit rather than ownership
 Editable20200109145900ML: Limited updateRequest to canEdit
 Editable20200124080600ML: Fixed deletion of latest version
+Editable20200210163900ML: Modified for authV3 support
 */
 
 
 contract Editable is Ownable {
     using strings for *;
 
-    bytes32 public version ="Editable20200124080600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20200210163900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -121,7 +122,7 @@ contract Editable is Ownable {
         emit UpdateRequest(objectHash);
     }
 
-    function removeVersionIdx(uint idx) {
+    function removeVersionIdx(uint idx) internal {
         delete versionHashes[idx];
         delete versionTimestamp[idx];
         if (idx != (versionHashes.length - 1)) {
@@ -176,4 +177,3 @@ contract Editable is Ownable {
         return foundIdx;
     }
 }
-

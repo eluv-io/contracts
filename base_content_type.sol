@@ -18,12 +18,13 @@ BaseContentType20190604112500ML: Fixes setGroupRights to use the right index.
 BaseContentType20190605150100ML: Splits out canConfirm from canPublish
 BaseContentType20190813105000ML: Modifies canCommit to ensure it is a view
 BaseContentType20200109163600ML: Supports visibility default filter
+BaseContentType20200210110700ML: Supports authv3 API
 */
 
 
 contract BaseContentType is Accessible, Editable {
 
-    bytes32 public version ="BaseContentType20200109163600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20200210110700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
@@ -44,14 +45,13 @@ contract BaseContentType is Accessible, Editable {
         return wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT());
     }
 
-    function accessRequestV3() public returns (bool) {
-        if (visibility < 10 ) {
-          IUserSpace userSpaceObj = IUserSpace(contentSpace);
-          address walletAddress = userSpaceObj.userWallets(tx.origin);
-          AccessIndexor wallet = AccessIndexor(walletAddress);
-          require(wallet.checkContentTypeRights(address(this), wallet.TYPE_ACCESS()));
+    function hasAccess(address _candidate) public constant returns (bool) {
+        if ((visibility < 10 ) || (_candidate == owner)) {
+            IUserSpace userSpaceObj = IUserSpace(contentSpace);
+            address walletAddress = userSpaceObj.userWallets(_candidate);
+            AccessIndexor wallet = AccessIndexor(walletAddress);
+            return wallet.checkContentTypeRights(address(this), wallet.TYPE_ACCESS());
         }
-        emit AccessRequestV3(0, objectHash, 0x0, 0x0, msg.sender, now * 1000);
         return true;
     }
 

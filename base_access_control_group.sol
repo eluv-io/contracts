@@ -38,11 +38,23 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     event ManagerAccessRevoked(address candidate);
     event UnauthorizedOperation(uint operationCode, address candidate);
 
+    event OAuthStatusChanged(bool enabled);
+
+    bool public oauthEnabled;
+
     constructor(address content_space) public {
         contentSpace = content_space;
         membersNum = 0;
         managersList.push(creator);
         managersNum = 1;
+        oauthEnabled = false;
+    }
+
+    function setOAuthEnabled(bool _enabled) public onlyOwner {
+        if (oauthEnabled != _enabled) {
+            oauthEnabled = _enabled;
+            emit OAuthStatusChanged(_enabled);
+        }
     }
 
     function grantManagerAccess(address manager) public onlyOwner {

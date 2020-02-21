@@ -2,8 +2,15 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+
 	"github.com/eluv-io/contracts/ethverify/abidiff"
 	"github.com/eluv-io/contracts/ethverify/gitutils"
+
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
@@ -13,11 +20,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
 )
 
 const (
@@ -36,12 +38,13 @@ var (
 	}
 
 	cmdGitFind = &cobra.Command{
-		Use:   "git-find",
+		Use:   "git-find <contract_address> <Path/to/contracts/repo> <elvmasterd_rpc_url> ",
 		Short: "Manage and retrieve the contract's git version",
 		Long: `git-find helps to retrieve the git version at which the contract bytecode is present. 
 The parameters can be set using flags or config file.`,
+		Args:    cobra.RangeArgs(2, 3),
 		RunE:    runGitFind,
-		Example: `ethverify git-find --contract 0x123 --ethurl http://localhost:8545 --rootdir <Path/to/contracts/folder>`,
+		Example: `if running from contracts repo : ethverify git-find 0xCAFE . "http://localhost:8545"`,
 	}
 
 	cmdAbiDiff = &cobra.Command{
@@ -65,10 +68,6 @@ func init() {
 	cmdRoot.PersistentFlags().Int("verbosity", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
 	cmdRoot.PersistentFlags().String("log-file", "", "Output log file")
 	cmdRoot.PersistentFlags().StringVar(&config, "config", "", "Config file path (default=<Homedir>/.eluvio/ethverify/config.toml")
-
-	cmdGitFind.Flags().String("ethurl", "http://localhost:8545", "HTTP-RPC server listening interface")
-	cmdGitFind.Flags().String("rootdir", "", "git root directory")
-	cmdGitFind.Flags().String("contract", "", "provide contract address")
 
 	cmdAbiDiff.Flags().Bool("overwrite", false, "overwrite 'store' directory with new abi, even if abi-diff throws breaking changes")
 	cmdAbiDiff.Flags().String("storedir", "./store", "directory for stored abi files")
@@ -181,16 +180,25 @@ func readConfig(cmd *cobra.Command, args []string) error {
 
 func runGitFind(cmd *cobra.Command, args []string) error {
 
-	ethUrl := viper.GetString("git_find.ethurl")
-	rootDir := viper.GetString("git_find.rootdir")
-	if rootDir == "" {
-		return fmt.Errorf("root directory is nil")
-	}
-	contractAddr := viper.GetString("git_find.contract")
+	contractAddr := args[0]
 	if !common.IsHexAddress(contractAddr) || contractAddr == "" {
 		return fmt.Errorf("contract address provided is invalid, contract addr = %v", contractAddr)
 	}
-	gitCommits, err := gitutils.GetContractGitCommit(rootDir, ethUrl, common.HexToAddress(contractAddr))
+
+	rootDir := args[1]
+	if rootDir == "" {
+		return fmt.Errorf("root directory is nil")
+	}
+
+	var ethurl string
+	if len(args) > 2 {
+		ethurl = args[2]
+	} else {
+		ethurl = "http://localhost:8545"
+		log.Warn(fmt.Sprintf("elvmasterd_rpc_url:%v", ethurl))
+	}
+
+	gitCommits, err := gitutils.GetContractGitCommit(rootDir, ethurl, common.HexToAddress(contractAddr))
 	if err != nil {
 		return err
 	}
@@ -204,6 +212,8 @@ func runGitFind(cmd *cobra.Command, args []string) error {
 			table.Append([]string{v})
 		}
 		table.Render()
+	} else {
+		log.Info("No git commits are present for given contract address", "contract address", contractAddr)
 	}
 
 	return nil
@@ -220,7 +230,7 @@ func runAbiDiff(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(diffItem) == 0 {
-		log.Info("NO difference in abi")
+		log.Info("NO DIFFERENCES in abi")
 		return nil
 	}
 
@@ -258,11 +268,9 @@ func Execute() error {
 
 func main() {
 
-	log.Info("EXECUTING eth-verify daemon...")
-
 	if err := Execute(); err != nil {
 		os.Exit(1)
 	}
 
-	log.Info("LEAVING eth-verify daemon...")
+	log.Info("LEAVING eth-verify...")
 }

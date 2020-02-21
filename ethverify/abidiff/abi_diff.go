@@ -3,17 +3,17 @@ package abidiff
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
-
-	contracts "github.com/eluv-io/contracts/build"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/log"
-
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
+
+	contracts "github.com/eluv-io/contracts/build"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 type ContractInfo struct {

@@ -7,6 +7,7 @@ import {BaseContent} from "./base_content.sol";
 import {IKmsSpace, INodeSpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
+import {ExternalUserWallet} from "./external_user_wallet.sol";
 
 /* -- Revision history --
 BaseAccessWallet20190320114000ML: First versioned released
@@ -178,8 +179,10 @@ contract BaseAccessWalletFactory is Ownable {
     bytes32 public version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createAccessWallet() public returns (address) {
-        return  (new BaseAccessWallet(msg.sender));
+        return (new BaseAccessWallet(msg.sender));
     }
 
-
+    function createExternalWallet(address _content_space, address _kmsAddr, address _extUserAddr) public returns (address) {
+        return (new ExternalUserWallet(_content_space, _kmsAddr, _extUserAddr));
+    }
 }

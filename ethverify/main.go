@@ -60,6 +60,25 @@ The default path for storedir is "./store", which can be changed using --storedi
 else "ethverify abi-diff --storedir <Path/to/stored/abi/dir>"
 `,
 	}
+
+	cmdGetContract = &cobra.Command{
+		Use:   "get-contract <contract_address> <contract_type> <elvmasterd_rpc_url>",
+		Short: "To retrieve read-only variables and methods for the provided contract-address",
+		Long: `get-contract retrieves read-only variables and methods for provided 'contract_address'.
+
+Requires following 3 arguments:
+	- 'contract_address' is the address of the contract
+	- 'elvmasterd_rpc_url' is HTTP-RPC server listening address
+	- 'contract_type' is required to invoke the respective contract ABI. It can be any of the following values
+		ownable | editable | container | nodeSpace | userSpace | accessIndexor | accessible | 
+		baseContentSpace | baseContentType | baseContent | baseLibrary | baseAccessWallet | baseAccessControlGroup
+	
+`,
+		RunE: runGetContract,
+		Example: `
+ethverify get-contract 0x1234 ownable http://localhost:8545
+`,
+	}
 )
 
 func init() {
@@ -74,9 +93,6 @@ func init() {
 
 	_ = viper.BindPFlag("verbosity", cmdRoot.PersistentFlags().Lookup("verbosity"))
 	_ = viper.BindPFlag("log_file", cmdRoot.PersistentFlags().Lookup("log-file"))
-	_ = viper.BindPFlag("git_find.ethurl", cmdGitFind.Flags().Lookup("ethurl"))
-	_ = viper.BindPFlag("git_find.rootdir", cmdGitFind.Flags().Lookup("rootdir"))
-	_ = viper.BindPFlag("git_find.contract", cmdGitFind.Flags().Lookup("contract"))
 	_ = viper.BindPFlag("abi_diff.overwrite", cmdAbiDiff.Flags().Lookup("overwrite"))
 	_ = viper.BindPFlag("abi_diff.storedir", cmdAbiDiff.Flags().Lookup("storedir"))
 
@@ -87,6 +103,7 @@ func init() {
 
 	cmdRoot.AddCommand(cmdGitFind)
 	cmdRoot.AddCommand(cmdAbiDiff)
+	cmdRoot.AddCommand(cmdGetContract)
 
 }
 
@@ -251,6 +268,20 @@ func runAbiDiff(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		log.Info("No Breaking changes are made, replacing the STORED abi to NEW abi")
+	}
+
+	return nil
+}
+
+func runGetContract(cmd *cobra.Command, args []string) error {
+
+	if len(args) <= 3 {
+		return fmt.Errorf("REQUIRES 3 arguments, (<contract_address> <contract_type> <elvmasterd_rpc_url>)")
+	}
+
+	contractConfig, err := NewContractConfig(args[0], args[1], args[2])
+	if err != nil {
+		return err
 	}
 
 	return nil

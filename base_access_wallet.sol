@@ -181,8 +181,4 @@ contract BaseAccessWalletFactory is Ownable {
     function createAccessWallet() public returns (address) {
         return (new BaseAccessWallet(msg.sender));
     }
-
-    function createExternalWallet(address _content_space, address _kmsAddr, address _extUserAddr) public returns (address) {
-        return (new ExternalUserWallet(_content_space, _kmsAddr, _extUserAddr));
-    }
 }

@@ -7,7 +7,6 @@ import {BaseContent} from "./base_content.sol";
 import {IKmsSpace, INodeSpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
-import {ExternalUserWallet} from "./external_user_wallet.sol";
 
 /* -- Revision history --
 BaseAccessWallet20190320114000ML: First versioned released

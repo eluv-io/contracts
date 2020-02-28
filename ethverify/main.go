@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/eluv-io/contracts/ethverify/abidiff"
+	"github.com/eluv-io/contracts/ethverify/contract"
 	"github.com/eluv-io/contracts/ethverify/gitutils"
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
@@ -275,14 +277,26 @@ func runAbiDiff(cmd *cobra.Command, args []string) error {
 
 func runGetContract(cmd *cobra.Command, args []string) error {
 
-	if len(args) <= 3 {
+	if len(args) < 3 {
 		return fmt.Errorf("REQUIRES 3 arguments, (<contract_address> <contract_type> <elvmasterd_rpc_url>)")
 	}
 
-	contractConfig, err := NewContractConfig(args[0], args[1], args[2])
+	contractConfig, err := contract.NewGetContractConfig(args[0], args[1], args[2])
 	if err != nil {
 		return err
 	}
+
+	info, err := contractConfig.GetContract()
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+
+	log.Info(string(jsonData))
 
 	return nil
 }

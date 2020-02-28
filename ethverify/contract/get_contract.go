@@ -1,4 +1,4 @@
-package getContract
+package contract
 
 import (
 	"fmt"
@@ -39,7 +39,6 @@ func NewGetContractConfig(contractAddrStr, contractType, elvmasterdRPCUrl string
 	config.ethclient = ec
 	config.contractType = contractType
 	config.co = bind.CallOpts{}
-
 	return &config, nil
 }
 
@@ -71,7 +70,9 @@ func (gc *getContractConfig) GetContract() (map[string]interface{}, error) {
 	case "baselibrary":
 		out, err = gc.getBaseLibrary()
 	case "baseaccesswallet":
+		out, err = gc.getBaseAccessWallet()
 	case "baseaccesscontrolgroup":
+		out, err = gc.getBaseAccessControlGroup()
 	default:
 		return nil, fmt.Errorf("contract_type provided is INVALID : %v", gc.contractType)
 	}
@@ -888,6 +889,103 @@ func (gc *getContractConfig) getBaseLibrary() (map[string]interface{}, error) {
 	}
 
 	return baseLibrary, nil
+}
+
+func (gc *getContractConfig) getBaseAccessWallet() (map[string]interface{}, error) {
+
+	acsWalletInst, err := contracts.NewBaseAccessWallet(gc.contractAddr, gc.ethclient)
+	if err != nil {
+		return nil, err
+	}
+
+	timestamp, err := acsWalletInst.CurrentTimestamp(&gc.co)
+	if err != nil {
+		return nil, err
+	}
+	unixTimeUTC := time.Unix(timestamp.Int64(), 0)
+
+	accessible, err := gc.getAccessible()
+	if err != nil {
+		return nil, err
+	}
+
+	container, err := gc.getContainer()
+	if err != nil {
+		return nil, err
+	}
+
+	accessIndexor, err := gc.getAccessIndexor()
+	if err != nil {
+		return nil, err
+	}
+
+	baseAccessWallet := map[string]interface{}{
+		"currentTimestamp": unixTimeUTC,
+		"accessible":       accessible,
+		"container":        container,
+		"accessIndexor":    accessIndexor,
+	}
+
+	return baseAccessWallet, nil
+}
+
+func (gc *getContractConfig) getBaseAccessControlGroup() (map[string]interface{}, error) {
+
+	acsCtrlGrp, err := contracts.NewBaseAccessControlGroup(gc.contractAddr, gc.ethclient)
+	if err != nil {
+		return nil, err
+	}
+
+	membersLength, err := acsCtrlGrp.MembersNum(&gc.co)
+	if err != nil {
+		return nil, err
+	}
+
+	var members []string
+	for i := int64(0); i < membersLength.Int64(); i++ {
+		member, err := acsCtrlGrp.MembersList(&gc.co, big.NewInt(i))
+		if err != nil {
+			return nil, err
+		}
+		members = append(members, member.String())
+	}
+
+	managersLength, err := acsCtrlGrp.ManagersNum(&gc.co)
+	if err != nil {
+		return nil, err
+	}
+
+	var managers []string
+	for i := int64(0); i < managersLength.Int64(); i++ {
+		manager, err := acsCtrlGrp.ManagersList(&gc.co, big.NewInt(i))
+		if err != nil {
+			return nil, err
+		}
+		managers = append(managers, manager.String())
+	}
+
+	accessIndexor, err := gc.getAccessIndexor()
+	if err != nil {
+		return nil, err
+	}
+
+	editable, err := gc.getEditable()
+	if err != nil {
+		return nil, err
+	}
+
+	baseAccessControlGroup := map[string]interface{}{
+		"info": map[string]interface{}{
+			"membersLength":  membersLength,
+			"membersList":    members,
+			"managersLength": managersLength,
+			"managerList":    managers,
+		},
+		"editable":      editable,
+		"accessIndexor": accessIndexor,
+	}
+
+	return baseAccessControlGroup, nil
 }
 
 // ----- for space node locators -------------

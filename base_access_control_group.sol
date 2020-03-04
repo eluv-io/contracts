@@ -23,7 +23,10 @@ BsAccessCtrlGrp20200204160600ML: Removes commented out sections
 
 contract BaseAccessControlGroup is AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20200204160600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20200303165900PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
+    //mapping (address => bool) public members;
+    //mapping (address => bool) public managers;
 
     address[] public membersList;
     uint256 public membersNum;
@@ -36,11 +39,23 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     event ManagerAccessRevoked(address candidate);
     event UnauthorizedOperation(uint operationCode, address candidate);
 
+    event OAuthStatusChanged(bool enabled);
+
+    bool public oauthEnabled;
+
     constructor(address content_space) public {
         contentSpace = content_space;
         membersNum = 0;
         managersList.push(creator);
         managersNum = 1;
+        oauthEnabled = false;
+    }
+
+    function setOAuthEnabled(bool _enabled) public onlyOwner {
+        if (oauthEnabled != _enabled) {
+            oauthEnabled = _enabled;
+            emit OAuthStatusChanged(_enabled);
+        }
     }
 
     function grantManagerAccess(address manager) public onlyOwner {

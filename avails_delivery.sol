@@ -97,6 +97,9 @@ contract AvailsDelivery is Content {
     )
     public view returns (uint8, uint8, uint8, uint256)
     {
+        if (!hasAccess(msg.sender,accessor)) {
+            return (0, 100, 0, 0);
+        }
         uint8 availCode = isAvailable(msg.sender, accessor);
         if (availCode != 0) {
             return (0, availCode, 0, 0);

@@ -181,7 +181,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWallet(address _user) private returns (address) {
+    function createUserWallet(address _user) public returns (address) {
         require(userWallets[_user] == 0x0);
         address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
         if (_user != tx.origin) {

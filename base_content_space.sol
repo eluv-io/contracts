@@ -18,7 +18,7 @@ import "./node.sol";
 import "./meta_object.sol";
 import "./transactable.sol";
 import "./lib_precompile.sol";
-import "./lv_recording.sol"; // need to bring in event definitions
+//import "./lv_recording.sol"; // need to bring in event definitions
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -29,12 +29,12 @@ BaseContentSpace20190510150900ML: Moves content creation from library to a dedic
 BaseContentSpace20190528193500ML: Moves node management to a parent class (INodeSpace)
 BaseContentSpace20190605144600ML: Implements canConfirm to overloads default from Editable
 BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
-BaseContentSpace20200107164800ML: Removes import of recording custom contract. To get all events, media_platform.sol should be used
+BaseContentSpace20200309155700ML: Removes import of recording custom contract. To get all events, media_platform.sol should be used
 */
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
-    bytes32 public version ="BaseContentSpace20191203120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20200309155700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;

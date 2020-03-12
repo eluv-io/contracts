@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
-import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import "./base_space_interfaces.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
@@ -32,7 +31,7 @@ BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 BaseContentSpace20200309155700ML: Removes import of recording custom contract. To get all events, media_platform.sol should be used
 */
 
-contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
+contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
     bytes32 public version ="BaseContentSpace20200309155700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -75,8 +74,9 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         visibility = 1;
     }
 
-    function setVisibility(uint8 visibility_code) public onlyOwner {
-        visibility = visibility_code;
+    // override
+    function setVisibility(uint8 _visibility_code) public onlyOwner {
+        visibility = _visibility_code;
     }
 
     function setFactory(address new_factory) public onlyOwner {

@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
-import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseContent} from "./base_content.sol";
 import {IKmsSpace, INodeSpace} from "./base_space_interfaces.sol";
@@ -20,7 +19,7 @@ BsAccessWallet20191203102900ML: Bumped up to reflect change in the access_indexo
 
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
-contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable {
+contract BaseAccessWallet is Container, AccessIndexor, Transactable {
     bytes32 public version = "BsAccessWallet20191203102900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {

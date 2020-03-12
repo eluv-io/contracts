@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
-import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {Container} from "./container.sol";
@@ -33,7 +32,7 @@ BaseContent20200212101200ML: Disambiguate getAccessInfo vs getAccessInfoV3 to re
 */
 
 
-contract BaseContent is Accessible, Editable {
+contract BaseContent is Editable {
 
     bytes32 public version ="BaseContent20200212101200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -142,10 +141,6 @@ contract BaseContent is Accessible, Editable {
         contentType = content_type;
         visibility = 0; //default could be made a function of the library.
         emit ContentObjectCreate(libraryAddress);
-    }
-
-    function setVisibility(uint8 visibility_code) public onlyEditor {
-        visibility = visibility_code;
     }
 
     function statusDescription() public constant returns (bytes32) {

@@ -1,6 +1,5 @@
 pragma solidity 0.4.24;
 
-import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import "./accessible.sol";
 import "./access_indexor.sol";
@@ -22,17 +21,13 @@ BaseContentType20200210110700ML: Supports authv3 API
 */
 
 
-contract BaseContentType is Accessible, Editable {
+contract BaseContentType is Editable {
 
     bytes32 public version ="BaseContentType20200210110700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
         visibility = 0;
-    }
-
-    function setVisibility(uint8 visibility_code) public onlyEditor {
-        visibility = visibility_code;
     }
 
     function canEdit() public view returns (bool) {

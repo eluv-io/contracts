@@ -2,6 +2,7 @@ pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 import "./strings.sol";
+import "./accessible.sol";
 
 /* -- Revision history --
 Editable20190222140100ML: First versioned released
@@ -18,7 +19,7 @@ Editable20200210163900ML: Modified for authV3 support
 */
 
 
-contract Editable is Ownable {
+contract Editable is Ownable, Accessible {
     using strings for *;
 
     bytes32 public version ="Editable20200210163900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
@@ -56,12 +57,10 @@ contract Editable is Ownable {
         return;
     }
 
-
     modifier onlyEditor() {
         require(canEdit());
         _;
     }
-
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
@@ -84,6 +83,10 @@ contract Editable is Ownable {
     // overridden in BaseContent to return library
     function parentAddress() public view returns (address) {
         return contentSpace;
+    }
+
+    function setVisibility(uint8 _visibility_code) public onlyEditor {
+        visibility = _visibility_code;
     }
 
     function clearPending() public {

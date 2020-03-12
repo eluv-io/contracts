@@ -1,6 +1,5 @@
 pragma solidity ^0.4.21;
 
-import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
@@ -24,7 +23,7 @@ BaseLibrary20200211164300ML: Modified to conform to authV3 API
 */
 
 
-contract BaseLibrary is MetaObject, Accessible, Container {
+contract BaseLibrary is MetaObject, Container {
 
     bytes32 public version ="BaseLibrary20200211164300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -56,10 +55,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         contentSpace = content_space;
         addressKMS = address_KMS;
         visibility = 0;
-    }
-
-    function setVisibility(uint8 visibility_code) public onlyEditor {
-        visibility = visibility_code;
     }
 
     function canConfirm() public view returns (bool) {

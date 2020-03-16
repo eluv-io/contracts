@@ -28,13 +28,14 @@ BaseContent20200131120200ML: Adds support for default finalize behavior in runFi
 BaseContent20200205101900ML: Adds support for non-0 runkill codes in contract swap, allows library editors to delete objects
 BaseContent20200205142000ML: Closes vulnerability allowing alien external objects to kill a custom contract
 BaseContent20200211163800ML: Modified to conform to authV3 API
-BaseContent20200212101200ML: Disambiguate getAccessInfo vs getAccessInfoV3 to reflect API changes
+BaseContent20200212101200ML: Disambiguatea getAccessInfo vs getAccessInfoV3 to reflect API changes
+BaseContent20200316135000ML: Leverages inherited hasAccess
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20200212101200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200316135000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -140,6 +141,7 @@ contract BaseContent is Editable {
         statusCode = -1;
         contentType = content_type;
         visibility = 0; //default could be made a function of the library.
+        indexCategory = 1; // AccessIndexor CATEGORY_CONTENT_OBJECT
         emit ContentObjectCreate(libraryAddress);
     }
 
@@ -237,8 +239,13 @@ contract BaseContent is Editable {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address userWallet = userSpaceObj.userWallets(accessor);
         if (userWallet != 0x0) {
+            /*
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentObjectRights(address(this), wallet.TYPE_ACCESS()) == true) {
+                return (0, 0, accessCharge);
+            }
+            */
+            if (hasAccess(accessor) == true) {
                 return (0, 0, accessCharge);
             }
         }
@@ -294,6 +301,21 @@ contract BaseContent is Editable {
             IUserSpace userSpaceObj = IUserSpace(contentSpace);
             address userWallet = userSpaceObj.userWallets(accessor);
             if (userWallet != 0x0) {
+                if (visibilityCode == 255) { //No custom calculations
+                    if (AccessIndexor(userWallet).checkRights(indexCategory, address(this), 0)  /*canSee(accessor)*/ == true) {
+                        visibilityCode = 0;
+                    }
+                }
+                if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
+                    if (accessCode == 255) {
+                        if (hasAccess(accessor) == true) {
+                            accessCode = 0;
+                        } else {
+                            accessCode = 100; //content accessible if paid for
+                        }
+                    }
+                }
+                /*
                 AccessIndexor wallet = AccessIndexor(userWallet);
                 if (visibilityCode == 255) { //No custom calculations
                     if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
@@ -309,6 +331,7 @@ contract BaseContent is Editable {
                         }
                     }
                 }
+                */
             }
         }
         return (visibilityCode, accessCode, calculatedCharge);
@@ -320,6 +343,7 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
+    /*
     function canEdit() public view returns (bool) {
         if ((visibility >= 100) || (msg.sender == owner)) {
          return true;
@@ -329,6 +353,7 @@ contract BaseContent is Editable {
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
     }
+    */
 
     function canPublish() public view returns (bool) {
         return (canEdit() || msg.sender == libraryAddress);
@@ -603,7 +628,7 @@ contract BaseContent is Editable {
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
-
+/*
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
         address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
         if (walletAddress == 0x0){
@@ -618,5 +643,6 @@ contract BaseContent is Editable {
         AccessIndexor indexor = AccessIndexor(group);
         indexor.setContentObjectRights(address(this), access_type, access);
     }
+*/
 
 }

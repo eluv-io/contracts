@@ -80,11 +80,12 @@ LvRecStream20191031162800ML: Adds originator in playback reporting
 LvRecStream20191031174500ML: Adds reporting or program details and original request timestamps
 LvRecStream20200129095300ML: Adds default runEdit to ensure compatibility
 LvRecStream20200130192600ML: Allows accessor with edit right on stream object to modify owner-only parameters
+LvRecStream20200316140800ML: Uses generic setRights instead of setContentObjectRights
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20200130192600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20200316140800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -229,8 +230,11 @@ contract LvRecordableStream is Content {
         membershipGroupsLength = addToGroupList(group, membershipGroups, prevLen);
         if (membershipGroupsLength > prevLen) {
             emit MembershipGroupAdded(now, group);
+            /*
             BaseAccessControlGroup accessIndex = BaseAccessControlGroup(group);
             accessIndex.setContentObjectRights(recordingStream, accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
+            */
+            BaseContent(recordingStream).setRights(group, 1 /*TYPE_ACCESS*/, 1 /*ACCESS_TENTATIVE*/);
         }
     }
 
@@ -239,8 +243,11 @@ contract LvRecordableStream is Content {
         membershipGroupsLength = removeFromGroupList(group, membershipGroups, prevLen);
         if (membershipGroupsLength < prevLen) {
             emit MembershipGroupRemoved(now, group);
+            /*
             BaseAccessControlGroup accessIndex = BaseAccessControlGroup(group);
             accessIndex.setContentObjectRights(recordingStream, accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+            */
+            BaseContent(recordingStream).setRights(group, 1 /*TYPE_ACCESS*/, 0 /*ACCESS_NONE*/);
             return true;
         }
         return false;

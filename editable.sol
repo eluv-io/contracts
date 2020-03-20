@@ -26,7 +26,7 @@ contract Editable is Ownable, Accessible {
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
-    event VersionConfirm(address spaceAddress, string objectHash);
+    event VersionConfirm(address spaceAddress, address parentAddress, string objectHash);
     event VersionDelete(address spaceAddress, string versionHash, int256 index);
 
     string public objectHash;
@@ -116,7 +116,7 @@ contract Editable is Ownable, Accessible {
         objectTimestamp = block.timestamp;
         pendingHash = "";
         commitPending = false;
-        emit VersionConfirm(contentSpace, objectHash);
+        emit VersionConfirm(contentSpace, parentAddress(), objectHash);
         return true;
     }
 

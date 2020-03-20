@@ -1,8 +1,10 @@
 pragma solidity 0.4.24;
 
-import {Ownable} from "./ownable.sol";
+//import {Ownable} from "./ownable.sol";
 import "./strings.sol";
 import "./accessible.sol";
+import "./access_indexor.sol";
+import "./user_space.sol";
 
 /* -- Revision history --
 Editable20190222140100ML: First versioned released
@@ -16,13 +18,15 @@ Editable20191219134600ML: Made updateRequest contingent on canEdit rather than o
 Editable20200109145900ML: Limited updateRequest to canEdit
 Editable20200124080600ML: Fixed deletion of latest version
 Editable20200210163900ML: Modified for authV3 support
+Editable20200316135400ML: Implements check and set rights to be inherited from
+
 */
 
 
-contract Editable is Ownable, Accessible {
+contract Editable is  Accessible {
     using strings for *;
 
-    bytes32 public version ="Editable20200210163900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20200316135400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -37,6 +41,7 @@ contract Editable is Ownable, Accessible {
 
     string public pendingHash;
     bool public commitPending;
+
 
     // TODO: migrate version timestamps as well ...
     function migrate(string _objectHash, string _versionHashesConcat) internal onlyOwner {
@@ -66,10 +71,44 @@ contract Editable is Ownable, Accessible {
         return versionHashes.length;
     }
 
+    /*
     //This function is meant to be overloaded. By default the owner is the only editor
     function canEdit() public view returns (bool) {
         return (msg.sender == owner);
     }
+    */
+    function canEdit() public view returns (bool) {
+        return hasEditorRight(tx.origin);
+    }
+
+
+
+    function hasEditorRight(address candidate) public view returns (bool) {
+        if ((candidate == owner) || (visibility >= 100)) {
+            return true;
+        }
+        if (indexCategory > 0) {
+            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
+            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 2/*AccessIndexor TYPE_EDIT*/);
+        } else {
+            return false;
+        }
+    }
+
+
+    /*
+    function canSee(address candidate) public view returns (bool) {
+        if ((candidate == owner) || (visibility >= 1)) {
+            return true;
+        }
+        if (indexCategory > 0) {
+            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
+            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 0); // AccessIndexor TYPE_SEE
+        } else {
+            return false;
+        }
+    }
+    */
 
     // intended to be overridden
     function canConfirm() public view returns (bool) {
@@ -85,9 +124,6 @@ contract Editable is Ownable, Accessible {
         return contentSpace;
     }
 
-    function setVisibility(uint8 _visibility_code) public onlyEditor {
-        visibility = _visibility_code;
-    }
 
     function clearPending() public {
         require(canCommit());
@@ -178,5 +214,27 @@ contract Editable is Ownable, Accessible {
 
         emit VersionDelete(contentSpace, _versionHash, foundIdx);
         return foundIdx;
+    }
+
+
+
+    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address walletAddress = userSpaceObj.userWallets(stakeholder);
+        if (walletAddress == 0x0){
+            //stakeholder is not a user (hence group or wallet)
+            setGroupRights(stakeholder, access_type, access);
+        } else {
+            setGroupRights(walletAddress, access_type, access);
+        }
+    }
+
+    function setGroupRights(address group, uint8 access_type, uint8 access) public {
+        AccessIndexor indexor = AccessIndexor(group);
+        indexor.setRights(indexCategory, address(this), access_type, access);
+    }
+
+    function setVisibility(uint8 _visibility_code) public onlyEditor {
+        visibility = _visibility_code;
     }
 }

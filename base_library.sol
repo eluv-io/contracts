@@ -4,7 +4,7 @@ import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
 import {IFactorySpace, INodeSpace} from "./base_space_interfaces.sol";
-import "./access_indexor.sol";
+//import "./access_indexor.sol";
 import "./meta_object.sol";
 
 /* -- Revision history --
@@ -20,12 +20,13 @@ BaseLibrary20190605150200ML: Splits out canConfirm from canPublish
 BaseLibrary20191010140800ML: Content can be deleted by content owner or the library owner
 BaseLibrary20200110162700ML: Adds support for visibility, differentiates rights to access and edit library object and content
 BaseLibrary20200211164300ML: Modified to conform to authV3 API
+BaseLibrary20200316135200ML: Leverages inherited hasAccess
 */
 
 
 contract BaseLibrary is MetaObject, Container {
 
-    bytes32 public version ="BaseLibrary20200211164300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20200316135200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -55,6 +56,7 @@ contract BaseLibrary is MetaObject, Container {
         contentSpace = content_space;
         addressKMS = address_KMS;
         visibility = 0;
+        indexCategory = 3; // AccessIndexor CATEGORY_LIBRARY
     }
 
     function canConfirm() public view returns (bool) {
@@ -73,6 +75,7 @@ contract BaseLibrary is MetaObject, Container {
         return canEdit();
     }
 
+    /*
     function canEdit() public view returns (bool) {
         return hasEditorRight(tx.origin);
     }
@@ -85,6 +88,7 @@ contract BaseLibrary is MetaObject, Container {
         AccessIndexor wallet = AccessIndexor(userWallet);
         return wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT());
     }
+    */
 
     function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
         for (uint256 i = 0; i < _groupListLength; i++) {
@@ -119,8 +123,11 @@ contract BaseLibrary is MetaObject, Container {
         contributorGroupsLength = addToGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength > prevLen) {
             emit ContributorGroupAdded(group);
+            /*
             AccessIndexor accessIndex = AccessIndexor(group);
             accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_TENTATIVE());
+            */
+            setRights(group, 0 /*AccessIndexor TYPE_SEE*/, 1 /*AccessIndexor ACCESS_TENTATIVE*/);
         }
     }
 
@@ -138,8 +145,11 @@ contract BaseLibrary is MetaObject, Container {
         contributorGroupsLength = removeFromGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength < prevLen) {
             emit ContributorGroupRemoved(group);
+            /*
             AccessIndexor accessIndex = AccessIndexor(group);
             accessIndex.setLibraryRights(address(this), accessIndex.TYPE_SEE(), accessIndex.ACCESS_NONE());
+            */
+            setRights(group, 0 /*AccessIndexor TYPE_SEE*/, 0 /*AccessIndexor ACCESS_TENTATIVE*/);
             return true;
         }
         return false;
@@ -150,8 +160,11 @@ contract BaseLibrary is MetaObject, Container {
         reviewerGroupsLength = addToGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength > prevLen) {
             emit ReviewerGroupAdded(group);
+            /*
             AccessIndexor accessIndex = AccessIndexor(group);
             accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
+            */
+            setRights(group, 1 /*AccessIndexor TYPE_ACCESS*/, 1 /*AccessIndexor ACCESS_TENTATIVE*/);
         }
     }
 
@@ -161,8 +174,11 @@ contract BaseLibrary is MetaObject, Container {
         if (reviewerGroupsLength < prevLen) {
             emit ReviewerGroupRemoved(group);
             if (!groupIsListed(group, accessorGroups)) {
+                /*
 	              AccessIndexor accessIndex = AccessIndexor(group);
                 accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+                */
+                setRights(group, 1 /*AccessIndexor TYPE_ACCESS*/, 0 /*AccessIndexor ACCESS_NONE*/);
             }
             return true;
         }
@@ -175,8 +191,11 @@ contract BaseLibrary is MetaObject, Container {
         accessorGroupsLength = addToGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength > prevLen) {
             emit AccessorGroupAdded(group);
+            /*
             AccessIndexor accessIndex = AccessIndexor(group);
             accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
+            */
+            setRights(group, 1 /*AccessIndexor TYPE_ACCESS*/,1 /*AccessIndexor ACCESS_TENTATIVE*/);
         }
     }
 
@@ -186,8 +205,11 @@ contract BaseLibrary is MetaObject, Container {
         if (accessorGroupsLength < prevLen) {
             emit AccessorGroupRemoved(group);
             if (!groupIsListed(group, reviewerGroups)) {
+                /*
                 AccessIndexor accessIndex = AccessIndexor(group);
                 accessIndex.setLibraryRights(address(this), accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+                */
+                setRights(group, 1 /*AccessIndexor TYPE_ACCESS*/, 0 /*AccessIndexor ACCESS_NONE*/);
             }
         }
         return false;
@@ -204,7 +226,7 @@ contract BaseLibrary is MetaObject, Container {
         }
         return false;
     }
-
+/*
     function hasAccess(address _candidate) public constant returns (bool) {
         if ((visibility >= 10) || (_candidate == owner)) {
             return true;
@@ -213,6 +235,7 @@ contract BaseLibrary is MetaObject, Container {
         AccessIndexor wallet = AccessIndexor(userWallet);
         return wallet.checkLibraryRights(address(this), wallet.TYPE_ACCESS());
     }
+    */
 
     function canContribute(address _candidate) public constant returns (bool) {
         return hasEditorRight(_candidate) || hasGroupAccess(_candidate, contributorGroups);
@@ -314,7 +337,7 @@ contract BaseLibrary is MetaObject, Container {
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
-
+/*
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
         address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
         if (walletAddress == 0x0){
@@ -329,6 +352,7 @@ contract BaseLibrary is MetaObject, Container {
         AccessIndexor indexor = AccessIndexor(group);
         indexor.setLibraryRights(address(this), access_type, access);
     }
+*/
 
     function publish(address contentObj) public returns (bool) {
         require(msg.sender == contentObj);

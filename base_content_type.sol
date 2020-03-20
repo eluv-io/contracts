@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 import {Editable} from "./editable.sol";
 import "./accessible.sol";
-import "./access_indexor.sol";
+//import "./access_indexor.sol";
 import "./user_space.sol";
 import "./node_space.sol";
 
@@ -18,18 +18,20 @@ BaseContentType20190605150100ML: Splits out canConfirm from canPublish
 BaseContentType20190813105000ML: Modifies canCommit to ensure it is a view
 BaseContentType20200109163600ML: Supports visibility default filter
 BaseContentType20200210110700ML: Supports authv3 API
+BaseContentType20200316135100ML: Leverages inherited hasAccess
 */
 
 
 contract BaseContentType is Editable {
 
-    bytes32 public version ="BaseContentType20200210110700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20200316135100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
         visibility = 0;
+        indexCategory =  4; // AccessIndexor CATEGORY_CONTENT_TYPE
     }
-
+/*
     function canEdit() public view returns (bool) {
         if (visibility >= 100) {
          return true;
@@ -39,7 +41,8 @@ contract BaseContentType is Editable {
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT());
     }
-
+*/
+/*
     function hasAccess(address _candidate) public constant returns (bool) {
         if ((visibility < 10 ) || (_candidate == owner)) {
             IUserSpace userSpaceObj = IUserSpace(contentSpace);
@@ -49,6 +52,7 @@ contract BaseContentType is Editable {
         }
         return true;
     }
+*/
 
     function canCommit() public view returns (bool) {
         return canEdit();
@@ -57,22 +61,6 @@ contract BaseContentType is Editable {
     function canConfirm() public view returns (bool) {
         INodeSpace spc = INodeSpace(contentSpace);
         return spc.canNodePublish(msg.sender);
-    }
-
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address walletAddress = userSpaceObj.userWallets(stakeholder);
-        if (walletAddress == 0x0){
-            //stakeholder is not a user (hence group or wallet)
-            setGroupRights(stakeholder, access_type, access);
-        } else {
-            setGroupRights(walletAddress, access_type, access);
-        }
-    }
-
-    function setGroupRights(address group, uint8 access_type, uint8 access) public {
-        AccessIndexor indexor = AccessIndexor(group);
-        indexor.setContentTypeRights(address(this), access_type, access);
     }
 
 }

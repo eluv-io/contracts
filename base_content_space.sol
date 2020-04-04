@@ -413,7 +413,7 @@ BaseCtFactory20191219182100ML: Updated to reflect change in BaseContent201912191
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20191219182100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200404182100PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);
@@ -432,18 +432,7 @@ contract BaseContentFactory is Ownable {
 
         return address(content);
     }
-}
 
-//BaseCtFactoryXt20191031115100PO: adds support for custom contract
-//BaseCtFactoryXt20191031153200ML: passes accessor to the runAccess via the addresses array
-//BaseCtFactoryXt20191031170400ML: adds request timestamp to event
-//BaseCtFactoryXt20191031203100ML: change initialization of array
-
-contract BaseContentFactoryExt is BaseContentFactory {
-
-    bytes32 public version ="BaseCtFactoryXt20191031203100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    // TODO: naming this the same as the event in BaseContentObject ...?
     event AccessRequest(
         uint256 timestamp,
         address libraryAddress,

@@ -2,9 +2,8 @@ pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 import {Editable} from "./editable.sol";
-import {Accessible} from "./accessible.sol";
 
-contract ExternalUserWallet is Accessible, Editable {
+contract ExternalUserWallet is Editable {
 
     address public addressTA; // trusted authority of the user - aka KMS
     address public addressExtUser;
@@ -34,7 +33,7 @@ contract ExternalUserWallet is Accessible, Editable {
 
     function accessRequest() public returns (bool) {
         require(msg.sender == owner || msg.sender == addressExtUser);
-        emit AccessRequest();
+        emit AccessRequestV3(keccak256(abi.encodePacked(address(this), now)), 0x0, 0x0, msg.sender, now * 1000);
         return true;
     }
 }

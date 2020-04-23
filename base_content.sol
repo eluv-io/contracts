@@ -20,12 +20,13 @@ BaseContent20190724203300ML: Enforces access rights in access request
 BaseContent20190801141600ML: Fixes the access rights grant for paid content
 BaseContent20191029161700ML: Removed debug statements for accessRequest
 BaseContent20191219135200ML: Made content object updatable by non-owner
+BaseContent20200422180500ML: Version update to reflect changes made to editable to fix deletion
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20191202161700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200422180500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;

@@ -19,14 +19,14 @@ Editable20200109145900ML: Limited updateRequest to canEdit
 Editable20200124080600ML: Fixed deletion of latest version
 Editable20200210163900ML: Modified for authV3 support
 Editable20200316135400ML: Implements check and set rights to be inherited from
-
+Editable20200410215400ML: disambiguate indexor.setRights and entity.setRights 
 */
 
 
 contract Editable is  Accessible {
     using strings for *;
 
-    bytes32 public version ="Editable20200316135400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20200410215400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -231,7 +231,7 @@ contract Editable is  Accessible {
 
     function setGroupRights(address group, uint8 access_type, uint8 access) public {
         AccessIndexor indexor = AccessIndexor(group);
-        indexor.setRights(indexCategory, address(this), access_type, access);
+        indexor.setEntityRights(indexCategory, address(this), access_type, access);
     }
 
     function setVisibility(uint8 _visibility_code) public onlyEditor {

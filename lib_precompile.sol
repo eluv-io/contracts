@@ -7,9 +7,14 @@ library Precompile {
     bytes4 constant sigIdString = bytes4(keccak256("makeIDString(int,address)"));
 
     int public constant KMS = 11;
+    int public constant TEN = 14;
 
     function CodeKMS() internal constant returns (int) {
         return KMS;
+    }
+
+    function CodeTEN() internal constant returns (int) {
+        return TEN;
     }
 
     uint constant idStrLen = 32;

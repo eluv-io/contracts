@@ -19,6 +19,7 @@ import "./meta_object.sol";
 import "./transactable.sol";
 import "./lib_precompile.sol";
 import "./lv_recording.sol"; // need to bring in event definitions
+import "./base_tenant_space.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released

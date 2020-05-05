@@ -1,4 +1,4 @@
-module github.com/eluv-io/contracts
+module github.com/eluv-io/contracts/ethverify
 
 go 1.13
 
@@ -10,6 +10,7 @@ require (
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/elastic/gosigar v0.10.4 // indirect
+	github.com/eluv-io/contracts v0.0.0-20200423223652-79f721fb709e
 	github.com/ethereum/go-ethereum v1.9.11
 	github.com/fjl/memsize v0.0.0-20190710130421-bcb5799ab5e5 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect

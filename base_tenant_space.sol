@@ -50,7 +50,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
     event GetAccessWallet(address walletAddress);
 
     address contentSpace;
-    constructor(address _contentSpace, string _tenantName) public {
+    constructor(address _contentSpace, string _tenantName) public payable {
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
         // although either the space owner or a trusted address to refer to the space
@@ -109,6 +109,12 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
     function canConfirm() public view returns (bool) {
         INodeSpace bcs = INodeSpace(address(this));
         return bcs.canNodePublish(msg.sender);
+    }
+
+    // TODO: ???
+    function canNodePublish(address _candidate) external view returns (bool) {
+        INodeSpace spc = INodeSpace(contentSpace);
+        return spc.canNodePublish(_candidate);
     }
 
     function createContentType() public returns (address) {

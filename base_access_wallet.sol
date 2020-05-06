@@ -8,6 +8,7 @@ import {IKmsSpace, INodeSpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
 import {ExternalUserWallet} from "./external_user_wallet.sol";
+import "./meta_object.sol";
 
 /* -- Revision history --
 BaseAccessWallet20190320114000ML: First versioned released
@@ -20,7 +21,7 @@ BsAccessWallet20191203102900ML: Bumped up to reflect change in the access_indexo
 
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
-contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable {
+contract BaseAccessWallet is MetaObject, Accessible, Container, AccessIndexor, Transactable {
     bytes32 public version = "BsAccessWallet20191203102900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {

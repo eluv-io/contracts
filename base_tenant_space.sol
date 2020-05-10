@@ -6,10 +6,10 @@ import {Editable} from "./editable.sol";
 import "./base_space_interfaces.sol";
 import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
+import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {Container} from "./container.sol";
 import "./user_space.sol";
 import "./node_space.sol";
-// import "./node.sol";
 import "./meta_object.sol";
 import "./lib_precompile.sol";
 import "./base_content_space.sol";
@@ -39,9 +39,6 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
     event CreateAccessWallet(address wallet);
     event BindUserWallet(address wallet, address userAddr);
 
-    // TODO: not used?
-    // event SetFactory(address factory);
-
     event AddKMSLocator(address sender,uint status);
     event RemoveKMSLocator(address sender, uint status);
 
@@ -53,20 +50,32 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
     constructor(address _contentSpace, string _tenantName) public payable {
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
-        // although either the space owner or a trusted address to refer to the space
+        // allow either the space owner or a trusted address to refer to the space
         require(msg.sender == spc.owner() || spc.checkKMSAddr(msg.sender) > 0);
         contentSpace = address(_contentSpace);
         emit CreateTenant(version, owner);
     }
 
     address public adminGroup;
-    address public defaultUserGroup;
+    address public defaultUserGroup; // TODO: should this always just point to a group that contains *all* users in the tenant?
 
     event SetTenantGroups(address adminGroup, address defaultUserGroup);
 
-    // TODO: need to make sure that checkKMSAddr checks the space !!!
-    function setGroups(address _adminGroup, address _defaultUserGroup) {
-        require(msg.sender == owner || checkKMSAddr(msg.sender) > 0);
+    function isAdmin(address _candidate) public view returns (bool) {
+        if (_candidate == owner) {
+            return true;
+        }
+        if (adminGroup == 0x0) // TODO: don't know if it should be *valid* to not have an admin group but ...
+            return false;
+        return BaseAccessControlGroup(adminGroup).hasManagerAccess(_candidate);
+    }
+
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender));
+        _;
+    }
+
+    function setGroups(address _adminGroup, address _defaultUserGroup) onlyAdmin {
         if (_adminGroup != 0x0) {
             adminGroup = _adminGroup;
         }
@@ -81,27 +90,27 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         return Precompile.makeIDString(Precompile.CodeTEN(), adminGroup);
     }
 
-    function setFactory(address new_factory) public onlyOwner {
+    function setFactory(address new_factory) public onlyAdmin {
         factory = new_factory;
     }
 
-    function setGroupFactory(address new_factory) public onlyOwner {
+    function setGroupFactory(address new_factory) public onlyAdmin {
         groupFactory = new_factory;
     }
 
-    function setWalletFactory(address new_factory) public onlyOwner {
+    function setWalletFactory(address new_factory) public onlyAdmin {
         walletFactory = new_factory;
     }
 
-    function setLibraryFactory(address new_factory) public onlyOwner {
+    function setLibraryFactory(address new_factory) public onlyAdmin {
         libraryFactory = new_factory;
     }
 
-    function setContentFactory(address new_factory) public onlyOwner {
+    function setContentFactory(address new_factory) public onlyAdmin {
         contentFactory = new_factory;
     }
 
-    function setDescription(string memory content_space_description) public onlyOwner {
+    function setDescription(string memory content_space_description) public onlyAdmin {
         description = content_space_description;
     }
 
@@ -117,60 +126,32 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         return spc.canNodePublish(_candidate);
     }
 
+    // TODO: auth?
     function createContentType() public returns (address) {
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
         return contentTypeAddress;
     }
 
+    // TODO: auth?
     function createLibrary(address address_KMS) public returns (address) {
         address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
         emit CreateLibrary(libraryAddress);
         return libraryAddress;
     }
 
+    // TODO: auth?
     function createContent(address lib, address content_type) public returns (address) {
         address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
         emit CreateContent(contentAddress);
         return contentAddress;
     }
 
+    // TODO: auth?
     function createGroup() public returns (address) {
         address groupAddress = BaseGroupFactory(groupFactory).createGroup();
         emit CreateGroup(groupAddress);
         return groupAddress;
-    }
-
-    function createAccessWallet() public returns (address) {
-        return createUserWallet(msg.sender);
-    }
-
-    //This methods revert when attempting to transfer ownership, so for now we make it private
-    // Hence it will be assumed, that user are responsible for creating their wallet.
-    // TODO: I think we want this to work for a tenant ...
-    function createUserWallet(address _user) public returns (address) {
-        require(userWallets[_user] == 0x0);
-        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-        if (_user != tx.origin) {
-            BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-            wallet.transferOwnership(_user);
-        }
-        emit CreateAccessWallet(walletAddress);
-        emit BindUserWallet(walletAddress, _user);
-        userWallets[_user] = walletAddress;
-        return walletAddress;
-    }
-
-    function getAccessWallet() public returns(address) {
-        address walletAddress;
-        if (userWallets[tx.origin] == 0x0) {
-            walletAddress = createAccessWallet();
-        } else {
-            walletAddress = userWallets[tx.origin];
-        }
-
-        emit GetAccessWallet(walletAddress);
-        return walletAddress;
     }
 
     // TODO: generally we likely want to allow the tenant to add KMS info but also fall back to the space ...?
@@ -190,7 +171,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
     }
 
     // can be used to add or remove - i.e. set to ""
-    function setKMSPublicKey(string _kmsID, string _pubKey) public onlyOwner {
+    function setKMSPublicKey(string _kmsID, string _pubKey) public onlyAdmin {
         kmsPublicKeys[_kmsID] = _pubKey;
     }
 
@@ -245,7 +226,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
     // mapping(address => string[]) public kmsMapping;
     // status -> 0 added
     // status -> 1 not added
-    function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+    function addKMSLocator(string _kmsID, bytes _locator) public onlyAdmin returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
 
         for (uint i = 0; i < kmsLocators.length; i++) {
@@ -261,7 +242,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
 
     // status -> 0 removed
     // status -> 1 not removed
-    function removeKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+    function removeKMSLocator(string _kmsID, bytes _locator) public onlyAdmin returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {

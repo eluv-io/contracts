@@ -47,27 +47,33 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
     event GetAccessWallet(address walletAddress);
 
     address contentSpace;
-    constructor(address _contentSpace, string _tenantName) public payable {
+    constructor(address _contentSpace, string _tenantName, address _owner) public payable {
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
         // allow either the space owner or a trusted address to refer to the space
         require(msg.sender == spc.owner() || spc.checkKMSAddr(msg.sender) > 0);
         contentSpace = address(_contentSpace);
+        owner = _owner;
         emit CreateTenant(version, owner);
     }
 
-    address public adminGroup;
-    address public defaultUserGroup; // TODO: should this always just point to a group that contains *all* users in the tenant?
+    bytes32 public constant GROUP_ID_ADMIN = "admin";
 
-    event SetTenantGroups(address adminGroup, address defaultUserGroup);
+    mapping(bytes32 => address[]) public groupsMapping;
+    bytes32[] public groupIds;
 
     function isAdmin(address _candidate) public view returns (bool) {
         if (_candidate == owner) {
             return true;
         }
-        if (adminGroup == 0x0) // TODO: don't know if it should be *valid* to not have an admin group but ...
-            return false;
-        return BaseAccessControlGroup(adminGroup).hasManagerAccess(_candidate);
+
+        address[] memory maybeAddrs = groupsMapping[GROUP_ID_ADMIN];
+        for (uint256 i = 0; i < maybeAddrs.length; i++) {
+            if (BaseAccessControlGroup(maybeAddrs[i]).hasManagerAccess(_candidate)) {
+                return true;
+            }
+        }
+        return true;
     }
 
     modifier onlyAdmin() {
@@ -75,18 +81,57 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         _;
     }
 
-    function setGroups(address _adminGroup, address _defaultUserGroup) onlyAdmin {
-        if (_adminGroup != 0x0) {
-            adminGroup = _adminGroup;
+    event AddTenantGroup(bytes32 groupId, address groupAddr);
+    event RemoveTenantGroup(bytes32 groupId, address groupAddr);
+
+    function addGroup(bytes32 _id, address _groupAddr) public onlyAdmin {
+        require(_groupAddr != 0x0);
+        for (uint256 i = 0; i < groupsMapping[_id].length; i++) {
+            require(_id != GROUP_ID_ADMIN); // only one tenant admin group allowed
+            if (groupsMapping[_id][i] == _groupAddr) {
+                return;
+            }
         }
-        if (_defaultUserGroup != 0x0) {
-            defaultUserGroup = _defaultUserGroup;
+        if (groupsMapping[_id].push(_groupAddr) == 1) {
+            groupIds.push(_id);
         }
-        emit SetTenantGroups(adminGroup, defaultUserGroup);
+        emit AddTenantGroup(_id, _groupAddr);
+    }
+
+    function checkIdsRemove(bytes32 _id) {
+        if (groupsMapping[_id].length == 0) {
+            for (uint256 i = 0; i < groupIds.length; i++) {
+                if (groupIds[i] == _id) {
+                    if (i != groupIds.length - 1) {
+                        groupIds[i] = groupIds[groupIds.length - 1];
+                    }
+                    delete groupIds[groupIds.length - 1];
+                    groupIds.length -= 1;
+                }
+            }
+        }
+    }
+
+    function removeGroup(bytes32 _id, address _groupAddr) public onlyAdmin {
+        require(_id != GROUP_ID_ADMIN); // can't change the tenant admin group
+        for (uint256 i = 0; i < groupsMapping[_id].length; i++) {
+            if (groupsMapping[_id][i] == _groupAddr) {
+                uint256 len = groupsMapping[_id].length;
+                if (i != len - 1) {
+                    groupsMapping[_id][i] = groupsMapping[_id][len - 1];
+                }
+                delete groupsMapping[_id][len - 1];
+                groupsMapping[_id].length -= 1;
+                checkIdsRemove(_id);
+                emit RemoveTenantGroup(_id, _groupAddr);
+                return;
+            }
+        }
     }
 
     // for 'historical' reasons the tenant ID is based on the address of the admin group - not this contract!
-    function getTenantID() public view returns (string){
+    function getTenantID() public view returns (string) {
+        address adminGroup = groupsMapping[GROUP_ID_ADMIN][0];
         return Precompile.makeIDString(Precompile.CodeTEN(), adminGroup);
     }
 

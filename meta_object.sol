@@ -29,9 +29,13 @@ contract MetaObject is Ownable, IAdmin {
             assembly {
                 smallKey := mload(add(key, keyLen))
             }
-            mapSmallKeys[smallKey] = value;
+            delete mapSmallKeys[smallKey];
+            if (value.length > 0)
+                mapSmallKeys[smallKey] = value;
         } else {
-            mapBigKeys[key] = value;
+            delete mapBigKeys[key];
+            if (value.length > 0)
+                mapBigKeys[key] = value;
         }
         emit ObjectMetaChanged(key);
     }

@@ -9,7 +9,20 @@ contract MetaObject is Ownable {
 
     event ObjectMetaChanged(bytes key);
 
-    function putMeta(bytes key, bytes value) public onlyOwner {
+    // meant to be overridden in base classes
+    function isAdmin(address _candidate) public view returns (bool) {
+        if (_candidate == owner) {
+            return true;
+        }
+        return false;
+    }
+
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender));
+        _;
+    }
+
+    function putMeta(bytes key, bytes value) public onlyAdmin {
         if (key.length <= 32) {
             bytes32 smallKey;
             uint256 keyLen = key.length;

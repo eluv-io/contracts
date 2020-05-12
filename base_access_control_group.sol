@@ -6,6 +6,7 @@ import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";
 import {IUserSpace, INodeSpace} from "./base_space_interfaces.sol";
+import {MetaObject} from "./meta_object.sol";
 
 
 /* -- Revision history --
@@ -20,12 +21,9 @@ BsAccessCtrlGrp20190723165900ML: Fixes deletion/adding to groups
 */
 
 
-contract BaseAccessControlGroup is AccessIndexor, Editable {
+contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
 
     bytes32 public version ="BsAccessCtrlGrp20200303165900PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    //mapping (address => bool) public members;
-    //mapping (address => bool) public managers;
 
     address[] public membersList;
     uint256 public membersNum;
@@ -94,6 +92,18 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
         address walletAddress = IUserSpace(contentSpace).userWallets(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_NONE());
+    }
+
+    function isAdmin(address _candidate) public view returns (bool) {
+        if (_candidate == owner) {
+            return true;
+        }
+        for (uint256 i = 0; i < managersList.length; i++) {
+            if (managersList[i] == _candidate) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function hasManagerAccess(address candidate) public view returns (bool) {

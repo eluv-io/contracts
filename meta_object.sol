@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 import "./ownable.sol";
 
-contract MetaObject is Ownable {
+contract MetaObject is Ownable, IAdmin {
 
     mapping(bytes32 => bytes) mapSmallKeys;
     mapping(bytes => bytes) mapBigKeys;

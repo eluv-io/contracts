@@ -12,6 +12,10 @@ Ownable20190315141500ML: Migrated to 0.4.24
 Ownable20190528193800ML: Added contentSpace as all descendant objects need it anyway
 */
 
+interface IAdmin {
+    function isAdmin(address _adminAddr) external view returns (bool);
+}
+
 
 contract Ownable {
 

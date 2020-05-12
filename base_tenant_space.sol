@@ -57,7 +57,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         emit CreateTenant(version, owner);
     }
 
-    bytes32 public constant GROUP_ID_ADMIN = "admin";
+    bytes32 public constant GROUP_ID_ADMIN = "tenant_admin";
 
     mapping(bytes32 => address[]) public groupsMapping;
     bytes32[] public groupIds;

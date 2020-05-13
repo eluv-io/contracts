@@ -4,6 +4,31 @@ import "./ownable.sol";
 
 contract MetaObject is Ownable, IAdmin {
 
+    event CounterIncremented(bytes32 ident, uint8 slot, uint32 val);
+    event BitSetAndGet(bytes32 ident, uint8 ord, bool prev);
+
+    struct wordGroup {
+        uint32[8] slots;
+    }
+
+    mapping(bytes32 => wordGroup) wordGroups;
+
+    function incrementCounter(bytes32 _ident, uint8 _ord) public onlyAdmin {
+        require(_ord <= 8);
+        wordGroups[_ident].slots[_ord]++;
+        emit CounterIncremented(_ident, _ord, wordGroups[_ident].slots[_ord]);
+    }
+
+    function setAndGetBit(bytes32 _ident, uint8 _ord) public onlyAdmin {
+        uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
+        uint256 bit = _ord % (4 * 8);
+        uint32 checkVal = uint32(1) << bit;
+        bool currSet = wordGroups[_ident].slots[slot] & checkVal == 0 ? false : true;
+        if (!currSet)
+            wordGroups[_ident].slots[slot] |= checkVal;
+        emit BitSetAndGet(_ident, _ord, currSet);
+    }
+
     mapping(bytes32 => bytes) mapSmallKeys;
     mapping(bytes => bytes) mapBigKeys;
 

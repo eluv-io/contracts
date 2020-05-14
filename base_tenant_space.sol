@@ -73,7 +73,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
                 return true;
             }
         }
-        return true;
+        return false;
     }
 
     modifier onlyAdmin() {

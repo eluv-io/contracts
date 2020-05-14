@@ -19,6 +19,13 @@ contract MetaObject is Ownable, IAdmin {
         emit CounterIncremented(_ident, _ord, wordGroups[_ident].slots[_ord]);
     }
 
+    function getBit(bytes32 _ident, uint8 _ord) public view returns (bool) {
+        uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
+        uint256 bit = _ord % (4 * 8);
+        uint32 checkVal = uint32(1) << bit;
+        return wordGroups[_ident].slots[slot] & checkVal == 0 ? false : true;
+    }
+
     function setAndGetBit(bytes32 _ident, uint8 _ord) public onlyAdmin {
         uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
         uint256 bit = _ord % (4 * 8);

@@ -13,6 +13,7 @@ import "./node_space.sol";
 import "./meta_object.sol";
 import "./lib_precompile.sol";
 import "./base_content_space.sol";
+import "./lib_enctoken.sol";
 
 // main difference from BaseContentSpace it tenant is *not* a NodeSpace *can* control publishing through INodeSpace
 contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeSpace, IKmsSpace, IFactorySpace {
@@ -74,6 +75,24 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
             }
         }
         return false;
+    }
+
+    event TenantTransfer(address to, uint256 amount);
+
+    function transfer(address _to, uint256 _amount) public onlyAdmin {
+        _to.transfer(_amount);
+    }
+
+    function transferToken(address _to, uint256 _amount,  bytes _encAuthToken) public {
+
+        string memory foo = PrecompEncToken.getString("id", _encAuthToken);
+
+        address maybeAddr = PrecompEncToken.getAddress("iid", _encAuthToken);
+        require(maybeAddr == address(this));
+
+        // _to.transfer(_amount);
+
+        emit TenantTransfer(_to, _amount);
     }
 
     modifier onlyAdmin() {

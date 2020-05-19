@@ -8,15 +8,6 @@ library EncToken {
     bytes4 constant sigIdUint = bytes4(keccak256("getUint(string,bytes)"));
     bytes4 constant sigIdAddress = bytes4(keccak256("getAddress(string,bytes)"));
 
-    function bytesToBytes32(bytes b) constant returns (bytes32 res) {
-        if (b.length == 0) {
-            return 0x0;
-        }
-        assembly {
-            res := mload(add(b, 32))
-        }
-    }
-
     function getUint(string _attrib, bytes _tok) internal constant returns (uint256 ret) {
         bytes4 sig = sigIdUint;
         address callAddr = elv_precomp_enc_token_addr;

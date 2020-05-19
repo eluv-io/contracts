@@ -77,13 +77,13 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         return false;
     }
 
-    event TenantTransfer(address to, uint256 amount);
+    event TenantTransfer(bytes32 ident, address to, uint256 amount);
 
     function transfer(address _to, uint256 _amount) public onlyAdmin {
         _to.transfer(_amount);
     }
 
-    function transferToken(address _to, uint256 _amount, bytes _encAuthToken) public onlyAdmin {
+    function transferToken(address _to, uint256 _amount, bytes _encAuthToken) public {
 
         address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
         require(maybeAddr == address(this));
@@ -94,17 +94,15 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         string memory otpId = EncToken.getString("id", _encAuthToken);
         uint256 otpOrd = EncToken.getUint("ord", _encAuthToken);
 
-        bytes memory segIdent = abi.encodePacked(otpId, ":", uint32(otpOrd / 256));
+        bytes32 segIdent = bytes32(EncToken.getUint("_SEGIDENT_", _encAuthToken));
+
         uint8 segBit = uint8(otpOrd % 256);
-        bytes32 testIdent = 0x01;
-        // bool wasSet = setAndGetBit(EncToken.bytesToBytes32(segIdent), segBit);
-        // bool wasSet = setAndGetBit(keccak256(segIdent), segBit);
-        bool wasSet = setAndGetBit(testIdent, segBit);
-        // require(!wasSet);
+        bool wasSet = setAndGetBitInternal(segIdent, segBit);
+        require(!wasSet);
 
         _to.transfer(_amount);
 
-        emit TenantTransfer(_to, _amount);
+        emit TenantTransfer(segIdent, _to, _amount);
     }
 
     modifier onlyAdmin() {

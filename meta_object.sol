@@ -1,6 +1,7 @@
 pragma solidity 0.4.24;
 
 import "./ownable.sol";
+import "./lib_enctoken.sol";
 
 contract MetaObject is Ownable, IAdmin {
 
@@ -26,7 +27,7 @@ contract MetaObject is Ownable, IAdmin {
         return wordGroups[_ident].slots[slot] & checkVal == 0 ? false : true;
     }
 
-    function setAndGetBit(bytes32 _ident, uint8 _ord) public onlyAdmin returns (bool) {
+    function setAndGetBitInternal(bytes32 _ident, uint8 _ord) returns (bool) {
         uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
         uint256 bit = _ord % (4 * 8);
         uint32 checkVal = uint32(1) << bit;
@@ -35,6 +36,10 @@ contract MetaObject is Ownable, IAdmin {
             wordGroups[_ident].slots[slot] |= checkVal;
         emit BitSetAndGet(_ident, _ord, currSet);
         return currSet;
+    }
+
+    function setAndGetBit(bytes32 _ident, uint8 _ord) public onlyAdmin returns (bool) {
+        return setAndGetBitInternal(_ident, _ord);
     }
 
     mapping(bytes32 => bytes) mapSmallKeys;

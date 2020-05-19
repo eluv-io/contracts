@@ -83,14 +83,26 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         _to.transfer(_amount);
     }
 
-    function transferToken(address _to, uint256 _amount,  bytes _encAuthToken) public {
+    function transferToken(address _to, uint256 _amount, bytes _encAuthToken) public onlyAdmin {
 
-        string memory foo = PrecompEncToken.getString("id", _encAuthToken);
-
-        address maybeAddr = PrecompEncToken.getAddress("iid", _encAuthToken);
+        address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
         require(maybeAddr == address(this));
 
-        // _to.transfer(_amount);
+        uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
+        require(_amount <= maxAmount);
+
+        string memory otpId = EncToken.getString("id", _encAuthToken);
+        uint256 otpOrd = EncToken.getUint("ord", _encAuthToken);
+
+        bytes memory segIdent = abi.encodePacked(otpId, ":", uint32(otpOrd / 256));
+        uint8 segBit = uint8(otpOrd % 256);
+        bytes32 testIdent = 0x01;
+        // bool wasSet = setAndGetBit(EncToken.bytesToBytes32(segIdent), segBit);
+        // bool wasSet = setAndGetBit(keccak256(segIdent), segBit);
+        bool wasSet = setAndGetBit(testIdent, segBit);
+        // require(!wasSet);
+
+        _to.transfer(_amount);
 
         emit TenantTransfer(_to, _amount);
     }

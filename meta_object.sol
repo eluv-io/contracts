@@ -26,7 +26,7 @@ contract MetaObject is Ownable, IAdmin {
         return wordGroups[_ident].slots[slot] & checkVal == 0 ? false : true;
     }
 
-    function setAndGetBit(bytes32 _ident, uint8 _ord) public onlyAdmin {
+    function setAndGetBit(bytes32 _ident, uint8 _ord) public onlyAdmin returns (bool) {
         uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
         uint256 bit = _ord % (4 * 8);
         uint32 checkVal = uint32(1) << bit;
@@ -34,6 +34,7 @@ contract MetaObject is Ownable, IAdmin {
         if (!currSet)
             wordGroups[_ident].slots[slot] |= checkVal;
         emit BitSetAndGet(_ident, _ord, currSet);
+        return currSet;
     }
 
     mapping(bytes32 => bytes) mapSmallKeys;

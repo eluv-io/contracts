@@ -157,27 +157,18 @@ contract BaseContentSpace is Accessible, Container, UserSpace, NodeSpace, IKmsSp
         emit EngageAccountLibrary(tx.origin);
     }
 
-    function createAccessWallet() public returns (address) {
-        return createUserWallet(tx.origin);
+    function createUserWallet(address _user) external returns (address) {
+        require(false);
+        return 0x0;
     }
 
-    // TODO: TESTING
-//    function createUserGuarantorWallet(address _user) public returns (bool) {
-//        if (userWallets[_user] != 0x0) {
-//            return false;
-//        }
-//        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-//        BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-//        // wallet.setGuarantor(msg.sender);
-//        wallet.transferOwnership(_user);
-//        userWallets[_user] = walletAddress;
-//        emit CreateAccessWallet(walletAddress); // TODO: different event here?
-//        return true;
-//    }
+    function createAccessWallet() public returns (address) {
+        return createUserWalletInternal(tx.origin);
+    }
 
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWallet(address _user) private returns (address) {
+    function createUserWalletInternal(address _user) private returns (address) {
         require(userWallets[_user] == 0x0);
         address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
         if (_user != tx.origin) {
@@ -201,17 +192,6 @@ contract BaseContentSpace is Accessible, Container, UserSpace, NodeSpace, IKmsSp
         emit GetAccessWallet(walletAddress);
         return walletAddress;
     }
-
-    /* removed as the createUserWallet does not work for creating wallet on behalf of a user
-    // Not sure we want that, if so it might have to be restricted -- to be thought through
-    function userWallets(address user) public returns(address) {
-        if (userWallets[user] == 0x0) {
-            return createUserWallet(user);
-        } else {
-            return userWallets[user];
-        }
-    }
-    */
 
     function getKMSID(address _kmsAddr) public view returns (string){
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);

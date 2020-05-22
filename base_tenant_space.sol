@@ -15,35 +15,17 @@ import "./lib_precompile.sol";
 import "./base_content_space.sol";
 import "./lib_enctoken.sol";
 
-// main difference from BaseContentSpace it tenant is *not* a NodeSpace *can* control publishing through INodeSpace
-contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeSpace, IKmsSpace, IFactorySpace {
+contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
 
     bytes32 public version ="BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
 
-    // TODO: are all factories valid? most likely but likely want mechanism that can defer to base content space
-    address public factory;
-    address public groupFactory;
-    address public walletFactory;
-    address public libraryFactory;
-    address public contentFactory;
+    function setDescription(string memory _desc) public onlyAdmin {
+        description = _desc;
+    }
 
-    mapping(string => bytes[]) kmsMapping;
-    mapping(string => string)  kmsPublicKeys;
-
-    event CreateContentType(address contentTypeAddress);
-    event CreateLibrary(address libraryAddress);
-    event CreateGroup(address groupAddress);
-    event CreateContent(address contentAddress);
-    event CreateAccessWallet(address wallet);
-    event BindUserWallet(address wallet, address userAddr);
-
-    event AddKMSLocator(address sender,uint status);
-    event RemoveKMSLocator(address sender, uint status);
-
-    // TODO: create tenant?
     event CreateTenant(bytes32 version, address owner);
     event GetAccessWallet(address walletAddress);
 
@@ -164,172 +146,121 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, UserSpace, INodeS
         return Precompile.makeIDString(Precompile.CodeTEN(), adminGroup);
     }
 
-    function setFactory(address new_factory) public onlyAdmin {
-        factory = new_factory;
+    // implement IUserSpace
+
+    address public userManager;
+    event SetUserManager(address newManager, address prevManager);
+
+    function setUserManager(address _userMan) public onlyAdmin {
+        emit SetUserManager(_userMan, userManager);
+        userManager = _userMan;
     }
 
-    function setGroupFactory(address new_factory) public onlyAdmin {
-        groupFactory = new_factory;
+    function userWallets(address _userAddr) external view returns (address) {
+        if (userManager != 0x0) {
+            return IUserSpace(userManager).userWallets(_userAddr);
+        }
+        return IUserSpace(contentSpace).userWallets(_userAddr);
     }
 
-    function setWalletFactory(address new_factory) public onlyAdmin {
-        walletFactory = new_factory;
+    function createUserWallet(address _userAddr) external returns (address) {
+        if (userManager != 0x0) {
+            return IUserSpace(userManager).createUserWallet(_userAddr);
+        }
+        // at this point in time, deployed spaces do not implement this method so we will revert - but this is likely what we want to do anyway
+        return IUserSpace(contentSpace).createUserWallet(_userAddr);
     }
 
-    function setLibraryFactory(address new_factory) public onlyAdmin {
-        libraryFactory = new_factory;
+    // implement INodeSpace
+
+    address public nodeManager;
+    event SetNodeManager(address newManager, address prevManager);
+
+    function setNodeManager(address _nodeMan) public onlyAdmin {
+        emit SetNodeManager(_nodeMan, nodeManager);
+        nodeManager = _nodeMan;
     }
 
-    function setContentFactory(address new_factory) public onlyAdmin {
-        contentFactory = new_factory;
-    }
-
-    function setDescription(string memory content_space_description) public onlyAdmin {
-        description = content_space_description;
-    }
-
-    // TODO: just point at space method?
     function canConfirm() public view returns (bool) {
-        INodeSpace bcs = INodeSpace(address(this));
-        return bcs.canNodePublish(msg.sender);
+        if (nodeManager != 0x0) {
+            return INodeSpace(nodeManager).canNodePublish(msg.sender);
+        }
+        return INodeSpace(contentSpace).canNodePublish(msg.sender);
     }
 
-    // TODO: ???
     function canNodePublish(address _candidate) external view returns (bool) {
-        INodeSpace spc = INodeSpace(contentSpace);
-        return spc.canNodePublish(_candidate);
+        if (nodeManager != 0x0) {
+            return INodeSpace(nodeManager).canNodePublish(_candidate);
+        }
+        return INodeSpace(contentSpace).canNodePublish(_candidate);
     }
 
-    // TODO: auth?
+    // implement IFactorySpace
+
+    address public factoryManager;
+    event SetFactoryManager(address newManager, address prevManager);
+
+    function setFactoryManager(address _factMan) public onlyAdmin {
+        emit SetFactoryManager(_factMan, factoryManager);
+        factoryManager = _factMan;
+    }
+
     function createContentType() public returns (address) {
-        address contentTypeAddress = BaseFactory(factory).createContentType();
-        emit CreateContentType(contentTypeAddress);
-        return contentTypeAddress;
+        if (factoryManager != 0x0) {
+            return IFactorySpace(factoryManager).createContentType();
+        }
+        return IFactorySpace(contentSpace).createContentType();
     }
 
-    // TODO: auth?
-    function createLibrary(address address_KMS) public returns (address) {
-        address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
-        emit CreateLibrary(libraryAddress);
-        return libraryAddress;
+    function createLibrary(address _kmsAddress) public returns (address) {
+        if (factoryManager != 0x0) {
+            return IFactorySpace(factoryManager).createLibrary(_kmsAddress);
+        }
+        return IFactorySpace(contentSpace).createLibrary(_kmsAddress);
     }
 
-    // TODO: auth?
-    function createContent(address lib, address content_type) public returns (address) {
-        address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
-        emit CreateContent(contentAddress);
-        return contentAddress;
+    function createContent(address _lib, address _contentType) public returns (address) {
+        if (factoryManager != 0x0) {
+            return IFactorySpace(factoryManager).createContent(_lib, _contentType);
+        }
+        return IFactorySpace(contentSpace).createContent(_lib, _contentType);
     }
 
-    // TODO: auth?
     function createGroup() public returns (address) {
-        address groupAddress = BaseGroupFactory(groupFactory).createGroup();
-        emit CreateGroup(groupAddress);
-        return groupAddress;
+        if (factoryManager != 0x0) {
+            return IFactorySpace(factoryManager).createGroup();
+        }
+        return IFactorySpace(contentSpace).createGroup();
     }
 
-    // TODO: generally we likely want to allow the tenant to add KMS info but also fall back to the space ...?
-    //  for simplicity (?) we might want to make it so that if the tenant provides *any* KMS info we *don't* fall back
-    //  to the space. otherwise, there would be not mechanism for the tenant to 'override' the default KMS info.
+    address public kmsManager;
+    event SetKmsManager(address newManager, address prevManager);
+
+    function setKmsManager(address _kmsMan) public onlyAdmin {
+        emit SetKmsManager(_kmsMan, kmsManager);
+        kmsManager = _kmsMan;
+    }
+
+    // implement IKmsSpace
+
     function getKMSID(address _kmsAddr) public view returns (string){
-        return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
-    }
-
-    function checkKMS(string _kmsIdStr) public view returns (uint) {
-        return kmsMapping[_kmsIdStr].length;
+        if (kmsManager != 0x0) {
+            return IKmsSpace(kmsManager).getKMSID(_kmsAddr);
+        }
+        return IKmsSpace(contentSpace).getKMSID(_kmsAddr);
     }
 
     function checkKMSAddr(address _kmsAddr) public view returns (uint) {
-        string memory kmsID = getKMSID(_kmsAddr);
-        return kmsMapping[kmsID].length;
+        if (kmsManager != 0x0) {
+            return IKmsSpace(kmsManager).checkKMSAddr(_kmsAddr);
+        }
+        return IKmsSpace(contentSpace).checkKMSAddr(_kmsAddr);
     }
 
-    // can be used to add or remove - i.e. set to ""
-    function setKMSPublicKey(string _kmsID, string _pubKey) public onlyAdmin {
-        kmsPublicKeys[_kmsID] = _pubKey;
-    }
-
-    function matchesPrefix(bytes input, bytes prefix) pure internal returns (bool) {
-        uint len = prefix.length;
-        if (len > input.length) len = input.length;
-        for (uint x = 0; x < len; x++) {
-            if (input[x] != prefix[x]) return false;
+    function getKMSInfo(string _kmsID, bytes _prefix) external view returns (string, string) {
+        if (kmsManager != 0x0) {
+            return IKmsSpace(kmsManager).getKMSInfo(_kmsID, _prefix);
         }
-        return true;
-    }
-
-    function filterPrefix(bytes[] input, bytes prefix) view internal returns (bytes[]) {
-        uint countMatch = 0;
-        for (uint i = 0; i < input.length; i++) {
-            if (matchesPrefix(input[i], prefix)) {
-                countMatch++;
-            }
-        }
-        bytes[] memory output = new bytes[](countMatch);
-        if (countMatch == 0) return output;
-        countMatch = 0;
-        for (i = 0; i < input.length; i++) {
-            if (matchesPrefix(input[i], prefix)) {
-                output[countMatch] = input[i];
-                countMatch++;
-            }
-        }
-        return output;
-    }
-
-    function getKMSInfo(string _kmsID, bytes prefix) external view returns (string, string) {
-        bytes[] memory locators = kmsMapping[_kmsID];
-        string memory publicKey = kmsPublicKeys[_kmsID];
-
-        if (locators.length == 0) return ("", publicKey);
-        bytes[] memory filtered = filterPrefix(locators, prefix);
-
-        string memory output;
-        for (uint i = 0; i < filtered.length; i++) {
-            if (i == filtered.length -1) {
-                output = string(abi.encodePacked(output, string(filtered[i])));
-            } else {
-                output = string(abi.encodePacked(output, string(filtered[i]), ","));
-            }
-        }
-        return (output, publicKey);
-    }
-
-
-    // KMS mappings
-    // mapping(address => string[]) public kmsMapping;
-    // status -> 0 added
-    // status -> 1 not added
-    function addKMSLocator(string _kmsID, bytes _locator) public onlyAdmin returns (bool) {
-        bytes[] memory kmsLocators = kmsMapping[_kmsID];
-
-        for (uint i = 0; i < kmsLocators.length; i++) {
-            if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
-                emit AddKMSLocator(msg.sender, 1);
-                return false;
-            }
-        }
-        kmsMapping[_kmsID].push(_locator);
-        emit AddKMSLocator(msg.sender, 0);
-        return true;
-    }
-
-    // status -> 0 removed
-    // status -> 1 not removed
-    function removeKMSLocator(string _kmsID, bytes _locator) public onlyAdmin returns (bool) {
-        bytes[] memory kmsLocators = kmsMapping[_kmsID];
-        for (uint i = 0; i < kmsLocators.length; i++) {
-            if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
-                if (i != kmsLocators.length - 1) {
-                    kmsMapping[_kmsID][i] = kmsLocators[kmsLocators.length - 1];
-                }
-                delete kmsMapping[_kmsID][kmsLocators.length - 1];
-                kmsMapping[_kmsID].length -= 1;
-                emit RemoveKMSLocator(msg.sender,0);
-                return true;
-            }
-        }
-        emit RemoveKMSLocator(msg.sender,1);
-        return false;
+        return IKmsSpace(contentSpace).getKMSInfo(_kmsID, _prefix);
     }
 }

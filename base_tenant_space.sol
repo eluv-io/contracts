@@ -15,6 +15,55 @@ import "./lib_precompile.sol";
 import "./base_content_space.sol";
 import "./lib_enctoken.sol";
 
+// CAREFUL: no storage! - otherwise it will conflict with the calling contract
+contract TenantFuncTokenTransfer is MetaObject {
+
+    event TenantTransfer(bytes32 ident, address to, uint256 amount);
+
+    function checkTransferToken(bytes _encAuthToken, uint256 _amount, address _to) public view returns (bool) {
+
+        address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
+        if (maybeAddr != address(this)) { // TODO: what is the address when delegatecall ...? maybe just always check this on the call side ...?
+            return false;
+        }
+
+        uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
+        if (_amount > maxAmount) {
+            return false;
+        }
+
+        bytes32 segIdent = bytes32(EncToken.getUint("_SEGIDENT_", _encAuthToken));
+        uint256 otpOrd = EncToken.getUint("ord", _encAuthToken);
+        uint8 segBit = uint8(otpOrd % 256);
+        bool isSet = getBit(segIdent, segBit);
+
+        return !isSet;
+    }
+
+    function transferToken(bytes _encAuthToken, uint256 _amount, address _to) public {
+
+        address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
+        require(maybeAddr == address(this));
+
+        uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
+        require(_amount <= maxAmount);
+
+        string memory otpId = EncToken.getString("id", _encAuthToken);
+        uint256 otpOrd = EncToken.getUint("ord", _encAuthToken);
+
+        bytes32 segIdent = bytes32(EncToken.getUint("_SEGIDENT_", _encAuthToken));
+
+        uint8 segBit = uint8(otpOrd % 256);
+        bool wasSet = setAndGetBitInternal(segIdent, segBit);
+        require(!wasSet);
+
+        _to.transfer(_amount);
+
+        emit TenantTransfer(segIdent, _to, _amount);
+    }
+
+}
+
 contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
 
     bytes32 public version ="BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
@@ -57,6 +106,27 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
             }
         }
         return false;
+    }
+
+    event FunctionsAdded(bytes4[] func4Bytes, address funcAddr);
+
+    mapping(bytes4 => address) public funcMapping;
+
+    function addFuncs(bytes4[] _func4Bytes, address _funcAddr) public onlyAdmin {
+        for (uint256 i = 0; i < _func4Bytes.length; i++) {
+            funcMapping[_func4Bytes[i]] = _funcAddr;
+        }
+        emit FunctionsAdded(_func4Bytes, _funcAddr);
+    }
+
+    function callFuncUintAddr(bytes4 _func4Bytes, uint256 _p1, address _p2, bytes _encAuthToken) public {
+        address maybeFuncAddr = funcMapping[_func4Bytes];
+        require(maybeFuncAddr != 0x0);
+
+        // check signature!
+
+        bool success = maybeFuncAddr.delegatecall(abi.encodeWithSelector(_func4Bytes, _encAuthToken, _p1, _p2));
+        require(success);
     }
 
     event TenantTransfer(bytes32 ident, address to, uint256 amount);

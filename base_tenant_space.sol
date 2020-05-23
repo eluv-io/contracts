@@ -20,30 +20,7 @@ contract TenantFuncTokenTransfer is MetaObject {
 
     event TenantTransfer(bytes32 ident, address to, uint256 amount);
 
-    function checkTransferToken(bytes _encAuthToken, uint256 _amount, address _to) public view returns (bool) {
-
-        address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
-        if (maybeAddr != address(this)) { // TODO: what is the address when delegatecall ...? maybe just always check this on the call side ...?
-            return false;
-        }
-
-        uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
-        if (_amount > maxAmount) {
-            return false;
-        }
-
-        bytes32 segIdent = bytes32(EncToken.getUint("_SEGIDENT_", _encAuthToken));
-        uint256 otpOrd = EncToken.getUint("ord", _encAuthToken);
-        uint8 segBit = uint8(otpOrd % 256);
-        bool isSet = getBit(segIdent, segBit);
-
-        return !isSet;
-    }
-
     function transferToken(bytes _encAuthToken, uint256 _amount, address _to) public {
-
-        address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
-        require(maybeAddr == address(this));
 
         uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
         require(_amount <= maxAmount);
@@ -61,7 +38,6 @@ contract TenantFuncTokenTransfer is MetaObject {
 
         emit TenantTransfer(segIdent, _to, _amount);
     }
-
 }
 
 contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
@@ -119,42 +95,35 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
         emit FunctionsAdded(_func4Bytes, _funcAddr);
     }
 
-    function callFuncUintAddr(bytes4 _func4Bytes, uint256 _p1, address _p2, bytes _encAuthToken) public {
+    function checkCallFunc(bytes _encAuthToken, uint8 _v, bytes32 _r, bytes32 _s) public view returns (bool) {
+
+        address signerAddr = ecrecover(keccak256(_encAuthToken), _v, _r, _s);
+        if (!isAdmin(signerAddr)) {
+            return false;
+        }
+
+        address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
+        if (maybeAddr != address(this)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    function callFuncUintAddr(bytes4 _func4Bytes, uint256 _p1, address _p2, bytes _encAuthToken,
+        uint8 _v, bytes32 _r, bytes32 _s) public {
+
+        require(checkCallFunc(_encAuthToken, _v, _r, _s));
+
         address maybeFuncAddr = funcMapping[_func4Bytes];
         require(maybeFuncAddr != 0x0);
-
-        // check signature!
 
         bool success = maybeFuncAddr.delegatecall(abi.encodeWithSelector(_func4Bytes, _encAuthToken, _p1, _p2));
         require(success);
     }
 
-    event TenantTransfer(bytes32 ident, address to, uint256 amount);
-
     function transfer(address _to, uint256 _amount) public onlyAdmin {
         _to.transfer(_amount);
-    }
-
-    function transferToken(address _to, uint256 _amount, bytes _encAuthToken) public {
-
-        address maybeAddr = EncToken.getAddress("iid", _encAuthToken);
-        require(maybeAddr == address(this));
-
-        uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
-        require(_amount <= maxAmount);
-
-        string memory otpId = EncToken.getString("id", _encAuthToken);
-        uint256 otpOrd = EncToken.getUint("ord", _encAuthToken);
-
-        bytes32 segIdent = bytes32(EncToken.getUint("_SEGIDENT_", _encAuthToken));
-
-        uint8 segBit = uint8(otpOrd % 256);
-        bool wasSet = setAndGetBitInternal(segIdent, segBit);
-        require(!wasSet);
-
-        _to.transfer(_amount);
-
-        emit TenantTransfer(segIdent, _to, _amount);
     }
 
     modifier onlyAdmin() {

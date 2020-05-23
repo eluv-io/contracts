@@ -16,11 +16,11 @@ import "./base_content_space.sol";
 import "./lib_enctoken.sol";
 
 // CAREFUL: no storage! - otherwise it will conflict with the calling contract
-contract TenantFuncTokenTransfer is MetaObject {
+contract TenantFuncTokenTransfer {
 
     event TenantTransfer(bytes32 ident, address to, uint256 amount);
 
-    function transferToken(bytes _encAuthToken, uint256 _amount, address _to) public {
+    function transferToken(address targetAddr, bytes _encAuthToken, uint256 _amount, address _to) public {
 
         uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
         require(_amount <= maxAmount);
@@ -31,7 +31,7 @@ contract TenantFuncTokenTransfer is MetaObject {
         bytes32 segIdent = bytes32(EncToken.getUint("_SEGIDENT_", _encAuthToken));
 
         uint8 segBit = uint8(otpOrd % 256);
-        bool wasSet = setAndGetBitInternal(segIdent, segBit);
+        bool wasSet = MetaObject(targetAddr).setAndGetBitInternal(segIdent, segBit);
         require(!wasSet);
 
         _to.transfer(_amount);
@@ -118,7 +118,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
         address maybeFuncAddr = funcMapping[_func4Bytes];
         require(maybeFuncAddr != 0x0);
 
-        bool success = maybeFuncAddr.delegatecall(abi.encodeWithSelector(_func4Bytes, _encAuthToken, _p1, _p2));
+        bool success = maybeFuncAddr.delegatecall(abi.encodeWithSelector(_func4Bytes, address(this), _encAuthToken, _p1, _p2));
         require(success);
     }
 

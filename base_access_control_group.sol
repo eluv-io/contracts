@@ -120,7 +120,6 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
         }
     }
 
-    //event dbg_setAccessGroupRights(address a, uint8 b, uint8 c);
     function grantAccess(address candidate) public {
         require(hasManagerAccess(msg.sender) == true);
         bool already = false;

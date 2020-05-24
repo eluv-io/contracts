@@ -16,27 +16,50 @@ import "./base_content_space.sol";
 import "./lib_enctoken.sol";
 
 // CAREFUL: no storage! - otherwise it will conflict with the calling contract
-contract TenantFuncTokenTransfer is MetaObject {
+contract TenantFuncsBase is MetaObject {
 
-    event TenantTransfer(bytes32 ident, address to, uint256 amount);
+    event TenantTransfer(address to, uint256 amount);
 
-    function transferToken(bytes _encAuthToken, uint256 _amount, address _to) public {
+    function checkAndSet(bytes _encToken) {
+        uint256 otpOrd = EncToken.getUint("ord", _encToken);
 
-        uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
-        require(_amount <= maxAmount);
-
-        string memory otpId = EncToken.getString("id", _encAuthToken);
-        uint256 otpOrd = EncToken.getUint("ord", _encAuthToken);
-
-        bytes32 segIdent = bytes32(EncToken.getUint("_SEGIDENT_", _encAuthToken));
+        bytes32 segIdent = bytes32(EncToken.getUint("segident(id,ord)", _encToken));
 
         uint8 segBit = uint8(otpOrd % 256);
         bool wasSet = setAndGetBitInternal(segIdent, segBit);
         require(!wasSet);
+    }
+
+    function transferToken(bytes _encAuthToken, uint256 _amount, address _to) public {
+        require(msg.sender == address(this), "may only be invoked with delegatecall");
+
+        checkAndSet(_encAuthToken);
+
+        uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
+        require(_amount <= maxAmount);
 
         _to.transfer(_amount);
 
-        emit TenantTransfer(segIdent, _to, _amount);
+        emit TenantTransfer(_to, _amount);
+    }
+
+    event ApplyGroups(address to, uint256 numGroups);
+
+    function applyGroups(bytes _encToken, uint256, address _to) public {
+        require(msg.sender == address(this), "may only be invoked with delegatecall");
+
+        string[10] memory groupOrdNames = ["grp:0", "grp:1", "grp:2", "grp:3", "grp:4", "grp:5", "grp:6", "grp:7", "grp:8", "grp:9"];
+
+        checkAndSet(_encToken);
+
+        uint256 cntGroups = EncToken.getUint("len(grp)", _encToken);
+        require(cntGroups <= 10);
+        for (uint256 i = 0; i < cntGroups; i++) {
+            address groupAddr = EncToken.getAddress(groupOrdNames[i], _encToken);
+            BaseAccessControlGroup(groupAddr).grantAccess(_to);
+        }
+
+        emit ApplyGroups(_to, cntGroups);
     }
 }
 

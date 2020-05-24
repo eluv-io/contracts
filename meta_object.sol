@@ -27,8 +27,7 @@ contract MetaObject is Ownable, IAdmin {
         return wordGroups[_ident].slots[slot] & checkVal == 0 ? false : true;
     }
 
-    function setAndGetBitInternal(bytes32 _ident, uint8 _ord) public returns (bool) {
-        require(msg.sender == address(this));
+    function setAndGetBitInternal(bytes32 _ident, uint8 _ord) returns (bool) {
         uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
         uint256 bit = _ord % (4 * 8);
         uint32 checkVal = uint32(1) << bit;

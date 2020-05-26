@@ -31,8 +31,6 @@ contract TenantFuncsBase is MetaObject {
     }
 
     function transferToken(bytes _encAuthToken, uint256 _amount, address _to) public {
-        require(msg.sender == address(this), "may only be invoked with delegatecall");
-
         checkAndSet(_encAuthToken);
 
         uint256 maxAmount = EncToken.getUint("max", _encAuthToken);
@@ -46,8 +44,6 @@ contract TenantFuncsBase is MetaObject {
     event ApplyGroups(address to, uint256 numGroups);
 
     function applyGroups(bytes _encToken, uint256, address _to) public {
-        require(msg.sender == address(this), "may only be invoked with delegatecall");
-
         string[10] memory groupOrdNames = ["grp:0", "grp:1", "grp:2", "grp:3", "grp:4", "grp:5", "grp:6", "grp:7", "grp:8", "grp:9"];
 
         checkAndSet(_encToken);
@@ -299,6 +295,7 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
     }
 
     function createGroup() public returns (address) {
+        address theGroup;
         if (factoryManager != 0x0) {
             return IFactorySpace(factoryManager).createGroup();
         }

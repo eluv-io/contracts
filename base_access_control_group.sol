@@ -40,8 +40,8 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
 
     bool public oauthEnabled;
 
-    constructor(address content_space) public {
-        contentSpace = content_space;
+    constructor(address _contentSpace) public {
+        contentSpace = _contentSpace;
         membersNum = 0;
         managersList.push(creator);
         managersNum = 1;
@@ -106,8 +106,15 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
         return false;
     }
 
+    address public tenant; // (optional?) address of tenant contract
+
+    function setTenant(address _tenantAddr) public {
+        require(isAdmin(msg.sender));
+        tenant = _tenantAddr;
+    }
+
     function hasManagerAccess(address candidate) public view returns (bool) {
-        return hasAccessRight(candidate, true);
+        return msg.sender == tenant || hasAccessRight(candidate, true);
     }
 
     function hasAccessRight(address candidate, bool mgr) public view returns (bool) {

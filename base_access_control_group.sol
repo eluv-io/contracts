@@ -113,8 +113,8 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
         tenant = _tenantAddr;
     }
 
-    function hasManagerAccess(address candidate) public view returns (bool) {
-        return msg.sender == tenant || hasAccessRight(candidate, true);
+    function hasManagerAccess(address _candidate) public view returns (bool) {
+        return _candidate == tenant || hasAccessRight(_candidate, true);
     }
 
     function hasAccessRight(address candidate, bool mgr) public view returns (bool) {

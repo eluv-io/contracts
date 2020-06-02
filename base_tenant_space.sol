@@ -78,13 +78,12 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
     event GetAccessWallet(address walletAddress);
 
     address contentSpace;
-    constructor(address _contentSpace, string _tenantName, address _owner) public payable {
+    constructor(address _contentSpace, string _tenantName) public payable {
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
         // allow either the space owner or a trusted address to refer to the space
         require(msg.sender == spc.owner() || spc.checkKMSAddr(msg.sender) > 0);
         contentSpace = address(_contentSpace);
-        owner = _owner;
         emit CreateTenant(version, owner);
     }
 
@@ -118,7 +117,10 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
         emit FunctionsAdded(_func4Bytes, _funcAddr);
     }
 
-    function checkCallFunc(bytes _encAuthToken, uint8 _v, bytes32 _r, bytes32 _s) public view returns (bool) {
+    function checkCallFunc(bytes4 _func4Bytes, bytes _encAuthToken, uint8 _v, bytes32 _r, bytes32 _s) public view returns (bool) {
+
+        address maybeFuncAddr = funcMapping[_func4Bytes];
+        require(maybeFuncAddr != 0x0);
 
         address signerAddr = ecrecover(keccak256(_encAuthToken), _v, _r, _s);
         if (!isAdmin(signerAddr)) {
@@ -142,11 +144,9 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
     function callFuncUintAddr(bytes4 _func4Bytes, uint256 _p1, address _p2, bytes _encAuthToken,
         uint8 _v, bytes32 _r, bytes32 _s) public {
 
-        require(checkCallFunc(_encAuthToken, _v, _r, _s));
+        require(checkCallFunc(_func4Bytes, _encAuthToken, _v, _r, _s));
 
         address maybeFuncAddr = funcMapping[_func4Bytes];
-        require(maybeFuncAddr != 0x0);
-
         bool success = maybeFuncAddr.delegatecall(abi.encodeWithSelector(_func4Bytes, _encAuthToken, _p1, _p2));
         require(success);
     }

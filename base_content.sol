@@ -21,6 +21,7 @@ BaseContent20190724203300ML: Enforces access rights in access request
 BaseContent20190801141600ML: Fixes the access rights grant for paid content
 BaseContent20191029161700ML: Removed debug statements for accessRequest
 BaseContent20191219135200ML: Made content object updatable by non-owner
+<<<<<<< HEAD
 BaseContent20200102165900ML: Enforce visibility driven rights to edit
 BaseContent20200107175100ML: Moved Visibility filter from BaseContentObject to Accessible, default it to 0
 BaseContent20200129211300ML: Restricts deletion to owner (not editor) or library owner, unless changed by custom contract
@@ -30,12 +31,15 @@ BaseContent20200205142000ML: Closes vulnerability allowing alien external object
 BaseContent20200211163800ML: Modified to conform to authV3 API
 BaseContent20200212101200ML: Disambiguatea getAccessInfo vs getAccessInfoV3 to reflect API changes
 BaseContent20200316135000ML: Leverages inherited hasAccess
+=======
+BaseContent20200422180500ML: Version update to reflect changes made to editable to fix deletion
+>>>>>>> develop
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20200316135000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200422180500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;

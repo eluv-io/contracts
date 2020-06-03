@@ -398,11 +398,12 @@ BaseCtFactory20191017165200ML: Updated to reflect change in BaseContent201908011
 BaseCtFactory20191219182100ML: Updated to reflect change in BaseContent20191219135200ML
 BaseCtFactory20200203112500ML: Set rights to SEE upon creation to avoid interfering with ownership transfer
 BaseCtFactory20200316121100ML: Uses content setRights instead of going straight to the wallet
+BaseCtFactory20200422180700ML: Updated to reflect fix of deletion of content objects
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20200316121100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200422180700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);
@@ -419,17 +420,6 @@ contract BaseContentFactory is Ownable {
 
         return address(content);
     }
-}
-
-//BaseCtFactoryXt20191031115100PO: adds support for custom contract
-//BaseCtFactoryXt20191031153200ML: passes accessor to the runAccess via the addresses array
-//BaseCtFactoryXt20191031170400ML: adds request timestamp to event
-//BaseCtFactoryXt20191031203100ML: changes initialization of array
-//BaseCtFactoryXt20200211164000ML: Modified to conform with authV3 API
-
-contract BaseContentFactoryExt is BaseContentFactory {
-
-    bytes32 public version ="BaseCtFactoryXt20200211164000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;

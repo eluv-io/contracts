@@ -34,11 +34,11 @@ func GetContractGitCommit(rootDir string, ethurl string, contractAddress common.
 		return nil, err
 	}
 	if hexutil.Encode(RuntimeBytecode) == "0x" {
-		return nil, fmt.Errorf("bytecode is not present in provided blockchain", "url", ethurl)
+		return nil, fmt.Errorf("bytecode is not present in provided blockchain, url:%v", ethurl)
 	}
 
 	rBytecode := strings.Split(hexutil.Encode(RuntimeBytecode), "0x")[1]
-	// Retrive swarm hash : 0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
+	// retrieve swarm hash : 0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
 	rBytecodeSwarmHash := rBytecode[len(rBytecode)-86:]
 	log.Debug("swarm", "hash", rBytecodeSwarmHash)
 

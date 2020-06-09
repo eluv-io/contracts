@@ -18,12 +18,15 @@ BsAccessCtrlGrp20190722161600ML: Made editable
 BsAccessCtrlGrp20190722214400ML: Provides the list of members and managers
 BsAccessCtrlGrp20190723130500ML: Fixes typo in managersNum
 BsAccessCtrlGrp20190723165900ML: Fixes deletion/adding to groups
+BsAccessCtrlGrp20200204160600ML: Removes commented out sections
+BsAccessCtrlGrp20200305113000ML: Overloads checkRights to reflect difference between groups and wallets
+BsAccessCtrlGrp20200316121700ML: Leverages inherited hasAccess
 */
 
 
 contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20200303165900PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20200316121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public membersList;
     uint256 public membersNum;
@@ -46,6 +49,7 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
         managersList.push(creator);
         managersNum = 1;
         oauthEnabled = false;
+        indexCategory =  CATEGORY_GROUP; //2
     }
 
     function setOAuthEnabled(bool _enabled) public onlyOwner {
@@ -70,9 +74,7 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
             managersNum++;
         }
         emit ManagerAccessGranted(manager);
-        address walletAddress = IUserSpace(contentSpace).userWallets(manager);
-        AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_TENTATIVE());
+        setRights(manager, TYPE_EDIT, ACCESS_TENTATIVE);
     }
 
     function revokeManagerAccess(address manager) public {
@@ -89,9 +91,7 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
             }
         }
         emit ManagerAccessRevoked(manager);
-        address walletAddress = IUserSpace(contentSpace).userWallets(manager);
-        AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_NONE());
+        setRights(manager, TYPE_EDIT, ACCESS_NONE);
     }
 
     function isAdmin(address _candidate) public view returns (bool) {
@@ -114,16 +114,14 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
     }
 
     function hasManagerAccess(address _candidate) public view returns (bool) {
-        return _candidate == tenant || hasAccessRight(_candidate, true);
+        return _candidate == tenant || hasEditorRight(_candidate);
     }
 
     function hasAccessRight(address candidate, bool mgr) public view returns (bool) {
-        address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
-        AccessIndexor userWallet = AccessIndexor(walletAddress);
-        if (mgr==true) {
-             return userWallet.checkAccessGroupRights(address(this), userWallet.TYPE_EDIT());
+        if (mgr == true) {
+             return hasEditorRight(candidate);
         } else {
-            return userWallet.checkAccessGroupRights(address(this), userWallet.TYPE_ACCESS());
+            return hasAccess(candidate);
         }
     }
 
@@ -146,10 +144,7 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
         }
 
         emit MemberAdded(candidate);
-
-        address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
-        AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
+        setRights(candidate, TYPE_ACCESS, ACCESS_TENTATIVE);
     }
 
     function revokeAccess(address candidate) public {
@@ -166,18 +161,22 @@ contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
             }
         }
         emit MemberRevoked(candidate);
-        address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
-        AccessIndexor userWallet = AccessIndexor(walletAddress);
-        userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_NONE());
+        setRights(candidate, TYPE_ACCESS, ACCESS_NONE);
     }
 
+    /*
     function hasAccess(address candidate) public view returns (bool) {
         return hasAccessRight(candidate, false);
     }
+*/
 
     function canConfirm() public view returns (bool) {
         INodeSpace ns = INodeSpace(contentSpace);
         return ns.canNodePublish(msg.sender);
+    }
+
+    function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
+        return checkDirectRights(index_type, obj, access_type);
     }
 
 }

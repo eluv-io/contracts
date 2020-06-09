@@ -109,31 +109,6 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return bcs.canNodePublish(msg.sender);
     }
 
-    // used to create a node contract instance. should be called by the address of the node that wishes to register.
-    function registerSpaceNode() public returns (address) {
-        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
-        uint i = 0;
-        for (; i < activeNodeAddresses.length; i++) {
-            if (activeNodeAddresses[i] == msg.sender) {
-                break;
-            }
-        }
-        require(i < activeNodeAddresses.length); // node should be in active list
-        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
-        nodeMapping[msg.sender] = nodeAddr;
-        emit RegisterNode(nodeAddr);
-        return nodeAddr;
-    }
-
-    function unregisterSpaceNode() public returns (bool) {
-        require(nodeMapping[msg.sender] != 0x0);
-        address nodeAddr = nodeMapping[msg.sender];
-        delete nodeMapping[msg.sender];
-        Node(nodeAddr).kill();
-        emit UnregisterNode(nodeAddr);
-    }
-
-
     function createContentType() public returns (address) {
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);

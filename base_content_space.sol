@@ -18,6 +18,7 @@ import "./meta_object.sol";
 import "./transactable.sol";
 import "./lib_precompile.sol";
 import "./base_tenant_space.sol";
+import "./base_access_policy.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released

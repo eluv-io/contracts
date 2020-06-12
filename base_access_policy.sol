@@ -9,6 +9,14 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
 
     string public description;
 
+    // TODO: this is the actual method called on AccessIndexor to set rights
+    //   event emitted: emit RightsChanged(address(this), obj, newAggregate);
+    //     function setEntityRights(uint8 indexType, address obj, uint8 access_type, uint8 access) public  {
+    //        if (indexType != 0) {
+    //            setRightsInternal(getAccessIndex(indexType),  obj,  access_type,  access);
+    //        }
+    //    }
+
     // conditions can be stored as part of metadata - i.e. in MetaObject ???
 
     string public constant EFFECT_ALLOW = "allow";
@@ -50,6 +58,15 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
     uint8 public constant REL_ACTION = 201;
 
     event AccessPolicyChanged(address space, int op, bytes32 relTarget, uint8 relType);
+
+    function addSubject(string _id) public returns (bool) {
+        bytes32 result;
+        assembly {
+            result := mload(add(_id, 32))
+        }
+        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, result, REL_EFFECT);
+        return true;
+    }
 
     function setEffect(string _newEffect) public returns (bool) {
         require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));

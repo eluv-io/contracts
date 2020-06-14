@@ -4,24 +4,24 @@ import "./ownable.sol";
 import "./meta_object.sol";
 import "./lib_accessmanager.sol";
 import "./editable.sol";
+import "./lib_precompile.sol";
 
 contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
 
     string public description;
 
-    // TODO: this is the actual method called on AccessIndexor to set rights
-    //   event emitted: emit RightsChanged(address(this), obj, newAggregate);
-    //     function setEntityRights(uint8 indexType, address obj, uint8 access_type, uint8 access) public  {
-    //        if (indexType != 0) {
-    //            setRightsInternal(getAccessIndex(indexType),  obj,  access_type,  access);
-    //        }
-    //    }
+    address public tenant;
 
-    // conditions can be stored as part of metadata - i.e. in MetaObject ???
+    function isAdmin(address _candidate) public view returns (bool) {
 
-    string public constant EFFECT_ALLOW = "allow";
-    string public constant EFFECT_DENY = "deny";
-    string public effect;
+        return (msg.sender == owner || hasEditorRight(msg.sender)
+            || AccessManager.isAllowed(msg.sender, Precompile.makePolicyId(address(this)), "edit"));
+    }
+
+    function setTenant(address _tenantAddr) public {
+        require(isAdmin(msg.sender));
+        tenant = _tenantAddr;
+    }
 
     // TODO: actually, maybe this goes in content space ...?
     event AccessPolicyCreated(address space);
@@ -29,7 +29,7 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
 
     constructor(address _contentSpace)  public payable {
         contentSpace = _contentSpace; // TODO: why isn't content space in constructor of Ownable?
-        effect = EFFECT_ALLOW; // default is allow
+        emit AccessPolicyCreated(contentSpace);
     }
 
     int public constant OP_ADD_SUBJECT = 1;
@@ -39,107 +39,81 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
     int public constant OP_ADD_ACTION = 5;
     int public constant OP_REMOVE_ACTION = 6;
     int public constant OP_SET_EFFECT = 7;
+    int public constant OP_CHANGE_DEF = 8;
 
-    // same as AccessIndexor ...?
-    uint8 public constant CATEGORY_MIN = 1;
-    uint8 public constant CATEGORY_CONTENT_OBJECT = 1;
-    uint8 public constant CATEGORY_GROUP = 2;
-    uint8 public constant CATEGORY_LIBRARY = 3;
-    uint8 public constant CATEGORY_CONTENT_TYPE = 4;
-    uint8 public constant CATEGORY_CONTRACT = 5;
-    uint8 public constant CATEGORY_POLICY = 6;
-    uint8 public constant CATEGORY_SPACE = 7;
-    uint8 public constant CATEGORY_MAX = 7;
+    event AccessPolicyChanged(address space, address tenant, int op, string relTarget);
 
-    uint8 public constant SUBJECT_ACCOUNT = 100;
-    uint8 public constant SUBJECT_GROUP = 101;
+    // override from AccessIndexor...
+    function setEntityRights(uint8 indexType, address obj, uint8 access_type, uint8 access) public  {
+        require(Editable(obj).hasEditorRight(tx.origin)); // TODO: is this necessary or does setEntityRights suffice...?
+        require(isAdmin(tx.origin));
+        super.setEntityRights(indexType, obj, access_type, access);
+        if (indexType == CATEGORY_CONTENT_OBJECT) {
+            emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_RESOURCE, Precompile.makeObjId(obj));
+        } else if (indexType == CATEGORY_GROUP) {
+            emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_SUBJECT, Precompile.makeGroupId(obj));
+        } else if (indexType == CATEGORY_LIBRARY) {
+            emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_RESOURCE, Precompile.makeLibId(obj));
+        }
+        // TODO: anything different (revert?) if it's not one of the handled types ...?
+    }
 
-    uint8 public constant REL_EFFECT = 200;
-    uint8 public constant REL_ACTION = 201;
-
-    event AccessPolicyChanged(address space, int op, bytes32 relTarget, uint8 relType);
+    // override from Editable...
+    function confirmCommit() public payable returns (bool) {
+        return super.confirmCommit();
+        emit AccessPolicyChanged(contentSpace, tenant, OP_CHANGE_DEF, "");
+    }
 
     function addSubject(string _id) public returns (bool) {
-        bytes32 result;
-        assembly {
-            result := mload(add(_id, 32))
-        }
-        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, result, REL_EFFECT);
+        // require(isAdmin(msg.sender)); TODO: TEST !!!
+        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
+        emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_SUBJECT, _id);
         return true;
     }
 
+    function removeSubject(string _id) public returns (bool) {
+        require(isAdmin(msg.sender));
+        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
+        emit AccessPolicyChanged(contentSpace, tenant, OP_REMOVE_SUBJECT, _id);
+        return true;
+    }
+
+    function addResource(string _id) public returns (bool) {
+        require(isAdmin(msg.sender));
+        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
+        emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_RESOURCE, _id);
+        return true;
+    }
+
+    function removeResource(string _id) public returns (bool) {
+        require(isAdmin(msg.sender));
+        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
+        emit AccessPolicyChanged(contentSpace, tenant, OP_REMOVE_RESOURCE, _id);
+        return true;
+    }
+
+    string public constant EFFECT_ALLOW = "allow";
+    string public constant EFFECT_DENY = "deny";
+    string public effect;
+
     function setEffect(string _newEffect) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
+        require(isAdmin(msg.sender));
         require(keccak256(abi.encodePacked(_newEffect)) == keccak256(abi.encodePacked(EFFECT_ALLOW)) ||
         keccak256(abi.encodePacked(_newEffect)) == keccak256(abi.encodePacked(EFFECT_DENY)));
         effect = _newEffect;
-        bytes32 result;
-        assembly {
-            result := mload(add(_newEffect, 32))
-        }
-        emit AccessPolicyChanged(contentSpace, OP_SET_EFFECT, result, REL_EFFECT);
-        return true;
-    }
-
-    function addUser(address _subject) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, bytes32(_subject), SUBJECT_ACCOUNT);
-        return true;
-    }
-
-    function removeUser(address _subject) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_SUBJECT, bytes32(_subject), SUBJECT_ACCOUNT);
-        return true;
-    }
-
-    function addGroup(address _subject) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_ADD_SUBJECT, bytes32(_subject), SUBJECT_GROUP);
-        return true;
-    }
-
-    function removeGroup(address _subject) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_SUBJECT, bytes32(_subject), SUBJECT_GROUP);
-        return true;
-    }
-
-    function addResource(address _resource, uint8 _category) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        require(_category >= CATEGORY_MIN && _category <= CATEGORY_MAX);
-        emit AccessPolicyChanged(contentSpace, OP_ADD_RESOURCE, bytes32(_resource), _category);
-        return true;
-    }
-
-    function removeResource(address _resource, uint8 _category) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        require(_category >= CATEGORY_MIN && _category <= CATEGORY_MAX);
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_RESOURCE, bytes32(_resource), _category);
+        emit AccessPolicyChanged(contentSpace, tenant, OP_SET_EFFECT, _newEffect);
         return true;
     }
 
     function addAction(string _action) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        bytes memory testAction = bytes(_action);
-        require(testAction.length > 0 && testAction.length <= 32);
-        bytes32 result;
-        assembly {
-            result := mload(add(_action, 32))
-        }
-        emit AccessPolicyChanged(contentSpace, OP_ADD_ACTION, result, REL_ACTION);
+        require(isAdmin(msg.sender));
+        emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_ACTION, _action);
         return true;
     }
 
     function removeAction(string _action) public returns (bool) {
-        require(msg.sender == owner || AccessManager.isAllowed(msg.sender, address(this), "edit"));
-        bytes memory testAction = bytes(_action);
-        require(testAction.length > 0 && testAction.length <= 32);
-        bytes32 result;
-        assembly {
-            result := mload(add(_action, 32))
-        }
-        emit AccessPolicyChanged(contentSpace, OP_REMOVE_ACTION, result, REL_ACTION);
+        require(isAdmin(msg.sender));
+        emit AccessPolicyChanged(contentSpace, tenant, OP_REMOVE_ACTION, _action);
         return true;
     }
 }

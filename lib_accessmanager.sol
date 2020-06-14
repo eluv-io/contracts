@@ -2,35 +2,25 @@ pragma solidity ^0.4.24;
 
 library AccessManager {
 
-    string public constant CREATE_LIBRARY = "create-library";
+    address constant elv_precomp_addr_am = 253;
 
-    address constant elv_precomp_addr_am = 254;
+    bytes4 constant sigIdIsAllowed = bytes4(keccak256("isAllowed(address,string,string)"));
 
-    bytes4 constant sigIdIsAllowed = bytes4(keccak256("isAllowed(address,address,string)"));
-
-    function constCreateLibrary() internal constant returns (string) {
-        return CREATE_LIBRARY;
-    }
-
-    function isAllowed(address _subject, address _resource, string _action) internal view returns (bool ret) {
-        return false;
-    }
-
-    // TODO: not yet implemented internally ...
-    function isAllowedToDo(address _subject, address _resource, string _action) internal view returns (bool ret) {
+    function isAllowed(address _subject, string _resourceId, string _action) internal view returns (bool ret) {
 
         bytes4 sig = sigIdIsAllowed;
         address callAddr = elv_precomp_addr_am;
         bytes32 truncAction;
+        bytes32 truncId;
 
         assembly {
             let x := mload(0x40)
             mstore(x, sig)
             mstore(add(x, 0x04), _subject)
-            mstore(add(x, 0x24), _resource)
+            truncId := mload(add(_resourceId, 32))
+            mstore(add(x, 0x24), truncId)
             truncAction := mload(add(_action, 32))
             mstore(add(x, 0x44), truncAction)
-        // input is now [4 bytes][32 bytes][32 bytes][32 bytes] = 100 bytes
 
             let res := call(
             0,          // no gas

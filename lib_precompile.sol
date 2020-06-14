@@ -6,8 +6,12 @@ library Precompile {
 
     bytes4 constant sigIdString = bytes4(keccak256("makeIDString(int,address)"));
 
+    int public constant LIB = 3;
+    int public constant OBJ = 4;
     int public constant KMS = 11;
+    int public constant GRP = 13;
     int public constant TEN = 14;
+    int public constant POL = 15; // TODO: id!
 
     function CodeKMS() internal constant returns (int) {
         return KMS;
@@ -15,6 +19,22 @@ library Precompile {
 
     function CodeTEN() internal constant returns (int) {
         return TEN;
+    }
+
+    function makeObjId(address _addr) returns (string) {
+        return makeIDString(OBJ, _addr);
+    }
+
+    function makeLibId(address _addr) returns (string) {
+        return makeIDString(LIB, _addr);
+    }
+
+    function makeGroupId(address _addr) returns (string) {
+        return makeIDString(GRP, _addr);
+    }
+
+    function makePolicyId(address _addr) returns (string) {
+        return makeIDString(POL, _addr);
     }
 
     uint constant idStrLen = 32;

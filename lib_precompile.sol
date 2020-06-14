@@ -21,19 +21,19 @@ library Precompile {
         return TEN;
     }
 
-    function makeObjId(address _addr) returns (string) {
+    function makeObjId(address _addr) internal constant returns (string) {
         return makeIDString(OBJ, _addr);
     }
 
-    function makeLibId(address _addr) returns (string) {
+    function makeLibId(address _addr) internal constant returns (string) {
         return makeIDString(LIB, _addr);
     }
 
-    function makeGroupId(address _addr) returns (string) {
+    function makeGroupId(address _addr) internal constant returns (string) {
         return makeIDString(GRP, _addr);
     }
 
-    function makePolicyId(address _addr) returns (string) {
+    function makePolicyId(address _addr) internal constant returns (string) {
         return makeIDString(POL, _addr);
     }
 

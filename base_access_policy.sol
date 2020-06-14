@@ -2,11 +2,15 @@ pragma solidity 0.4.24;
 
 import "./ownable.sol";
 import "./meta_object.sol";
-import "./lib_accessmanager.sol";
+import {AccessManager} from "./lib_accessmanager.sol";
 import "./editable.sol";
 import "./lib_precompile.sol";
 
 contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
+
+    address constant elv_precomp_addr_am = 253;
+
+    bytes4 constant sigIdIsAllowed = bytes4(keccak256("isAllowed(address,string,string)"));
 
     string public description;
 

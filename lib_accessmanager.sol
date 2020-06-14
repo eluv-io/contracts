@@ -31,12 +31,13 @@ library AccessManager {
             x,          // Store output over input
             0x20)       // Output is 32 byte bool
 
-            if eq(res, 0) {
+            switch res
+            case 0 {
                 revert(0, 0)
             }
-
-            ret := mload(x)
-            mstore(0x40, add(x, 0x20))  // Set storage pointer to empty space - i.e. after returned storage
+            default {
+                ret := mload(x)
+            }
         }
     }
 }

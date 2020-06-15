@@ -22,10 +22,9 @@ library AccessManager {
             truncAction := mload(add(_action, 32))
             mstore(add(x, 0x44), truncAction)
 
-            let res := call(
+            let res := staticcall(
             0,          // no gas
             callAddr,   // To addr
-            0,          // No value - i.e. tokens
             x,          // Inputs are stored at location x
             0x64,       // Inputs are 100 bytes long
             x,          // Store output over input

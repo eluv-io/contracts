@@ -17,9 +17,8 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
     address public tenant;
 
     function isAdmin(address _candidate) public view returns (bool) {
-
-        return (msg.sender == owner || hasEditorRight(msg.sender)
-            || AccessManager.isAllowed(msg.sender, Precompile.makePolicyId(address(this)), "edit"));
+        return (_candidate == owner || hasEditorRight(_candidate)
+            || AccessManager.isAllowed(_candidate, Precompile.makePolicyId(address(this)), "edit"));
     }
 
     function setTenant(address _tenantAddr) public {
@@ -44,6 +43,12 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
     int public constant OP_REMOVE_ACTION = 6;
     int public constant OP_SET_EFFECT = 7;
     int public constant OP_CHANGE_DEF = 8;
+
+    int public constant REL_EFFECT = 200;
+    int public constant REL_ACTION = 201;
+
+    int public constant SUBJECT_ACCOUNT = 240;
+    int public constant SUBJECT_GROUP = 241;
 
     event AccessPolicyChanged(address space, address tenant, int op, string relTarget);
 

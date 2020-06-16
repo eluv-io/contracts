@@ -9,9 +9,9 @@ library Precompile {
     int public constant LIB = 3;
     int public constant OBJ = 4;
     int public constant KMS = 11;
-    int public constant GRP = 13;
-    int public constant TEN = 14;
-    int public constant POL = 15; // TODO: id!
+    int public constant TEN = 13;
+    int public constant GRP = 14;
+    int public constant POL = 15;
 
     function CodeKMS() internal constant returns (int) {
         return KMS;

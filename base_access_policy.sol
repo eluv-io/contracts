@@ -16,9 +16,21 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
 
     address public tenant;
 
+    bool public useAccessManager;
+
+    function setUseAccessManager(bool _use) public {
+        require(isAdmin(msg.sender));
+        useAccessManager = _use;
+    }
+
     function isAdmin(address _candidate) public view returns (bool) {
-        return (_candidate == owner || hasEditorRight(_candidate)
-            || AccessManager.isAllowed(_candidate, Precompile.makePolicyId(address(this)), "edit"));
+        if (_candidate == owner || hasEditorRight(_candidate)) {
+            return true;
+        }
+        if (useAccessManager) {
+            return AccessManager.isAllowed(_candidate, Precompile.makePolicyId(address(this)), "edit");
+        }
+        return false;
     }
 
     function setTenant(address _tenantAddr) public {
@@ -32,6 +44,7 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
 
     constructor(address _contentSpace)  public payable {
         contentSpace = _contentSpace; // TODO: why isn't content space in constructor of Ownable?
+        useAccessManager = false;
         emit AccessPolicyCreated(contentSpace);
     }
 
@@ -74,29 +87,25 @@ contract BaseAccessPolicy is MetaObject, AccessIndexor, Editable {
     }
 
     function addSubject(string _id) public returns (bool) {
-        // require(isAdmin(msg.sender)); TODO: TEST !!!
-        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
+        require(isAdmin(msg.sender));
         emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_SUBJECT, _id);
         return true;
     }
 
     function removeSubject(string _id) public returns (bool) {
         require(isAdmin(msg.sender));
-        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
         emit AccessPolicyChanged(contentSpace, tenant, OP_REMOVE_SUBJECT, _id);
         return true;
     }
 
     function addResource(string _id) public returns (bool) {
         require(isAdmin(msg.sender));
-        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
         emit AccessPolicyChanged(contentSpace, tenant, OP_ADD_RESOURCE, _id);
         return true;
     }
 
     function removeResource(string _id) public returns (bool) {
         require(isAdmin(msg.sender));
-        AccessManager.isAllowed(msg.sender, _id, "admin"); // edit?
         emit AccessPolicyChanged(contentSpace, tenant, OP_REMOVE_RESOURCE, _id);
         return true;
     }

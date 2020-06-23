@@ -235,5 +235,6 @@ contract Editable is  Accessible {
 
     function setVisibility(uint8 _visibility_code) public onlyEditor {
         visibility = _visibility_code;
+        emit VisibilityChanged(contentSpace, contentSpace, visibility);
     }
 }

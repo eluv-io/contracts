@@ -78,6 +78,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     // override
     function setVisibility(uint8 _visibility_code) public onlyOwner {
         visibility = _visibility_code;
+        emit VisibilityChanged(address(this), 0x0, visibility);
     }
 
     function setFactory(address new_factory) public onlyOwner {

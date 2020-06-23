@@ -55,9 +55,10 @@ contract Accessible is Ownable {
         return true;
     }
 
+    event VisibilityChanged(address contentSpace, address parentAddress, uint8 visibility);
 
     function setVisibility(uint8 _visibility_code) public onlyOwner {
         visibility = _visibility_code;
+        emit VisibilityChanged(contentSpace, contentSpace, visibility);
     }
-
 }

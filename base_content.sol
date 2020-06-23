@@ -515,7 +515,7 @@ contract BaseContent is Editable {
         }
 
         // Raise Event
-        emit AccessRequestV3(requestNonce, libraryAddress, contextHash, accessor, request_timestamp);
+        emit AccessRequestV3(uint256(requestNonce), libraryAddress, contextHash, accessor, request_timestamp);
 
         // Logs custom key/value pairs
         uint256 i;
@@ -599,7 +599,7 @@ contract BaseContent is Editable {
         emit AccessCompleteV3(requestNonce, success, libraryAddress, 0x0, msg.sender, now * 1000);
         return success;
     }
-    function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 /*ml_out_hash*/) public payable returns (bool) {
+    function accessComplete(uint256 request_ID, uint256 score_pct, uint256) public payable returns (bool) {
         bytes32 requestNonce = makeNonce(requestID);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;

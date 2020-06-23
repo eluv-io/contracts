@@ -24,7 +24,7 @@ contract Accessible is Ownable {
 
 
     event AccessRequestV3(
-        bytes32 requestNonce,
+        uint256 requestNonce,
         address parentAddress, // likely will need for tenancy - but could be something else ...?
         bytes32 contextHash,
         address accessor,           // I've called this 'userAddress' - don't care too much but ideally it's the same name wherever it means the same thing!
@@ -51,7 +51,7 @@ contract Accessible is Ownable {
         address[] stakeholders
     ) public payable returns (bool) {
         require(hasAccess(msg.sender));
-        emit AccessRequestV3(keccak256(abi.encodePacked(address(this), now)), 0x0, 0x0, msg.sender, now * 1000);
+        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), now))), 0x0, 0x0, msg.sender, now * 1000);
         return true;
     }
 

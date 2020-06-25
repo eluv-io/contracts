@@ -430,7 +430,7 @@ contract BaseContentFactory is Ownable {
         return size > 0;
     }
 
-    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
         //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
         //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);

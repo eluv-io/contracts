@@ -14,7 +14,7 @@ import "./user_space.sol";
 
 contract Accessible is Ownable {
 
-    bytes32 public version ="Accessible20200316121600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Accessible20200626121600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint8 public visibility = 1;
     uint8 public constant CAN_SEE = 1;

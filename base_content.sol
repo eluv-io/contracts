@@ -150,6 +150,11 @@ contract BaseContent is Editable {
         return statusCodeDescription(statusCode);
     }
 
+    function setVisibility(uint8 _visibility_code) public onlyEditor {
+        visibility = _visibility_code;
+        emit VisibilityChanged(contentSpace, libraryAddress, visibility);
+    }
+
     function statusCodeDescription(int status_code) public constant returns (bytes32) {
         bytes32 codeDescription = 0x0;
         if (contentContractAddress != 0x0) {

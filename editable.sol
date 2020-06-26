@@ -43,26 +43,6 @@ contract Editable is  Accessible {
     string public pendingHash;
     bool public commitPending;
 
-
-    // TODO: migrate version timestamps as well ...
-    function migrate(string _objectHash, string _versionHashesConcat) internal onlyOwner {
-
-        objectHash = _objectHash;
-
-        if (bytes(_versionHashesConcat).length == 0)
-            return;
-
-        strings.slice memory s = _versionHashesConcat.toSlice();
-        strings.slice memory delim = ":".toSlice();
-        string[] memory hashes = new string[](s.count(delim) + 1);
-        for(uint i = 0; i < hashes.length; i++) {
-            hashes[i] = s.split(delim).toString();
-        }
-        versionHashes = hashes;
-
-        return;
-    }
-
     modifier onlyEditor() {
         require(canEdit());
         _;

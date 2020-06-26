@@ -60,36 +60,6 @@ contract BaseContent is Editable {
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
     }
 
-    function migrate(address _contentType,
-            address _addressKMS,
-            address _contentContractAddress,
-            // address _libraryAddress,
-            uint256 _accessCharge,
-            int _statusCode,
-            // uint256 _requestID,
-            uint8 _visibility,
-            string _objectHash,
-            string _versionHashes
-        ) public {
-
-        Ownable space = Ownable(contentSpace);
-	      require(msg.sender == space.owner());
-
-        contentType = _contentType;
-        addressKMS = _addressKMS;
-        contentContractAddress = _contentContractAddress;
-        // libraryAddress = _libraryAddress; // TODO: set by library factory method?
-
-        accessCharge = _accessCharge;
-        statusCode = _statusCode;
-        // requestID = _requestID;
-        visibility = _visibility;
-
-        super.migrate(_objectHash, _versionHashes);
-
-        return;
-    }
-
     // TODO: remove?
     mapping(bytes32 => RequestData) public requestMap;
 

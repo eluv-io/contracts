@@ -107,7 +107,7 @@ contract TstContent is Content {
     //0 indicates that access request can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
-        bytes32, /*requestNonce*/
+        uint256, /*requestNonce*/
         bytes32[], /*customValues*/
         address[], /*stakeholders*/
         address accessor

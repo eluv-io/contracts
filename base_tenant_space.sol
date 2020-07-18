@@ -77,7 +77,6 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
     event CreateTenant(bytes32 version, address owner);
     event GetAccessWallet(address walletAddress);
 
-    address contentSpace;
     constructor(address _contentSpace, string _tenantName) public payable {
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
@@ -91,6 +90,25 @@ contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INode
 
     mapping(bytes32 => address[]) public groupsMapping;
     bytes32[] public groupIds;
+
+    mapping(bytes32 => string[]) public listsMapping;
+
+    function addListItem(bytes32 listKey, string itemVal) public onlyAdmin {
+        listsMapping[listKey].push(itemVal);
+    }
+
+    function removeListOrd(bytes32 listKey, uint itemOrd) public onlyAdmin {
+        uint lastOrd = listsMapping[listKey].length - 1;
+        if (itemOrd < lastOrd) {
+            listsMapping[listKey][itemOrd] = listsMapping[listKey][lastOrd];
+        }
+        delete listsMapping[listKey][lastOrd];
+        listsMapping[listKey].length--;
+    }
+
+    function listLength(bytes32 listKey) public view returns (uint) {
+        return listsMapping[listKey].length;
+    }
 
     function isAdmin(address _candidate) public view returns (bool) {
         if (_candidate == owner) {

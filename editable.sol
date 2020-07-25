@@ -27,7 +27,7 @@ Editable20200422180400ML: Fixed deletion of latest version
 contract Editable is  Accessible {
     using strings for *;
 
-    bytes32 public version ="Editable20200422180400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20200626180400PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);

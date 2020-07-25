@@ -34,7 +34,7 @@ BaseContentSpace20200316120600ML: Defaults visibility to ensure access is open
 
 contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
-    bytes32 public version ="BaseContentSpace20200316120600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20200626120600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -431,7 +431,7 @@ contract BaseContentFactory is Ownable {
         return size > 0;
     }
 
-    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
         //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
         //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);

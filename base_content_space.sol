@@ -7,6 +7,7 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
 import {BaseContent} from "./base_content.sol";
+import {Content} from "./content.sol";
 import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
 import {AccessIndexor} from "./access_indexor.sol";
@@ -431,10 +432,43 @@ contract BaseContentFactory is Ownable {
         return size > 0;
     }
 
+    event AccessRequest(
+        uint256 timestamp,
+        address libraryAddress,
+        address contentAddress,
+        address userAddress,
+        bytes32 contextHash,
+        uint64 request_timestamp
+    );
+
+    event AccessComplete(
+        uint256 timestamp,
+        address libraryAddress,
+        address contentAddress,
+        address userAddress,
+        bytes32 contextHash,
+        uint64 request_timestamp
+    );
+
+    function checkCustomV2(BaseContent cobj, address userAddr, uint256 nonce, bool finalize) {
+        if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
+            bytes32[] memory emptyVals;
+            address[] memory paramAddrs;
+            Content c = Content(cobj.contentContractAddress());
+            if (finalize)
+                c.runFinalize(nonce, emptyVals, paramAddrs, userAddr);
+            else
+                c.runAccess(nonce, emptyVals, paramAddrs, userAddr);
+        }
+    }
+
+    bytes4 constant sigAccessRequestContext = bytes4(0x78f52ffb);
+    bytes4 constant sigAccessCompleteContext = bytes4(0xbc7dba33);
+
     function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
-        //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
-        //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
+        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
+        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
 
         uint paramsLen = _opCodes.length;
 
@@ -446,16 +480,26 @@ contract BaseContentFactory is Ownable {
 
         for (uint i = 0; i < paramsLen; i++) {
             BaseContent cobj = BaseContent(_contentAddrs[i]);
-            // guard against race condition where content object is deleted before batch is executed.
+            // guard against condition where content object is deleted before batch is executed.
             if (!isContract(_contentAddrs[i]))
                 continue;
-            // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
+            bool success;
             if (_opCodes[i] == OP_ACCESS_REQUEST) {
-                cobj.accessRequestContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
+                success = _contentAddrs[i].call(abi.encodeWithSelector(sigAccessRequestContext, _requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]));
+                if (!success) {
+                    // legacy support
+                    emit AccessRequest(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
+                    checkCustomV2(cobj, _userAddrs[i], _ts[i], false);
+                }
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
-                cobj.accessCompleteContext(_requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]);
+                success = _contentAddrs[i].call(abi.encodeWithSelector(sigAccessCompleteContext, _requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]));
+                if (!success) {
+                    // legacy support
+                    emit AccessComplete(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
+                    checkCustomV2(cobj, _userAddrs[i], _ts[i], true);
+                }
             } else {
-                require(false);
+                revert(); // invalid
             }
         }
     }

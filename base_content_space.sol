@@ -45,8 +45,6 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     address public libraryFactory;
     address public contentFactory;
 
-    mapping(address => address) public nodeMapping;
-
     mapping(string => bytes[]) kmsMapping;
     mapping(string => string)  kmsPublicKeys;
 
@@ -110,31 +108,6 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         INodeSpace bcs = INodeSpace(address(this));
         return bcs.canNodePublish(msg.sender);
     }
-
-    // used to create a node contract instance. should be called by the address of the node that wishes to register.
-    function registerSpaceNode() public returns (address) {
-        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
-        uint i = 0;
-        for (; i < activeNodeAddresses.length; i++) {
-            if (activeNodeAddresses[i] == msg.sender) {
-                break;
-            }
-        }
-        require(i < activeNodeAddresses.length); // node should be in active list
-        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
-        nodeMapping[msg.sender] = nodeAddr;
-        emit RegisterNode(nodeAddr);
-        return nodeAddr;
-    }
-
-    function unregisterSpaceNode() public returns (bool) {
-        require(nodeMapping[msg.sender] != 0x0);
-        address nodeAddr = nodeMapping[msg.sender];
-        delete nodeMapping[msg.sender];
-        Node(nodeAddr).kill();
-        emit UnregisterNode(nodeAddr);
-    }
-
 
     function createContentType() public returns (address) {
         address contentTypeAddress = BaseFactory(factory).createContentType();
@@ -450,24 +423,24 @@ contract BaseContentFactory is Ownable {
         uint64 request_timestamp
     );
 
-    function checkCustomV2(BaseContent cobj, address userAddr, uint256 nonce, bool finalize) {
-        if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
-            bytes32[] memory emptyVals;
-            address[] memory paramAddrs;
-            Content c = Content(cobj.contentContractAddress());
-            if (finalize)
-                c.runFinalize(nonce, emptyVals, paramAddrs, userAddr);
-            else
-                c.runAccess(nonce, emptyVals, paramAddrs, userAddr);
-        }
-    }
+//    function checkCustomV2(BaseContent cobj, address userAddr, uint256 nonce, bool finalize) {
+//        if (cobj.contentContractAddress() != 0x0 && isContract(cobj.contentContractAddress())) {
+//            bytes32[] memory emptyVals;
+//            address[] memory paramAddrs;
+//            Content c = Content(cobj.contentContractAddress());
+//            if (finalize)
+//                c.runFinalize(nonce, emptyVals, paramAddrs, userAddr);
+//            else
+//                c.runAccess(nonce, emptyVals, paramAddrs, userAddr);
+//        }
+//    }
 
     bytes4 constant sigAccessRequestContext = bytes4(0x78f52ffb);
     bytes4 constant sigAccessCompleteContext = bytes4(0xbc7dba33);
 
     function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
-        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
+        IKmsSpace ourSpace = IKmsSpace(contentSpace);
         require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
 
         uint paramsLen = _opCodes.length;
@@ -489,14 +462,14 @@ contract BaseContentFactory is Ownable {
                 if (!success) {
                     // legacy support
                     emit AccessRequest(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
-                    checkCustomV2(cobj, _userAddrs[i], _ts[i], false);
+                    // checkCustomV2(cobj, _userAddrs[i], _ts[i], false);
                 }
             } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
                 success = _contentAddrs[i].call(abi.encodeWithSelector(sigAccessCompleteContext, _requestNonces[i], _ctxHashes[i], _userAddrs[i], _ts[i]));
                 if (!success) {
                     // legacy support
                     emit AccessComplete(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
-                    checkCustomV2(cobj, _userAddrs[i], _ts[i], true);
+                    // checkCustomV2(cobj, _userAddrs[i], _ts[i], true);
                 }
             } else {
                 revert(); // invalid

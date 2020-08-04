@@ -414,7 +414,7 @@ BaseCtFactory20200422180700ML: Updated to reflect fix of deletion of content obj
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20200422180700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);

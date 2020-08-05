@@ -210,7 +210,19 @@ contract Editable is  Accessible {
 
     function setGroupRights(address group, uint8 access_type, uint8 access) public {
         AccessIndexor indexor = AccessIndexor(group);
-        indexor.setEntityRights(indexCategory, address(this), access_type, access);
+        if (indexCategory == indexor.CATEGORY_CONTENT_OBJECT()) {
+            indexor.setContentObjectRights(address(this), access_type, access)  ;
+        } else if (indexCategory == indexor.CATEGORY_GROUP()) {
+            indexor.setAccessGroupRights(address(this), access_type, access);
+        } else if (indexCategory == indexor.CATEGORY_LIBRARY()) {
+            indexor.setLibraryRights(address(this), access_type, access);
+        } else if (indexCategory == indexor.CATEGORY_CONTENT_TYPE()) {
+            indexor.setContentTypeRights(address(this), access_type, access);
+        } else if (indexCategory == indexor.CATEGORY_CONTRACT()) {
+            indexor.setContractRights(address(this), access_type, access);
+        } else {
+            revert();
+        }
     }
 
     function setVisibility(uint8 _visibility_code) public onlyEditor {

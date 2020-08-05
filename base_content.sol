@@ -6,6 +6,7 @@ import {Content} from "./content.sol";
 import {Container} from "./container.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import "./user_space.sol";
+import "./meta_object.sol";
 
 /* -- Revision history --
 BaseContent20190221101600ML: First versioned released
@@ -34,7 +35,7 @@ BaseContent20200422180500ML: Version update to reflect changes made to editable 
 */
 
 
-contract BaseContent is Editable {
+contract BaseContent is MetaObject, Editable {
 
     bytes32 public version ="BaseContent20200626180500PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

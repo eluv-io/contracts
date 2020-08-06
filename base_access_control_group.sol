@@ -6,7 +6,7 @@ import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";
 import {IUserSpace, INodeSpace} from "./base_space_interfaces.sol";
-import {MetaObject} from "./meta_object.sol";
+import {MetaObject, CounterObject} from "./meta_object.sol";
 
 
 /* -- Revision history --
@@ -24,7 +24,7 @@ BsAccessCtrlGrp20200316121700ML: Leverages inherited hasAccess
 */
 
 
-contract BaseAccessControlGroup is MetaObject, AccessIndexor, Editable {
+contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Editable {
 
     bytes32 public version ="BsAccessCtrlGrp20200316121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

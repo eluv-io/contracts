@@ -17,7 +17,6 @@ interface IAdmin {
     function isAdmin(address _adminAddr) external view returns (bool);
 }
 
-
 contract Ownable {
 
     bytes32 public version ="Ownable20200210110100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
@@ -66,6 +65,19 @@ contract Ownable {
     function kill() public onlyOwner {
         selfdestruct(owner);  // kills contract; send remaining funds back to owner
     }
+}
 
+contract Adminable is Ownable, IAdmin {
+    // meant to be overridden in derived classes
+    function isAdmin(address _candidate) public view returns (bool) {
+        if (_candidate == owner) {
+            return true;
+        }
+        return false;
+    }
 
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender));
+        _;
+    }
 }

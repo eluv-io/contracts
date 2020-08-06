@@ -16,7 +16,7 @@ import "./base_content_space.sol";
 import "./lib_enctoken.sol";
 
 // CAREFUL: no storage! - otherwise it will conflict with the calling contract
-contract TenantFuncsBase is MetaObject {
+contract TenantFuncsBase is MetaObject, CounterObject {
 
     event TenantTransfer(address to, uint256 amount);
 
@@ -59,7 +59,7 @@ contract TenantFuncsBase is MetaObject {
     }
 }
 
-contract BaseTenantSpace is MetaObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
+contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
 
     bytes32 public version ="BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

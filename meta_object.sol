@@ -3,10 +3,11 @@ pragma solidity 0.4.24;
 import "./ownable.sol";
 import "./lib_enctoken.sol";
 
-contract MetaObject is Ownable, IAdmin {
+contract CounterObject is Adminable {
 
     event CounterIncremented(bytes32 ident, uint8 slot, uint32 val);
     event BitSetAndGet(bytes32 ident, uint8 ord, bool prev);
+    event WordGroupDeleted(bytes32 ident);
 
     struct wordGroup {
         uint32[8] slots;
@@ -14,8 +15,13 @@ contract MetaObject is Ownable, IAdmin {
 
     mapping(bytes32 => wordGroup) wordGroups;
 
+    function deleteGroup(bytes32 _ident) public onlyAdmin {
+        delete wordGroups[_ident];
+        emit WordGroupDeleted(_ident);
+    }
+
     function incrementCounter(bytes32 _ident, uint8 _ord) public onlyAdmin {
-        require(_ord <= 8);
+        require(_ord < 8);
         wordGroups[_ident].slots[_ord]++;
         emit CounterIncremented(_ident, _ord, wordGroups[_ident].slots[_ord]);
     }
@@ -41,24 +47,14 @@ contract MetaObject is Ownable, IAdmin {
     function setAndGetBit(bytes32 _ident, uint8 _ord) public onlyAdmin returns (bool) {
         return setAndGetBitInternal(_ident, _ord);
     }
+}
+
+contract MetaObject is Adminable {
 
     mapping(bytes32 => bytes) mapSmallKeys;
     mapping(bytes => bytes) mapBigKeys;
 
     event ObjectMetaChanged(bytes key);
-
-    // meant to be overridden in base classes
-    function isAdmin(address _candidate) public view returns (bool) {
-        if (_candidate == owner) {
-            return true;
-        }
-        return false;
-    }
-
-    modifier onlyAdmin() {
-        require(isAdmin(msg.sender));
-        _;
-    }
 
     function putMeta(bytes key, bytes value) public onlyAdmin {
         if (key.length <= 32) {

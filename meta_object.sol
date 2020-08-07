@@ -26,6 +26,11 @@ contract CounterObject is Adminable {
         emit CounterIncremented(_ident, _ord, wordGroups[_ident].slots[_ord]);
     }
 
+    function getCounter(bytes32 _ident, uint8 _ord) public view returns (uint32) {
+        require(_ord < 8);
+        return wordGroups[_ident].slots[_ord];
+    }
+
     function getBit(bytes32 _ident, uint8 _ord) public view returns (bool) {
         uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
         uint256 bit = _ord % (4 * 8);

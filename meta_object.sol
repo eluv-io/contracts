@@ -22,8 +22,9 @@ contract CounterObject is Adminable {
 
     function incrementCounter(bytes32 _ident, uint8 _ord) public onlyAdmin {
         require(_ord < 8);
+        uint32 x = wordGroups[_ident].slots[_ord];
         wordGroups[_ident].slots[_ord]++;
-        emit CounterIncremented(_ident, _ord, wordGroups[_ident].slots[_ord]);
+        emit CounterIncremented(_ident, _ord, x);
     }
 
     function getCounter(bytes32 _ident, uint8 _ord) public view returns (uint32) {

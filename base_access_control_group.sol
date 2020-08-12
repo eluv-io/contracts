@@ -17,12 +17,13 @@ BsAccessCtrlGrp20190722161600ML: Made editable
 BsAccessCtrlGrp20190722214400ML: Provides the list of members and managers
 BsAccessCtrlGrp20190723130500ML: Fixes typo in managersNum
 BsAccessCtrlGrp20190723165900ML: Fixes deletion/adding to groups
+BsAccessCtrlGrp20200529110800ML: Overloads checkRights to reflect difference between groups and wallets
 */
 
 
 contract BaseAccessControlGroup is AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20200303165900PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20200529110800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     //mapping (address => bool) public members;
     //mapping (address => bool) public managers;
@@ -162,6 +163,11 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     function canConfirm() public view returns (bool) {
         INodeSpace ns = INodeSpace(contentSpace);
         return ns.canNodePublish(msg.sender);
+    }
+
+
+    function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
+        return checkDirectRights(index_type, obj, access_type);
     }
 
 }

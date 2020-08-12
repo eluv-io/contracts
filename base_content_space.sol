@@ -369,11 +369,12 @@ contract BaseFactory is Ownable {
 
 /* -- Revision history --
 BaseGroupFactory20190729115200ML: First versioned released
+BaseGroupFactory20200529112300ML: Updated to reflect changes made to BaseAccessControlGroup to fix ownership rights issue
 */
 
 contract BaseGroupFactory is Ownable {
 
-    bytes32 public version ="BaseGroupFactory20190729115200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseGroupFactory20200529112300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createGroup() public returns (address) {
         address newGroup = (new BaseAccessControlGroup(msg.sender));

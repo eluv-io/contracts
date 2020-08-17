@@ -117,7 +117,9 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
 
         address[] memory maybeAddrs = groupsMapping[GROUP_ID_ADMIN];
         for (uint256 i = 0; i < maybeAddrs.length; i++) {
-            if (BaseAccessControlGroup(maybeAddrs[i]).hasManagerAccess(_candidate)) {
+            BaseAccessControlGroup theGroup = BaseAccessControlGroup(maybeAddrs[i]);
+            // if candidate is either a manager or regular member, we consider them an admin of the tenant
+            if (theGroup.hasAccessRight(_candidate, false) || theGroup.hasAccessRight(_candidate, true)) {
                 return true;
             }
         }

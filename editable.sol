@@ -59,7 +59,7 @@ contract Editable is  Accessible {
     }
     */
     function canEdit() public view returns (bool) {
-        return hasEditorRight(tx.origin);
+        return hasEditorRight(msg.sender);
     }
 
 
@@ -97,7 +97,7 @@ contract Editable is  Accessible {
     }
 
     function canCommit() public view returns (bool) {
-        return (tx.origin == owner);
+        return (msg.sender == owner);
     }
 
     // overridden in BaseContent to return library

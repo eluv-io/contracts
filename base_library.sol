@@ -75,21 +75,6 @@ contract BaseLibrary is MetaObject, Container {
         return canEdit();
     }
 
-    /*
-    function canEdit() public view returns (bool) {
-        return hasEditorRight(tx.origin);
-    }
-
-    function hasEditorRight(address candidate) public view returns (bool) {
-        if ((visibility >= 100) || (candidate == owner)) {
-            return true;
-        }
-        address userWallet = IUserSpace(contentSpace).userWallets(candidate);
-        AccessIndexor wallet = AccessIndexor(userWallet);
-        return wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT());
-    }
-    */
-
     function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
         for (uint256 i = 0; i < _groupListLength; i++) {
             if (_addGroup == _groupList[i]) {
@@ -255,7 +240,6 @@ contract BaseLibrary is MetaObject, Container {
     function submitApprovalRequest() public returns (bool) {
         address contentContract = msg.sender;
         BaseContent c = BaseContent(contentContract);
-        //require((c.owner() == tx.origin)); the publish already check authorization
 
         if (requiresReview() == false) { //No review required
             // 0 indicates approval, custom contract might overwrite that decision
@@ -278,7 +262,7 @@ contract BaseLibrary is MetaObject, Container {
         approvalRequestsLength++;
 
         // Log event
-        emit ApproveContentRequest(contentContract, tx.origin);
+        emit ApproveContentRequest(contentContract, msg.sender);
         return true;
     }
 
@@ -291,7 +275,7 @@ contract BaseLibrary is MetaObject, Container {
     }
 
     function approveContent(address content_contract, bool approved, string note) public returns ( bool ) {
-        require(canReview(tx.origin) == true);
+        require(canReview(msg.sender) == true);
         // credit the account based on the percent_complete
         uint256 index = approvalRequestsMap[content_contract] - 1;
         BaseContent c = BaseContent(content_contract);

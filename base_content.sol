@@ -149,7 +149,7 @@ contract BaseContent is MetaObject, Editable {
 
 
     function setStatusCode(int status_code) public returns (int) {
-        if ((tx.origin == owner) && ((status_code < 0) || ((status_code > 0) && (statusCode < 0)))) {
+        if ((msg.sender == owner) && ((status_code < 0) || ((status_code > 0) && (statusCode < 0)))) {
 
             //Owner can revert content to draft mode regardless of status (debatable for published, viewable content)
             //  and owner can move status from draft to in review
@@ -320,18 +320,6 @@ contract BaseContent is MetaObject, Editable {
         return accessCharge;
     }
 
-    /*
-    function canEdit() public view returns (bool) {
-        if ((visibility >= 100) || (msg.sender == owner)) {
-         return true;
-        }
-        IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address walletAddress = userSpaceObj.userWallets(tx.origin);
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
-    }
-    */
-
     function canPublish() public view returns (bool) {
         return (canEdit() || msg.sender == libraryAddress);
     }
@@ -363,7 +351,7 @@ contract BaseContent is MetaObject, Editable {
         require(canPublish());
         int newStatusCode;
         if (contentContractAddress == 0x0) {
-            if (((tx.origin == owner) || (msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {
+            if (((msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {
                 newStatusCode = status_code; //owner can change status back to draft or to in-review
             } else if ((msg.sender == libraryAddress) && (statusCode >= 0)) {
                 newStatusCode = status_code; //library can change status of content in review to any status
@@ -415,7 +403,7 @@ contract BaseContent is MetaObject, Editable {
         address accessor,
         uint256 request_timestamp
     ) public payable returns (uint256) {
-        require(tx.origin == addressKMS);
+        require(msg.sender == addressKMS);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
         return accessRequestInternal(requestNonce, emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
@@ -527,7 +515,7 @@ contract BaseContent is MetaObject, Editable {
         uint256 _request_timestamp
         ) public payable returns (bool) {
 
-        require(tx.origin == addressKMS);
+        require(msg.sender == addressKMS);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
         bool success = accessCompleteInternal(_requestNonce,  emptyVals, emptyAddrs);
@@ -592,7 +580,7 @@ contract BaseContent is MetaObject, Editable {
         }
         require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
         if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
-          require((tx.origin == owner) || Container(libraryAddress).canEdit());
+          require(Container(libraryAddress).canEdit());
         }
         if ((canKill == 100) || (canKill == 1100)){
             Content(contentContractAddress).commandKill();

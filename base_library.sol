@@ -316,7 +316,7 @@ contract BaseLibrary is MetaObject, Container {
     }
 
     // content can be deleted by content owner or the library owner - enforced inside the kill
-    function deleteContent(address _contentAddr) public {
+    function deleteContent(address _contentAddr) public onlyEditor {
         BaseContent content = BaseContent(_contentAddr);
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);

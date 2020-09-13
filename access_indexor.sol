@@ -267,12 +267,16 @@ contract AccessIndexor is Ownable {
     // Object rights holders can grant confirm if they are also Wallet manager
     //access is either ACCESS_NONE (0), or any uint8 > 0, the current rights and privilege of granter and grantee will drive the new rights values
     function setRightsInternal(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private  {
-        bool isIndexorManager = hasManagerAccess(msg.sender);
-        bool isObjRightHolder = false;
-        IUserSpace space = IUserSpace(contentSpace);
-        address walletAddress = space.userWallets(msg.sender);
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
+        bool isIndexorManager = hasManagerAccess(tx.origin);
+
+        bool isObjRightHolder = true;
+        // if we proxy through an object then it's the job of the calling object to auth the call correctly
+        if (msg.sender != obj) {
+            IUserSpace space = IUserSpace(contentSpace);
+            address walletAddress = space.userWallets(msg.sender);
+            AccessIndexor wallet = AccessIndexor(walletAddress);
+            isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
+        }
 
         uint8 currentAggregate = index.rights[obj];
         uint8[3] memory currentRights;

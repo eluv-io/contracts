@@ -33,7 +33,7 @@ contract Ownable {
     //  the spoofee as the owner of the object ...?
     constructor() public payable {
         creator = tx.origin;
-        owner = tx.origin;
+        owner = msg.sender;
     }
 
     // "Fallback" function - necessary if this contract needs to be paid

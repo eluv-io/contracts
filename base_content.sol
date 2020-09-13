@@ -579,9 +579,9 @@ contract BaseContent is MetaObject, Editable {
             canKill = Content(contentContractAddress).runKillExt();
         }
         require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
-        if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
-          require(Container(libraryAddress).canEdit());
-        }
+//        if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
+//          require(Container(libraryAddress).canEdit());
+//        }
         if ((canKill == 100) || (canKill == 1100)){
             Content(contentContractAddress).commandKill();
         }
@@ -593,21 +593,4 @@ contract BaseContent is MetaObject, Editable {
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
-/*
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
-        if (walletAddress == 0x0){
-            //stakeholder is not a user (hence group or wallet)
-            setGroupRights(stakeholder, access_type, access);
-        } else {
-            setGroupRights(walletAddress, access_type, access);
-        }
-    }
-
-    function setGroupRights(address group, uint8 access_type, uint8 access) public {
-        AccessIndexor indexor = AccessIndexor(group);
-        indexor.setContentObjectRights(address(this), access_type, access);
-    }
-*/
-
 }

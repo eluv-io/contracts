@@ -62,8 +62,6 @@ contract Editable is  Accessible {
         return hasEditorRight(msg.sender);
     }
 
-
-
     function hasEditorRight(address candidate) public view returns (bool) {
         if ((candidate == owner) || (visibility >= 100)) {
             return true;
@@ -197,7 +195,7 @@ contract Editable is  Accessible {
         return foundIdx;
     }
 
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
+    function setRights(address stakeholder, uint8 access_type, uint8 access) public onlyEditor {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address walletAddress = userSpaceObj.userWallets(stakeholder);
         if (walletAddress == 0x0){

@@ -298,7 +298,9 @@ contract BaseFactory is Ownable {
     //  don't think there's a legit spoofing attack here because the spoofee ends up with the rights.
     function createContentType() public returns (address) {
         address newType = (new BaseContentType(msg.sender));
-        BaseContentType(newType).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
+        BaseContentType theType = BaseContentType(newType);
+        theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
+        theType.transferOwnership(tx.origin);
         return newType;
     }
 
@@ -325,7 +327,9 @@ contract BaseGroupFactory is Ownable {
     // see note on BaseFactory
     function createGroup() public returns (address) {
         address newGroup = (new BaseAccessControlGroup(msg.sender));
-        BaseAccessControlGroup(newGroup).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+        BaseAccessControlGroup theGroup = BaseAccessControlGroup(newGroup);
+        theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+        theGroup.transferOwnership(tx.origin);
         return newGroup;
     }
 }
@@ -345,7 +349,9 @@ contract BaseLibraryFactory is Ownable {
     // see note on BaseFactory
     function createLibrary(address address_KMS) public returns (address) {
         address newLib = (new BaseLibrary(address_KMS, msg.sender));
-        BaseLibrary(newLib).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
+        BaseLibrary theLib = BaseLibrary(newLib);
+        theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
+        theLib.transferOwnership(tx.origin);
         return newLib;
     }
 }
@@ -370,7 +376,7 @@ contract BaseContentFactory is Ownable {
 
         // this looks suspicious because it *can* be spoofed, but the object owner and the rights holder ends up being tx.origin
         //  as well so there doesn't seem to be a legit spoofing attack.
-        require(libraryObj.canContribute(tx.origin)); //check if sender has contributor access
+        require(libraryObj.canContribute(tx.origin)); // check if sender has contributor access
         require(libraryObj.validType(content_type));
 
         BaseContent content = new BaseContent(msg.sender, lib, content_type);
@@ -379,6 +385,7 @@ contract BaseContentFactory is Ownable {
 
         // register object in user wallet
         BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+        content.transferOwnership(tx.origin);
 
         return address(content);
     }

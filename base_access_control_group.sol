@@ -113,6 +113,14 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         tenant = _tenantAddr;
     }
 
+    // overload ...
+    function hasEditorRight(address _candidate) public view returns (bool) {
+        if (_candidate == tenant) {
+            return true;
+        }
+        return super.hasEditorRight(_candidate);
+    }
+
     function hasManagerAccess(address _candidate) public view returns (bool) {
         return _candidate == tenant || hasEditorRight(_candidate);
     }

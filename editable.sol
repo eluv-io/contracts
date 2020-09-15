@@ -52,12 +52,7 @@ contract Editable is  Accessible {
         return versionHashes.length;
     }
 
-    /*
-    //This function is meant to be overloaded. By default the owner is the only editor
-    function canEdit() public view returns (bool) {
-        return (msg.sender == owner);
-    }
-    */
+    // This function is meant to be overloaded. By default the owner is the only editor
     function canEdit() public view returns (bool) {
         return hasEditorRight(msg.sender);
     }
@@ -68,26 +63,11 @@ contract Editable is  Accessible {
         }
         if (indexCategory > 0) {
             address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
-            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 2/*AccessIndexor TYPE_EDIT*/);
+            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 2 /* TYPE_EDIT */ );
         } else {
             return false;
         }
     }
-
-
-    /*
-    function canSee(address candidate) public view returns (bool) {
-        if ((candidate == owner) || (visibility >= 1)) {
-            return true;
-        }
-        if (indexCategory > 0) {
-            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
-            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 0); // AccessIndexor TYPE_SEE
-        } else {
-            return false;
-        }
-    }
-    */
 
     // intended to be overridden
     function canConfirm() public view returns (bool) {

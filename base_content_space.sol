@@ -146,7 +146,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return createUserWalletInternal(msg.sender);
     }
 
-    //This methods revert when attempting to transfer ownership, so for now we make it private
+    // This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
     function createUserWalletInternal(address _user) returns (address) {
         require(userWallets[_user] == 0x0);

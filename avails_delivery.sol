@@ -15,13 +15,14 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 /* -- Revision history --
 AvlDelivery20190404103300ML: First versioned released
 AvlDelivery20190510152500ML: updated for new runAccessInfo API
+AvlDelivery20200211163600ML: updated to comform to authV3
 */
 
 
 contract AvailsDelivery is Content {
 
 
-    bytes32 public version ="AvlDelivery20190510152500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AvlDelivery20200211163600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     struct AvailabilityData {
         bool clearedSD; // cleared for SD
@@ -51,9 +52,9 @@ contract AvailsDelivery is Content {
         accessors[content] = accessor;
     }
 
-    function validateAvailability() public view {
-        require(hasAccess(msg.sender, tx.origin));
-        require(isAvailable(msg.sender, tx.origin) == 0);
+    function validateAvailability(address accessor) public view {
+        require(hasAccess(msg.sender, accessor));
+        require(isAvailable(msg.sender, accessor) == 0);
     }
 
     function hasAccess(address content, address accessor) public view returns (bool) {
@@ -90,20 +91,16 @@ contract AvailsDelivery is Content {
 
 
     function runAccessInfo(
-        uint8 level,
         bytes32[], /*customValues*/
-        address[] /*stakeholders*/
+        address[], /*stakeholders*/
+        address accessor
     )
     public view returns (uint8, uint8, uint8, uint256)
     {
-        if (level == 0){
-            if (hasAccess(msg.sender, tx.origin)) {
-                return (0, 0, 0, 0);
-            } else {
-                return (0, 100, 0, 0); //User not member of accessor group
-            }
+        if (!hasAccess(msg.sender,accessor)) {
+            return (0, 100, 0, 0);
         }
-        uint8 availCode = isAvailable(msg.sender, tx.origin);
+        uint8 availCode = isAvailable(msg.sender, accessor);
         if (availCode != 0) {
             return (0, availCode, 0, 0);
         }
@@ -112,16 +109,14 @@ contract AvailsDelivery is Content {
 
 
     function runAccess(
-        uint256, /*request_ID*/
-        uint8 level, /*level*/
+        bytes32, /*request_ID*/
         bytes32[], /*custom_values*/
-        address[] /*stake_holders*/
+        address[], /*stake_holders*/
+        address accessor
     )
     public payable returns(uint)
     {
-        if (level != 0){
-            validateAvailability();
-        }
+        validateAvailability(accessor);
         return 0;
     }
 

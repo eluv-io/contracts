@@ -12,11 +12,13 @@ LvProvider20190923175500ML: Adds support for split ownership of streams and prov
 LvStrmRightsHldr201910172800ML: Changes name, modifies reporting to reflect authorization components
 LvStrmRightsHldr20191025153800ML: Uses reporting only function from stream object for authorization
 LvStrmRightsHldr20191029121900ML: Adds timestamps to all events
+LvStrmRightsHldr20200129095200ML: Adds runEdit default function to ensure compatibility
+LvStrmRightsHldr20200211102500ML: Adapted to authV3
 */
 
 contract LvStreamRightsHolder is Content {
 
-    bytes32 public version = "LvStrmRightsHldr20191029121900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvStrmRightsHldr20200211102500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping (address => bool) public recordingStreams;
 
@@ -51,6 +53,12 @@ contract LvStreamRightsHolder is Content {
         recordingStreams[stream] = false;
         emit DisableRecording(now, stream);
     }
+
+    //0 indicates edit can proceed
+    //100 indicates that custom contract does not modify default behavior
+    function runEdit() public returns (uint) {
+        return 100;
+    }
 }
 
 
@@ -70,11 +78,14 @@ LvRecStream20191029150600ML: Changes playback event to report score
 LvRecStream20191030161000ML: Adds right-holder permission check function
 LvRecStream20191031162800ML: Adds originator in playback reporting
 LvRecStream20191031174500ML: Adds reporting or program details and original request timestamps
+LvRecStream20200129095300ML: Adds default runEdit to ensure compatibility
+LvRecStream20200130192600ML: Allows accessor with edit right on stream object to modify owner-only parameters
+LvRecStream20200316140800ML: Uses generic setRights instead of setContentObjectRights
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20191031174500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20200316140800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -92,8 +103,8 @@ contract LvRecordableStream is Content {
     event DeleteRecording(uint256 timestamp, address accessor, address recObj, address recContract);
     event SetRecordingTimes(uint256 timestamp, address accessor, address recObj, uint recStartTime, uint recEndTime);
     event SetRecordingStatus(uint256 timestamp, address accessor, address recObj, string recStatus);
-    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, uint256 requestID, uint256 accessTimestamp);
-    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, uint256 requestID, uint8 percentPlayed, uint256 finalizeTimestamp);
+    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, uint256 requestNonce, uint256 accessTimestamp);
+    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, uint256 requestNonce, uint8 percentPlayed, uint256 finalizeTimestamp);
     event RecordedProgramId(uint256 timestamp, address accessor, address recObj, string programId, uint256 programStart, uint256 programEnd, string programTitle);
 
     event MembershipGroupRemoved(uint256 timestamp, address group);
@@ -113,8 +124,20 @@ contract LvRecordableStream is Content {
         handle = "";
     }
 
-    function setRecordingStream(address stream) public onlyOwner  { //only required if contract is instanciated manually, otherwise it is set correctly in the constructor
+    modifier onlyEditor() {
+        BaseContent content  = BaseContent(recordingStream);
+        require((tx.origin == owner) || content.canEdit());
+        _;
+    }
+
+    function setRecordingStream(address stream) public onlyEditor  { //only required if contract is instanciated manually, otherwise it is set correctly in the constructor
        recordingStream = stream;
+    }
+
+    //0 indicates edit can proceed
+    //100 indicates that custom contract does not modify default behavior
+    function runEdit() public returns (uint) {
+        return 100;
     }
 
     // When a recordable stream is created a contract is created to track copies of that recording
@@ -176,12 +199,12 @@ contract LvRecordableStream is Content {
         return (recordingEnabled, isMember);
     }
 
-    function enableRecording() public onlyOwner  {
+    function enableRecording() public onlyEditor  {
         recordingEnabled = true;
         emit EnableRecording(now);
     }
 
-    function disableRecording() public onlyOwner  {
+    function disableRecording() public onlyEditor  {
         recordingEnabled = false;
         emit DisableRecording(now);
     }
@@ -202,23 +225,29 @@ contract LvRecordableStream is Content {
         return false;
     }
 
-    function addMembershipGroup(address group) public onlyOwner {
+    function addMembershipGroup(address group) public onlyEditor {
         uint256 prevLen = membershipGroupsLength;
         membershipGroupsLength = addToGroupList(group, membershipGroups, prevLen);
         if (membershipGroupsLength > prevLen) {
             emit MembershipGroupAdded(now, group);
+            /*
             BaseAccessControlGroup accessIndex = BaseAccessControlGroup(group);
             accessIndex.setContentObjectRights(recordingStream, accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_TENTATIVE());
+            */
+            BaseContent(recordingStream).setRights(group, 1 /*TYPE_ACCESS*/, 1 /*ACCESS_TENTATIVE*/);
         }
     }
 
-    function removeMembershipGroup(address group) public onlyOwner returns (bool) {
+    function removeMembershipGroup(address group) public onlyEditor returns (bool) {
         uint256 prevLen = membershipGroupsLength;
         membershipGroupsLength = removeFromGroupList(group, membershipGroups, prevLen);
         if (membershipGroupsLength < prevLen) {
             emit MembershipGroupRemoved(now, group);
+            /*
             BaseAccessControlGroup accessIndex = BaseAccessControlGroup(group);
             accessIndex.setContentObjectRights(recordingStream, accessIndex.TYPE_ACCESS(), accessIndex.ACCESS_NONE());
+            */
+            BaseContent(recordingStream).setRights(group, 1 /*TYPE_ACCESS*/, 0 /*ACCESS_NONE*/);
             return true;
         }
         return false;
@@ -253,20 +282,20 @@ contract LvRecordableStream is Content {
     }
 
 
-    function setRightsHolder(address _rightsHolder) public onlyOwner  {
+    function setRightsHolder(address _rightsHolder) public onlyEditor  {
         rightsHolder = _rightsHolder;
         LvStreamRightsHolder provObj = LvStreamRightsHolder(rightsHolder);
         provObj.registerStream(recordingStream);
     }
 
-    function startStream(string _handle) public onlyOwner  {
+    function startStream(string _handle) public onlyEditor  {
         handle = _handle;
         startTime = now;
         endTime = 0; //to allow re-opening
         emit StartStream(now);
     }
 
-    function stopStream() public onlyOwner  {
+    function stopStream() public onlyEditor  {
         handle = "";
         endTime = now;
         emit StopStream(now);
@@ -290,14 +319,14 @@ contract LvRecordableStream is Content {
         emit SetRecordingTimes(now, tx.origin, rec.contentAddress(), rec.startTime(), rec.endTime());
     }
 
-    function logRecordingPlaybackStarted(uint256 requestID, address originator, uint256 requestTimestamp) public {
+    function logRecordingPlaybackStarted(uint256 requestNonce, address originator, uint256 requestTimestamp) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlaybackStarted(now, originator, rec.contentAddress(), requestID, requestTimestamp);
+        emit RecordingPlaybackStarted(now, originator, rec.contentAddress(), requestNonce, requestTimestamp);
     }
 
-    function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed, address originator, uint256 requestTimestamp) public {
+    function logRecordingPlaybackCompleted(uint256 requestNonce, uint8 percentPlayed, address originator, uint256 requestTimestamp) public {
         LvRecording rec = LvRecording(msg.sender);
-        emit RecordingPlaybackCompleted(now, originator, rec.contentAddress(), requestID, percentPlayed, requestTimestamp);
+        emit RecordingPlaybackCompleted(now, originator, rec.contentAddress(), requestNonce, percentPlayed, requestTimestamp);
     }
 
     function logRecordingDeletion() public {
@@ -312,6 +341,9 @@ contract LvRecordableStream is Content {
 
 }
 
+
+
+
 /* -- Revision history --
 LvRecording20190812210100ML: First versioned released
 LvRecording20190825165500ML: Adds stream-wide event logging of recordings.
@@ -321,15 +353,12 @@ LvRecording20191029150500ML: Adds score to playback events
 LvRecording20191031162800ML: Adds originator to playback events in case of state channel originated transactions
 LvRecording20191031174500ML: Adds playback ID and reporting of program details
 LvRecording20191031204100ML: Bug fix in runAccess
+LvRecording20200211165400ML: Modified to conform to authV3 API
 */
-
-
-
-
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20191031204100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20200211165400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -400,32 +429,44 @@ contract LvRecording is Content {
         stream.logRecordingStatus();
     }
 
-    //timestamp of original request is passed in request ID for state-channel
-    function runAccess(uint256 requestID, uint8 level, bytes32[]custom_values, address[] stakeholders) public payable returns(uint) {
-        if (level > 0) {
-            LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-            if (stakeholders[0] == 0x0){
-                stream.logRecordingPlaybackStarted(requestID, tx.origin, now);
-            } else {
-                playbackId = playbackId + 1;
-                if (playbacksLength < playbacks.length) {
-                    playbacks[playbacksLength] = playbackId;
-                } else {
-                    playbacks.push(playbackId);
-                }
-                playbacksLength = playbacksLength + 1;
-                stream.logRecordingPlaybackStarted(playbackId, stakeholders[0], requestID);
-            }
+    //timestamp of original request can be passed in customValues[0] state-channel
+    function runAccess(uint256 requestNonce,  bytes32[] customValues, address[] stakeholders, address accessor) public payable returns(uint) {
+        LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
+        if (customValues.length ==  0) {
+            stream.logRecordingPlaybackStarted(requestNonce, accessor, now);
+        } else {
+            stream.logRecordingPlaybackStarted(requestNonce, accessor, uint256(customValues[0]));
         }
         return 0;
     }
 
-    function runFinalize(uint256 requestID, uint256 score_pct) public payable returns (uint) {
+    //function to help formatting the percent complete to be provided in actionComplete
+    function encodeScore(uint8 percent) public pure returns (bytes32) {
+        return bytes32(percent);
+    }
+
+    function encodeTimestamp(uint256 timestamp) public pure returns (bytes32) {
+        return bytes32(timestamp);
+    }
+
+    //timestamp of original request can be passed in customValues[1] state-channel, prc_complete is passed in customValues[0]
+    function runFinalize(
+        uint256 requestNonce,
+        bytes32[] customValues,
+        address[], /*stakeholders*/
+        address accessor
+    ) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
-        stream.logRecordingPlaybackCompleted(requestID, uint8(score_pct), tx.origin, now);
+        uint256 timestamp = now;
+        if (customValues.length >=  2) {
+            timestamp = uint256(customValues[1]);
+        }
+        stream.logRecordingPlaybackCompleted(requestNonce, uint8(customValues[0]), accessor, timestamp);
         return 0;
     }
 
+
+    /*
     function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
         if (playbacksLength > 0) {
@@ -437,6 +478,7 @@ contract LvRecording is Content {
         }
         return 0;
     }
+    */
 
     function runKill() public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);

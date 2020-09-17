@@ -10,12 +10,17 @@ pragma solidity 0.4.24;
 Ownable20190221100500ML: First versioned released
 Ownable20190315141500ML: Migrated to 0.4.24
 Ownable20190528193800ML: Added contentSpace as all descendant objects need it anyway
+Ownable20200210110100ML: Added versionAPI, set to 3.0
 */
 
+interface IAdmin {
+    function isAdmin(address _adminAddr) external view returns (bool);
+}
 
 contract Ownable {
 
-    bytes32 public version ="Ownable20190528193800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Ownable20200210110100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public versionAPI = "3.0";
     address public creator;
     address public owner;
     address public contentSpace;
@@ -60,6 +65,19 @@ contract Ownable {
     function kill() public onlyOwner {
         selfdestruct(owner);  // kills contract; send remaining funds back to owner
     }
+}
 
+contract Adminable is Ownable, IAdmin {
+    // meant to be overridden in derived classes
+    function isAdmin(address _candidate) public view returns (bool) {
+        if (_candidate == owner) {
+            return true;
+        }
+        return false;
+    }
 
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender));
+        _;
+    }
 }

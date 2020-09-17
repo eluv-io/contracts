@@ -11,12 +11,13 @@ import {INodeSpace} from "./node_space.sol";
 /* -- Revision history --
 Container20190528144600ML: First versioned released
 Container20190529091800ML: Remove warning on hasAccess
+Container20200316135300ML: Leverages inherited hasAccess
 */
 
 
 contract Container is Editable {
 
-    bytes32 public version = "Container20190529091800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "Container20200316135300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public addressKMS;
 
@@ -32,8 +33,6 @@ contract Container is Editable {
     function setAddressKMS(address address_KMS) public onlyOwner {
         addressKMS = address_KMS;
     }
-
-
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
         if ((contentTypeContracts[content_type] == 0x0) && (whitelistedType(content_type) == false)) {
@@ -96,10 +95,6 @@ contract Container is Editable {
 
     function requiresReview() public view returns (bool) {
         return false;
-    }
-
-    function hasAccess(address /*_candidate*/) public constant returns (bool) {
-        return true;
     }
 
     // Current implementation ignores rights provided directly to individual

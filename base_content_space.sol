@@ -133,11 +133,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         emit CreateGroup(groupAddress);
         return groupAddress;
     }
-
-    function engageAccountLibrary() public returns (address) {
-        emit EngageAccountLibrary(msg.sender);
-    }
-
+    
     function createUserWallet(address _user) external returns (address) {
         return createUserWalletInternal(_user);
     }
@@ -368,7 +364,7 @@ BaseCtFactory20200422180700ML: Updated to reflect fix of deletion of content obj
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20200422180700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     // see note on BaseFactory re tx.origin
     function createContent(address lib, address content_type) public  returns (address) {

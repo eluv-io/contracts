@@ -321,22 +321,6 @@ contract BaseLibrary is MetaObject, Container {
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
-/*
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
-        if (walletAddress == 0x0){
-            //stakeholder is not a user (hence group or wallet)
-            setGroupRights(stakeholder, access_type, access);
-        } else {
-            setGroupRights(walletAddress, access_type, access);
-        }
-    }
-
-    function setGroupRights(address group, uint8 access_type, uint8 access) public {
-        AccessIndexor indexor = AccessIndexor(group);
-        indexor.setLibraryRights(address(this), access_type, access);
-    }
-*/
 
     function publish(address contentObj) public returns (bool) {
         require(msg.sender == contentObj);

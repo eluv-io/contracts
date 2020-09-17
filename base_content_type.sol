@@ -40,5 +40,4 @@ contract BaseContentType is Editable {
         INodeSpace spc = INodeSpace(contentSpace);
         return spc.canNodePublish(msg.sender);
     }
-
 }

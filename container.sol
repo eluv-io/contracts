@@ -18,11 +18,11 @@ Container20200316135300ML: Leverages inherited hasAccess
 
 contract Container is Editable {
 
-    address public addressKMS;
+    address payable public addressKMS;
 
-    address[] public contentTypesList;
+    address payable[] public contentTypesList;
     uint256 public contentTypesLength = 0;
-    mapping ( address => address ) public contentTypeContracts;  // custom contracts map
+    mapping ( address => address) public contentTypeContracts;  // custom contracts map
 
 
     event ContentTypeAdded(address contentType, address contentContract);
@@ -33,11 +33,11 @@ contract Container is Editable {
     }
 
 
-    function setAddressKMS(address address_KMS) public onlyOwner {
+    function setAddressKMS(address payable address_KMS) public onlyOwner {
         addressKMS = address_KMS;
     }
 
-    function addContentType(address content_type, address content_contract) public onlyOwner {
+    function addContentType(address payable content_type, address content_contract) public onlyOwner {
         if ((contentTypeContracts[content_type] == address(0x0)) && (whitelistedType(content_type) == false)) {
             if (contentTypesLength < contentTypesList.length) {
                 contentTypesList[contentTypesLength] = content_type;
@@ -96,24 +96,24 @@ contract Container is Editable {
         return address(0x0);
     }
 
-    function requiresReview() public view returns (bool) {
+    function requiresReview() public view virtual returns (bool) {
         return false;
     }
 
     // Current implementation ignores rights provided directly to individual
-    function canContribute(address _candidate) public view returns (bool) {
+    function canContribute(address payable _candidate) public view virtual returns (bool) {
         return ((_candidate == owner) || (msg.sender == owner)); //not sure about the ||
     }
 
-    function canPublish(address _candidate) public view returns (bool) {
+    function canPublish(address payable _candidate) public view virtual returns (bool) {
         return ((_candidate == owner) || (msg.sender == owner)); //not sure about the ||
     }
 
-    function canReview(address /*_candidate*/) public view returns (bool) {
+    function canReview(address payable /*_candidate*/) public view virtual returns (bool) {
         return false;
     }
 
-    function publish(address payable contentObj) public returns (bool) {
+    function publish(address payable contentObj) public virtual returns (bool) {
         require(msg.sender == contentObj);
         BaseContent content = BaseContent(contentObj);
         content.updateStatus(0); //update status to published

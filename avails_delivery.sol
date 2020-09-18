@@ -22,9 +22,6 @@ AvlDelivery20200211163600ML: updated to comform to authV3
 
 contract AvailsDelivery is Content {
 
-
-    bytes32 public version ="AvlDelivery20200211163600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     struct AvailabilityData {
         bool clearedSD; // cleared for SD
         bool clearedHD; // cleared for HD
@@ -35,6 +32,10 @@ contract AvailsDelivery is Content {
 
     mapping(address => address) public accessors;  // Indexed using OTT Delivery BaseContent address
     mapping(address => AvailabilityData) public availability; // Indexed using OTT Delivery BaseContent address
+    
+    constructor(){
+        version ="AvlDelivery20200211163600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
 
     function setAvailability(address content, bool sd,bool hd, uint start, uint end, address region ) public {

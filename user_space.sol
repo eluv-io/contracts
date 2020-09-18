@@ -14,10 +14,12 @@ UserSpace20190506155300ML: First versioned released
 
 contract UserSpace is IUserSpace {
 
-    bytes32 public version ="UserSpace20190506155300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-
     mapping(address => address) public userWalletsMap;
+    bytes32 public userSpaceVersion;
+    
+    constructor(){
+        userSpaceVersion ="UserSpace20190506155300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     function userWallets(address payable _userAddr) external view override returns (address payable) {
         return payable(userWalletsMap[_userAddr]);

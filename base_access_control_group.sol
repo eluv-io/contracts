@@ -27,12 +27,11 @@ BsAccessCtrlGrp20200316121700ML: Leverages inherited hasAccess
 
 contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20200316121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    address[] public membersList;
+    address payable[] public membersList;
     uint256 public membersNum;
-    address[] public managersList;
+    address payable[] public managersList;
     uint256 public managersNum;
+    address payable public tenant; // (optional?) address of tenant contract
 
     event MemberAdded(address candidate);
     event ManagerAccessGranted(address candidate);
@@ -44,7 +43,9 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
 
     bool public oauthEnabled;
 
-    constructor(address _contentSpace) public {
+    constructor(address payable _contentSpace) {
+        version ="BsAccessCtrlGrp20200316121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+        
         contentSpace = _contentSpace;
         membersNum = 0;
         managersList.push(creator);
@@ -58,7 +59,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         emit OAuthStatusChanged(_enabled);
     }
 
-    function grantManagerAccess(address manager) public onlyOwner {
+    function grantManagerAccess(address payable manager) public onlyOwner {
         bool already = false;
         for (uint i = 0; i < managersNum; i++) {
             if (managersList[i] == manager) {
@@ -78,7 +79,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(manager, TYPE_EDIT, ACCESS_TENTATIVE);
     }
 
-    function revokeManagerAccess(address manager) public {
+    function revokeManagerAccess(address payable manager) public {
         require((msg.sender == owner) || (msg.sender == manager));
         for (uint i = 0; i < managersNum; i++) {
             if (managersList[i] == manager) {
@@ -95,7 +96,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(manager, TYPE_EDIT, ACCESS_NONE);
     }
 
-    function isAdmin(address _candidate) public view returns (bool) {
+    function isAdmin(address payable _candidate) public view override returns (bool) {
         if (_candidate == owner) {
             return true;
         }
@@ -107,26 +108,24 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         return false;
     }
 
-    address public tenant; // (optional?) address of tenant contract
-
-    function setTenant(address _tenantAddr) public {
+    function setTenant(address payable _tenantAddr) public {
         require(isAdmin(msg.sender));
         tenant = _tenantAddr;
     }
 
     // overload ...
-    function hasEditorRight(address _candidate) public view returns (bool) {
+    function hasEditorRight(address payable _candidate) public view override returns (bool) {
         if (_candidate == tenant) {
             return true;
         }
         return super.hasEditorRight(_candidate);
     }
 
-    function hasManagerAccess(address _candidate) public view returns (bool) {
+    function hasManagerAccess(address payable _candidate) public view override returns (bool) {
         return _candidate == tenant || hasEditorRight(_candidate);
     }
 
-    function hasAccessRight(address candidate, bool mgr) public view returns (bool) {
+    function hasAccessRight(address payable candidate, bool mgr) public view returns (bool) {
         if (mgr == true) {
              return hasEditorRight(candidate);
         } else {
@@ -134,7 +133,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         }
     }
 
-    function grantAccess(address candidate) public {
+    function grantAccess(address payable candidate) public {
         require(hasManagerAccess(msg.sender) == true);
         bool already = false;
         for (uint i = 0; i < membersNum; i++) {
@@ -156,7 +155,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(candidate, TYPE_ACCESS, ACCESS_TENTATIVE);
     }
 
-    function revokeAccess(address candidate) public {
+    function revokeAccess(address payable candidate) public {
         require((hasManagerAccess(msg.sender) == true) || (msg.sender == candidate));
         for (uint i = 0; i < membersNum; i++) {
             if (membersList[i] == candidate) {
@@ -173,7 +172,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(candidate, TYPE_ACCESS, ACCESS_NONE);
     }
 
-    function canConfirm() public view returns (bool) {
+    function canConfirm() public view override returns (bool) {
         INodeSpace ns = INodeSpace(contentSpace);
         return ns.canNodePublish(msg.sender);
     }

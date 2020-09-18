@@ -13,7 +13,7 @@ contract PaymentService is Content {
     bytes32 public version ="PaymentService20190318102800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     struct RedeemRequest {
-        address id; // client address requesting
+        address payable id; // client address requesting
         string redeemCurrency;
         uint256 numTokens; // number of token to be redeemed
         string payTo;
@@ -25,7 +25,7 @@ contract PaymentService is Content {
 
     string tokenCurrency = "USD";
     uint256 tokenValue = 1;
-    address public payerAddress;
+    address payable public payerAddress;
 
     event RedeemTokenRequest(uint256 numtokens, string pay_to, string nonce);
     event RedeemTokenExecuted(string currency, uint256 value, string payment_proof, string nonce);

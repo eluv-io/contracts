@@ -23,7 +23,7 @@ contract Content is Ownable {
     uint8 public constant DEFAULT_ACCESS  = 2;
     uint8 public constant DEFAULT_CHARGE  = 4;
 
-    address authorizedKiller;
+    address payable authorizedKiller;
 
     event Log(string label);
     event LogBool(string label, bool b);

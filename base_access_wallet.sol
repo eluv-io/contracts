@@ -22,6 +22,14 @@ BsAccessWallet20191203102900ML: Bumped up to reflect change in the access_indexo
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
 contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable {
+    
+    event ExecStatus(address guarantor, int code);
+
+    int public constant execStatusOk = 0;
+    int public constant execStatusNonceFail = 1;
+    int public constant execStatusBalanceFail = 2;
+    int public constant execStatusSigFail = 3;
+    int public constant execStatusSendFail = 4;
 
     constructor(address payable content_space) payable {
         version = "BsAccessWallet20191203102900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
@@ -58,14 +66,6 @@ contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable 
         if (checkAddr != owner) return false;
         return true;
     }
-
-    event ExecStatus(address guarantor, int code);
-
-    int public constant execStatusOk = 0;
-    int public constant execStatusNonceFail = 1;
-    int public constant execStatusBalanceFail = 2;
-    int public constant execStatusSigFail = 3;
-    int public constant execStatusSendFail = 4;
 
     function execute(address payable _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address payable _dest, uint256 _value, uint256 _ts)
     external
@@ -120,9 +120,9 @@ contract BaseAccessWalletFactory is Ownable {
         version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
     }
 
-    function createAccessWallet() public returns (address) {
+    function createAccessWallet() public returns (address payable) {
         BaseAccessWallet theWallet = new BaseAccessWallet(msg.sender); // msg.sender here is the space ...
         theWallet.transferOwnership(tx.origin);
-        return address(theWallet);
+        return payable(address(theWallet));
     }
 }

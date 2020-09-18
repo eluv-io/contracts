@@ -25,19 +25,19 @@ BaseContentType20200316135100ML: Leverages inherited hasAccess
 
 contract BaseContentType is Editable {
 
-    bytes32 public version ="BaseContentType20200316135100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    constructor(address content_space) public payable {
+    constructor(address payable content_space) payable {
+        version ="BaseContentType20200316135100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+        
         contentSpace = content_space;
         visibility = 0;
         indexCategory =  4; // AccessIndexor CATEGORY_CONTENT_TYPE
     }
 
-    function canCommit() public view returns (bool) {
+    function canCommit() public view override returns (bool) {
         return canEdit();
     }
 
-    function canConfirm() public view returns (bool) {
+    function canConfirm() public view override returns (bool) {
         INodeSpace spc = INodeSpace(contentSpace);
         return spc.canNodePublish(msg.sender);
     }

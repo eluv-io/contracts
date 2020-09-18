@@ -40,7 +40,7 @@ library EncToken {
         }
     }
 
-    function getAddress(string memory _attrib, bytes memory _tok) internal returns (address ret) {
+    function getAddress(string memory _attrib, bytes memory _tok) internal returns (address payable ret) {
         bytes4 sig = sigIdAddress;
         address callAddr = elv_precomp_enc_token_addr;
         bytes32 truncAttrib;

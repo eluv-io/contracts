@@ -20,7 +20,7 @@ interface IAdmin {
 
 contract Ownable {
 
-    bytes32 public version ="Ownable20200210110100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version;
     bytes32 public versionAPI = "3.0";
     address payable public creator;
     address payable public owner;
@@ -33,6 +33,8 @@ contract Ownable {
     // Moreover, this likely is safe because I'm not sure what purpose a spoofing attack would have that ends up with
     //  the spoofee as the owner of the object ...?
     constructor() payable {
+        version="Ownable20200210110100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+        
         creator = tx.origin;
         owner = msg.sender;
     }
@@ -82,7 +84,7 @@ contract Adminable is Ownable, IAdmin {
         return false;
     }
 
-    modifier onlyAdmin() {
+    modifier onlyAdmin() virtual {
         require(isAdmin(msg.sender));
         _;
     }

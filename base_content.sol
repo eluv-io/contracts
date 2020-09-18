@@ -105,7 +105,7 @@ contract BaseContent is MetaObject, Editable {
         _;
     }
 
-    constructor(address payable content_space, address payable lib, address payable content_type) public payable {
+    constructor(address payable content_space, address payable lib, address payable content_type) payable {
         
         version ="BaseContent20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
         

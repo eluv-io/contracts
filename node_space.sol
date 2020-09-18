@@ -16,10 +16,10 @@ NodeSpace20190528170100ML: First versioned released
 
 contract NodeSpace is Ownable, INodeSpace {
 
-    address[] public activeNodeAddresses;
+    address payable[] public activeNodeAddresses;
     bytes[] public activeNodeLocators;
 
-    address[] public pendingNodeAddresses;
+    address payable[] public pendingNodeAddresses;
     bytes[] public pendingNodeLocators;
     
     event NodeSubmitted(address addr, bytes locator);
@@ -32,7 +32,7 @@ contract NodeSpace is Ownable, INodeSpace {
         version ="NodeSpace20190528170100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
     }
 
-    function checkRedundantEntry(address[] memory _addrs, bytes[] memory _locators, address payable _nodeAddr, bytes memory _nodeLocator) pure internal returns (bool) {
+    function checkRedundantEntry(address payable[] memory _addrs, bytes[] memory _locators, address payable _nodeAddr, bytes memory _nodeLocator) pure internal returns (bool) {
         require(_addrs.length == _locators.length);
         for (uint i = 0; i < _addrs.length; i++) {
             // right now we assume that neither the address or the locator can be used redundantly
@@ -64,7 +64,7 @@ contract NodeSpace is Ownable, INodeSpace {
 
     
 
-    function removeNodeInternal(uint nodeOrd, address[] storage _nodeAddresses, bytes[] storage _nodeLocators) internal {
+    function removeNodeInternal(uint nodeOrd, address payable[] storage _nodeAddresses, bytes[] storage _nodeLocators) internal {
         require(nodeOrd < _nodeAddresses.length && nodeOrd < _nodeLocators.length);
         if (nodeOrd != _nodeAddresses.length - 1) {
             _nodeLocators[nodeOrd] = _nodeLocators[_nodeLocators.length - 1];

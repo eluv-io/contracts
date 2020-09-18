@@ -30,12 +30,7 @@ Editable20200422180400ML: Fixed deletion of latest version
 
 contract Editable is  Accessible {
     //using strings for *;
-
-    event CommitPending(address spaceAddress, address parentAddress, string objectHash);
-    event UpdateRequest(string objectHash);
-    event VersionConfirm(address spaceAddress, address parentAddress, string objectHash);
-    event VersionDelete(address spaceAddress, string versionHash, int256 index);
-
+    
     string public objectHash;
     // made public on 1/25/2020 - not generally safe to assume it's available on all deployed contracts
     uint public objectTimestamp;
@@ -45,6 +40,12 @@ contract Editable is  Accessible {
     string public pendingHash;
     bool public commitPending;
 
+    event CommitPending(address spaceAddress, address parentAddress, string objectHash);
+    event UpdateRequest(string objectHash);
+    event VersionConfirm(address spaceAddress, address parentAddress, string objectHash);
+    event VersionDelete(address spaceAddress, string versionHash, int256 index);
+
+    
     modifier onlyEditor() {
         require(canEdit());
         _;
@@ -63,7 +64,7 @@ contract Editable is  Accessible {
         return hasEditorRight(msg.sender);
     }
 
-    function hasEditorRight(address payable candidate) public view returns (bool) {
+    function hasEditorRight(address payable candidate) public view virtual returns (bool) {
         if ((candidate == owner) || (visibility >= 100)) {
             return true;
         }
@@ -209,8 +210,9 @@ contract Editable is  Accessible {
         }
     }
 
-    function setVisibility(uint8 _visibility_code) public override(Accessible) virtual onlyEditor {
-        visibility = _visibility_code;
-        emit VisibilityChanged(contentSpace, contentSpace, visibility);
-    }
+// TODO : same definition as in accessible.sol, causing override clash when overrided from base_content.sol ....
+    // function setVisibility(uint8 _visibility_code) public override onlyEditor {
+    //     visibility = _visibility_code;
+    //     emit VisibilityChanged(contentSpace, contentSpace, visibility);
+    // }
 }

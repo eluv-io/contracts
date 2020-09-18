@@ -21,9 +21,7 @@ AccessIndexor20200410215200ML: disambiguate setRights by renaming setEntityRight
 
 
 contract AccessIndexor is Ownable {
-
-    event RightsChanged(address principal, address entity, uint8 aggregate);
-
+    
     uint8 public CATEGORY_CONTENT_OBJECT = 1;
     uint8 public CATEGORY_GROUP = 2;
     uint8 public CATEGORY_LIBRARY = 3;
@@ -37,6 +35,8 @@ contract AccessIndexor is Ownable {
     uint8 public constant ACCESS_TENTATIVE = 1; //access was granted, but not accepted by recipient
     uint8 public constant ACCESS_CONFIRMED = 2; //access was granted and accepted by recipient
     uint8[3] ranking = [1,10,100];
+
+    event RightsChanged(address principal, address entity, uint8 aggregate);
 
     struct AccessIndex {
         uint8 category;
@@ -56,7 +56,7 @@ contract AccessIndexor is Ownable {
 
     mapping(uint8 => AccessIndex) private accessIndexes;
 
-    constructor() public payable {
+    constructor() payable {
         version = "AccessIndexor20200410215200ML";
         
         libraries.category = CATEGORY_LIBRARY;
@@ -170,7 +170,7 @@ contract AccessIndexor is Ownable {
         return contracts.list[position];
     }
 
-    function hasManagerAccess(address candidate) public view returns (bool) {
+    function hasManagerAccess(address payable candidate) public view virtual returns (bool) {
         return (candidate == owner);
     }
 

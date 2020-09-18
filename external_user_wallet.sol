@@ -6,8 +6,8 @@ import {Editable} from "./editable.sol";
 
 contract ExternalUserWallet is Editable {
 
-    address public addressTA; // trusted authority of the user - aka KMS
-    address public addressExtUser;
+    address payable public addressTA; // trusted authority of the user - aka KMS
+    address payable public addressExtUser;
 
     event CreateExtUserWallet(address contentSpace, address extUserAddr);
 

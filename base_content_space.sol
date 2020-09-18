@@ -35,15 +35,13 @@ BaseContentSpace20200316120600ML: Defaults visibility to ensure access is open
 
 contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
-    bytes32 public version ="BaseContentSpace20200626120600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     string public name;
     string public description;
-    address public factory;
-    address public groupFactory;
-    address public walletFactory;
-    address public libraryFactory;
-    address public contentFactory;
+    address payable public factory;
+    address payable public groupFactory;
+    address payable public walletFactory;
+    address payable public libraryFactory;
+    address payable public contentFactory;
 
     mapping(address => address) public nodeMapping;
 
@@ -69,7 +67,9 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     event CreateSpace(bytes32 version, address owner);
     event GetAccessWallet(address walletAddress);
 
-    constructor(string memory content_space_name) public {
+    constructor(string memory content_space_name) {
+        version ="BaseContentSpace20200626120600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials X
+        
         name = content_space_name;
         contentSpace = address(this);
         emit CreateSpace(version, owner);
@@ -77,28 +77,28 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     }
 
     // override
-    function setVisibility(uint8 _visibility_code) public onlyOwner {
+    function setVisibility(uint8 _visibility_code) public override onlyOwner {
         visibility = _visibility_code;
-        emit VisibilityChanged(address(this), 0x0, visibility);
+        emit VisibilityChanged(address(this), address(0x0), visibility);
     }
 
-    function setFactory(address new_factory) public onlyOwner {
+    function setFactory(address payable new_factory) public onlyOwner {
         factory = new_factory;
     }
 
-    function setGroupFactory(address new_factory) public onlyOwner {
+    function setGroupFactory(address payable new_factory) public onlyOwner {
         groupFactory = new_factory;
     }
 
-    function setWalletFactory(address new_factory) public onlyOwner {
+    function setWalletFactory(address payable new_factory) public onlyOwner {
         walletFactory = new_factory;
     }
 
-    function setLibraryFactory(address new_factory) public onlyOwner {
+    function setLibraryFactory(address payable new_factory) public onlyOwner {
         libraryFactory = new_factory;
     }
 
-    function setContentFactory(address new_factory) public onlyOwner {
+    function setContentFactory(address payable new_factory) public onlyOwner {
         contentFactory = new_factory;
     }
 
@@ -106,89 +106,89 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         description = content_space_description;
     }
 
-    function canConfirm() public view returns (bool) {
+    function canConfirm() public view override returns (bool) {
         INodeSpace bcs = INodeSpace(address(this));
         return bcs.canNodePublish(msg.sender);
     }
 
-    function createContentType() public returns (address) {
-        address contentTypeAddress = BaseFactory(factory).createContentType();
+    function createContentType() public override returns (address payable) {
+        address payable contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
         return contentTypeAddress;
     }
 
-    function createLibrary(address address_KMS) public returns (address) {
-        address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
+    function createLibrary(address payable address_KMS) public override returns (address payable) {
+        address payable libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
         emit CreateLibrary(libraryAddress);
         return libraryAddress;
     }
 
-    function createContent(address lib, address content_type) public returns (address) {
-        address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
+    function createContent(address payable lib, address payable content_type) public override returns (address payable) {
+        address payable contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
         emit CreateContent(contentAddress);
         return contentAddress;
     }
 
-    function createGroup() public returns (address) {
-        address groupAddress = BaseGroupFactory(groupFactory).createGroup();
+    function createGroup() public override returns (address payable) {
+        address payable groupAddress = BaseGroupFactory(groupFactory).createGroup();
         emit CreateGroup(groupAddress);
         return groupAddress;
     }
     
-    function createUserWallet(address _user) external returns (address) {
+    function createUserWallet(address payable _user) external override returns (address payable) {
         return createUserWalletInternal(_user);
     }
 
-    function createAccessWallet() public returns (address) {
+    function createAccessWallet() public returns (address payable) {
         return createUserWalletInternal(msg.sender);
     }
 
     // This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWalletInternal(address _user) returns (address) {
-        require(userWallets[_user] == 0x0);
-        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
+    function createUserWalletInternal(address payable _user) public returns (address payable) {
+        require(userWalletsMap[_user] == address(0x0));
+        address payable walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
         if (_user != msg.sender) {
             BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
             wallet.transferOwnership(_user);
         }
         emit CreateAccessWallet(walletAddress);
         emit BindUserWallet(walletAddress, _user);
-        userWallets[_user] = walletAddress;
+        userWalletsMap[_user] = walletAddress;
         return walletAddress;
     }
 
     function getAccessWallet() public returns(address) {
         address walletAddress;
-        if (userWallets[msg.sender] == 0x0) {
+        if (userWalletsMap[msg.sender] == address(0x0)) {
             walletAddress = createAccessWallet();
         } else {
-            walletAddress = userWallets[msg.sender];
+            walletAddress = userWalletsMap[msg.sender];
         }
 
         emit GetAccessWallet(walletAddress);
         return walletAddress;
     }
 
-    function getKMSID(address _kmsAddr) public view returns (string){
+    function getKMSID(address payable _kmsAddr) public view override returns (string memory){
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
     }
 
-    function checkKMS(string _kmsIdStr) public view returns (uint) {
+    function checkKMS(string memory _kmsIdStr) public view returns (uint) {
         return kmsMapping[_kmsIdStr].length;
     }
 
-    function checkKMSAddr(address _kmsAddr) public view returns (uint) {
+    function checkKMSAddr(address payable _kmsAddr) public view override returns (uint) {
         string memory kmsID = getKMSID(_kmsAddr);
         return kmsMapping[kmsID].length;
     }
 
     // can be used to add or remove - i.e. set to ""
-    function setKMSPublicKey(string _kmsID, string _pubKey) public onlyOwner {
+    function setKMSPublicKey(string memory _kmsID, string memory _pubKey) public onlyOwner {
         kmsPublicKeys[_kmsID] = _pubKey;
     }
 
-    function matchesPrefix(bytes input, bytes prefix) pure internal returns (bool) {
+    function matchesPrefix(bytes memory input, bytes memory prefix) pure internal returns (bool) {
         uint len = prefix.length;
         if (len > input.length) len = input.length;
         for (uint x = 0; x < len; x++) {
@@ -197,7 +197,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return true;
     }
 
-    function filterPrefix(bytes[] input, bytes prefix) view internal returns (bytes[]) {
+    function filterPrefix(bytes[] memory input, bytes memory prefix) view internal returns (bytes[] memory) {
         uint countMatch = 0;
         for (uint i = 0; i < input.length; i++) {
             if (matchesPrefix(input[i], prefix)) {
@@ -207,7 +207,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         bytes[] memory output = new bytes[](countMatch);
         if (countMatch == 0) return output;
         countMatch = 0;
-        for (i = 0; i < input.length; i++) {
+        for (uint i = 0; i < input.length; i++) {
             if (matchesPrefix(input[i], prefix)) {
                 output[countMatch] = input[i];
                 countMatch++;
@@ -216,7 +216,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return output;
     }
 
-    function getKMSInfo(string _kmsID, bytes prefix) external view returns (string, string) {
+    function getKMSInfo(string memory _kmsID, bytes memory prefix) external view override returns (string memory, string memory) {
         bytes[] memory locators = kmsMapping[_kmsID];
         string memory publicKey = kmsPublicKeys[_kmsID];
 
@@ -239,7 +239,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     // mapping(address => string[]) public kmsMapping;
     // status -> 0 added
     // status -> 1 not added
-    function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+    function addKMSLocator(string memory _kmsID, bytes memory _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
 
         for (uint i = 0; i < kmsLocators.length; i++) {
@@ -255,7 +255,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
 
     // status -> 0 removed
     // status -> 1 not removed
-    function removeKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+    function removeKMSLocator(string memory _kmsID, bytes memory _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
@@ -263,7 +263,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
                     kmsMapping[_kmsID][i] = kmsLocators[kmsLocators.length - 1];
                 }
                 delete kmsMapping[_kmsID][kmsLocators.length - 1];
-                kmsMapping[_kmsID].length -= 1;
+                kmsMapping[_kmsID].pop();
                 emit RemoveKMSLocator(msg.sender,0);
                 return true;
             }
@@ -289,12 +289,14 @@ BaseFactory20200316120700ML: Uses content-type setRights instead of going straig
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20200316120700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    constructor(){
+        version ="BaseFactory20200316120700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
     //  don't think there's a legit spoofing attack here because the spoofee ends up with the rights.
-    function createContentType() public returns (address) {
-        address newType = (new BaseContentType(msg.sender));
+    function createContentType() public returns (address payable) {
+        address payable newType = address(new BaseContentType(msg.sender));
         BaseContentType theType = BaseContentType(newType);
         theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
         theType.transferOwnership(tx.origin);
@@ -319,11 +321,13 @@ BaseGroupFactory20200316120800ML: Uses group setRights instead of going straight
 
 contract BaseGroupFactory is Ownable {
 
-    bytes32 public version ="BaseGroupFactory20200316120800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    constructor(){
+        version ="BaseGroupFactory20200316120800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     // see note on BaseFactory
-    function createGroup() public returns (address) {
-        address newGroup = (new BaseAccessControlGroup(msg.sender));
+    function createGroup() public returns (address payable) {
+        address payable newGroup = address(new BaseAccessControlGroup(msg.sender));
         BaseAccessControlGroup theGroup = BaseAccessControlGroup(newGroup);
         theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
         theGroup.transferOwnership(tx.origin);
@@ -341,11 +345,13 @@ BaseLibFactory20200316121000ML: Uses group setRights instead of going straight t
 
 contract BaseLibraryFactory is Ownable {
 
-    bytes32 public version ="BaseLibFactory20200316121000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    constructor(){
+        version ="BaseLibFactory20200316121000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     // see note on BaseFactory
-    function createLibrary(address address_KMS) public returns (address) {
-        address newLib = (new BaseLibrary(address_KMS, msg.sender));
+    function createLibrary(address payable address_KMS) public returns (address payable) {
+        address payable newLib = address(new BaseLibrary(address_KMS, msg.sender));
         BaseLibrary theLib = BaseLibrary(newLib);
         theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
         theLib.transferOwnership(tx.origin);
@@ -365,10 +371,12 @@ BaseCtFactory20200422180700ML: Updated to reflect fix of deletion of content obj
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    constructor(){
+        version ="BaseCtFactory20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     // see note on BaseFactory re tx.origin
-    function createContent(address lib, address content_type) public  returns (address) {
+    function createContent(address payable lib, address payable content_type) public  returns (address payable) {
         Container libraryObj = Container(lib);
 
         // this looks suspicious because it *can* be spoofed, but the object owner and the rights holder ends up being tx.origin
@@ -378,7 +386,7 @@ contract BaseContentFactory is Ownable {
 
         BaseContent content = new BaseContent(msg.sender, lib, content_type);
         content.setAddressKMS(libraryObj.addressKMS());
-        content.setContentContractAddress(libraryObj.contentTypeContracts(content_type));
+        content.setContentContractAddress(payable(libraryObj.contentTypeContracts(content_type)));
 
         // register object in user wallet
         BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
@@ -390,13 +398,13 @@ contract BaseContentFactory is Ownable {
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;
 
-    function isContract(address addr) returns (bool) {
+    function isContract(address addr) public returns (bool) {
         uint size;
         assembly { size := extcodesize(addr) }
         return size > 0;
     }
 
-    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+    function executeAccessBatch(uint32[] memory _opCodes, address payable[] memory _contentAddrs, address payable[] memory _userAddrs, uint256[] memory _requestNonces, bytes32[] memory _ctxHashes, uint256[] memory _ts, uint256[] memory _amt) public {
 
         //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
         //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);

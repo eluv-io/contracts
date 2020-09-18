@@ -1,4 +1,5 @@
-pragma solidity ^0.4.21;
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.7.1;
 
 import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";

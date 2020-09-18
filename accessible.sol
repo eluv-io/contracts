@@ -1,4 +1,5 @@
-pragma solidity 0.4.24;
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.7.1;
 
 /* -- Revision history --
 Accessible20190222135900ML: First versioned released

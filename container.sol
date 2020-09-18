@@ -1,4 +1,5 @@
-pragma solidity 0.4.24;
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.7.1;
 import {Editable} from "./editable.sol";
 import {BaseContent} from "./base_content.sol";
 import {INodeSpace} from "./node_space.sol";

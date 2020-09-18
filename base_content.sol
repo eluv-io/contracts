@@ -38,12 +38,10 @@ BaseContent20200422180500ML: Version update to reflect changes made to editable 
 
 contract BaseContent is MetaObject, Editable {
 
-    bytes32 public version ="BaseContent20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    address public contentType;
-    address public addressKMS;
-    address public contentContractAddress;
-    address public libraryAddress;
+    address payable public contentType;
+    address payable public addressKMS;
+    address payable public contentContractAddress;
+    address payable public libraryAddress;
 
     uint256 public accessCharge;
     //bool refundable;
@@ -56,7 +54,7 @@ contract BaseContent is MetaObject, Editable {
     uint256 public requestID = 0;
 
     struct RequestData {
-        address originator; // client address requesting
+        address payable originator; // client address requesting
         uint256 amountPaid; // number of token received
         int8 status; //0 access requested, 1 access granted, -1 access refused, 2 access completed, -2 access error
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
@@ -107,7 +105,10 @@ contract BaseContent is MetaObject, Editable {
         _;
     }
 
-    constructor(address content_space, address lib, address content_type) public payable {
+    constructor(address payable content_space, address payable lib, address payable content_type) public payable {
+        
+        version ="BaseContent20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+        
         contentSpace = content_space;
         libraryAddress = lib;
         statusCode = -1;
@@ -117,18 +118,18 @@ contract BaseContent is MetaObject, Editable {
         emit ContentObjectCreate(libraryAddress);
     }
 
-    function statusDescription() public constant returns (bytes32) {
+    function statusDescription() public view returns (bytes32) {
         return statusCodeDescription(statusCode);
     }
 
-    function setVisibility(uint8 _visibility_code) public onlyEditor {
+    function setVisibility(uint8 _visibility_code) public override onlyEditor {
         visibility = _visibility_code;
         emit VisibilityChanged(contentSpace, libraryAddress, visibility);
     }
 
-    function statusCodeDescription(int status_code) public constant returns (bytes32) {
+    function statusCodeDescription(int status_code) public view returns (bytes32) {
         bytes32 codeDescription = 0x0;
-        if (contentContractAddress != 0x0) {
+        if (contentContractAddress != address(0x0)) {
             Content c = Content(contentContractAddress);
             codeDescription = c.runDescribeStatus(status_code);
         }
@@ -165,22 +166,22 @@ contract BaseContent is MetaObject, Editable {
         return statusCode;
     }
 
-    function setAddressKMS(address address_KMS) public onlyEditor {
+    function setAddressKMS(address payable address_KMS) public onlyEditor {
         addressKMS = address_KMS;
     }
 
-    function getKMSInfo(bytes prefix) public view returns (string, string) {
+    function getKMSInfo(bytes memory prefix) public view returns (string memory, string memory) {
         IKmsSpace kmsSpaceObj = IKmsSpace(contentSpace);
-        if (addressKMS == 0x0 || kmsSpaceObj.checkKMSAddr(addressKMS) == 0) {
+        if (addressKMS == address(0x0) || kmsSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");
         }
         return kmsSpaceObj.getKMSInfo(kmsSpaceObj.getKMSID(addressKMS), prefix);
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.
-    function setContentContractAddress(address addr) public onlyEditor {
+    function setContentContractAddress(address payable addr) public onlyEditor {
         Content c;
-        if (contentContractAddress != 0x0) {
+        if (contentContractAddress != address(0x0)) {
             c = Content(contentContractAddress);
             uint killStatus = c.runKillExt();
             if ((killStatus == 100) || (killStatus == 1100)) {
@@ -190,7 +191,7 @@ contract BaseContent is MetaObject, Editable {
             }
         }
         contentContractAddress = addr;
-        if (addr != 0x0) {
+        if (addr != address(0x0)) {
             c = Content(addr);
             uint createStatus = c.runCreate();
             require(createStatus == 0);
@@ -209,13 +210,13 @@ contract BaseContent is MetaObject, Editable {
     //      100 -> content available if paid for
     //      255 -> unset
 
-    function getWIPAccessInfo(address accessor) private view returns (uint8, uint8, uint256) {
+    function getWIPAccessInfo(address payable accessor) private view returns (uint8, uint8, uint256) {
         if ((accessor == owner) || (visibility >= CAN_ACCESS) ){
             return (0, 0, accessCharge);
         }
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address userWallet = userSpaceObj.userWallets(accessor);
-        if (userWallet != 0x0) {
+        address payable userWallet = userSpaceObj.userWallets(accessor);
+        if (userWallet != address(0x0)) {
             /*
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentObjectRights(address(this), wallet.TYPE_ACCESS()) == true) {
@@ -232,12 +233,12 @@ contract BaseContent is MetaObject, Editable {
         return (10, 10, accessCharge);
     }
 
-    function getCustomInfo(address accessor, bytes32[] customValues, address[] stakeholders) public view returns (uint8, uint8, uint256) {
+    function getCustomInfo(address accessor, bytes32[] memory customValues, address[] memory stakeholders) public view returns (uint8, uint8, uint256) {
         uint256 calculatedCharge = accessCharge;
         uint8[2] memory codes;
         codes[0] = (visibility >= CAN_SEE) ? 0 : 255; // visibilityCode
         codes[1] = (visibility >= CAN_ACCESS) ? 0 :255; //accessCode
-        if (contentContractAddress != 0x0) {
+        if (contentContractAddress != address(0x0)) {
             uint8 customMask;
             uint8 customVisibility;
             uint8 customAccess;
@@ -260,11 +261,11 @@ contract BaseContent is MetaObject, Editable {
         return (codes[0], codes[1], calculatedCharge);
     }
 
-    function getAccessInfo(uint8 level, bytes32[] customValues, address[] stakeholders) public view returns (uint8, uint8, uint256) { //legacy
+    function getAccessInfo(uint8 level, bytes32[] memory customValues, address[] memory stakeholders) public view returns (uint8, uint8, uint256) { //legacy
         return getAccessInfoV3(msg.sender, customValues, stakeholders);
     }
 
-    function getAccessInfoV3(address accessor, bytes32[] customValues, address[] stakeholders) public view returns (uint8, uint8, uint256) {
+    function getAccessInfoV3(address payable accessor, bytes32[] memory customValues, address[] memory stakeholders) public view returns (uint8, uint8, uint256) {
 
         if (statusCode != 0) {
             return getWIPAccessInfo(accessor); //broken out to reduce complexity (compiler failed)
@@ -276,8 +277,8 @@ contract BaseContent is MetaObject, Editable {
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
             IUserSpace userSpaceObj = IUserSpace(contentSpace);
-            address userWallet = userSpaceObj.userWallets(accessor);
-            if (userWallet != 0x0) {
+            address payable userWallet = userSpaceObj.userWallets(accessor);
+            if (userWallet != address(0x0)) {
                 if (visibilityCode == 255) { //No custom calculations
                     if (AccessIndexor(userWallet).checkRights(indexCategory, address(this), 0)  /*canSee(accessor)*/ == true) {
                         visibilityCode = 0;
@@ -324,17 +325,17 @@ contract BaseContent is MetaObject, Editable {
         return (canEdit() || msg.sender == libraryAddress);
     }
 
-    function canCommit() public view returns (bool) {
+    function canCommit() public view override returns (bool) {
         return canEdit();
     }
 
-    function canConfirm() public view returns (bool) {
+    function canConfirm() public view override returns (bool) {
         INodeSpace bcs = INodeSpace(contentSpace);
         return bcs.canNodePublish(msg.sender);
     }
 
     // override from Editable
-    function parentAddress() public view returns (address) {
+    function parentAddress() public view override returns (address) {
         return libraryAddress;
     }
 
@@ -350,7 +351,7 @@ contract BaseContent is MetaObject, Editable {
     function updateStatus(int status_code) public returns (int) {
         require(canPublish());
         int newStatusCode;
-        if (contentContractAddress == 0x0) {
+        if (contentContractAddress == address(0x0)) {
             if (((msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {
                 newStatusCode = status_code; //owner can change status back to draft or to in-review
             } else if ((msg.sender == libraryAddress) && (statusCode >= 0)) {
@@ -367,12 +368,12 @@ contract BaseContent is MetaObject, Editable {
 
 
     //this function allows custom content contract to call makeRequestPayment
-    function processRequestPayment(uint256 requestNonce, address payee, string label, uint256 amount) public returns (bool) {
-        require((contentContractAddress != 0x0) && (msg.sender == contentContractAddress));
+    function processRequestPayment(uint256 requestNonce, address payable payee, string memory label, uint256 amount) public returns (bool) {
+        require((contentContractAddress != address(0x0)) && (msg.sender == contentContractAddress));
         return makeRequestPayment(requestNonce, payee, label, amount);
     }
 
-    function makeRequestPayment(uint256 requestNonce, address payee, string label, uint256 amount) private returns (bool) {
+    function makeRequestPayment(uint256 requestNonce, address payable payee, string memory label, uint256 amount) private returns (bool) {
         RequestData storage r = requestMap[requestNonce];
         if ((r.settled + amount) <= r.amountPaid) {
             payee.transfer(amount);
@@ -382,8 +383,8 @@ contract BaseContent is MetaObject, Editable {
         return true;
     }
 
-    function updateRequest() public {
-        if (contentContractAddress == 0x0) {
+    function updateRequest() public override {
+        if (contentContractAddress == address(0x0)) {
             super.updateRequest();
         } else {
             Content c = Content(contentContractAddress);
@@ -400,7 +401,7 @@ contract BaseContent is MetaObject, Editable {
     function accessRequestContext(
         uint256 requestNonce,
         bytes32 contextHash,
-        address accessor,
+        address payable accessor,
         uint256 request_timestamp
     ) public payable returns (uint256) {
         require(msg.sender == addressKMS);
@@ -409,17 +410,17 @@ contract BaseContent is MetaObject, Editable {
         return accessRequestInternal(requestNonce, emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
     }
 
-    function makeNonce(uint256 reqId) view returns(uint256) {
+    function makeNonce(uint256 reqId) public view returns(uint256) {
         return uint256(keccak256(abi.encodePacked(requestID, address(this))));
     }
 
     function accessRequestV3(
-        bytes32[] customValues,
-        address[] stakeholders
-    ) public payable returns (bool) {
+        bytes32[] memory customValues,
+        address[] memory stakeholders
+    ) public payable override returns (bool) {
         requestID = requestID + 1;
         uint256 requestNonce = makeNonce(requestID);
-        accessRequestInternal(requestNonce, customValues, stakeholders, 0x0, msg.sender, now * 1000);
+        accessRequestInternal(requestNonce, customValues, stakeholders, 0x0, msg.sender, block.timestamp * 1000);
 
         //The 2 next lines could be moved into accessRequest internal to support payment via statechannel
         RequestData memory r = RequestData(msg.sender, msg.value, 0, 0);
@@ -434,10 +435,10 @@ contract BaseContent is MetaObject, Editable {
     //  stakeholders - an array of additional address used to provide additional relevant addresses
     function accessRequest( //Left for backward compatibility
         uint8 level,
-        string pkeRequestor,
-        string pkeAFGH,
-        bytes32[] customValues,
-        address[] stakeholders
+        string memory pkeRequestor,
+        string memory pkeAFGH,
+        bytes32[] memory customValues,
+        address[] memory stakeholders
     )
     public payable returns (uint256) {
         accessRequestV3(customValues, stakeholders);
@@ -445,7 +446,7 @@ contract BaseContent is MetaObject, Editable {
         return requestID;
     }
 
-    function validateAccess(address accessor, bytes32[] custom_values, address[] stakeholders) internal {
+    function validateAccess(address payable accessor, bytes32[] memory custom_values, address[] memory stakeholders) internal {
         uint256 requiredFund;
         uint8 visibilityCode;
         uint8 accessCode;
@@ -462,17 +463,17 @@ contract BaseContent is MetaObject, Editable {
 
     function accessRequestInternal(
         uint256 requestNonce,
-        bytes32[] custom_values,
-        address[] stakeholders,
+        bytes32[] memory custom_values,
+        address[] memory stakeholders,
         bytes32 contextHash,
-        address accessor,
+        address payable accessor,
         uint256 request_timestamp
     )
     internal returns (uint256) {
 
         validateAccess(accessor, custom_values, stakeholders);
 
-        if (contentContractAddress != 0x0) {
+        if (contentContractAddress != address(0x0)) {
             Content c = Content(contentContractAddress);
             uint result = c.runAccess(requestNonce, custom_values, stakeholders, accessor);
             require(result == 0);
@@ -489,7 +490,7 @@ contract BaseContent is MetaObject, Editable {
             }
         }
         for (i = 0; i < stakeholders.length; i++) {
-            if (stakeholders[i] != 0x0) {
+            if (stakeholders[i] != address(0x0)) {
                 emit AccessRequestStakeholder(stakeholders[i]);
             }
         }
@@ -498,9 +499,9 @@ contract BaseContent is MetaObject, Editable {
     }
 
 
-    function accessCompleteInternal(uint256 requestNonce, bytes32[] customValues, address[] stakeholders) public payable returns (bool) {
+    function accessCompleteInternal(uint256 requestNonce, bytes32[] memory customValues, address[] memory stakeholders) public payable returns (bool) {
         bool success = true;
-        if (contentContractAddress != 0x0) {
+        if (contentContractAddress != address(0x0)) {
             Content c = Content(contentContractAddress);
             uint256 result = c.runFinalize(requestNonce, customValues, stakeholders, msg.sender);
             success = (result == 0);
@@ -535,9 +536,9 @@ contract BaseContent is MetaObject, Editable {
     // to the sender
     //
     // add a state variable in the contract indicating whether to credit back based on quality score
-    function accessCompleteV3(uint256 requestNonce, bytes32[] customValues, address[] stakeholders) public payable returns (bool) {
+    function accessCompleteV3(uint256 requestNonce, bytes32[] memory customValues, address[] memory stakeholders) public payable returns (bool) {
         RequestData storage r = requestMap[requestNonce];
-        require((r.originator != 0x0) && ((msg.sender == r.originator) || (msg.sender == owner)));
+        require((r.originator != address(0x0)) && ((msg.sender == r.originator) || (msg.sender == owner)));
 
         bool success = accessCompleteInternal(requestNonce, customValues, stakeholders);
 
@@ -560,7 +561,7 @@ contract BaseContent is MetaObject, Editable {
         }
         delete requestMap[requestNonce];
         // record to event
-        emit AccessCompleteV3(requestNonce, success, libraryAddress, 0x0, msg.sender, now * 1000);
+        emit AccessCompleteV3(requestNonce, success, libraryAddress, 0x0, msg.sender, block.timestamp * 1000);
         return success;
     }
     function accessComplete(uint256 request_ID, uint256 score_pct, uint256) public payable returns (bool) {
@@ -573,9 +574,9 @@ contract BaseContent is MetaObject, Editable {
     }
 
 
-    function kill() public onlyFromLibrary {
+    function kill() public override onlyFromLibrary {
         uint canKill = 0;
-        if (contentContractAddress != 0x0) {
+        if (contentContractAddress != address(0x0)) {
             canKill = Content(contentContractAddress).runKillExt();
         }
         require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
@@ -589,7 +590,7 @@ contract BaseContent is MetaObject, Editable {
     }
 
     function setPaidRights() private {
-        address walletAddress = IUserSpace(contentSpace).userWallets(msg.sender);
+        address payable walletAddress = IUserSpace(contentSpace).userWallets(msg.sender);
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }

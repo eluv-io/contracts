@@ -22,13 +22,14 @@ BsAccessWallet20191203102900ML: Bumped up to reflect change in the access_indexo
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
 contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable {
-    bytes32 public version = "BsAccessWallet20191203102900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address content_space)  public payable {
+    constructor(address payable content_space) payable {
+        version = "BsAccessWallet20191203102900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+        
         contentSpace = content_space;
     }
 
-    function canConfirm() public view returns (bool) {
+    function canConfirm() public view override returns (bool) {
         INodeSpace bcs = INodeSpace(contentSpace);
         return bcs.canNodePublish(msg.sender);
     }
@@ -41,7 +42,7 @@ contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable 
     uint256 public currentTimestamp;
 
     // TODO: not sure if this is necessary - there should be a default accessor for currentTimestamp?
-    function validateTimestamp(uint256 _ts) public view returns (bool) {
+    function validateTimestamp(uint256 _ts) public view override returns (bool) {
         if (_ts > currentTimestamp)
             return true;
         return false;
@@ -50,6 +51,7 @@ contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable 
     function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts)
     public
     view
+    override
     returns (bool) {
         bytes32 checkHash = keccak256(abi.encodePacked(address(this), _dest, _value, _ts));
         address checkAddr = ecrecover(checkHash, _v, _r, _s);
@@ -65,8 +67,9 @@ contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable 
     int public constant execStatusSigFail = 3;
     int public constant execStatusSendFail = 4;
 
-    function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts)
+    function execute(address payable _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address payable _dest, uint256 _value, uint256 _ts)
     external
+    override
     returns (bool) {
 
         IKmsSpace spc = IKmsSpace(contentSpace);
@@ -113,7 +116,9 @@ BsAccWltFactory20190506154200ML: First versioned released
 
 contract BaseAccessWalletFactory is Ownable {
 
-    bytes32 public version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    constructor(){
+        version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     function createAccessWallet() public returns (address) {
         BaseAccessWallet theWallet = new BaseAccessWallet(msg.sender); // msg.sender here is the space ...

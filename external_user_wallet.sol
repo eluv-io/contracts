@@ -3,16 +3,15 @@ pragma solidity ^0.7.1;
 
 import {Ownable} from "./ownable.sol";
 import {Editable} from "./editable.sol";
-import {Accessible} from "./accessible.sol";
 
-contract ExternalUserWallet is Accessible, Editable {
+contract ExternalUserWallet is Editable {
 
     address public addressTA; // trusted authority of the user - aka KMS
     address public addressExtUser;
 
     event CreateExtUserWallet(address contentSpace, address extUserAddr);
 
-    constructor(address _content_space, address _taAddr, address _extUserAddr) public payable {
+    constructor(address payable _content_space, address payable _taAddr, address payable _extUserAddr) payable {
         contentSpace = _content_space;
         addressTA = _taAddr;
         addressExtUser = _extUserAddr;
@@ -25,17 +24,17 @@ contract ExternalUserWallet is Accessible, Editable {
     }
 
     // overloads ...
-    function canEdit() public view returns (bool) {
+    function canEdit() public view override returns (bool) {
         return (msg.sender == owner || msg.sender == addressExtUser);
     }
 
-    function canCommit() public view returns (bool) {
+    function canCommit() public view override returns (bool) {
         return (msg.sender == owner || msg.sender == addressExtUser);
     }
 
     function accessRequest() public returns (bool) {
         require(msg.sender == owner || msg.sender == addressExtUser);
-        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), now))), 0x0, 0x0, msg.sender, now * 1000);
+        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), block.timestamp))), address(0x0), 0x0, msg.sender, block.timestamp * 1000);
         return true;
     }
 }

@@ -19,8 +19,6 @@ Content20200210164100ML: Modified for authV3 support
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20200210164100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     uint8 public constant DEFAULT_SEE  = 1;
     uint8 public constant DEFAULT_ACCESS  = 2;
     uint8 public constant DEFAULT_CHARGE  = 4;
@@ -40,6 +38,10 @@ contract Content is Ownable {
     event RunAccessCharge(int256 calculatedAccessCharge);
     event RunAccess(uint256 requestNonce, uint result);
     event RunFinalize(uint256 requestNonce, uint result);
+    
+    constructor(){
+        version ="Content20200210164100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     function runDescribeStatus(int) public view returns (bytes32) {
         return 0x0;
@@ -73,7 +75,7 @@ contract Content is Ownable {
         if ((result == 100) || (result == 1100)) {
           authorizedKiller = msg.sender;
         } else {
-          authorizedKiller = 0x0;
+          authorizedKiller = address(0x0);
         }
         return result;
     }
@@ -85,8 +87,8 @@ contract Content is Ownable {
 
 
     function runAccessInfo(
-        bytes32[], /*customValues*/
-        address[], /*stakeholders*/
+        bytes32[] memory, /*customValues*/
+        address[] memory, /*stakeholders*/
         address accessor
     )
     public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
@@ -100,8 +102,8 @@ contract Content is Ownable {
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
         uint256, /*requestNonce*/
-        bytes32[], /*customValues*/
-        address[], /*stakeholders*/
+        bytes32[] memory, /*customValues*/
+        address[] memory, /*stakeholders*/
         address accessor
     )
         public payable returns(uint)
@@ -117,8 +119,8 @@ contract Content is Ownable {
     // Other numbers can be used as error codes and would stop the processing.
     function runFinalize(
       uint256, /*requestNonce*/
-      bytes32[], /*customValues*/
-      address[], /*stakeholders*/
+      bytes32[] memory, /*customValues*/
+      address[] memory, /*stakeholders*/
       address accessor
     ) public payable returns (uint) {
         return 0;

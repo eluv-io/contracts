@@ -201,7 +201,7 @@ contract BaseLibrary is MetaObject, Container {
         return false;
     }
 
-    function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
+    function hasGroupAccess(address _candidate, address[] memory _groupList) internal view returns (bool) {
         for (uint i = 0; i < _groupList.length; i++) {
             if (_groupList[i] != 0x0) {
                 BaseAccessControlGroup groupContract = BaseAccessControlGroup(_groupList[i]);
@@ -223,11 +223,11 @@ contract BaseLibrary is MetaObject, Container {
     }
     */
 
-    function canContribute(address _candidate) public constant returns (bool) {
+    function canContribute(address _candidate) public view returns (bool) {
         return hasEditorRight(_candidate) || hasGroupAccess(_candidate, contributorGroups);
     }
 
-    function canReview(address _candidate) public constant returns (bool) {
+    function canReview(address _candidate) public view returns (bool) {
         if (_candidate == owner) {
             return true;
         }
@@ -267,7 +267,7 @@ contract BaseLibrary is MetaObject, Container {
         return true;
     }
 
-    function getPendingApprovalRequest(uint256 index) public constant returns (address) {
+    function getPendingApprovalRequest(uint256 index) public view returns (address) {
         // Read and process the first content in the approvalRequests list
         if ((approvalRequestsLength == 0) || (approvalRequestsLength <= index)) {
             return 0;

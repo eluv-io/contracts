@@ -68,7 +68,7 @@ contract Ownable {
         creator = newCreator;
     }
 
-    function kill() public onlyOwner {
+    function kill() public virtual onlyOwner {
         selfdestruct(owner);  // kills contract; send remaining funds back to owner
     }
 }

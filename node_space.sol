@@ -123,8 +123,4 @@ contract NodeSpace is Ownable, INodeSpace {
         return false;
     }
 
-
-
-
-
 }

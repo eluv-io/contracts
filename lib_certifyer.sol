@@ -5,7 +5,7 @@ library Certifyer {
 
     //event Vrs(uint8 v, bytes32 r, bytes32 s);
 
-    function splitSignature(bytes sig) pure public returns (uint8, bytes32, bytes32) {
+    function splitSignature(bytes memory sig) pure public returns (uint8, bytes32, bytes32) {
         require(sig.length == 65);
 
         bytes32 r;
@@ -23,7 +23,7 @@ library Certifyer {
         return (v, r, s);
     }
 
-    function uint2str(uint i) pure public returns (bytes){
+    function uint2str(uint i) pure public returns (bytes memory){
         if (i == 0) return "0";
         uint j = i;
         uint length=0;
@@ -34,18 +34,18 @@ library Certifyer {
         bytes memory bstr = new bytes(length);
         uint k = length - 1;
         while (i != 0){
-            bstr[k--] = byte(48 + i % 10);
+            bstr[k--] = byte(bytes32(48 + i % 10));
             i /= 10;
         }
         return bstr;
     }
 
-    function messageHash(bytes message) pure public returns (bytes32) {
+    function messageHash(bytes memory message) pure public returns (bytes32) {
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n",uint2str(message.length), message));
         //return keccak256("\x19Ethereum Signed Message:\n\x32\x30",  message);
     }
 
-    function recoverSignerFromMessageHash(bytes32 message_hash, bytes sig) pure public returns (address) {
+    function recoverSignerFromMessageHash(bytes32 message_hash, bytes memory sig) pure public returns (address) {
         uint8 v;
         bytes32 r;
         bytes32 s;
@@ -56,7 +56,7 @@ library Certifyer {
         return ecrecover(message_hash, v, r, s);
     }
 
-    function recoverSignerFromMessage(bytes message, bytes sig) pure public returns (address) {
+    function recoverSignerFromMessage(bytes memory message, bytes memory sig) pure public returns (address) {
         return recoverSignerFromMessageHash(messageHash(message), sig);
     }
 

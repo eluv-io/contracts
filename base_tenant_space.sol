@@ -21,7 +21,7 @@ contract TenantFuncsBase is MetaObject, CounterObject {
 
     event TenantTransfer(address to, uint256 amount);
 
-    function checkAndSet(bytes _encToken) {
+    function checkAndSet(bytes _encToken) public {
         uint256 otpOrd = EncToken.getUint("ord", _encToken);
 
         bytes32 segIdent = bytes32(EncToken.getUint("segident(id,ord)", _encToken));
@@ -62,8 +62,6 @@ contract TenantFuncsBase is MetaObject, CounterObject {
 
 contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
 
-    bytes32 public version ="BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     string public name;
     string public description;
 
@@ -79,6 +77,9 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
     event GetAccessWallet(address walletAddress);
 
     constructor(address _contentSpace, string _tenantName, address _kmsAddr) public payable {
+        version ="BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+        
+        
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
         // allow either the space owner or a trusted address to refer to the space
@@ -199,7 +200,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
         emit AddTenantGroup(_id, _groupAddr);
     }
 
-    function checkIdsRemove(bytes32 _id) {
+    function checkIdsRemove(bytes32 _id) public {
         if (groupsMapping[_id].length == 0) {
             for (uint256 i = 0; i < groupIds.length; i++) {
                 if (groupIds[i] == _id) {

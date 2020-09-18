@@ -15,8 +15,6 @@ import "./user_space.sol";
 
 contract Accessible is Ownable {
 
-    bytes32 public version ="Accessible20200626121600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     uint8 public visibility = 1;
     uint8 public constant CAN_SEE = 1;
     uint8 public constant CAN_ACCESS = 10;
@@ -31,15 +29,19 @@ contract Accessible is Ownable {
         address accessor,           // I've called this 'userAddress' - don't care too much but ideally it's the same name wherever it means the same thing!
         uint256 requestTimestamp   // always millis - either set from context or with blockchain now()
     );
+    
+    constructor(){
+        version ="Accessible20200626121600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
-    function hasAccess(address candidate) public view returns (bool) {
+    function hasAccess(address payable candidate) public view returns (bool) {
 
         if ((candidate == owner) || (visibility >= 10) ) {
             return true;
         }
 
         if (indexCategory > 0) {
-            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
+            address payable walletAddress = IUserSpace(contentSpace).userWallets(candidate);
             return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 1/*AccessIndexor TYPE_ACCESS*/);
         } else {
             return false;
@@ -48,17 +50,17 @@ contract Accessible is Ownable {
 
 
     function accessRequestV3(
-        bytes32[] customValues,
-        address[] stakeholders
-    ) public payable returns (bool) {
+        bytes32[] memory customValues,
+        address[] memory stakeholders
+    ) public payable virtual returns (bool) {
         require(hasAccess(msg.sender));
-        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), now))), 0x0, 0x0, msg.sender, now * 1000);
+        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), block.timestamp))), address(0x0), 0x0, msg.sender, block.timestamp * 1000);
         return true;
     }
 
     event VisibilityChanged(address contentSpace, address parentAddress, uint8 visibility);
 
-    function setVisibility(uint8 _visibility_code) public onlyOwner {
+    function setVisibility(uint8 _visibility_code) public virtual onlyOwner {
         visibility = _visibility_code;
         emit VisibilityChanged(contentSpace, contentSpace, visibility);
     }

@@ -3,7 +3,9 @@
 pragma solidity ^0.7.1;
 
 //import {Ownable} from "./ownable.sol";
-import "./strings.sol";
+
+// strings library OUTDATED... 
+//import "./strings.sol";
 import "./accessible.sol";
 import "./access_indexor.sol";
 import "./user_space.sol";
@@ -27,9 +29,7 @@ Editable20200422180400ML: Fixed deletion of latest version
 
 
 contract Editable is  Accessible {
-    using strings for *;
-
-    bytes32 public version ="Editable20200626180400PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    //using strings for *;
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -49,22 +49,26 @@ contract Editable is  Accessible {
         require(canEdit());
         _;
     }
+    
+    constructor(){
+        version ="Editable20200626180400PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
     }
 
     // This function is meant to be overloaded. By default the owner is the only editor
-    function canEdit() public view returns (bool) {
+    function canEdit() public view virtual returns (bool) {
         return hasEditorRight(msg.sender);
     }
 
-    function hasEditorRight(address candidate) public view returns (bool) {
+    function hasEditorRight(address payable candidate) public view returns (bool) {
         if ((candidate == owner) || (visibility >= 100)) {
             return true;
         }
         if (indexCategory > 0) {
-            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
+            address payable walletAddress = IUserSpace(contentSpace).userWallets(candidate);
             return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 2 /* TYPE_EDIT */ );
         } else {
             return false;
@@ -72,16 +76,16 @@ contract Editable is  Accessible {
     }
 
     // intended to be overridden
-    function canConfirm() public view returns (bool) {
+    function canConfirm() public view virtual returns (bool) {
         return false;
     }
 
-    function canCommit() public view returns (bool) {
+    function canCommit() public view virtual returns (bool) {
         return (msg.sender == owner);
     }
 
     // overridden in BaseContent to return library
-    function parentAddress() public view returns (address) {
+    function parentAddress() public view virtual returns (address) {
         return contentSpace;
     }
 
@@ -92,7 +96,7 @@ contract Editable is  Accessible {
         commitPending = false;
     }
 
-    function commit(string _objectHash) public {
+    function commit(string memory _objectHash) public {
         require(canCommit());
         require(!commitPending); // don't allow two possibly different commits to step on each other - one always wins
 	    require(bytes(_objectHash).length < 128);
@@ -117,7 +121,7 @@ contract Editable is  Accessible {
         return true;
     }
 
-    function updateRequest() public {
+    function updateRequest() public virtual {
         require(canEdit());
         emit UpdateRequest(objectHash);
     }
@@ -129,12 +133,12 @@ contract Editable is  Accessible {
             versionHashes[idx] = versionHashes[versionHashes.length - 1];
             versionTimestamp[idx] = versionTimestamp[versionTimestamp.length - 1];
         }
-        versionHashes.length--;
-        versionTimestamp.length--;
+        versionHashes.pop();
+        versionTimestamp.pop();
         return;
     }
 
-    function deleteVersion(string _versionHash) public returns (int256) {
+    function deleteVersion(string memory _versionHash) public returns (int256) {
         require(canCommit());
 
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
@@ -177,10 +181,10 @@ contract Editable is  Accessible {
         return foundIdx;
     }
 
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public onlyEditor {
+    function setRights(address payable stakeholder, uint8 access_type, uint8 access) public onlyEditor {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address walletAddress = userSpaceObj.userWallets(stakeholder);
-        if (walletAddress == 0x0){
+        address payable walletAddress = userSpaceObj.userWallets(stakeholder);
+        if (walletAddress == address(0x0)){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);
         } else {
@@ -188,7 +192,7 @@ contract Editable is  Accessible {
         }
     }
 
-    function setGroupRights(address group, uint8 access_type, uint8 access) public {
+    function setGroupRights(address payable group, uint8 access_type, uint8 access) public {
         AccessIndexor indexor = AccessIndexor(group);
         if (indexCategory == indexor.CATEGORY_CONTENT_OBJECT()) {
             indexor.setContentObjectRights(address(this), access_type, access)  ;
@@ -205,7 +209,7 @@ contract Editable is  Accessible {
         }
     }
 
-    function setVisibility(uint8 _visibility_code) public onlyEditor {
+    function setVisibility(uint8 _visibility_code) public override(Accessible) virtual onlyEditor {
         visibility = _visibility_code;
         emit VisibilityChanged(contentSpace, contentSpace, visibility);
     }

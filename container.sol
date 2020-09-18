@@ -18,17 +18,19 @@ Container20200316135300ML: Leverages inherited hasAccess
 
 contract Container is Editable {
 
-    bytes32 public version = "Container20200316135300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     address public addressKMS;
 
-    address[] public contentTypes;
+    address[] public contentTypesList;
     uint256 public contentTypesLength = 0;
     mapping ( address => address ) public contentTypeContracts;  // custom contracts map
 
 
     event ContentTypeAdded(address contentType, address contentContract);
     event ContentTypeRemoved(address contentType);
+    
+    constructor(){
+        version = "Container20200316135300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
 
     function setAddressKMS(address address_KMS) public onlyOwner {
@@ -36,11 +38,11 @@ contract Container is Editable {
     }
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
-        if ((contentTypeContracts[content_type] == 0x0) && (whitelistedType(content_type) == false)) {
-            if (contentTypesLength < contentTypes.length) {
-                contentTypes[contentTypesLength] = content_type;
+        if ((contentTypeContracts[content_type] == address(0x0)) && (whitelistedType(content_type) == false)) {
+            if (contentTypesLength < contentTypesList.length) {
+                contentTypesList[contentTypesLength] = content_type;
             } else {
-                contentTypes.push(content_type);
+                contentTypesList.push(content_type);
             }
             contentTypesLength = contentTypesLength + 1;
         }
@@ -51,11 +53,11 @@ contract Container is Editable {
     function removeContentType(address content_type) public onlyOwner returns (bool) {
         uint256 latestIndex = contentTypesLength - 1;
         for (uint256 i = 0; i < contentTypesLength; i++) {
-            if (contentTypes[i] == content_type) {
-                delete contentTypes[i];
+            if (contentTypesList[i] == content_type) {
+                delete contentTypesList[i];
                 if (i != latestIndex) {
-                    contentTypes[i] = contentTypes[latestIndex];
-                    delete contentTypes[latestIndex];
+                    contentTypesList[i] = contentTypesList[latestIndex];
+                    delete contentTypesList[latestIndex];
                 }
                 contentTypesLength = latestIndex; //decrease by 1
                 delete contentTypeContracts[content_type];
@@ -76,7 +78,7 @@ contract Container is Editable {
     function whitelistedType(address content_type) public view returns (bool) {
         bool isValidType = false;
         for (uint i = 0; i < contentTypesLength; i++) {
-            if (contentTypes[i] == content_type) {
+            if (contentTypesList[i] == content_type) {
                 isValidType = true;
             }
         }
@@ -85,13 +87,13 @@ contract Container is Editable {
 
 
     function findTypeByHash(bytes32 typeHash) public view returns (address) {
-        for (uint i = 0; i < contentTypes.length; i++) {
-            Editable contentType = Editable(contentTypes[i]);
+        for (uint i = 0; i < contentTypesList.length; i++) {
+            Editable contentType = Editable(payable(contentTypesList[i]));
             if (keccak256(abi.encodePacked(contentType.objectHash())) == keccak256(abi.encodePacked(typeHash))) {
-                return contentTypes[i];
+                return contentTypesList[i];
             }
         }
-        return 0x0;
+        return address(0x0);
     }
 
     function requiresReview() public view returns (bool) {
@@ -99,7 +101,7 @@ contract Container is Editable {
     }
 
     // Current implementation ignores rights provided directly to individual
-    function canContribute(address _candidate) public constant returns (bool) {
+    function canContribute(address _candidate) public view returns (bool) {
         return ((_candidate == owner) || (msg.sender == owner)); //not sure about the ||
     }
 
@@ -111,7 +113,7 @@ contract Container is Editable {
         return false;
     }
 
-    function publish(address contentObj) public returns (bool) {
+    function publish(address payable contentObj) public returns (bool) {
         require(msg.sender == contentObj);
         BaseContent content = BaseContent(contentObj);
         content.updateStatus(0); //update status to published

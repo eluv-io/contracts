@@ -43,20 +43,20 @@ contract Content is Ownable {
         version ="Content20200210164100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
     }
 
-    function runDescribeStatus(int) public view returns (bytes32) {
+    function runDescribeStatus(int) public view virtual returns (bytes32) {
         return 0x0;
     }
 
     //0 indicates that the creation can proceed.
     // Other numbers can be used as error codes and would stop the processing.
-    function runCreate() public payable returns (uint) {
+    function runCreate() public payable virtual returns (uint) {
         return 0;
     }
 
 
    //0 indicates edit can proceed
    //100 indicates that custom contract does not modify default behavior
-   function runEdit() public returns (uint) {
+   function runEdit() public virtual returns (uint) {
        return 100;
    }
 
@@ -65,7 +65,7 @@ contract Content is Ownable {
     //1000 indicates that the deletion/inactivation can proceed without further validations
     //1100 indicates that the deletion can proceed without further validations and the custom contract should be killed too
     // Other numbers can be used as error codes and would stop the processing.
-    function runKill() public payable returns (uint) {
+    function runKill() public payable virtual returns (uint) {
         return 0;
     }
 
@@ -81,7 +81,7 @@ contract Content is Ownable {
     }
 
     // a negative number returned indicates that the licensing fee to be paid is the default
-    function runStatusChange(int proposed_status_code) public payable returns (int) {
+    function runStatusChange(int proposed_status_code) public payable virtual returns (int) {
         return proposed_status_code;
     }
 
@@ -89,9 +89,9 @@ contract Content is Ownable {
     function runAccessInfo(
         bytes32[] memory, /*customValues*/
         address[] memory, /*stakeholders*/
-        address accessor
+        address payable accessor
     )
-    public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
+    public view virtual returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
     {
         return (7, 0, 0, 0); //7 is DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, hence the 3 tailing values are ignored
     }
@@ -104,9 +104,9 @@ contract Content is Ownable {
         uint256, /*requestNonce*/
         bytes32[] memory, /*customValues*/
         address[] memory, /*stakeholders*/
-        address accessor
+        address payable accessor
     )
-        public payable returns(uint)
+        public payable virtual returns(uint)
     {
             return 0;
     }

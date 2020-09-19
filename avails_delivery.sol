@@ -38,53 +38,53 @@ contract AvailsDelivery is Content {
     }
 
 
-    function setAvailability(address content, bool sd,bool hd, uint start, uint end, address region ) public {
+    function setAvailability(address payable content, bool sd,bool hd, uint start, uint end, address region ) public {
         BaseContent c = BaseContent(content);
         require(msg.sender == c.owner());
         uint startDate = start;
         if (startDate == 0) {
-            startDate = now;
+            startDate = block.timestamp;
         }
         availability[content] = AvailabilityData(sd, hd, startDate, end, region);
     }
 
-    function setAccessorGroup(address content, address accessor) public {
+    function setAccessorGroup(address payable content, address accessor) public {
         BaseContent c = BaseContent(content);
         require(msg.sender == c.owner());
         accessors[content] = accessor;
     }
 
-    function validateAvailability(address accessor) public view {
+    function validateAvailability(address payable accessor) public view {
         require(hasAccess(msg.sender, accessor));
         require(isAvailable(msg.sender, accessor) == 0);
     }
 
-    function hasAccess(address content, address accessor) public view returns (bool) {
-        address accessorGroup = accessors[content];
-        if (accessorGroup == 0x0) {
+    function hasAccess(address payable content, address payable accessor) public view returns (bool) {
+        address payable accessorGroup = payable(accessors[content]);
+        if (accessorGroup == address(0x0)) {
             return true;
         }
         BaseAccessControlGroup group = BaseAccessControlGroup(accessorGroup);
         return group.hasAccess(accessor);
     }
 
-    function isAvailable(address content, address accessor) public view returns (uint8) {
+    function isAvailable(address content, address payable accessor) public view returns (uint8) {
         uint8 available = 0;
         AvailabilityData storage avail = availability[content];
-        address region = avail.region;
+        address payable region = payable(avail.region);
 
-        if (region != 0x0) {
+        if (region != address(0x0)) {
             BaseAccessControlGroup group = BaseAccessControlGroup(region);
             if (group.hasAccess(accessor) == false) {
                 available = 10;
                 //emit Log("Wrong territory");
             }
         }
-        if (avail.startDate > now) {
+        if (avail.startDate > block.timestamp) {
             available = 20;
             //emit Log("Not yet available");
         }
-        if ((avail.endDate != 0) && (avail.endDate < now)) {
+        if ((avail.endDate != 0) && (avail.endDate < block.timestamp)) {
             available = 30;
             //emit Log("Not longer available");
         }
@@ -93,11 +93,11 @@ contract AvailsDelivery is Content {
 
 
     function runAccessInfo(
-        bytes32[], /*customValues*/
-        address[], /*stakeholders*/
-        address accessor
+        bytes32[] memory, /*customValues*/
+        address[] memory, /*stakeholders*/
+        address payable accessor
     )
-    public view returns (uint8, uint8, uint8, uint256)
+    public view override returns (uint8, uint8, uint8, uint256)
     {
         if (!hasAccess(msg.sender,accessor)) {
             return (0, 100, 0, 0);
@@ -112,9 +112,9 @@ contract AvailsDelivery is Content {
 
     function runAccess(
         bytes32, /*request_ID*/
-        bytes32[], /*custom_values*/
-        address[], /*stake_holders*/
-        address accessor
+        bytes32[] memory, /*custom_values*/
+        address[] memory, /*stake_holders*/
+        address payable accessor
     )
     public payable returns(uint)
     {

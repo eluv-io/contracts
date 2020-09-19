@@ -10,8 +10,6 @@ PaymentService20190318102800ML: First versioned released, migrated to 0.4.24, ma
 
 contract PaymentService is Content {
 
-    bytes32 public version ="PaymentService20190318102800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     struct RedeemRequest {
         address payable id; // client address requesting
         string redeemCurrency;
@@ -30,9 +28,13 @@ contract PaymentService is Content {
     event RedeemTokenRequest(uint256 numtokens, string pay_to, string nonce);
     event RedeemTokenExecuted(string currency, uint256 value, string payment_proof, string nonce);
     event SetTokenValue(string currency, uint256 value);
+    
+    constructor(){
+        version ="PaymentService20190318102800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
 
-    function redeemTokenRequest(string payment_account, string tx_nonce) public payable returns (uint) {
+    function redeemTokenRequest(string memory payment_account, string memory tx_nonce) public payable returns (uint) {
         //If the request is not backed by a balance
         if (msg.value == 0) {
             return 1;
@@ -48,15 +50,15 @@ contract PaymentService is Content {
         return 0;
     }
 
-    function getPendingRedeemRequest() public constant returns ( address, string, uint256, string, string) {
+    function getPendingRedeemRequest() public view returns ( address, string memory, uint256, string memory, string memory) {
         if (redeemRequestsLength == 0) {
-            return (0, "", 0, "", "");
+            return (address(0), "", 0, "", "");
         }
         RedeemRequest memory req = redeemRequests[0];
         return (req.id, req.redeemCurrency, req.numTokens, req.payTo, req.nonce);
     }
 
-    function redeemTokenExecuted(string currency, uint256 value, string payment_proof, string tx_nonce) public returns (uint) {
+    function redeemTokenExecuted(string memory currency, uint256 value, string memory payment_proof, string memory tx_nonce) public returns (uint) {
         if ((msg.sender != creator) && (msg.sender != payerAddress)) {
             return 3;
         }
@@ -73,21 +75,21 @@ contract PaymentService is Content {
         return 1;
     }
 
-    function redeemDbg(uint256 idx) public constant returns (uint256, uint256, string) {
+    function redeemDbg(uint256 idx) public view returns (uint256, uint256, string memory) {
         return (redeemRequests.length, redeemRequestsLength, redeemRequests[idx].nonce);
     }
 
-    function setPayerAdress(address payer_address) public onlyOwner {
+    function setPayerAdress(address payable payer_address) public onlyOwner {
         payerAddress = payer_address;
     }
 
-    function setTokenValue(string currency, uint256 value) public onlyOwner {
+    function setTokenValue(string memory currency, uint256 value) public onlyOwner {
         tokenCurrency = currency;
         tokenValue = value;
         emit SetTokenValue(currency, value);
     }
 
-    function getTokenValue() public constant returns(string, uint256) {
+    function getTokenValue() public view returns(string memory, uint256) {
         return (tokenCurrency, tokenValue);
     }
 

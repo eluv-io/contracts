@@ -60,8 +60,8 @@ contract TenantFuncsBase is MetaObject, CounterObject {
     }
 }
 
-// TODO : removed Accessible as it is inherited by Editable ...
-contract BaseTenantSpace is MetaObject, CounterObject, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
+
+contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
 
     string public name;
     string public description;
@@ -167,7 +167,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Container, IUserSpace, IN
         require(checkCallFunc(_func4Bytes, _encAuthToken, _v, _r, _s));
 
         address maybeFuncAddr = funcMapping[_func4Bytes];
-// TODO : check changes ...
+
         bool success = maybeFuncAddr.delegatecall(abi.encodeWithSelector(_func4Bytes, _encAuthToken, _p1, _p2));
         require(success);
     }
@@ -192,7 +192,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Container, IUserSpace, IN
                 return;
             }
         }
-// TODO : check changes ...
+
         groupsMapping[_id].push(_groupAddr);
         if (groupsMapping[_id].length == 1) {
             groupIds.push(_id);

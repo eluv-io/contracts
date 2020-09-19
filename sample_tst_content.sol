@@ -11,8 +11,6 @@ TstContent20200211165300ML: Modified to conform to authV3 API
 
 contract TstContent is Content {
 
-    bytes32 public version = "TstContent20200211165300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
     mapping (int => bytes32) public statusCodeDescription;
     uint public runCreateCode = 0;
     uint public runEditCode = 100;
@@ -25,8 +23,12 @@ contract TstContent is Content {
     uint8 public visibilityCode=0;
     uint8 public accessCode=0;
     uint256 public accessCharge=0;
+    
+    constructor(){
+        version = "TstContent20200211165300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    }
 
-    function runDescribeStatus(int code) public view returns (bytes32) {
+    function runDescribeStatus(int code) public view override returns (bytes32) {
         return statusCodeDescription[code];
     }
 
@@ -52,7 +54,7 @@ contract TstContent is Content {
 
     //0 indicates that the creation can proceed.
     // Other numbers can be used as error codes and would stop the processing.
-    function runCreate() public payable returns (uint) {
+    function runCreate() public payable override returns (uint) {
         return runCreateCode;
     }
  
@@ -63,7 +65,7 @@ contract TstContent is Content {
 
    //0 indicates edit can proceed
    //100 indicates that custom contract does not modify default behavior
-   function runEdit() public returns (uint) {
+   function runEdit() public override returns (uint) {
        return runEditCode;
    }
 
@@ -76,7 +78,7 @@ contract TstContent is Content {
     //1000 indicates that the deletion/inactivation can proceed without further validations
     //1100 indicates that the deletion can proceed without further validations and the custom contract should be killed too
     // Other numbers can be used as error codes and would stop the processing.
-    function runKill() public payable returns (uint) {
+    function runKill() public payable override returns (uint) {
         return runKillCode;
     }
 
@@ -85,7 +87,7 @@ contract TstContent is Content {
     }
 
     // a negative number returned indicates that the licending fee to be paid is the default
-    function runStatusChange(int proposed_status_code) public payable returns (int) {
+    function runStatusChange(int proposed_status_code) public payable override returns (int) {
         return runStatusChangeCode;
     }
 
@@ -95,11 +97,11 @@ contract TstContent is Content {
 
 
     function runAccessInfo(
-        bytes32[], /*customValues*/
-        address[], /*stakeholders*/
-        address accessor
+        bytes32[] memory, /*customValues*/
+        address[] memory, /*stakeholders*/
+        address payable accessor
     )
-    public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
+    public view override returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
     {
         return (maskCode, visibilityCode, accessCode, accessCharge); //7 is DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, hence the 3 tailing values are ignored
     }
@@ -109,11 +111,11 @@ contract TstContent is Content {
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
         uint256, /*requestNonce*/
-        bytes32[], /*customValues*/
-        address[], /*stakeholders*/
-        address accessor
+        bytes32[] memory, /*customValues*/
+        address[] memory, /*stakeholders*/
+        address payable accessor
     )
-        public payable returns(uint)
+        public payable override returns(uint)
     {
             return runAccessCode;
     }
@@ -128,7 +130,7 @@ contract TstContent is Content {
     // behavior is currently unchanged regardless of result.
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
-    function runFinalize(bytes32, bytes32[], address[], address) public payable returns (uint) {
+    function runFinalize(bytes32, bytes32[] memory, address[] memory, address) public payable returns (uint) {
         return runFinalizeCode;
     }
 
@@ -142,10 +144,12 @@ contract TstContentFactory is Ownable {
    
     event NewTstContent(address instanceAddress);
 
-    bytes32 public version = "TstContentFctry20100113182100ML";
+    constructor(){
+        version = "TstContentFctry20100113182100ML";
+    }
 
     function instantiate() public returns (address) {
-	address instanceAddress = new TstContent();
+	address instanceAddress = address(new TstContent());
         emit NewTstContent(instanceAddress);
         return instanceAddress;
     }

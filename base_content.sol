@@ -233,7 +233,7 @@ contract BaseContent is MetaObject, Editable {
         return (10, 10, accessCharge);
     }
 
-    function getCustomInfo(address accessor, bytes32[] memory customValues, address[] memory stakeholders) public view returns (uint8, uint8, uint256) {
+    function getCustomInfo(address payable accessor, bytes32[] memory customValues, address[] memory stakeholders) public view returns (uint8, uint8, uint256) {
         uint256 calculatedCharge = accessCharge;
         uint8[2] memory codes;
         codes[0] = (visibility >= CAN_SEE) ? 0 : 255; // visibilityCode

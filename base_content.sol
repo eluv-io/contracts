@@ -320,7 +320,9 @@ contract BaseContent is MetaObject, Editable {
     }
 
     function canPublish() public view returns (bool) {
-        return (canEdit() || msg.sender == libraryAddress);
+        // need to check the library address first. if canEdit() is called on a library it reverts because the library
+        //  cannot have a wallet.
+        return (msg.sender == libraryAddress || canEdit());
     }
 
     function canCommit() public view returns (bool) {

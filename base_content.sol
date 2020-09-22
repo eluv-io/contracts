@@ -352,11 +352,7 @@ contract BaseContent is MetaObject, Editable {
         require(canPublish());
         int newStatusCode;
         if (contentContractAddress == 0x0) {
-            if (((msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {
-                newStatusCode = status_code; //owner can change status back to draft or to in-review
-            } else if ((msg.sender == libraryAddress) && (statusCode >= 0)) {
-                newStatusCode = status_code; //library can change status of content in review to any status
-            }
+            newStatusCode = status_code;
         } else {
             Content c = Content(contentContractAddress);
             newStatusCode = c.runStatusChange(status_code);

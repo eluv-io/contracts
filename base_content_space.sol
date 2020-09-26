@@ -111,24 +111,28 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     }
 
     function createContentType() public returns (address) {
+        require(msg.sender == tx.origin);
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
         return contentTypeAddress;
     }
 
     function createLibrary(address address_KMS) public returns (address) {
+        require(msg.sender == tx.origin);
         address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
         emit CreateLibrary(libraryAddress);
         return libraryAddress;
     }
 
     function createContent(address lib, address content_type) public returns (address) {
+        require(msg.sender == tx.origin);
         address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
         emit CreateContent(contentAddress);
         return contentAddress;
     }
 
     function createGroup() public returns (address) {
+        require(msg.sender == tx.origin);
         address groupAddress = BaseGroupFactory(groupFactory).createGroup();
         emit CreateGroup(groupAddress);
         return groupAddress;
@@ -145,7 +149,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     // This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
     function createUserWalletInternal(address _user) returns (address) {
-        require(userWallets[_user] == 0x0);
+        require(userWallets[_user] == address(0x0));
         address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
         if (_user != msg.sender) {
             BaseAccessWallet wallet = BaseAccessWallet(walletAddress);

@@ -125,7 +125,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     }
 
     function createContent(address lib, address content_type) public returns (address) {
-        require(msg.sender == tx.origin);
+        require(msg.sender == tx.origin || msg.sender == lib);
         address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
         emit CreateContent(contentAddress);
         return contentAddress;

@@ -310,6 +310,7 @@ contract BaseLibrary is MetaObject, Container {
     }
 
     function createContent(address content_type) public  returns (address) {
+        require(msg.sender == tx.origin, "only direct calls allowed");
         address content = IFactorySpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
         return content;

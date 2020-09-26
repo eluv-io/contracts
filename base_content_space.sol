@@ -290,9 +290,13 @@ contract BaseFactory is Ownable {
 
     bytes32 public version ="BaseFactory20200316120700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+        // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
     //  don't think there's a legit spoofing attack here because the spoofee ends up with the rights.
     function createContentType() public returns (address) {
+        require(msg.sender == contentSpace);
         address newType = (new BaseContentType(msg.sender));
         BaseContentType theType = BaseContentType(newType);
         theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
@@ -320,8 +324,13 @@ contract BaseGroupFactory is Ownable {
 
     bytes32 public version ="BaseGroupFactory20200316120800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+
     // see note on BaseFactory
     function createGroup() public returns (address) {
+        require(msg.sender == contentSpace);
         address newGroup = (new BaseAccessControlGroup(msg.sender));
         BaseAccessControlGroup theGroup = BaseAccessControlGroup(newGroup);
         theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
@@ -342,8 +351,13 @@ contract BaseLibraryFactory is Ownable {
 
     bytes32 public version ="BaseLibFactory20200316121000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+
     // see note on BaseFactory
     function createLibrary(address address_KMS) public returns (address) {
+        require(msg.sender == contentSpace);
         address newLib = (new BaseLibrary(address_KMS, msg.sender));
         BaseLibrary theLib = BaseLibrary(newLib);
         theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
@@ -366,8 +380,13 @@ contract BaseContentFactory is Ownable {
 
     bytes32 public version ="BaseCtFactory20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+
     // see note on BaseFactory re tx.origin
     function createContent(address lib, address content_type) public  returns (address) {
+        require(msg.sender == contentSpace);
         Container libraryObj = Container(lib);
 
         // this looks suspicious because it *can* be spoofed, but the object owner and the rights holder ends up being tx.origin

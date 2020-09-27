@@ -25,9 +25,15 @@ contract Ownable {
     address public owner;
     address public contentSpace;
 
+    // TODO: don't know if we can easily change this to msg.sender...
+    //  since object in the content hierarchy are created through factories, msg.sender would end up being the factory
+    //  instead of the end-user as expected. it theory we could change the space to set the owner as msg.sender but
+    //  we currently can't change spaces.
+    // Moreover, this likely is safe because I'm not sure what purpose a spoofing attack would have that ends up with
+    //  the spoofee as the owner of the object ...?
     constructor() public payable {
         creator = tx.origin;
-        owner = tx.origin;
+        owner = msg.sender;
     }
 
     // "Fallback" function - necessary if this contract needs to be paid
@@ -35,16 +41,14 @@ contract Ownable {
 
     /**
      * Throws if called by any account other than the owner.
-     *  note: both transaction initiator (tx.origin) and caller entity (msg.sender) are considered to also allow
-     *       ownership by contracts, not just accounts.
      */
     modifier onlyOwner() {
-        require((tx.origin == owner) || (msg.sender == owner));
+        require(msg.sender == owner);
         _;
     }
 
     modifier onlyCreator() {
-        require(tx.origin == creator);
+        require(msg.sender == creator);
         _;
     }
 

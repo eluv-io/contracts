@@ -114,7 +114,14 @@ contract BaseAccessWalletFactory is Ownable {
 
     bytes32 public version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+
     function createAccessWallet() public returns (address) {
-        return (new BaseAccessWallet(msg.sender));
+        require(msg.sender == contentSpace);
+        BaseAccessWallet theWallet = new BaseAccessWallet(msg.sender); // msg.sender here is the space ...
+        theWallet.transferOwnership(tx.origin);
+        return address(theWallet);
     }
 }

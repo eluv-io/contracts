@@ -83,7 +83,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
         // allow either the space owner or a trusted address to refer to the space
         require(msg.sender == spc.owner() || spc.checkKMSAddr(msg.sender) > 0);
         contentSpace = address(_contentSpace);
-        _kmsAddr = addressKMS;
+        addressKMS = _kmsAddr;
         emit CreateTenant(version, owner);
     }
 

@@ -2,6 +2,7 @@ pragma solidity 0.4.24;
 
 import "./ownable.sol";
 import {IUserSpace} from "./base_space_interfaces.sol";
+import "./editable.sol";
 
 /* -- Revision history --
 AccessIndexor20190423111800ML: First versioned release
@@ -107,28 +108,6 @@ contract AccessIndexor is Ownable {
     function setContractRights(address obj, uint8 access_type, uint8 access) public  {
         setRightsInternal(contracts, obj, access_type, access);
     }
-
-    /*
-    function checkLibraryRights(address lib, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_LIBRARY, lib, access_type);
-    }
-
-    function checkAccessGroupRights(address group, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_GROUP, group, access_type);
-    }
-
-    function checkContentObjectRights(address obj, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_CONTENT_OBJECT, obj, access_type);
-    }
-
-    function checkContentTypeRights(address obj, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_CONTENT_TYPE, obj, access_type);
-    }
-
-    function checkContractRights(address obj, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_CONTRACT, obj, access_type);
-    }
-    */
 
     function getLibraryRights(address lib) public view returns(uint8) {
         return libraries.rights[lib];
@@ -267,12 +246,18 @@ contract AccessIndexor is Ownable {
     // Object rights holders can grant confirm if they are also Wallet manager
     //access is either ACCESS_NONE (0), or any uint8 > 0, the current rights and privilege of granter and grantee will drive the new rights values
     function setRightsInternal(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private  {
-        bool isIndexorManager = hasManagerAccess(tx.origin);
-        bool isObjRightHolder = false;
-        IUserSpace space = IUserSpace(contentSpace);
-        address walletAddress = space.userWallets(tx.origin);
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
+
+        bool isIndexorManager = false;
+        bool isObjRightHolder = true;
+        // if we proxy through an object then it's the job of the calling object to auth the call correctly
+        if (msg.sender != obj) {
+            Editable e = Editable(obj);
+            isObjRightHolder = e.hasEditorRight(msg.sender);
+            isIndexorManager = hasManagerAccess(msg.sender);
+        } else {
+            // if we are being proxied through the target object then it is safe and correct to use tx.origin
+            isIndexorManager = hasManagerAccess(tx.origin);
+        }
 
         uint8 currentAggregate = index.rights[obj];
         uint8[3] memory currentRights;

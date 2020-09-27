@@ -113,6 +113,14 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         tenant = _tenantAddr;
     }
 
+    // overload ...
+    function hasEditorRight(address _candidate) public view returns (bool) {
+        if (_candidate == tenant) {
+            return true;
+        }
+        return super.hasEditorRight(_candidate);
+    }
+
     function hasManagerAccess(address _candidate) public view returns (bool) {
         return _candidate == tenant || hasEditorRight(_candidate);
     }
@@ -164,12 +172,6 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(candidate, TYPE_ACCESS, ACCESS_NONE);
     }
 
-    /*
-    function hasAccess(address candidate) public view returns (bool) {
-        return hasAccessRight(candidate, false);
-    }
-*/
-
     function canConfirm() public view returns (bool) {
         INodeSpace ns = INodeSpace(contentSpace);
         return ns.canNodePublish(msg.sender);
@@ -178,5 +180,4 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
     function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
         return checkDirectRights(index_type, obj, access_type);
     }
-
 }

@@ -52,17 +52,10 @@ contract Editable is  Accessible {
         return versionHashes.length;
     }
 
-    /*
-    //This function is meant to be overloaded. By default the owner is the only editor
+    // This function is meant to be overloaded. By default the owner is the only editor
     function canEdit() public view returns (bool) {
-        return (msg.sender == owner);
+        return hasEditorRight(msg.sender);
     }
-    */
-    function canEdit() public view returns (bool) {
-        return hasEditorRight(tx.origin);
-    }
-
-
 
     function hasEditorRight(address candidate) public view returns (bool) {
         if ((candidate == owner) || (visibility >= 100)) {
@@ -70,26 +63,11 @@ contract Editable is  Accessible {
         }
         if (indexCategory > 0) {
             address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
-            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 2/*AccessIndexor TYPE_EDIT*/);
+            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 2 /* TYPE_EDIT */ );
         } else {
             return false;
         }
     }
-
-
-    /*
-    function canSee(address candidate) public view returns (bool) {
-        if ((candidate == owner) || (visibility >= 1)) {
-            return true;
-        }
-        if (indexCategory > 0) {
-            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
-            return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 0); // AccessIndexor TYPE_SEE
-        } else {
-            return false;
-        }
-    }
-    */
 
     // intended to be overridden
     function canConfirm() public view returns (bool) {
@@ -97,7 +75,7 @@ contract Editable is  Accessible {
     }
 
     function canCommit() public view returns (bool) {
-        return (tx.origin == owner);
+        return (msg.sender == owner);
     }
 
     // overridden in BaseContent to return library
@@ -197,7 +175,7 @@ contract Editable is  Accessible {
         return foundIdx;
     }
 
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
+    function setRights(address stakeholder, uint8 access_type, uint8 access) public onlyEditor {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address walletAddress = userSpaceObj.userWallets(stakeholder);
         if (walletAddress == 0x0){

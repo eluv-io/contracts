@@ -32,12 +32,14 @@ BaseContent20200211163800ML: Modified to conform to authV3 API
 BaseContent20200212101200ML: Disambiguatea getAccessInfo vs getAccessInfoV3 to reflect API changes
 BaseContent20200316135000ML: Leverages inherited hasAccess
 BaseContent20200422180500ML: Version update to reflect changes made to editable to fix deletion
+BaseContent20200803130000PO: Authv3 changes
+BaseContent20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 
 contract BaseContent is MetaObject, Editable {
 
-    bytes32 public version ="BaseContent20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;

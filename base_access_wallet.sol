@@ -16,12 +16,13 @@ BaseAccessWallet20190510151100ML: Supports modified getAccessInfo API
 BaseAccessWallet20190528124400ML: Change base to be Accessible and Editable (thru Container)
 BsAccessWallet20190611120000PO: State channel support 
 BsAccessWallet20191203102900ML: Bumped up to reflect change in the access_indexor code
+BsAccessWallet20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
 contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable {
-    bytes32 public version = "BsAccessWallet20191203102900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "BsAccessWallet20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {
         contentSpace = content_space;

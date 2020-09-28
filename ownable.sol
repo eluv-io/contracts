@@ -11,6 +11,7 @@ Ownable20190221100500ML: First versioned released
 Ownable20190315141500ML: Migrated to 0.4.24
 Ownable20190528193800ML: Added contentSpace as all descendant objects need it anyway
 Ownable20200210110100ML: Added versionAPI, set to 3.0
+Ownable20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 interface IAdmin {
@@ -19,7 +20,7 @@ interface IAdmin {
 
 contract Ownable {
 
-    bytes32 public version ="Ownable20200210110100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Ownable20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
     bytes32 public versionAPI = "3.0";
     address public creator;
     address public owner;

@@ -30,11 +30,13 @@ BaseContentSpace20190605144600ML: Implements canConfirm to overloads default fro
 BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 BaseContentSpace20200309155700ML: Removes import of recording custom contract. To get all events, media_platform.sol should be used
 BaseContentSpace20200316120600ML: Defaults visibility to ensure access is open
+BaseContentSpace20200626120600PO: authv3 changes
+BaseContentSpace20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
-    bytes32 public version ="BaseContentSpace20200626120600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -288,11 +290,12 @@ BaseFactory20190722161600ML: No changes, updated to provide generation for BsAcc
 BaseFactory20190801140700ML: Removed access group creation to its own factory
 BaseFactory20200203112400ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 BaseFactory20200316120700ML: Uses content-type setRights instead of going straight to the wallet
+BaseFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20200316120700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address _spaceAddr) public {
         contentSpace = _spaceAddr;
@@ -322,11 +325,12 @@ contract BaseFactory is Ownable {
 BaseGroupFactory20190729115200ML: First versioned released
 BaseGroupFactory20200203112000ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 BaseGroupFactory20200316120800ML: Uses group setRights instead of going straight to the wallet
+BaseGroupFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseGroupFactory is Ownable {
 
-    bytes32 public version ="BaseGroupFactory20200316120800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseGroupFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address _spaceAddr) public {
         contentSpace = _spaceAddr;
@@ -349,11 +353,12 @@ contract BaseGroupFactory is Ownable {
 BaseLibFactory20190506153200ML: Split out of BaseFactory, adds access indexing
 BaseLibFactory20200203111800ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 BaseLibFactory20200316121000ML: Uses group setRights instead of going straight to the wallet
+BaseLibFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseLibraryFactory is Ownable {
 
-    bytes32 public version ="BaseLibFactory20200316121000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address _spaceAddr) public {
         contentSpace = _spaceAddr;
@@ -378,11 +383,14 @@ BaseCtFactory20191219182100ML: Updated to reflect change in BaseContent201912191
 BaseCtFactory20200203112500ML: Set rights to SEE upon creation to avoid interfering with ownership transfer
 BaseCtFactory20200316121100ML: Uses content setRights instead of going straight to the wallet
 BaseCtFactory20200422180700ML: Updated to reflect fix of deletion of content objects
+BaseCtFactory20200803130000PO: authv3 changes
+BaseCtFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
+
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address _spaceAddr) public {
         contentSpace = _spaceAddr;

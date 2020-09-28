@@ -21,12 +21,13 @@ BaseLibrary20191010140800ML: Content can be deleted by content owner or the libr
 BaseLibrary20200110162700ML: Adds support for visibility, differentiates rights to access and edit library object and content
 BaseLibrary20200211164300ML: Modified to conform to authV3 API
 BaseLibrary20200316135200ML: Leverages inherited hasAccess
+BaseLibrary20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 
 contract BaseLibrary is MetaObject, Container {
 
-    bytes32 public version ="BaseLibrary20200316135200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;

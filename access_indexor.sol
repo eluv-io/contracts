@@ -14,14 +14,15 @@ AccessIndexor20190801141000ML: Adds method to provide ACCESS right to the caller
 AccessIndexor20191113202400ML: Ensures accessor has at least access right to a group to benefit from group rights
 AccessIndexor20200110100200ML: Removes debug events
 AccessIndexor20200204144400ML: Fixes lookup of group based rights to check group membership vs. visibility only
-AccessIndexor20200316121400ML: replaces entity-specific set and check rights with generic one that uses index-type
-AccessIndexor20200410215200ML: disambiguate setRights by renaming setEntityRights
+AccessIndexor20200316121400ML: Replaces entity-specific set and check rights with generic one that uses index-type
+AccessIndexor20200410215200ML: Disambiguate setRights by renaming setEntityRights
+AccessIndexor20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20200410215200ML";
+    bytes32 public version = "AccessIndexor20200928110000PO";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
 

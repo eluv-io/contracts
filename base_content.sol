@@ -50,9 +50,9 @@ contract BaseContent is MetaObject, Editable {
     //bool refundable;
     int public statusCode; // 0: accessible, - in draft, + in review
                            // application have discretion to make up their own status codes to represent their workflow
-    bytes32 public constant STATUS_PUBLISHED = "Published";
-    bytes32 public constant STATUS_DRAFT = "Draft";
-    bytes32 public constant STATUS_REVIEW = "Draft in review";
+//    bytes32 public constant STATUS_PUBLISHED = "Published";
+//    bytes32 public constant STATUS_DRAFT = "Draft";
+//    bytes32 public constant STATUS_REVIEW = "Draft in review";
 
     uint256 public requestID = 0;
 
@@ -99,9 +99,9 @@ contract BaseContent is MetaObject, Editable {
     event Publish(bool requestStatus, int statusCode, string objectHash);
 
     // Debug events
-    event InvokeCustomPreHook(address custom_contract);
-    event ReturnCustomHook(address custom_contract, uint256 result);
-    event InvokeCustomPostHook(address custom_contract);
+//    event InvokeCustomPreHook(address custom_contract);
+//    event ReturnCustomHook(address custom_contract, uint256 result);
+//    event InvokeCustomPostHook(address custom_contract);
 
     modifier onlyFromLibrary() {
         require(msg.sender == libraryAddress);
@@ -118,35 +118,35 @@ contract BaseContent is MetaObject, Editable {
         emit ContentObjectCreate(libraryAddress);
     }
 
-    function statusDescription() public constant returns (bytes32) {
-        return statusCodeDescription(statusCode);
-    }
+//    function statusDescription() public constant returns (bytes32) {
+//        return statusCodeDescription(statusCode);
+//    }
 
     function setVisibility(uint8 _visibility_code) public onlyEditor {
         visibility = _visibility_code;
         emit VisibilityChanged(contentSpace, libraryAddress, visibility);
     }
 
-    function statusCodeDescription(int status_code) public constant returns (bytes32) {
-        bytes32 codeDescription = 0x0;
-        if (contentContractAddress != 0x0) {
-            Content c = Content(contentContractAddress);
-            codeDescription = c.runDescribeStatus(status_code);
-        }
-        if (codeDescription != 0x0) {
-            return codeDescription;
-        }
-        if (status_code == 0) {
-            return STATUS_PUBLISHED;
-        }
-        if (status_code < 0) {
-            return  STATUS_DRAFT;
-        }
-        if (status_code > 0) {
-            return STATUS_REVIEW;
-        }
-        return 0;
-    }
+//    function statusCodeDescription(int status_code) public constant returns (bytes32) {
+//        bytes32 codeDescription = 0x0;
+//        if (contentContractAddress != 0x0) {
+//            Content c = Content(contentContractAddress);
+//            codeDescription = c.runDescribeStatus(status_code);
+//        }
+//        if (codeDescription != 0x0) {
+//            return codeDescription;
+//        }
+//        if (status_code == 0) {
+//            return STATUS_PUBLISHED;
+//        }
+//        if (status_code < 0) {
+//            return  STATUS_DRAFT;
+//        }
+//        if (status_code > 0) {
+//            return STATUS_REVIEW;
+//        }
+//        return 0;
+//    }
 
 
     function setStatusCode(int status_code) public returns (int) {

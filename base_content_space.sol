@@ -11,6 +11,7 @@ import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import {Container} from "./container.sol";
+import {Utils} from "./utils.sol";
 import "./user_space.sol";
 import "./node_space.sol";
 import "./node.sol";
@@ -388,6 +389,32 @@ BaseCtFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 
 */
 
+library CheckV3 {
+    bytes4 constant checkV3Sig = bytes4(keccak256("versionAPI()"));
+    function check(address _checkAddr) internal returns (bool) {
+        bool ret = true;
+        bytes4 sig = checkV3Sig;
+        assembly {
+            let x := mload(0x40)
+            mstore(x, sig)
+            let success := call(
+            0,
+            _checkAddr,
+            0x0,
+            x,
+            0x04,
+            x,
+            0x20)
+
+            if eq(success, 0) {
+                ret := 0
+            }
+            mstore(0x40, add(x, 0x20)) // ???
+        }
+        return ret;
+    }
+}
+
 contract BaseContentFactory is Ownable {
 
     bytes32 public version ="BaseCtFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
@@ -395,7 +422,7 @@ contract BaseContentFactory is Ownable {
     constructor(address _spaceAddr) public {
         contentSpace = _spaceAddr;
     }
-
+    
     // see note on BaseFactory re tx.origin
     function createContent(address lib, address content_type) public  returns (address) {
         require(msg.sender == contentSpace);
@@ -410,9 +437,19 @@ contract BaseContentFactory is Ownable {
         content.setAddressKMS(libraryObj.addressKMS());
         content.setContentContractAddress(libraryObj.contentTypeContracts(content_type));
 
-        // register object in user wallet
-        BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
-        content.transferOwnership(tx.origin);
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address userWallet = userSpaceObj.userWallets(tx.origin);
+
+        bool isV3Contract = CheckV3.check(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            content.transferOwnership(tx.origin);
+            index.setContentObjectRights(address(content), 0, 2);
+        } else {
+            // v3+ path ...
+            BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+            content.transferOwnership(tx.origin);
+        }
 
         return address(content);
     }
@@ -428,16 +465,16 @@ contract BaseContentFactory is Ownable {
 
     function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
-        //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
-        //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
+        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
+        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
 
         uint paramsLen = _opCodes.length;
 
-        require(_contentAddrs.length == paramsLen);
-        require(_requestNonces.length == paramsLen);
-        require(_userAddrs.length == paramsLen);
-        require(_ctxHashes.length == paramsLen);
-        require(_ts.length == paramsLen);
+//        require(_contentAddrs.length == paramsLen);
+//        require(_requestNonces.length == paramsLen);
+//        require(_userAddrs.length == paramsLen);
+//        require(_ctxHashes.length == paramsLen);
+//        require(_ts.length == paramsLen);
 
         for (uint i = 0; i < paramsLen; i++) {
             BaseContent cobj = BaseContent(_contentAddrs[i]);

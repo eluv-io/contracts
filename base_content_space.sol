@@ -115,7 +115,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
 
     function createContentType() public returns (address) {
         require(msg.sender == tx.origin);
-        address contentTypeAddress = BaseFactory(factory).createContentType();
+        address contentTypeAddress = BaseTypeFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
         return contentTypeAddress;
     }
@@ -294,21 +294,37 @@ BaseFactory20200316120700ML: Uses content-type setRights instead of going straig
 BaseFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
-contract BaseFactory is Ownable {
+contract BaseTypeFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseTypeFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address _spaceAddr) public {
         contentSpace = _spaceAddr;
     }
-        // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
+
+    // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
     //  don't think there's a legit spoofing attack here because the spoofee ends up with the rights.
     function createContentType() public returns (address) {
         require(msg.sender == contentSpace);
         address newType = (new BaseContentType(msg.sender));
         BaseContentType theType = BaseContentType(newType);
-        theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
-        theType.transferOwnership(tx.origin);
+
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address userWallet = userSpaceObj.userWallets(tx.origin);
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            theType.transferOwnership(tx.origin);
+            index.setContentTypeRights(address(newType), 0, 2);
+        } else {
+            // v3+ path ...
+            theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
+            theType.transferOwnership(tx.origin);
+        }
+
         return newType;
     }
 
@@ -318,9 +334,6 @@ contract BaseFactory is Ownable {
         return address(n);
     }
 }
-
-
-
 
 /* -- Revision history --
 BaseGroupFactory20190729115200ML: First versioned released
@@ -342,13 +355,26 @@ contract BaseGroupFactory is Ownable {
         require(msg.sender == contentSpace);
         address newGroup = (new BaseAccessControlGroup(msg.sender));
         BaseAccessControlGroup theGroup = BaseAccessControlGroup(newGroup);
-        theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
-        theGroup.transferOwnership(tx.origin);
+
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address userWallet = userSpaceObj.userWallets(tx.origin);
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            theGroup.transferOwnership(tx.origin);
+            index.setAccessGroupRights(newGroup, 0, 2);
+        } else {
+            // v3+ path ...
+            theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+            theGroup.transferOwnership(tx.origin);
+        }
+
         return newGroup;
     }
 }
-
-
 
 /* -- Revision history --
 BaseLibFactory20190506153200ML: Split out of BaseFactory, adds access indexing
@@ -370,8 +396,23 @@ contract BaseLibraryFactory is Ownable {
         require(msg.sender == contentSpace);
         address newLib = (new BaseLibrary(address_KMS, msg.sender));
         BaseLibrary theLib = BaseLibrary(newLib);
-        theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
-        theLib.transferOwnership(tx.origin);
+
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address userWallet = userSpaceObj.userWallets(tx.origin);
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            theLib.transferOwnership(tx.origin);
+            index.setAccessGroupRights(newLib, 0, 2);
+        } else {
+            // v3+ path ...
+            theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
+            theLib.transferOwnership(tx.origin);
+        }
+
         return newLib;
     }
 }
@@ -388,32 +429,6 @@ BaseCtFactory20200803130000PO: authv3 changes
 BaseCtFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 
 */
-
-library CheckV3 {
-    bytes4 constant checkV3Sig = bytes4(keccak256("versionAPI()"));
-    function check(address _checkAddr) internal returns (bool) {
-        bool ret = true;
-        bytes4 sig = checkV3Sig;
-        assembly {
-            let x := mload(0x40)
-            mstore(x, sig)
-            let success := call(
-            0,
-            _checkAddr,
-            0x0,
-            x,
-            0x04,
-            x,
-            0x20)
-
-            if eq(success, 0) {
-                ret := 0
-            }
-            mstore(0x40, add(x, 0x20)) // ???
-        }
-        return ret;
-    }
-}
 
 contract BaseContentFactory is Ownable {
 
@@ -440,7 +455,9 @@ contract BaseContentFactory is Ownable {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
         address userWallet = userSpaceObj.userWallets(tx.origin);
 
-        bool isV3Contract = CheckV3.check(userWallet);
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
         if (!isV3Contract) {
             AccessIndexor index = AccessIndexor(userWallet);
             content.transferOwnership(tx.origin);
@@ -469,12 +486,6 @@ contract BaseContentFactory is Ownable {
         require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
 
         uint paramsLen = _opCodes.length;
-
-//        require(_contentAddrs.length == paramsLen);
-//        require(_requestNonces.length == paramsLen);
-//        require(_userAddrs.length == paramsLen);
-//        require(_ctxHashes.length == paramsLen);
-//        require(_ts.length == paramsLen);
 
         for (uint i = 0; i < paramsLen; i++) {
             BaseContent cobj = BaseContent(_contentAddrs[i]);

@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 //import "./ownable.sol";
-import {BaseFactory} from "./base_content_space.sol";
+import {BaseTypeFactory} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";

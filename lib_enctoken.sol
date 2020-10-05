@@ -27,7 +27,7 @@ library EncToken {
                 mstore(add(x, add(0x24,i)), mload(add(add(_tok, 0x20), i)))
             }
 
-            let res := call(0, callAddr, 0, x, allLen, x, 0x20)
+            let res := staticcall(0, callAddr, x, allLen, x, 0x20)
 
             switch res
             case 0 {
@@ -58,7 +58,7 @@ library EncToken {
                 mstore(add(x, add(0x24,i)), mload(add(add(_tok, 0x20), i)))
             }
 
-            let res := call(0, callAddr, 0, x, allLen, x, 0x20)
+            let res := staticcall(0, callAddr, x, allLen, x, 0x20)
 
             switch res
             case 0 {
@@ -89,7 +89,7 @@ library EncToken {
                 mstore(add(x, add(0x24,i)), mload(add(add(_tok, 0x20), i)))
             }
 
-            let res := call(0, callAddr, 0, x, allLen, x, 0x60)
+            let res := staticcall(0, callAddr, x, allLen, x, 0x60)
 
             switch res
             case 0 {

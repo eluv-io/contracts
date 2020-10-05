@@ -67,7 +67,7 @@ contract AccessIndexor is Ownable {
     }
 
 
-    function getAccessIndex(uint8 indexCategory) private returns (AccessIndex storage) {
+    function getAccessIndex(uint8 indexCategory) private view returns (AccessIndex storage) {
         if (indexCategory == CATEGORY_CONTENT_OBJECT) {
             return contentObjects;
         }

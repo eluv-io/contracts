@@ -318,7 +318,6 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
     }
 
     function createGroup() public returns (address) {
-        address theGroup;
         if (factoryManager != address(0x0)) {
             return IFactorySpace(factoryManager).createGroup();
         }

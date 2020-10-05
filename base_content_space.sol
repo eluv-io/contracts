@@ -203,7 +203,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return true;
     }
 
-    function filterPrefix(bytes[] memory input, bytes memory prefix) view internal returns (bytes[] memory) {
+    function filterPrefix(bytes[] memory input, bytes memory prefix) pure internal returns (bytes[] memory) {
         uint countMatch = 0;
         for (uint i = 0; i < input.length; i++) {
             if (matchesPrefix(input[i], prefix)) {
@@ -474,7 +474,7 @@ contract BaseContentFactory is Ownable {
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;
 
-    function isContract(address addr) public returns (bool) {
+    function isContract(address addr) public view returns (bool) {
         uint size;
         assembly { size := extcodesize(addr) }
         return size > 0;
@@ -487,7 +487,7 @@ contract BaseContentFactory is Ownable {
         uint256[] memory _requestNonces,
         bytes32[] memory _ctxHashes,
         uint256[] memory _ts,
-        uint256[] memory _amt) public {
+        uint256[] memory) public {
 
         BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
         require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);

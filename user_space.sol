@@ -18,7 +18,7 @@ contract UserSpace is IUserSpace {
     mapping(address => address) public userWallets;
 
     // STUB impl - meant to be overridden
-    function createUserWallet(address payable _user) external returns (address) {
+    function createUserWallet(address payable) external returns (address) {
         require(false);
         return address(0x0);
     }

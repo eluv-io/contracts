@@ -47,8 +47,8 @@ contract Accessible is Ownable {
 
 
     function accessRequestV3(
-        bytes32[] memory customValues,
-        address payable[] memory stakeholders
+        bytes32[] memory,
+        address payable[] memory
     ) public payable returns (bool) {
         require(hasAccess(msg.sender));
         emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), now))), address(0x0), bytes32(0x0), msg.sender, now * 1000);

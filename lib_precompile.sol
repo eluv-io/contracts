@@ -9,11 +9,11 @@ library Precompile {
     int public constant KMS = 11;
     int public constant TEN = 14;
 
-    function CodeKMS() internal view returns (int) {
+    function CodeKMS() internal pure returns (int) {
         return KMS;
     }
 
-    function CodeTEN() internal view returns (int) {
+    function CodeTEN() internal pure returns (int) {
         return TEN;
     }
 
@@ -32,10 +32,9 @@ library Precompile {
             mstore(add(x, 0x08), _addr)
             // input is now [4 bytes][4 bytes][32 bytes] = 40 bytes
 
-            let res := call(
+            let res := staticcall(
             0,          // no gas
             callAddr,   // To addr
-            0,          // No value - i.e. tokens
             x,          // Inputs are stored at location x
             0x28,       // Inputs are 40 bytes long
             x,          // Store output over input

@@ -117,7 +117,7 @@ contract BaseLibrary is MetaObject, Container {
         }
     }
 
-    function groupIsListed(address payable group, address payable[] memory groups) internal returns (bool) {
+    function groupIsListed(address payable group, address payable[] memory groups) internal pure returns (bool) {
        for (uint256 i = 0; i < groups.length; i++) {
            if (group == groups[i]) {
                return true;

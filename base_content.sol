@@ -261,7 +261,7 @@ contract BaseContent is MetaObject, Editable {
         return (codes[0], codes[1], calculatedCharge);
     }
 
-    function getAccessInfo(uint8 level, bytes32[] memory customValues, address payable[] memory stakeholders) public view returns (uint8, uint8, uint256) { //legacy
+    function getAccessInfo(uint8, bytes32[] memory customValues, address payable[] memory stakeholders) public view returns (uint8, uint8, uint256) { //legacy
         return getAccessInfoV3(msg.sender, customValues, stakeholders);
     }
 
@@ -409,7 +409,7 @@ contract BaseContent is MetaObject, Editable {
     }
 
     function makeNonce(uint256 reqId) private view returns(uint256) {
-        return uint256(keccak256(abi.encodePacked(requestID, address(this))));
+        return uint256(keccak256(abi.encodePacked(reqId, address(this))));
     }
 
     function accessRequestV3(
@@ -432,7 +432,7 @@ contract BaseContent is MetaObject, Editable {
     //  customValues - an array of custom values used to convey additional information
     //  stakeholders - an array of additional address used to provide additional relevant addresses
     function accessRequest( //Left for backward compatibility
-        uint8 level,
+        uint8,
         string memory pkeRequestor,
         string memory pkeAFGH,
         bytes32[] memory customValues,

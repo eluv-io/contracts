@@ -86,9 +86,8 @@ contract Content is Ownable {
     function runAccessInfo(
         bytes32[] memory, /*customValues*/
         address payable[] memory, /*stakeholders*/
-        address accessor
-    )
-    public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
+        address
+    ) public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
     {
         return (7, 0, 0, 0); //7 is DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, hence the 3 tailing values are ignored
     }
@@ -98,10 +97,10 @@ contract Content is Ownable {
     //0 indicates that access request can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
-        uint256, /*requestNonce*/
-        bytes32[] memory, /*customValues*/
-        address payable[] memory, /*stakeholders*/
-        address accessor
+        uint256,
+        bytes32[] memory,
+        address payable[] memory,
+        address
     )
         public payable returns(uint)
     {
@@ -115,10 +114,10 @@ contract Content is Ownable {
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runFinalize(
-      uint256, /*requestNonce*/
-      bytes32[] memory, /*customValues*/
-      address[] memory, /*stakeholders*/
-      address accessor
+      uint256,
+      bytes32[] memory,
+      address[] memory,
+      address
     ) public payable returns (uint) {
         return 0;
     }

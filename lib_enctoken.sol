@@ -1,14 +1,14 @@
-pragma solidity ^0.4.24;
+pragma solidity >0.4.24;
 
 library EncToken {
 
-    address constant elv_precomp_enc_token_addr = 254;
+    address constant elv_precomp_enc_token_addr = address(254);
 
     bytes4 constant sigIdString = bytes4(keccak256("getString(string,bytes)"));
     bytes4 constant sigIdUint = bytes4(keccak256("getUint(string,bytes)"));
     bytes4 constant sigIdAddress = bytes4(keccak256("getAddress(string,bytes)"));
 
-    function getUint(string _attrib, bytes _tok) internal constant returns (uint256 ret) {
+    function getUint(string memory _attrib, bytes memory _tok) internal view returns (uint256 ret) {
         bytes4 sig = sigIdUint;
         address callAddr = elv_precomp_enc_token_addr;
         bytes32 truncAttrib;
@@ -39,7 +39,7 @@ library EncToken {
         }
     }
 
-    function getAddress(string _attrib, bytes _tok) internal constant returns (address ret) {
+    function getAddress(string memory _attrib, bytes memory _tok) internal view returns (address payable ret) {
         bytes4 sig = sigIdAddress;
         address callAddr = elv_precomp_enc_token_addr;
         bytes32 truncAttrib;
@@ -70,7 +70,7 @@ library EncToken {
         }
     }
 
-    function getString(string _attrib, bytes _tok) internal constant returns (string ret) {
+    function getString(string memory _attrib, bytes memory _tok) internal view returns (string memory ret) {
         bytes4 sig = sigIdString;
         address callAddr = elv_precomp_enc_token_addr;
         bytes32 truncAttrib;

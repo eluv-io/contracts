@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >0.4.24;
 
 import {Ownable} from "./ownable.sol";
 
@@ -13,7 +13,8 @@ library Utils {
 
         // Ownable(_checkAddr).versionAPI();
 
-        return !_checkAddr.call(abi.encodeWithSelector(checkV3Sig));
+        return false; // TODO !!!
+        // return !_checkAddr.call(abi.encodeWithSelector(checkV3Sig));
 
 //        assembly {
 //            let x := mload(0x40)

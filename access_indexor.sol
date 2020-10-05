@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity >0.4.24;
 
 import "./ownable.sol";
 import {IUserSpace} from "./base_space_interfaces.sol";
@@ -43,7 +43,7 @@ contract AccessIndexor is Ownable {
     struct AccessIndex {
         uint8 category;
         mapping (address => uint8) rights; // rights map for a given object address
-        address[] list; // All items for which rights are known
+        address payable[] list; // All items for which rights are known
         uint256 length; // Number of items listed
     }
 
@@ -86,27 +86,27 @@ contract AccessIndexor is Ownable {
         return others;
     }
 
-    function setContentSpace(address content_space) public onlyOwner {
+    function setContentSpace(address payable content_space) public onlyOwner {
         contentSpace = content_space;
     }
 
-    function setLibraryRights(address lib, uint8 access_type, uint8 access) public  {
+    function setLibraryRights(address payable lib, uint8 access_type, uint8 access) public  {
         setRightsInternal(libraries, lib, access_type, access);
     }
 
-    function setAccessGroupRights(address group, uint8 access_type, uint8 access) public  {
+    function setAccessGroupRights(address payable group, uint8 access_type, uint8 access) public  {
         setRightsInternal(accessGroups, group, access_type, access);
     }
 
-    function setContentObjectRights(address obj, uint8 access_type, uint8 access) public  {
+    function setContentObjectRights(address payable obj, uint8 access_type, uint8 access) public  {
         setRightsInternal(contentObjects, obj, access_type, access);
     }
 
-    function setContentTypeRights(address obj, uint8 access_type, uint8 access) public  {
+    function setContentTypeRights(address payable obj, uint8 access_type, uint8 access) public  {
         setRightsInternal(getAccessIndex(CATEGORY_CONTENT_TYPE), obj, access_type, access);
     }
 
-    function setContractRights(address obj, uint8 access_type, uint8 access) public  {
+    function setContractRights(address payable obj, uint8 access_type, uint8 access) public  {
         setRightsInternal(contracts, obj, access_type, access);
     }
 
@@ -186,7 +186,7 @@ contract AccessIndexor is Ownable {
         return (currentAggregate >= ranking[access_type]);
     }
 
-    function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
+    function checkRights(uint8 index_type, address payable obj, uint8 access_type) public view returns(bool) {
         Ownable instance = Ownable(obj);
         if (instance.owner() == owner){
             return true;
@@ -197,10 +197,10 @@ contract AccessIndexor is Ownable {
         }
         if (index_type != CATEGORY_GROUP){
             AccessIndexor groupObj;
-            address group;
+            address payable group;
             for (uint i = 0; i < accessGroups.length; i++) {
                 group = accessGroups.list[i];
-                if ((group != 0x0) && (accessGroups.rights[group] >= 1)) {
+                if ((group != address(0x0)) && (accessGroups.rights[group] >= 1)) {
                     groupObj = AccessIndexor(group);
                     //needs to be at least a member, seeing is not enough  (not using hasAccess on group to avoid circular reference)
                     if (((groupObj.owner() == owner) || (accessGroups.rights[group] >= 10 )) && groupObj.checkDirectRights(index_type, obj, access_type) == true) {
@@ -215,7 +215,7 @@ contract AccessIndexor is Ownable {
 
     // Provides ACCESS right to the caller object
     function setAccessRights() public  {
-        address obj = msg.sender;
+        address payable obj = msg.sender;
         uint8 currentAggregate = contentObjects.rights[obj];
         uint8[3] memory currentRights;
         currentRights[0] = currentAggregate % 10;
@@ -234,7 +234,7 @@ contract AccessIndexor is Ownable {
         emit RightsChanged(address(this), obj, newAggregate);
     }
 
-    function setEntityRights(uint8 indexType, address obj, uint8 access_type, uint8 access) public  {
+    function setEntityRights(uint8 indexType, address payable obj, uint8 access_type, uint8 access) public  {
         if (indexType != 0) {
             setRightsInternal(getAccessIndex(indexType),  obj,  access_type,  access);
         }
@@ -246,7 +246,7 @@ contract AccessIndexor is Ownable {
     // Object rights holders can revoke
     // Object rights holders can grant confirm if they are also Wallet manager
     //access is either ACCESS_NONE (0), or any uint8 > 0, the current rights and privilege of granter and grantee will drive the new rights values
-    function setRightsInternal(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private  {
+    function setRightsInternal(AccessIndex storage index, address payable obj, uint8 access_type, uint8 access) private  {
 
         bool isIndexorManager = false;
         bool isObjRightHolder = true;
@@ -312,7 +312,7 @@ contract AccessIndexor is Ownable {
         emit RightsChanged(address(this), obj, newAggregate);
     }
 
-    function addToList(AccessIndex storage index, address obj) private {
+    function addToList(AccessIndex storage index, address payable obj) private {
         if (index.length < index.list.length) {
             index.list[index.length] = obj;
         } else {

@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity >0.4.24;
 
 import {Ownable} from "./ownable.sol";
 import {BaseContent} from "./base_content.sol";
@@ -72,7 +72,7 @@ contract Content is Ownable {
         if ((result == 100) || (result == 1100)) {
           authorizedKiller = msg.sender;
         } else {
-          authorizedKiller = 0x0;
+          authorizedKiller = address(0x0);
         }
         return result;
     }
@@ -84,8 +84,8 @@ contract Content is Ownable {
 
 
     function runAccessInfo(
-        bytes32[], /*customValues*/
-        address[], /*stakeholders*/
+        bytes32[] memory, /*customValues*/
+        address payable[] memory, /*stakeholders*/
         address accessor
     )
     public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
@@ -99,8 +99,8 @@ contract Content is Ownable {
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
         uint256, /*requestNonce*/
-        bytes32[], /*customValues*/
-        address[], /*stakeholders*/
+        bytes32[] memory, /*customValues*/
+        address payable[] memory, /*stakeholders*/
         address accessor
     )
         public payable returns(uint)
@@ -116,8 +116,8 @@ contract Content is Ownable {
     // Other numbers can be used as error codes and would stop the processing.
     function runFinalize(
       uint256, /*requestNonce*/
-      bytes32[], /*customValues*/
-      address[], /*stakeholders*/
+      bytes32[] memory, /*customValues*/
+      address[] memory, /*stakeholders*/
       address accessor
     ) public payable returns (uint) {
         return 0;

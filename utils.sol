@@ -9,7 +9,8 @@ library Utils {
         bool success;
         bytes memory data;
         (success, data) = _checkAddr.staticcall(abi.encodeWithSelector(checkV3Sig));
-        if (!success || data.length == 0 || data[0] == 0x0) {
+        // on contracts where versionAPI doesn't exist (pre-V3) the staticcall returns success but returned data is empty
+        if (!success || data.length == 0) {
             return false;
         }
         return true;

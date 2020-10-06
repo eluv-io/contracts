@@ -16,6 +16,7 @@ interface IUserSpace {
 }
 
 interface IKmsSpace {
+    function checkKMS(string calldata _kmsIdStr) external view returns (uint);
     function checkKMSAddr(address _kmsAddr) external view returns (uint);
     function getKMSID(address _kmsAddr) external view returns (string memory);
     function getKMSInfo(string calldata _kmsID, bytes calldata prefix) external view returns (string memory, string memory);

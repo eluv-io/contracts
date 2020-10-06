@@ -341,6 +341,13 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
         return IKmsSpace(contentSpace).getKMSID(_kmsAddr);
     }
 
+    function checkKMS(string calldata _kmsIdStr) external view returns (uint) {
+        if (kmsManager != address(0x0)) {
+            return IKmsSpace(kmsManager).checkKMS(_kmsIdStr);
+        }
+        return IKmsSpace(contentSpace).checkKMS(_kmsIdStr);
+    }
+
     function checkKMSAddr(address _kmsAddr) public view returns (uint) {
         if (kmsManager != address(0x0)) {
             return IKmsSpace(kmsManager).checkKMSAddr(_kmsAddr);

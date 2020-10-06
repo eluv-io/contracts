@@ -430,6 +430,14 @@ BaseCtFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 
 */
 
+contract ContentFactoryHelper is Ownable {
+
+    function createContentInstance(address payable _spcAddr, address payable _lib, address payable _content_type) public returns (address payable) {
+        BaseContent content = new BaseContent(_spcAddr, _lib, _content_type);
+        return address(content);
+    }
+}
+
 contract BaseContentFactory is Ownable {
 
     bytes32 public version ="BaseCtFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
@@ -437,6 +445,16 @@ contract BaseContentFactory is Ownable {
     constructor(address payable _spaceAddr) public {
         contentSpace = _spaceAddr;
     }
+
+    function bytesToAddress(bytes memory b) private pure returns (address payable addr) {
+        assembly {
+            addr := mload(add(b,20))
+        }
+    }
+
+    bytes4 constant createContentSig = bytes4(keccak256("createContentInstance(address,address,address)"));
+
+    address factoryHelper;
     
     // see note on BaseFactory re tx.origin
     function createContent(address payable lib, address payable content_type) public  returns (address) {
@@ -448,7 +466,13 @@ contract BaseContentFactory is Ownable {
         require(libraryObj.canContribute(tx.origin)); // check if sender has contributor access
         require(libraryObj.validType(content_type));
 
-        BaseContent content = new BaseContent(msg.sender, lib, content_type);
+        bool success;
+        bytes memory data;
+        // BaseContent content = new BaseContent(msg.sender, lib, content_type);
+        (success, data) = factoryHelper.delegatecall(abi.encodeWithSelector(createContentSig, msg.sender, lib, content_type));
+        address payable contentAddr = bytesToAddress(data);
+        BaseContent content = BaseContent(contentAddr);
+
         content.setAddressKMS(libraryObj.addressKMS());
         content.setContentContractAddress(libraryObj.contentTypeContracts(content_type));
 

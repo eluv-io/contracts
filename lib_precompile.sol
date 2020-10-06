@@ -22,7 +22,7 @@ library Precompile {
     function makeIDString(int _code, address _addr) internal view returns (string memory ret) {
 
         bytes4 sig = sigIdString;
-        bytes4 codeBytes = bytes4(bytes32(_code));
+        bytes4 codeBytes = bytes4(int32(_code));
         address callAddr = elv_precomp_addr;
 
         assembly {

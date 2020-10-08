@@ -59,12 +59,18 @@ contract TenantFuncsBase is MetaObject, CounterObject {
     }
 }
 
-contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
+contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
 
     bytes32 public version ="BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
+
+    address public addressKMS;
+
+    function setAddressKMS(address address_KMS) public onlyOwner {
+        addressKMS = address_KMS;
+    }
 
     // TODO: add setter(s)
     uint256 public defTokenExpSecs = 24 * 60 * 60; // default one day
@@ -162,7 +168,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
         return true;
     }
 
-    function callFuncUintAddr(bytes4 _func4Bytes, uint256 _p1, address _p2, bytes memory _encAuthToken,
+    function callFuncUintAddr(bytes4 _func4Bytes, uint256 _p1, address payable _p2, bytes memory _encAuthToken,
         uint8 _v, bytes32 _r, bytes32 _s) public {
 
         require(checkCallFunc(_func4Bytes, _encAuthToken, _v, _r, _s));

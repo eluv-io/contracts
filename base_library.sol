@@ -1,4 +1,4 @@
-pragma solidity >0.4.21;
+pragma solidity 0.5.4;
 
 import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";

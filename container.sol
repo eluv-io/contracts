@@ -1,4 +1,4 @@
-pragma solidity >0.4.24;
+pragma solidity 0.5.4;
 import {Editable} from "./editable.sol";
 import {BaseContent} from "./base_content.sol";
 import {INodeSpace} from "./node_space.sol";

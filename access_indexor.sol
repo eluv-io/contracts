@@ -1,4 +1,4 @@
-pragma solidity >0.4.24;
+pragma solidity 0.5.4;
 
 import "./ownable.sol";
 import {IUserSpace} from "./base_space_interfaces.sol";

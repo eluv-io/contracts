@@ -1,4 +1,4 @@
-pragma solidity >0.4.24;
+pragma solidity 0.5.4;
 
 interface IFactorySpace {
     // this is the only method that's not directly called on the space

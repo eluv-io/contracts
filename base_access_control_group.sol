@@ -1,4 +1,4 @@
-pragma solidity >0.4.24;
+pragma solidity 0.5.4;
 
 //import "./ownable.sol";
 import {BaseTypeFactory} from "./base_content_space.sol";

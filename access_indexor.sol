@@ -110,6 +110,26 @@ contract AccessIndexor is Ownable {
         setRightsInternal(contracts, obj, access_type, access);
     }
 
+    function checkLibraryRights(address payable lib, uint8 access_type) public view returns(bool) {
+        return checkRights(CATEGORY_LIBRARY, lib, access_type);
+    }
+
+    function checkAccessGroupRights(address payable group, uint8 access_type) public view returns(bool) {
+        return checkRights(CATEGORY_GROUP, group, access_type);
+    }
+
+    function checkContentObjectRights(address payable obj, uint8 access_type) public view returns(bool) {
+        return checkRights(CATEGORY_CONTENT_OBJECT, obj, access_type);
+    }
+
+    function checkContentTypeRights(address payable obj, uint8 access_type) public view returns(bool) {
+        return checkRights(CATEGORY_CONTENT_TYPE, obj, access_type);
+    }
+
+    function checkContractRights(address payable obj, uint8 access_type) public view returns(bool) {
+        return checkRights(CATEGORY_CONTRACT, obj, access_type);
+    }
+
     function getLibraryRights(address lib) public view returns(uint8) {
         return libraries.rights[lib];
     }

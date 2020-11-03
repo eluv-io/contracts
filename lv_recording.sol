@@ -14,11 +14,12 @@ LvStrmRightsHldr20191025153800ML: Uses reporting only function from stream objec
 LvStrmRightsHldr20191029121900ML: Adds timestamps to all events
 LvStrmRightsHldr20200129095200ML: Adds runEdit default function to ensure compatibility
 LvStrmRightsHldr20200211102500ML: Adapted to authV3
+LvStrmRightsHldr20201102132300ML: Adapted to solidy 5
 */
 
 contract LvStreamRightsHolder is Content {
 
-    bytes32 public version = "LvStrmRightsHldr20200211102500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvStrmRightsHldr20201102132300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping (address => bool) public recordingStreams;
 
@@ -26,7 +27,7 @@ contract LvStreamRightsHolder is Content {
     event EnableRecording(uint256 timestamp, address stream);
     event DisableRecording(uint256 timestamp, address stream);
 
-    function authorizeRecording(address stream, address accessor) returns (bool) {
+    function authorizeRecording(address payable stream, address accessor) public returns (bool) {
         bool decision = recordingStreams[stream];
         BaseContent streamObj = BaseContent(stream);
         LvRecordableStream streamContract = LvRecordableStream(streamObj.contentContractAddress());
@@ -37,19 +38,19 @@ contract LvStreamRightsHolder is Content {
         return (decision && providerDecision && isMember);
     }
 
-    function registerStream(address stream) public {
+    function registerStream(address payable stream) public {
         BaseContent streamObj = BaseContent(stream);
         require(streamObj.owner() == tx.origin);
         recordingStreams[stream] = true;
         emit EnableRecording(now, stream);
     }
 
-    function enableRecording(address stream) onlyOwner {
+    function enableRecording(address payable stream) public onlyOwner {
         recordingStreams[stream] = true;
         emit EnableRecording(now, stream);
     }
 
-    function disableRecording(address stream) onlyOwner {
+    function disableRecording(address payable stream) public onlyOwner {
         recordingStreams[stream] = false;
         emit DisableRecording(now, stream);
     }
@@ -81,21 +82,21 @@ LvRecStream20191031174500ML: Adds reporting or program details and original requ
 LvRecStream20200129095300ML: Adds default runEdit to ensure compatibility
 LvRecStream20200130192600ML: Allows accessor with edit right on stream object to modify owner-only parameters
 LvRecStream20200316140800ML: Uses generic setRights instead of setContentObjectRights
+LvRecStream20201102132300ML: Adapted to solidy 5
 */
 
 contract LvRecordableStream is Content {
 
-    bytes32 public version = "LvRecStream20200316140800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "LvRecStream20201102132300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
     bool public recordingEnabled;
     string public handle;
+    address payable public recordingStream; //the content object for the recordable stream
 
-    address public recordingStream; //the content object for the recordable stream
-
-    address public rightsHolder;
-    address[] public membershipGroups;
+    address payable public rightsHolder;
+    address payable[] public membershipGroups;
     uint256 public membershipGroupsLength;
 
     event AuthorizeRecording(uint256 timestamp, address accessor, bool rightsHolder, bool provider, bool membership);
@@ -130,7 +131,7 @@ contract LvRecordableStream is Content {
         _;
     }
 
-    function setRecordingStream(address stream) public onlyEditor  { //only required if contract is instanciated manually, otherwise it is set correctly in the constructor
+    function setRecordingStream(address payable stream) public onlyEditor  { //only required if contract is instanciated manually, otherwise it is set correctly in the constructor
        recordingStream = stream;
     }
 
@@ -142,13 +143,13 @@ contract LvRecordableStream is Content {
 
     // When a recordable stream is created a contract is created to track copies of that recording
     function runCreate() public payable returns (uint) {
-        if (recordingStream == 0x0) {
+        if (recordingStream == address(0x0)) {
             setRecordingStream(msg.sender);
             enableRecording();
             return 0;
         }
 
-        if (rightsHolder != 0x0) {
+        if (rightsHolder != address(0x0)) {
             LvStreamRightsHolder provObj = LvStreamRightsHolder(rightsHolder);
             require(provObj.authorizeRecording(recordingStream, tx.origin));
         } else {
@@ -156,7 +157,7 @@ contract LvRecordableStream is Content {
             require(authorizeRecording(tx.origin));
         }
 
-        address instanceAddress = new LvRecording();
+        address payable instanceAddress = address(new LvRecording());
         LvRecording rec = LvRecording(instanceAddress);
         rec.setContentAddress(msg.sender);
         BaseContent obj = BaseContent(msg.sender);
@@ -166,7 +167,7 @@ contract LvRecordableStream is Content {
     }
 
     function hasRightsHolderPermission() public view returns (bool) {
-        if (rightsHolder != 0x0) {
+        if (rightsHolder != address(0x0)) {
             LvStreamRightsHolder provObj = LvStreamRightsHolder(rightsHolder);
             return provObj.recordingStreams(recordingStream);
         }
@@ -181,7 +182,7 @@ contract LvRecordableStream is Content {
     }
 
     function authorizeRecording(address accessor) public returns (bool){
-        if (rightsHolder != 0x0) {
+        if (rightsHolder != address(0x0)) {
             LvStreamRightsHolder provObj = LvStreamRightsHolder(rightsHolder);
             return provObj.authorizeRecording(recordingStream, tx.origin);
         } else {
@@ -193,7 +194,7 @@ contract LvRecordableStream is Content {
 
     //Can be used to generate a transaction to indicate authorization failure as otherwise negative event a rolled back and thus never emitted
     function logRecordingAuthorization(address accessor, bool rightsHolderDecision) public returns(bool, bool){
-        require((msg.sender == rightsHolder) || ((rightsHolder == 0x0) && rightsHolderDecision)); //can only be called by the rightsholder or as a bypass if rightsholder is not set
+        require((msg.sender == rightsHolder) || ((rightsHolder == address(0x0)) && rightsHolderDecision)); //can only be called by the rightsholder or as a bypass if rightsholder is not set
         bool isMember = hasMembership(accessor);
         emit AuthorizeRecording(now, accessor, rightsHolderDecision, recordingEnabled, isMember);
         return (recordingEnabled, isMember);
@@ -215,7 +216,7 @@ contract LvRecordableStream is Content {
             return true;
         }
         for (uint i = 0; i < membershipGroupsLength; i++) {
-            if (membershipGroups[i] != 0x0) {
+            if (membershipGroups[i] != address(0x0)) {
                 BaseAccessControlGroup groupContract = BaseAccessControlGroup(membershipGroups[i]);
                 if (groupContract.hasAccess(accessor)) {
                     return true;
@@ -225,7 +226,7 @@ contract LvRecordableStream is Content {
         return false;
     }
 
-    function addMembershipGroup(address group) public onlyEditor {
+    function addMembershipGroup(address payable group) public onlyEditor {
         uint256 prevLen = membershipGroupsLength;
         membershipGroupsLength = addToGroupList(group, membershipGroups, prevLen);
         if (membershipGroupsLength > prevLen) {
@@ -238,7 +239,7 @@ contract LvRecordableStream is Content {
         }
     }
 
-    function removeMembershipGroup(address group) public onlyEditor returns (bool) {
+    function removeMembershipGroup(address payable group) public onlyEditor returns (bool) {
         uint256 prevLen = membershipGroupsLength;
         membershipGroupsLength = removeFromGroupList(group, membershipGroups, prevLen);
         if (membershipGroupsLength < prevLen) {
@@ -253,7 +254,7 @@ contract LvRecordableStream is Content {
         return false;
     }
 
-    function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
+    function addToGroupList(address payable _addGroup, address payable[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
         for (uint256 i = 0; i < _groupListLength; i++) {
             if (_addGroup == _groupList[i]) {
                 return _groupListLength;
@@ -267,7 +268,7 @@ contract LvRecordableStream is Content {
         return (_groupListLength + 1);
     }
 
-    function removeFromGroupList(address _removeGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
+    function removeFromGroupList(address _removeGroup, address payable[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
         for (uint256 i = 0; i < _groupListLength; i++) {
             if (_removeGroup == _groupList[i]) {
                 delete _groupList[i];
@@ -282,13 +283,13 @@ contract LvRecordableStream is Content {
     }
 
 
-    function setRightsHolder(address _rightsHolder) public onlyEditor  {
+    function setRightsHolder(address payable _rightsHolder) public onlyEditor  {
         rightsHolder = _rightsHolder;
         LvStreamRightsHolder provObj = LvStreamRightsHolder(rightsHolder);
         provObj.registerStream(recordingStream);
     }
 
-    function startStream(string _handle) public onlyEditor  {
+    function startStream(string memory _handle) public onlyEditor  {
         handle = _handle;
         startTime = now;
         endTime = 0; //to allow re-opening
@@ -334,7 +335,7 @@ contract LvRecordableStream is Content {
         emit DeleteRecording(now, tx.origin, rec.contentAddress(), msg.sender);
     }
 
-    function logRecordedProgramId(string programId, uint256 programStart, uint256 programEnd, string programTitle){
+    function logRecordedProgramId(string memory programId, uint256 programStart, uint256 programEnd, string memory programTitle) public {
         LvRecording rec = LvRecording(msg.sender);
         emit RecordedProgramId(now, tx.origin, rec.contentAddress(), programId, programStart,  programEnd, programTitle);
     }
@@ -354,19 +355,20 @@ LvRecording20191031162800ML: Adds originator to playback events in case of state
 LvRecording20191031174500ML: Adds playback ID and reporting of program details
 LvRecording20191031204100ML: Bug fix in runAccess
 LvRecording20200211165400ML: Modified to conform to authV3 API
+LvRecording20201102132300ML: Adapted to solidy 5
 */
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20200211165400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20201102132300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
 
     uint8 public recordingStatus; //0: not started, 10: started, 100: completed
 
-    address public recordingStreamContract;
-    address public contentAddress;
+    address payable public recordingStreamContract;
+    address payable public contentAddress;
 
     uint256 playbackId;
     uint256[] playbacks;
@@ -385,7 +387,7 @@ contract LvRecording is Content {
         playbacksLength = 0;
     }
 
-    function setContentAddress(address _contentAddress) public onlyOwner {
+    function setContentAddress(address payable _contentAddress) public onlyOwner {
          contentAddress = _contentAddress;
     }
 
@@ -430,7 +432,7 @@ contract LvRecording is Content {
     }
 
     //timestamp of original request can be passed in customValues[0] state-channel
-    function runAccess(uint256 requestNonce,  bytes32[] customValues, address[] stakeholders, address accessor) public payable returns(uint) {
+    function runAccess(uint256 requestNonce,  bytes32[] memory customValues, address payable[] memory stakeholders, address accessor) public payable returns(uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
         if (customValues.length ==  0) {
             stream.logRecordingPlaybackStarted(requestNonce, accessor, now);
@@ -442,7 +444,7 @@ contract LvRecording is Content {
 
     //function to help formatting the percent complete to be provided in actionComplete
     function encodeScore(uint8 percent) public pure returns (bytes32) {
-        return bytes32(percent);
+        return bytes32(uint(percent));
     }
 
     function encodeTimestamp(uint256 timestamp) public pure returns (bytes32) {
@@ -452,8 +454,8 @@ contract LvRecording is Content {
     //timestamp of original request can be passed in customValues[1] state-channel, prc_complete is passed in customValues[0]
     function runFinalize(
         uint256 requestNonce,
-        bytes32[] customValues,
-        address[], /*stakeholders*/
+        bytes32[] memory customValues,
+        address[] memory, /*stakeholders*/
         address accessor
     ) public payable returns (uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
@@ -461,7 +463,7 @@ contract LvRecording is Content {
         if (customValues.length >=  2) {
             timestamp = uint256(customValues[1]);
         }
-        stream.logRecordingPlaybackCompleted(requestNonce, uint8(customValues[0]), accessor, timestamp);
+        stream.logRecordingPlaybackCompleted(requestNonce, uint8(uint(customValues[0])), accessor, timestamp);
         return 0;
     }
 
@@ -496,7 +498,7 @@ contract LvRecording is Content {
         }
     }
 
-    function logProgramId(string programId, uint256 programStart, uint256 programEnd, string programTitle, byte[] signature) public onlyOwner {
+    function logProgramId(string memory programId, uint256 programStart, uint256 programEnd, string memory programTitle, byte[] memory signature) public onlyOwner {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
         stream.logRecordedProgramId(programId, programStart, programEnd, programTitle);
         emit RecordProgramId(now, programId);

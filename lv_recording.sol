@@ -364,7 +364,6 @@ contract LvRecording is Content {
 
     uint public startTime;
     uint public endTime;
-
     uint8 public recordingStatus; //0: not started, 10: started, 100: completed
 
     address payable public recordingStreamContract;

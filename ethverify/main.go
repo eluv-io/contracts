@@ -1,23 +1,25 @@
+// +build ignore
+
 package main
 
 import (
 	"fmt"
-	"github.com/eluv-io/contracts/ethverify/abidiff"
-	"github.com/eluv-io/contracts/ethverify/gitutils"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/mattn/go-colorable"
-	"github.com/mattn/go-isatty"
-	"github.com/mitchellh/go-homedir"
-	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/mitchellh/go-homedir"
+	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/eluv-io/contracts/ethverify/abidiff"
+	"github.com/eluv-io/contracts/ethverify/gitutils"
 )
 
 const (

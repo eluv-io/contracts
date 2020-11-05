@@ -1,16 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 set -Eeuo pipefail
 
 run_solc()
 {
     bsc_name=$(basename ${1})
-    out="$(solc ${1} --abi --hashes --optimize -o ${abi_dir} --overwrite)"
-    if [[ $? -ne 0 ]]; then
-        echo "FAILED : error occured running solc for ${bsc_name}"
-        echo ${out}
-        exit 1
-    else
-        echo "SUCCESS : ${bsc_name} ABI and function hashes present in ${abi_dir}"
+    $(solc ${1} --abi --hashes --optimize -o ${abi_dir} --overwrite)
+    if [[ $? -eq 0 ]]; then
+        echo -e "\n SUCCESS : ${bsc_name} ABI and function hashes present in ${abi_dir}"
     fi
 }
 
@@ -40,8 +36,6 @@ then
     exit 1
 fi
 
-
-
 out_dir="$( mkdir -p "$sol_dir/build" && cd "$sol_dir/build" && pwd )"
 abi_dir=$sol_dir/dist
 
@@ -53,15 +47,16 @@ if [[ $? -ne 0 ]]; then
 else
     echo "SUCCESS : The go binding for base_content_space.sol is present at ${out_dir}/base_content_space.go"
 fi
-echo ${separator}
-echo ""
+echo -e "\n${separator}\n"
 
-run_solc ${sol_dir}/base_content_space.sol
-echo ${separator}
-echo ""
-run_solc ${sol_dir}/lv_recording.sol
-echo ${separator}
-echo ""
+
+run_solc "${sol_dir}/base_content_space.sol"
+echo -e "\n${separator}\n"
+run_solc "${sol_dir}/lv_recording.sol"
+echo -e "\n${separator}\n"
+#run_solc "${sol_dir}/payment_service.sol"
+#echo -e "\n${separator}\n"
+
 
 $(go generate ./abi-parser)
 if [[ $? -ne 0 ]]; then

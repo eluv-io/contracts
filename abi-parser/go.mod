@@ -1,4 +1,4 @@
-module github.com/eluv-io/contracts
+module github.com/eluv-io/contracts/abi-parser
 
 go 1.13
 

@@ -1,5 +1,3 @@
-// +build ignore
-
 package main
 
 import (
@@ -13,13 +11,15 @@ import (
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/mattn/go-colorable"
+	"github.com/mattn/go-isatty"
 	"github.com/mitchellh/go-homedir"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/eluv-io/contracts/ethverify/abidiff"
-	"github.com/eluv-io/contracts/ethverify/gitutils"
+	"github.com/eluv-io/contracts/cmds/ethverify/abidiff"
+	"github.com/eluv-io/contracts/cmds/ethverify/gitutils"
 )
 
 const (

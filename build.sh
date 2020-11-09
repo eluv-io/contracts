@@ -58,7 +58,7 @@ echo -e "\n${separator}\n"
 #echo -e "\n${separator}\n"
 
 
-$(go generate ./abi-parser)
+$(go generate ./cmds/abi-parser)
 if [[ $? -ne 0 ]]; then
     echo "FAILED : error occured while parsing abi"
     exit 1

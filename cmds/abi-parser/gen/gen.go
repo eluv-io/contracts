@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
-const distDir = "../dist"
+const distDir = "../../dist"
 
 type EventStruct struct {
 	Event string `json:"event"`

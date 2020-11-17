@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/eluv-io/contracts/ethverify/abidiff"
-	"github.com/eluv-io/contracts/ethverify/gitutils"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
@@ -13,11 +17,9 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
+
+	"github.com/eluv-io/contracts/cmds/ethverify/abidiff"
+	"github.com/eluv-io/contracts/cmds/ethverify/gitutils"
 )
 
 const (

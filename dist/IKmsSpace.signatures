@@ -1,0 +1,4 @@
+8d2a23db: checkKMS(string)
+d6be0f49: checkKMSAddr(address)
+589aafc1: getKMSID(address)
+268bfac4: getKMSInfo(string,bytes)

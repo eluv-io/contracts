@@ -3,17 +3,16 @@ package abidiff
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
-
-	contracts "github.com/eluv-io/contracts/build"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/log"
-
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
+
+	contractsFromDevelop "github.com/eluv-io/contracts/build"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 type ContractInfo struct {
@@ -23,12 +22,12 @@ type ContractInfo struct {
 
 // if someone knows how to find all the constants in a package, let me know...
 var checkContracts = []ContractInfo{
-	{"BaseContentSpace", contracts.BaseContentSpaceABI},
-	{"BaseLibrary", contracts.BaseLibraryABI},
-	{"BaseContent", contracts.BaseContentABI},
-	{"BaseAccessControlGroup", contracts.BaseAccessControlGroupABI},
-	{"BaseContentType", contracts.BaseContentABI},
-	{"BaseAccessWallet", contracts.BaseAccessWalletABI},
+	{"BaseContentSpace", contractsFromDevelop.BaseContentSpaceABI},
+	{"BaseLibrary", contractsFromDevelop.BaseLibraryABI},
+	{"BaseContent", contractsFromDevelop.BaseContentABI},
+	{"BaseAccessControlGroup", contractsFromDevelop.BaseAccessControlGroupABI},
+	{"BaseContentType", contractsFromDevelop.BaseContentABI},
+	{"BaseAccessWallet", contractsFromDevelop.BaseAccessWalletABI},
 }
 
 type DiffItem struct {

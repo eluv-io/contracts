@@ -13,6 +13,7 @@ run_solc()
 # to get path to sol folder
 sol_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+
 separator=
 for i in {0..100}
 do
@@ -26,13 +27,13 @@ then
     exit 1
 fi
 
-# check the abigen is installed using HomeBrew
-if [[ ! -f /usr/local/bin/abigen ]]
-then
-    echo "Error : abigen is not found, install ethereum using Homebrew"
-    echo "Steps"
-    echo "- brew tap ethereum/ethereum"
-    echo "- brew install ethereum"
+# build abigen
+pushd cmds > /dev/null 2>&1
+go build -o ../abigen ./abigen
+ret=$?
+popd > /dev/null 2>&1
+if [[ $ret -ne 0 ]]; then
+    echo "Error : building abigen failed"
     exit 1
 fi
 
@@ -40,8 +41,11 @@ out_dir="$( mkdir -p "$sol_dir/build" && cd "$sol_dir/build" && pwd )"
 abi_dir=$sol_dir/dist
 
 # abigen --sol ./base_content_space.sol --pkg=contracts --out build/base_content_space.go
-$(abigen --sol ${sol_dir}/base_content_space.sol --pkg=contracts --out ${out_dir}/base_content_space.go)
-if [[ $? -ne 0 ]]; then
+$(./abigen --sol ${sol_dir}/base_content_space.sol --pkg=contracts --out ${out_dir}/base_content_space.go)
+ret=$?
+rm ./abigen
+
+if [[ $ret -ne 0 ]]; then
     echo "FAILED : error occured while creating go binding!"
     exit 1
 else

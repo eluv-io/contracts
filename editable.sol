@@ -24,6 +24,17 @@ Editable20200626180400PO: Authv3 changes
 Editable20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
+contract EditableHelper {
+
+     function getTimestamps(address payable _editAddr, uint _offset, uint _max) public view returns (uint[] memory) {
+        Editable e = Editable(_editAddr);
+        uint[] memory result = new uint[](_max);
+        for (uint i = 0; i < _max; i++) {
+            result[i] = e.versionTimestamp(_offset + i);
+        }
+        return result;
+    }
+}
 
 contract Editable is  Accessible {
 

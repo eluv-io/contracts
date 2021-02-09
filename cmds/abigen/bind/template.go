@@ -49,11 +49,25 @@ type tmplMethod struct {
 	Structured bool       // Whether the returns should be accumulated into a struct
 }
 
-// tmplEvent is a wrapper around an a
+// tmplEvent is a wrapper around an abi.Event
 type tmplEvent struct {
 	KType      string    // Type name of a contract binding where the event was found
 	Original   abi.Event // Original event as parsed by the abi package
 	Normalized abi.Event // Normalized version of the parsed fields
+}
+
+type tmplEventList []*tmplEvent
+
+func (l tmplEventList) Len() int {
+	return len(l)
+}
+
+func (l tmplEventList) Less(i, j int) bool {
+	return l[i].Normalized.Name < l[j].Normalized.Name
+}
+
+func (l tmplEventList) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
 }
 
 // tmplField is a wrapper around a struct field with binding language
@@ -102,8 +116,6 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 )
 
-
-
 // Reference imports to suppress errors if they are not otherwise used.
 var (
 	_ = big.NewInt
@@ -116,17 +128,20 @@ var (
 	_ = event.NewSubscription
 )
 
-var parsedABIS map[string]*abi.ABI
+// Map of ABI names to *abi.ABI
+// ABI names are constants starting with K_
+var ParsedABIS map[string]*abi.ABI
 
-func init() {
-	parsedABIS = make(map[string]*abi.ABI)
-	for name, _ := range ABIS {
-		a, err := parseABI(name)
-		if err == nil {
-			parsedABIS[name] = a
-		}
-	}
-}
+// Map of Unique events names to *EventInfo. 
+// Unique events names are constants starting with E_ 
+var UniqueEvents = map[string]*EventInfo{}
+
+// Map of Unique events types to *EventInfo 
+var EventsByType = map[reflect.Type]*EventInfo{}
+
+// Map of Unique events IDs to *EventInfo 
+var EventsByID   = map[common.Hash]*EventInfo{}
+
 
 // JSON returns a parsed ABI interface and error if it failed.
 func JSON(reader io.Reader) (*abi.ABI, error) {
@@ -149,7 +164,7 @@ func parseABI(name string) (*abi.ABI, error) {
 }
 
 func ParsedABI(name string) (*abi.ABI, error) {
-	pabi, ok := parsedABIS[name]
+	pabi, ok := ParsedABIS[name]
 	if ok {
 		return pabi, nil
 	}
@@ -190,10 +205,17 @@ type EventInfo struct {
 	Unpack func(log *types.Log, ev interface{}) error // unpack the given log into the given event
 }
 
-// Map of Unique events names to EventInfo
-var UniqueEvents = map[string]*EventInfo{
+func init() {
+	ParsedABIS = make(map[string]*abi.ABI)
+	for name, _ := range ABIS {
+		a, err := parseABI(name)
+		if err == nil {
+			ParsedABIS[name] = a
+		}
+	}
+	var ev *EventInfo
 	{{range $event := .Events}}
-	E_{{.Normalized.Name}}: {
+	ev = &EventInfo{
 		ID:     common.HexToHash("{{eventId .Normalized}}"), 
 		Type:   reflect.TypeOf((*{{.Normalized.Name}})(nil)),
 		Unpack: func(log *types.Log, ev interface{}) error{
@@ -203,7 +225,11 @@ var UniqueEvents = map[string]*EventInfo{
 			}
 			return nil
 		},
-	},{{end}}
+	}
+	UniqueEvents[E_{{.Normalized.Name}}] = ev
+	EventsByType[ev.Type] = ev
+	EventsByID[ev.ID] = ev
+	{{end}}
 }
 
 // Unique events structs

@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"go/format"
 	"regexp"
+	"sort"
 	"strings"
 	"text/template"
 	"unicode"
@@ -222,7 +223,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		}
 		allByName[lev[0].Normalized.Name] = h
 	}
-	for h, _ := range toRemove {
+	for h := range toRemove {
 		log.Warn("Removing duplicate from unique events ",
 			"event", allEvents[h][0].Normalized.Name,
 			"hash", allEvents[h][0].Normalized.ID().String())
@@ -231,7 +232,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 
 	// generate unique events map
 	log.Info("unique events")
-	uniqueEvents := make([]*tmplEvent, 0)
+	uniqueEvents := make(tmplEventList, 0)
 	for _, lev := range allEvents {
 		n := lev[0].Normalized.Name
 		for i := 1; i < len(lev); i++ {
@@ -246,6 +247,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		log.Info(lev[0].Normalized.Name, "<-", strings.Join(contracts, ","))
 		uniqueEvents = append(uniqueEvents, lev[0])
 	}
+	sort.Sort(uniqueEvents)
 
 	// Check if that type has already been identified as a library
 	for i := 0; i < len(types); i++ {

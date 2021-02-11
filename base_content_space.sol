@@ -313,11 +313,12 @@ BaseFactory20190801140700ML: Removed access group creation to its own factory
 BaseFactory20200203112400ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 BaseFactory20200316120700ML: Uses content-type setRights instead of going straight to the wallet
 BaseFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
+BaseFactory20201129223200ML: Fix glitch in creation of library (registration to the wrong index)
 */
 
 contract BaseTypeFactory is Ownable {
 
-    bytes32 public version ="BaseTypeFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20201129223200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address payable _spaceAddr) public {
         contentSpace = _spaceAddr;
@@ -427,7 +428,7 @@ contract BaseLibraryFactory is Ownable {
         if (!isV3Contract) {
             AccessIndexor index = AccessIndexor(userWallet);
             theLib.transferOwnership(tx.origin);
-            index.setAccessGroupRights(newLib, 0, 2);
+            index.setLibraryRights(newLib, 0, 2);
         } else {
             // v3+ path ...
             theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet

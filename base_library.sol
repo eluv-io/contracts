@@ -22,12 +22,13 @@ BaseLibrary20200110162700ML: Adds support for visibility, differentiates rights 
 BaseLibrary20200211164300ML: Modified to conform to authV3 API
 BaseLibrary20200316135200ML: Leverages inherited hasAccess
 BaseLibrary20200928110000PO: Replace tx.origin with msg.sender in some cases
+BaseLibrary20201129223200ML: Bump up version to match update in the factory
 */
 
 
 contract BaseLibrary is MetaObject, Container {
 
-    bytes32 public version ="BaseLibrary20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "BaseLibrary20201129223200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address payable[] public contributorGroups;
     address payable[] public reviewerGroups;

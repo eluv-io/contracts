@@ -1,6 +1,7 @@
 #!/bin/bash
 set -Eeuo pipefail
 
+
 run_solc()
 {
     bsc_name=$(basename ${1})
@@ -26,21 +27,18 @@ then
     exit 1
 fi
 
-# check the abigen is installed using HomeBrew
-if [[ ! -f /usr/local/bin/abigen ]]
-then
-    echo "Error : abigen is not found, install ethereum using Homebrew"
-    echo "Steps"
-    echo "- brew tap ethereum/ethereum"
-    echo "- brew install ethereum"
-    exit 1
+if [[ "${ABIGEN}" == "" ]]; then
+    echo "ERROR : requires ABIGEN path to be set"
+    echo ""
+    echo "export ABIGEN=\"<abigen-path>\""
+    echo "./build.sh"
 fi
 
 out_dir="$( mkdir -p "$sol_dir/build" && cd "$sol_dir/build" && pwd )"
 abi_dir=$sol_dir/dist
 
 # abigen --sol ./base_content_space.sol --pkg=contracts --out build/base_content_space.go
-$(abigen --sol ${sol_dir}/base_content_space.sol --pkg=contracts --out ${out_dir}/base_content_space.go)
+$(${ABIGEN} --sol ${sol_dir}/base_content_space.sol --pkg=contracts --out ${out_dir}/base_content_space.go)
 if [[ $? -ne 0 ]]; then
     echo "FAILED : error occured while creating go binding!"
     exit 1

@@ -200,9 +200,31 @@ const (
 
 // EventInfo gather information about a 'unique event'.
 type EventInfo struct {
+	Name   string                                     // name of the event as in abi.Event 
 	ID     common.Hash                                // ID of the event 
 	Type   reflect.Type                               // type of the struct event 
-	Unpack func(log *types.Log, ev interface{}) error // unpack the given log into the given event
+	Unpack func(log types.Log, ev interface{}) error  // unpack the given log into the given event
+}
+
+func (ev *EventInfo) Value(log types.Log) (reflect.Value, error) {
+	event := reflect.New(ev.Type.Elem())
+	err := ev.Unpack(log, event.Interface())
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	f := event.Elem().FieldByName("Raw")
+	if f.IsValid() && f.CanSet() {
+		f.Set(reflect.ValueOf(log))
+	}
+	return event, nil
+}
+
+func (ev *EventInfo) Event(log types.Log) (interface{}, error) {
+	val, err := ev.Value(log)
+	if err != nil {
+		return nil, err
+	}
+	return val.Interface(), nil
 }
 
 func init() {
@@ -216,11 +238,12 @@ func init() {
 	var ev *EventInfo
 	{{range $event := .Events}}
 	ev = &EventInfo{
+		Name:   "{{.Original.Name}}",
 		ID:     common.HexToHash("{{eventId .Normalized}}"), 
 		Type:   reflect.TypeOf((*{{.Normalized.Name}})(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error{
+		Unpack: func(log types.Log, ev interface{}) error{
 			anABI, _ := ParsedABI(K_{{.KType}})
-			if err := anABI.Unpack(ev, E_{{.Normalized.Name}}, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "{{.Original.Name}}", log.Data); err != nil {
 				return err
 			}
 			return nil

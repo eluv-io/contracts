@@ -244,8 +244,11 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		for _, ev := range lev {
 			contracts = append(contracts, ev.KType)
 		}
+		sort.Strings(contracts)
 		log.Info(lev[0].Normalized.Name, "<-", strings.Join(contracts, ","))
-		uniqueEvents = append(uniqueEvents, lev[0])
+		ev := lev[0]
+		ev.KType = contracts[0]
+		uniqueEvents = append(uniqueEvents, ev)
 	}
 	sort.Sort(uniqueEvents)
 

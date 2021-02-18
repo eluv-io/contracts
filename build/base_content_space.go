@@ -220,9 +220,31 @@ const (
 
 // EventInfo gather information about a 'unique event'.
 type EventInfo struct {
-	ID     common.Hash                                // ID of the event
-	Type   reflect.Type                               // type of the struct event
-	Unpack func(log *types.Log, ev interface{}) error // unpack the given log into the given event
+	Name   string                                    // name of the event as in abi.Event
+	ID     common.Hash                               // ID of the event
+	Type   reflect.Type                              // type of the struct event
+	Unpack func(log types.Log, ev interface{}) error // unpack the given log into the given event
+}
+
+func (ev *EventInfo) Value(log types.Log) (reflect.Value, error) {
+	event := reflect.New(ev.Type.Elem())
+	err := ev.Unpack(log, event.Interface())
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	f := event.Elem().FieldByName("Raw")
+	if f.IsValid() && f.CanSet() {
+		f.Set(reflect.ValueOf(log))
+	}
+	return event, nil
+}
+
+func (ev *EventInfo) Event(log types.Log) (interface{}, error) {
+	val, err := ev.Value(log)
+	if err != nil {
+		return nil, err
+	}
+	return val.Interface(), nil
 }
 
 func init() {
@@ -236,11 +258,12 @@ func init() {
 	var ev *EventInfo
 
 	ev = &EventInfo{
+		Name: "AccessComplete",
 		ID:   common.HexToHash("0x2c49ac638ee7bf3341004c40512c79847bb7fb8f17fb53151ff576a35630ac06"),
 		Type: reflect.TypeOf((*AccessComplete)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_AccessComplete, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AccessComplete", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -251,11 +274,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AccessCompleteV3",
 		ID:   common.HexToHash("0xd3e5b1d14681444d8159fa85b57104b685f47fb9164fd82b7fafe4e123dcc3a1"),
 		Type: reflect.TypeOf((*AccessCompleteV3)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_AccessCompleteV3, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AccessCompleteV3", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -266,11 +290,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AccessRequest",
 		ID:   common.HexToHash("0x50f423e39e8beb25bb2da38a63e3d33b5368f261522813712756733eaf569a06"),
 		Type: reflect.TypeOf((*AccessRequest)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_AccessRequest, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AccessRequest", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -281,11 +306,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AccessRequestStakeholder",
 		ID:   common.HexToHash("0xb6e3239e521a6c66920ae634f8e921a37e6991d520ac44d52f8516397f41b684"),
 		Type: reflect.TypeOf((*AccessRequestStakeholder)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_AccessRequestStakeholder, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AccessRequestStakeholder", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -296,11 +322,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AccessRequestV3",
 		ID:   common.HexToHash("0x545ceffc5093a8300777a74bb094968fbd62d128313df01eb72fd5350ec659c7"),
 		Type: reflect.TypeOf((*AccessRequestV3)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_AccessRequestV3, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_Accessible)
+			if err := anABI.Unpack(ev, "AccessRequestV3", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -311,11 +338,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AccessRequestValue",
 		ID:   common.HexToHash("0x515e0a48b385fce2a8e4d9f169a97c4f6ea669a752358f5e6ab37cc3c2e84c38"),
 		Type: reflect.TypeOf((*AccessRequestValue)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_AccessRequestValue, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AccessRequestValue", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -326,11 +354,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AccessorGroupAdded",
 		ID:   common.HexToHash("0x3a94857e4393737f73edb175a7d0c195c7f635d9ae995e12740616ec55c9d411"),
 		Type: reflect.TypeOf((*AccessorGroupAdded)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_AccessorGroupAdded, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AccessorGroupAdded", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -341,11 +370,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AccessorGroupRemoved",
 		ID:   common.HexToHash("0xc5224c4118417a068eeac7d714e6d8af6f99ec3fb611bc965185460b0e38f081"),
 		Type: reflect.TypeOf((*AccessorGroupRemoved)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_AccessorGroupRemoved, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AccessorGroupRemoved", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -356,11 +386,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AddKMSLocator",
 		ID:   common.HexToHash("0xdf8127994c229011ce9c4764bdc0375bb71c06cf1544f034cd81a42f37233319"),
 		Type: reflect.TypeOf((*AddKMSLocator)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_AddKMSLocator, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "AddKMSLocator", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -371,11 +402,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "AddNode",
 		ID:   common.HexToHash("0x2bb0f9ba138ffddb5a8f974e9885b65a7814d3002654f1cf3f2d3f619a4006c4"),
 		Type: reflect.TypeOf((*AddNode)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_NodeSpace)
-			if err := anABI.Unpack(ev, E_AddNode, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseContentSpace)
+			if err := anABI.Unpack(ev, "AddNode", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -386,11 +418,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ApproveContent",
 		ID:   common.HexToHash("0x70234ce475fee4ab40e5e55cf533f67f12b47ef4c860e62dd7affa84ead4b442"),
 		Type: reflect.TypeOf((*ApproveContent)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ApproveContent, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ApproveContent", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -401,11 +434,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ApproveContentRequest",
 		ID:   common.HexToHash("0x0588a34cf0de4e025d359c89ca4bacbcbf175440909952d91c814412d9da996a"),
 		Type: reflect.TypeOf((*ApproveContentRequest)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ApproveContentRequest, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ApproveContentRequest", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -416,11 +450,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "BindUserWallet",
 		ID:   common.HexToHash("0x05e3f3adaf96d565bb326088a1d8e0d78497549df2c99a8ab681e5fbc7a9b3f2"),
 		Type: reflect.TypeOf((*BindUserWallet)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_BindUserWallet, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "BindUserWallet", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -431,11 +466,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CommitPending",
 		ID:   common.HexToHash("0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75"),
 		Type: reflect.TypeOf((*CommitPending)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_CommitPending, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
+			if err := anABI.Unpack(ev, "CommitPending", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -446,11 +482,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ContentObjectCreate",
 		ID:   common.HexToHash("0xc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19"),
 		Type: reflect.TypeOf((*ContentObjectCreate)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_ContentObjectCreate, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ContentObjectCreate", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -461,11 +498,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ContentObjectCreated",
 		ID:   common.HexToHash("0xadc3945407fc9e1f5763b74624698197e96e741e6e7c683373498712ba3eb878"),
 		Type: reflect.TypeOf((*ContentObjectCreated)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ContentObjectCreated, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ContentObjectCreated", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -476,11 +514,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ContentObjectDeleted",
 		ID:   common.HexToHash("0x36500cee87b0da1746889a3483dccb525acfc40b8c0f2218e164c6cdf1482a3e"),
 		Type: reflect.TypeOf((*ContentObjectDeleted)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ContentObjectDeleted, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ContentObjectDeleted", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -491,11 +530,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ContentTypeAdded",
 		ID:   common.HexToHash("0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7"),
 		Type: reflect.TypeOf((*ContentTypeAdded)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_ContentTypeAdded, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessWallet)
+			if err := anABI.Unpack(ev, "ContentTypeAdded", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -506,11 +546,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ContentTypeRemoved",
 		ID:   common.HexToHash("0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2"),
 		Type: reflect.TypeOf((*ContentTypeRemoved)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_ContentTypeRemoved, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessWallet)
+			if err := anABI.Unpack(ev, "ContentTypeRemoved", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -521,11 +562,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ContributorGroupAdded",
 		ID:   common.HexToHash("0x218673669018c25b89bfbf1b58d0075e37c8847ef16e707b92355b7833e97d61"),
 		Type: reflect.TypeOf((*ContributorGroupAdded)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ContributorGroupAdded, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ContributorGroupAdded", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -536,11 +578,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ContributorGroupRemoved",
 		ID:   common.HexToHash("0xbbd97daa1862eb12f77ed128a557406737cee07b131b1e2d7140dff2005e197c"),
 		Type: reflect.TypeOf((*ContributorGroupRemoved)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ContributorGroupRemoved, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ContributorGroupRemoved", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -551,11 +594,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CreateAccessWallet",
 		ID:   common.HexToHash("0x56c4bf13bebaa9f2be39ac3f2f4619a0dd1b694bb8c5f43c6b244a6dba0f0cca"),
 		Type: reflect.TypeOf((*CreateAccessWallet)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_CreateAccessWallet, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "CreateAccessWallet", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -566,11 +610,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CreateContent",
 		ID:   common.HexToHash("0xa0633ea0b3cb5796607e5f551ae79c7eeee0dc7ee0c3ff8996506261651368ce"),
 		Type: reflect.TypeOf((*CreateContent)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_CreateContent, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "CreateContent", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -581,11 +626,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CreateContentType",
 		ID:   common.HexToHash("0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8"),
 		Type: reflect.TypeOf((*CreateContentType)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_CreateContentType, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "CreateContentType", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -596,11 +642,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CreateExtUserWallet",
 		ID:   common.HexToHash("0x786a1cca426afc9bf7b81ff1382a573ebc21b93bddf4784c49f56a3ae8a691c8"),
 		Type: reflect.TypeOf((*CreateExtUserWallet)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_ExternalUserWallet)
-			if err := anABI.Unpack(ev, E_CreateExtUserWallet, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "CreateExtUserWallet", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -611,11 +658,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CreateGroup",
 		ID:   common.HexToHash("0xa3b1fe71ae61bad8cffa485b230e24e518938f76182a30fa0d9979e7237ad159"),
 		Type: reflect.TypeOf((*CreateGroup)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_CreateGroup, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "CreateGroup", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -626,11 +674,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CreateLibrary",
 		ID:   common.HexToHash("0x473c07a6d0228c4fb8fe2be3b4617c3b5fb7c0f8cd9ba4b67e8631844b9b6571"),
 		Type: reflect.TypeOf((*CreateLibrary)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_CreateLibrary, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "CreateLibrary", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -641,11 +690,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "CreateSpace",
 		ID:   common.HexToHash("0x599bb380c80b69455450a615c515544b8da3b09f2efa116a5f0567682203cf54"),
 		Type: reflect.TypeOf((*CreateSpace)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_CreateSpace, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "CreateSpace", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -656,11 +706,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "EngageAccountLibrary",
 		ID:   common.HexToHash("0x53ce35a7383a3ea3f695bdf0f87d7e5485ba816b382673e849bfdd24e7f5e3ca"),
 		Type: reflect.TypeOf((*EngageAccountLibrary)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_EngageAccountLibrary, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "EngageAccountLibrary", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -671,11 +722,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ExecStatus",
 		ID:   common.HexToHash("0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad"),
 		Type: reflect.TypeOf((*ExecStatus)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseAccessWallet)
-			if err := anABI.Unpack(ev, E_ExecStatus, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ExecStatus", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -686,11 +738,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "GetAccessWallet",
 		ID:   common.HexToHash("0x1c917c3c2698bd5b98acb9772728da62f2ce3670e4578910a6465b955f63e157"),
 		Type: reflect.TypeOf((*GetAccessWallet)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_GetAccessWallet, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "GetAccessWallet", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -701,11 +754,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "InsufficientFunds",
 		ID:   common.HexToHash("0x03eb8b54a949acec2cd08fdb6d6bd4647a1f2c907d75d6900648effa92eb147f"),
 		Type: reflect.TypeOf((*InsufficientFunds)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_InsufficientFunds, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "InsufficientFunds", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -716,11 +770,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "InvokeCustomPostHook",
 		ID:   common.HexToHash("0x97d9c9779ed3ed8b9a6edfe16d17b1fdec843245747a19abfb621806e37d4a89"),
 		Type: reflect.TypeOf((*InvokeCustomPostHook)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_InvokeCustomPostHook, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "InvokeCustomPostHook", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -731,11 +786,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "InvokeCustomPreHook",
 		ID:   common.HexToHash("0x12b04791b5caab768e2757268992f0c62801e3921d9e310c893f0d5f9caa5f71"),
 		Type: reflect.TypeOf((*InvokeCustomPreHook)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_InvokeCustomPreHook, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "InvokeCustomPreHook", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -746,11 +802,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "Log",
 		ID:   common.HexToHash("0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab"),
 		Type: reflect.TypeOf((*Log)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_Log, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "Log", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -761,11 +818,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "LogAddress",
 		ID:   common.HexToHash("0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e"),
 		Type: reflect.TypeOf((*LogAddress)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_LogAddress, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "LogAddress", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -776,11 +834,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "LogBool",
 		ID:   common.HexToHash("0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47"),
 		Type: reflect.TypeOf((*LogBool)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_LogBool, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "LogBool", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -791,11 +850,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "LogBytes32",
 		ID:   common.HexToHash("0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7"),
 		Type: reflect.TypeOf((*LogBytes32)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_LogBytes32, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "LogBytes32", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -806,11 +866,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "LogInt256",
 		ID:   common.HexToHash("0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22"),
 		Type: reflect.TypeOf((*LogInt256)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_LogInt256, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "LogInt256", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -821,11 +882,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "LogUint256",
 		ID:   common.HexToHash("0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d"),
 		Type: reflect.TypeOf((*LogUint256)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_LogUint256, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "LogUint256", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -836,11 +898,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ManagerAccessGranted",
 		ID:   common.HexToHash("0x93bcaab179551bde429187645251f8e1fb8ac85801fcb1cf91eb2c9043d61117"),
 		Type: reflect.TypeOf((*ManagerAccessGranted)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, E_ManagerAccessGranted, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ManagerAccessGranted", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -851,11 +914,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ManagerAccessRevoked",
 		ID:   common.HexToHash("0x2d6aa1a9629d125e23a0cf692cda7cd6795dff1652eedd4673b38ec31e387b95"),
 		Type: reflect.TypeOf((*ManagerAccessRevoked)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, E_ManagerAccessRevoked, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ManagerAccessRevoked", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -866,11 +930,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "MemberAdded",
 		ID:   common.HexToHash("0xb251eb052afc73ffd02ffe85ad79990a8b3fed60d76dbc2fa2fdd7123dffd914"),
 		Type: reflect.TypeOf((*MemberAdded)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, E_MemberAdded, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "MemberAdded", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -881,11 +946,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "MemberRevoked",
 		ID:   common.HexToHash("0x745cd29407db644ed93e3ceb61cbcab96d1dfb496989ac5d5bf514fc5a9fab9c"),
 		Type: reflect.TypeOf((*MemberRevoked)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, E_MemberRevoked, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "MemberRevoked", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -896,11 +962,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "NodeApproved",
 		ID:   common.HexToHash("0xd644c8164f225d3b7fdbcc404f279bb1e823ef0d93f88dd4b24e85d0e7bc6a54"),
 		Type: reflect.TypeOf((*NodeApproved)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_NodeSpace)
-			if err := anABI.Unpack(ev, E_NodeApproved, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseContentSpace)
+			if err := anABI.Unpack(ev, "NodeApproved", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -911,11 +978,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "NodeSubmitted",
 		ID:   common.HexToHash("0xae5645569f32b946f7a747113c64094a29a6b84c5ddf55816ef4381ce8a3a46d"),
 		Type: reflect.TypeOf((*NodeSubmitted)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_NodeSpace)
-			if err := anABI.Unpack(ev, E_NodeSubmitted, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseContentSpace)
+			if err := anABI.Unpack(ev, "NodeSubmitted", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -926,11 +994,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "OAuthStatusChanged",
 		ID:   common.HexToHash("0x04c71e53d136838eea703132a77007b0526b9a7691cdb7a6017a93673f865cbb"),
 		Type: reflect.TypeOf((*OAuthStatusChanged)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, E_OAuthStatusChanged, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "OAuthStatusChanged", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -941,11 +1010,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ObjectMetaChanged",
 		ID:   common.HexToHash("0xe2b310ec9dabdc05229a748e07666c3bc9c46c6ef465cce30d0aa3aa64a0644c"),
 		Type: reflect.TypeOf((*ObjectMetaChanged)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_MetaObject)
-			if err := anABI.Unpack(ev, E_ObjectMetaChanged, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessWallet)
+			if err := anABI.Unpack(ev, "ObjectMetaChanged", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -956,11 +1026,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "Publish",
 		ID:   common.HexToHash("0xad9c5eacc073b2e1767affc883e050347e1dd379c9799cb5ac0a17bde80f5cf4"),
 		Type: reflect.TypeOf((*Publish)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_Publish, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "Publish", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -971,11 +1042,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RegisterNode",
 		ID:   common.HexToHash("0x4575facd117046c9c28b69a3eb9c08939f2462a5a22ea6c6dcd4f79b8dd124e9"),
 		Type: reflect.TypeOf((*RegisterNode)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_RegisterNode, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RegisterNode", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -986,11 +1058,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RemoveKMSLocator",
 		ID:   common.HexToHash("0x5f463eb53cddf646852b82c0d9bdb1d1ec215c3802b780e8b7beea8b6e99f94c"),
 		Type: reflect.TypeOf((*RemoveKMSLocator)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_RemoveKMSLocator, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RemoveKMSLocator", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1001,11 +1074,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RemoveNode",
 		ID:   common.HexToHash("0x41ec5b9efdbf61871df6a18b687e04bea93d5793af5f8c8b4626e155b23dc19d"),
 		Type: reflect.TypeOf((*RemoveNode)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_NodeSpace)
-			if err := anABI.Unpack(ev, E_RemoveNode, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseContentSpace)
+			if err := anABI.Unpack(ev, "RemoveNode", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1016,11 +1090,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ReturnCustomHook",
 		ID:   common.HexToHash("0x8c693e8b27db7caf9b9637b66dcc11444760023a4d53e95407a3acef1b249f50"),
 		Type: reflect.TypeOf((*ReturnCustomHook)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_ReturnCustomHook, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ReturnCustomHook", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1031,11 +1106,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ReviewerGroupAdded",
 		ID:   common.HexToHash("0x1b88a571cc8ac2e87512f05648e79d184f5cc0cbb2889bc487c41f8b9a3202eb"),
 		Type: reflect.TypeOf((*ReviewerGroupAdded)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ReviewerGroupAdded, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ReviewerGroupAdded", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1046,11 +1122,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "ReviewerGroupRemoved",
 		ID:   common.HexToHash("0xdf9d78c5635b72b709c85300a786eb7238acbe5bffe01c60c16464e45c6eb6eb"),
 		Type: reflect.TypeOf((*ReviewerGroupRemoved)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_ReviewerGroupRemoved, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "ReviewerGroupRemoved", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1061,11 +1138,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RightsChanged",
 		ID:   common.HexToHash("0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4"),
 		Type: reflect.TypeOf((*RightsChanged)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_AccessIndexor)
-			if err := anABI.Unpack(ev, E_RightsChanged, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RightsChanged", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1076,11 +1154,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RunAccess",
 		ID:   common.HexToHash("0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58"),
 		Type: reflect.TypeOf((*RunAccess)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_RunAccess, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RunAccess", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1091,11 +1170,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RunAccessCharge",
 		ID:   common.HexToHash("0xe1f170f83120da6c17cd0ed37a683fc996637c63d2c94a60c806d4cb7466f47b"),
 		Type: reflect.TypeOf((*RunAccessCharge)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_RunAccessCharge, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RunAccessCharge", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1106,11 +1186,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RunCreate",
 		ID:   common.HexToHash("0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b"),
 		Type: reflect.TypeOf((*RunCreate)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_RunCreate, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RunCreate", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1121,11 +1202,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RunFinalize",
 		ID:   common.HexToHash("0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891"),
 		Type: reflect.TypeOf((*RunFinalize)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_RunFinalize, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RunFinalize", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1136,11 +1218,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RunKill",
 		ID:   common.HexToHash("0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86"),
 		Type: reflect.TypeOf((*RunKill)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_RunKill, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RunKill", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1151,11 +1234,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "RunStatusChange",
 		ID:   common.HexToHash("0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff"),
 		Type: reflect.TypeOf((*RunStatusChange)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, E_RunStatusChange, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "RunStatusChange", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1166,11 +1250,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "SetAccessCharge",
 		ID:   common.HexToHash("0x4114f8ef80b6de2161db580cbefa14e1892d15d3ebe2062c9914e4a5773114a3"),
 		Type: reflect.TypeOf((*SetAccessCharge)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_SetAccessCharge, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "SetAccessCharge", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1181,11 +1266,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "SetContentContract",
 		ID:   common.HexToHash("0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7"),
 		Type: reflect.TypeOf((*SetContentContract)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_SetContentContract, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "SetContentContract", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1196,11 +1282,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "SetContentType",
 		ID:   common.HexToHash("0x4f692e87baf302f7281e83eec109053efc2ca8e7bddfc6ce88c579cd9767f71f"),
 		Type: reflect.TypeOf((*SetContentType)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_SetContentType, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "SetContentType", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1211,11 +1298,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "SetFactory",
 		ID:   common.HexToHash("0x1c893ef9379093af30f458b9e74d2aba13c499660b68dec5e29af7b199c188b9"),
 		Type: reflect.TypeOf((*SetFactory)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_SetFactory, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "SetFactory", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1226,11 +1314,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "SetStatusCode",
 		ID:   common.HexToHash("0xda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a2"),
 		Type: reflect.TypeOf((*SetStatusCode)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, E_SetStatusCode, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "SetStatusCode", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1241,11 +1330,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "UnauthorizedOperation",
 		ID:   common.HexToHash("0x23de2adc3e22f171f66b3e5a333e17feb9dc30ba9570933bd259cb6c13ef7ab7"),
 		Type: reflect.TypeOf((*UnauthorizedOperation)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_UnauthorizedOperation, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
+			if err := anABI.Unpack(ev, "UnauthorizedOperation", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1256,11 +1346,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "UnregisterNode",
 		ID:   common.HexToHash("0xb98695ab4c6cedb3b4dfe62479a9d39a59aa2cb38b8bd92bbb6ce5856e42bdf4"),
 		Type: reflect.TypeOf((*UnregisterNode)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, E_UnregisterNode, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "UnregisterNode", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1271,11 +1362,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "UpdateKmsAddress",
 		ID:   common.HexToHash("0x74538e2fbd034afddf32b42c5939d211ce86c7683f9768f1a4969746f81f8608"),
 		Type: reflect.TypeOf((*UpdateKmsAddress)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
+		Unpack: func(log types.Log, ev interface{}) error {
 			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, E_UpdateKmsAddress, log.Data); err != nil {
+			if err := anABI.Unpack(ev, "UpdateKmsAddress", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1286,11 +1378,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "UpdateRequest",
 		ID:   common.HexToHash("0x403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65"),
 		Type: reflect.TypeOf((*UpdateRequest)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_UpdateRequest, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
+			if err := anABI.Unpack(ev, "UpdateRequest", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1301,11 +1394,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "VersionConfirm",
 		ID:   common.HexToHash("0xbdaffceabaaa783aa187fea6c2e815541d29e2290bf3f7d3c4fc53672b68f7df"),
 		Type: reflect.TypeOf((*VersionConfirm)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_VersionConfirm, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
+			if err := anABI.Unpack(ev, "VersionConfirm", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1316,11 +1410,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "VersionDelete",
 		ID:   common.HexToHash("0x238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51"),
 		Type: reflect.TypeOf((*VersionDelete)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_VersionDelete, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
+			if err := anABI.Unpack(ev, "VersionDelete", log.Data); err != nil {
 				return err
 			}
 			return nil
@@ -1331,11 +1426,12 @@ func init() {
 	EventsByID[ev.ID] = ev
 
 	ev = &EventInfo{
+		Name: "VisibilityChanged",
 		ID:   common.HexToHash("0x369a336baa7895746725663e717b3523139ebabfff8c32bc4b13e8f88e502500"),
 		Type: reflect.TypeOf((*VisibilityChanged)(nil)),
-		Unpack: func(log *types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Container)
-			if err := anABI.Unpack(ev, E_VisibilityChanged, log.Data); err != nil {
+		Unpack: func(log types.Log, ev interface{}) error {
+			anABI, _ := ParsedABI(K_Accessible)
+			if err := anABI.Unpack(ev, "VisibilityChanged", log.Data); err != nil {
 				return err
 			}
 			return nil

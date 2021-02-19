@@ -14,4 +14,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.4.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
+	gopkg.in/urfave/cli.v1 v1.20.0
 )
+
+replace github.com/eluv-io/contracts/cmds => ./

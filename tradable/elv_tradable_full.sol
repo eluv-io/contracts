@@ -52,12 +52,20 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         return true;
     }
 
+    /**
+     * @dev Burns a specific ERC721 token.
+     * @param tokenId uint256 id of the ERC721 token to be burned.
+    */
+    function burn(uint256 tokenId) public {
+        require(_isApprovedOrOwner(msg.sender, tokenId));
+        _burn(tokenId);
+    }
+
     event SetTokenURI(uint256 indexed tokenId, string prevURI, string newURI);
 
     // allows the owner of a token to reset the URI.
     function setTokenURI(uint256 tokenId, string memory uri) public {
-        address tokenOwner = ownerOf(tokenId);
-        require(msg.sender == tokenOwner);
+        require(_isApprovedOrOwner(msg.sender, tokenId));
         emit SetTokenURI(tokenId, this.tokenURI(tokenId), uri);
         _setTokenURI(tokenId, uri);
     }

@@ -14,8 +14,8 @@ contract ProxyRegistry {
 }
 
 /**
- * @title ELVTradable
- * ELVTradable - ERC721 contract that whitelists a trading address, and has minting functionality.
+ * @title ElvTradable
+ * ElvTradable - ERC721 contract that whitelists a trading address, and has minting functionality.
  */
 contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ownable {
     using Strings for string;
@@ -52,10 +52,13 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         return true;
     }
 
+    event SetTokenURI(uint256 indexed tokenId, string prevURI, string newURI);
+
     // allows the owner of a token to reset the URI.
     function setTokenURI(uint256 tokenId, string memory uri) public {
-        address owner = ownerOf(tokenId);
-        require(msg.sender == owner);
+        address tokenOwner = ownerOf(tokenId);
+        require(msg.sender == tokenOwner);
+        emit SetTokenURI(tokenId, this.tokenURI(tokenId), uri);
         _setTokenURI(tokenId, uri);
     }
 

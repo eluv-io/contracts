@@ -13,6 +13,17 @@ contract ProxyRegistry {
     mapping(address => OwnableDelegateProxy) public proxies;
 }
 
+contract TestProxyRegistry is ProxyRegistry {
+
+    int public countDelegates;
+
+    function addDelegate(address from, address to) public {
+        require(to != msg.sender);
+        proxies[from] = OwnableDelegateProxy(to);
+        countDelegates++;
+    }
+}
+
 interface TransferFeeProxy {
     function getTransferFee(uint256 _tokenId) external view returns (uint256);
 }
@@ -62,18 +73,16 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
      * @dev Burns a specific ERC721 token.
      * @param tokenId uint256 id of the ERC721 token to be burned.
     */
-    // TODO: *don't* allow proxy to burn !?!?! may be irrelevant since the proxy can transfer to an arbitrary account !?!?!
     function burn(uint256 tokenId) public {
-        require(_isApprovedOrOwner(msg.sender, tokenId) && msg.sender != proxyRegistryAddress);
+        require(_isApprovedOrOwner(msg.sender, tokenId));
         _burn(tokenId);
     }
 
     event SetTokenURI(uint256 indexed tokenId, string prevURI, string newURI);
 
     // allows the owner of a token to reset the URI.
-    // TODO: *don't* allow proxy to burn !?!?! may be irrelevant since the proxy can transfer to an arbitrary account !?!?!
     function setTokenURI(uint256 tokenId, string memory uri) public {
-        require(_isApprovedOrOwner(msg.sender, tokenId) && msg.sender != proxyRegistryAddress);
+        require(_isApprovedOrOwner(msg.sender, tokenId));
         emit SetTokenURI(tokenId, this.tokenURI(tokenId), uri);
         _setTokenURI(tokenId, uri);
     }
@@ -115,13 +124,11 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         msg.sender.transfer(_amount);
     }
 
-    // TODO: the 'safeTransferFrom' variants in ERC721.sol call 'transferFrom'. I am not 100% sure in Solidity
-    //  if that means they will call into this overridden method by default.
     function transferFrom(address from, address to, uint256 tokenId) public payable {
-        super.transferFrom(from, to, tokenId);
         if (msg.value < getTransferFee(tokenId)) {
-            require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender));
+            require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender), "transfer w/o proxy requires fee");
         }
+        super.transferFrom(from, to, tokenId);
     }
 
     function isProxyApprovedForAll(address owner, address operator) public view returns (bool) {

@@ -13,14 +13,26 @@ contract ProxyRegistry {
     mapping(address => OwnableDelegateProxy) public proxies;
 }
 
-contract TestProxyRegistry is ProxyRegistry {
+contract OwnerProxyRegistry is ProxyRegistry, Ownable {
 
     int public countDelegates;
 
-    function addDelegate(address from, address to) public {
-        require(to != msg.sender);
-        proxies[from] = OwnableDelegateProxy(to);
+    constructor (address[10] memory initDelegates) public {
+        for (uint i = 0; i < initDelegates.length; i++) {
+            if (initDelegates[i] != address(0)) {
+                addDelegate(initDelegates[i]);
+            }
+        }
+    }
+
+    function addDelegate(address from) public onlyOwner {
+        require(from != msg.sender);
+        proxies[from] = OwnableDelegateProxy(msg.sender);
         countDelegates++;
+    }
+
+    function finalize() public onlyOwner {
+        selfdestruct(msg.sender);
     }
 }
 

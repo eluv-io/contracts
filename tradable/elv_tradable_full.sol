@@ -81,6 +81,20 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         return true;
     }
 
+    function isMinterSigned(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
+        return isMinter(ecrecover(keccak256(abi.encodePacked(address(this), to, tokenId, tokenURI)), v, r, s));
+    }
+
+    // _mint emits event Transfer(address(0), to, tokenId) - so will be indistinguishable
+    function mintSignedWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        require(!_exists(tokenId));
+        // require(msg.sender == to); // TODO: do we want this? any reason anyone can't submit the transaction?
+        require(isMinterSigned(to, tokenId, tokenURI, v, r, s));
+        _mint(to, tokenId);
+        _setTokenURI(tokenId, tokenURI);
+        return true;
+    }
+
     /**
      * @dev Burns a specific ERC721 token.
      * @param tokenId uint256 id of the ERC721 token to be burned.

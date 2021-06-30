@@ -7,6 +7,7 @@ import "./oz_token/ownership/Ownable.sol";
 import "./oz_token/access/roles/MinterRole.sol";
 import "./Strings.sol";
 import "./elv_wrapped.sol";
+import "./elv_token.sol";
 
 contract OwnableDelegateProxy {}
 

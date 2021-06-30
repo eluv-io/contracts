@@ -1,11 +1,12 @@
 pragma solidity ^0.5.0;
 
-import "./oz_erc721/ERC721.sol";
-import "./oz_erc721/ERC721Enumerable.sol";
-import "./oz_erc721/ERC721Metadata.sol";
-import "./oz_erc721/ownership/Ownable.sol";
-import "./oz_erc721/access/roles/MinterRole.sol";
+import "./oz_token/ERC721.sol";
+import "./oz_token/ERC721Enumerable.sol";
+import "./oz_token/ERC721Metadata.sol";
+import "./oz_token/ownership/Ownable.sol";
+import "./oz_token/access/roles/MinterRole.sol";
 import "./Strings.sol";
+import "./elv_wrapped.sol";
 
 contract OwnableDelegateProxy {}
 

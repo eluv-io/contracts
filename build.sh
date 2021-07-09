@@ -49,14 +49,14 @@ else
 fi
 echo -e "\n${separator}\n"
 
-
 run_solc "${sol_dir}/base_content_space.sol"
 echo -e "\n${separator}\n"
 run_solc "${sol_dir}/lv_recording.sol"
 echo -e "\n${separator}\n"
 run_solc "${sol_dir}/payment_service.sol"
 echo -e "\n${separator}\n"
-
+run_solc "${sol_dir}/tradable/elv_tradable_full.sol"
+echo -e "\n${separator}\n"
 
 $(go generate ./cmds/abi-parser)
 if [[ $? -ne 0 ]]; then

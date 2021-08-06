@@ -22,12 +22,13 @@ BsAccessCtrlGrp20200204160600ML: Removes commented out sections
 BsAccessCtrlGrp20200305113000ML: Overloads checkRights to reflect difference between groups and wallets
 BsAccessCtrlGrp20200316121700ML: Leverages inherited hasAccess
 BsAccessCtrlGrp20200928110000PO: Replace tx.origin with msg.sender in some cases
+BsAccessCtrlGrp20210806150000PO: Change impl of group to use maps instead of lists.
 */
 
 
 contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20210806150000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping(address => bool) public membersMap;
     uint256 public membersNum;

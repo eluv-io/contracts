@@ -1,4 +1,5 @@
 8f32d59b: isOwner()
+7d58f1de: mintWithTokenURIMany(address[],address[],uint256[],string[])
 8da5cb5b: owner()
 715018a6: renounceOwnership()
 f2fde38b: transferOwnership(address)

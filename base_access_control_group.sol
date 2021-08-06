@@ -29,9 +29,9 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
 
     bytes32 public version ="BsAccessCtrlGrp20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    address payable[] public membersList;
+    mapping(address => bool) public membersMap;
     uint256 public membersNum;
-    address payable[] public managersList;
+    mapping(address => bool) public managersMap;
     uint256 public managersNum;
 
     event MemberAdded(address candidate);
@@ -47,10 +47,10 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
     constructor(address payable _contentSpace) public {
         contentSpace = _contentSpace;
         membersNum = 0;
-        managersList.push(creator);
+        managersMap[creator] = true;
         managersNum = 1;
         oauthEnabled = false;
-        indexCategory =  CATEGORY_GROUP; //2
+        indexCategory =  CATEGORY_GROUP; // 2
     }
 
     function setOAuthEnabled(bool _enabled) public onlyOwner {
@@ -60,37 +60,24 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
 
     function grantManagerAccess(address payable manager) public onlyOwner {
         bool already = false;
-        for (uint i = 0; i < managersNum; i++) {
-            if (managersList[i] == manager) {
-                already = true;
-                break;
-            }
-        }
-        if (already == false) {
-            if (managersList.length == managersNum) {
-                managersList.push(manager);
-            } else {
-                managersList[managersNum] = manager;
-            }
+
+        if (!managersMap[manager]) {
+            managersMap[manager] = true;
             managersNum++;
         }
+
         emit ManagerAccessGranted(manager);
         setRights(manager, TYPE_EDIT, ACCESS_TENTATIVE);
     }
 
     function revokeManagerAccess(address payable manager) public {
         require((msg.sender == owner) || (msg.sender == manager));
-        for (uint i = 0; i < managersNum; i++) {
-            if (managersList[i] == manager) {
-                delete managersList[i];
-                if (i != (managersNum - 1)) {
-                    managersList[i] = managersList[managersNum - 1];
-                    delete managersList[managersNum - 1];
-                }
-                managersNum--;
-                break;
-            }
+
+        if (managersMap[manager]) {
+            delete managersMap[manager];
+            managersNum--;
         }
+
         emit ManagerAccessRevoked(manager);
         setRights(manager, TYPE_EDIT, ACCESS_NONE);
     }
@@ -99,12 +86,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         if (_candidate == owner) {
             return true;
         }
-        for (uint256 i = 0; i < managersList.length; i++) {
-            if (managersList[i] == _candidate) {
-                return true;
-            }
-        }
-        return false;
+        return managersMap[_candidate];
     }
 
     address public tenant; // (optional?) address of tenant contract
@@ -136,19 +118,9 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
 
     function grantAccess(address payable candidate) public {
         require(hasManagerAccess(msg.sender) == true);
-        bool already = false;
-        for (uint i = 0; i < membersNum; i++) {
-            if (membersList[i] == candidate) {
-                already = true;
-                break;
-            }
-        }
-        if (already == false) {
-            if (membersList.length == membersNum) {
-                membersList.push(candidate);
-            } else {
-                membersList[membersNum] = candidate;
-            }
+
+        if (!membersMap[candidate]) {
+            membersMap[candidate] = true;
             membersNum++;
         }
 
@@ -158,17 +130,12 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
 
     function revokeAccess(address payable candidate) public {
         require((hasManagerAccess(msg.sender) == true) || (msg.sender == candidate));
-        for (uint i = 0; i < membersNum; i++) {
-            if (membersList[i] == candidate) {
-                delete membersList[i];
-                if (i != (membersNum - 1)) {
-                    membersList[i] = membersList[membersNum - 1];
-                    delete membersList[membersNum - 1];
-                }
-                membersNum--;
-                break;
-            }
+
+        if (membersMap[candidate]) {
+            delete membersMap[candidate];
+            membersNum--;
         }
+
         emit MemberRevoked(candidate);
         setRights(candidate, TYPE_ACCESS, ACCESS_NONE);
     }

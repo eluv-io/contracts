@@ -116,6 +116,12 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         }
     }
 
+    function grantAccessMany(address payable[] memory candidates) public {
+        for (uint i = 0; i < candidates.length; i++) {
+            grantAccess(candidates[i]);
+        }
+    }
+
     function grantAccess(address payable candidate) public {
         require(hasManagerAccess(msg.sender) == true);
 

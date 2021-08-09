@@ -28,7 +28,7 @@ BsAccessCtrlGrp20210806150000PO: Change impl of group to use maps instead of lis
 
 contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20210806150000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20210809150000PO";
 
     mapping(address => bool) public membersMap;
     uint256 public membersNum;
@@ -57,6 +57,12 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
     function setOAuthEnabled(bool _enabled) public onlyOwner {
         oauthEnabled = _enabled;
         emit OAuthStatusChanged(_enabled);
+    }
+
+    bool public isConsumerGroup;
+
+    function setIsConsumerGroup(bool _enabled) public onlyOwner {
+        isConsumerGroup = _enabled;
     }
 
     function grantManagerAccess(address payable manager) public onlyOwner {
@@ -124,7 +130,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
     }
 
     function grantAccess(address payable candidate) public {
-        require(hasManagerAccess(msg.sender) == true);
+        require(hasManagerAccess(msg.sender) || (isConsumerGroup && (msg.sender == candidate)));
 
         if (!membersMap[candidate]) {
             membersMap[candidate] = true;

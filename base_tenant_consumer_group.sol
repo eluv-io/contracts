@@ -32,9 +32,6 @@ contract BaseTenantConsumerGroup is MetaObject, CounterObject, Editable {
     }
 
     function hasAccess(address candidate) public view returns (bool) {
-        if (isAdmin(address(uint160(candidate)))) {
-            return true;
-        }
         return membersMap[candidate];
     }
 

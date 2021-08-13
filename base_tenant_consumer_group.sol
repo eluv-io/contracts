@@ -35,21 +35,24 @@ contract BaseTenantConsumerGroup is MetaObject, CounterObject, Editable {
         return membersMap[candidate];
     }
 
+    function grantAccessInternal(address payable candidate) private {
+        if (!membersMap[candidate]) {
+            membersMap[candidate] = true;
+            membersNum++;
+        }
+        emit MemberAdded(candidate);
+    }
+
     function grantAccessMany(address payable[] memory candidates) public {
+        require(isAdmin(msg.sender));
         for (uint i = 0; i < candidates.length; i++) {
-            grantAccess(candidates[i]);
+            grantAccessInternal(candidates[i]);
         }
     }
 
     function grantAccess(address payable candidate) public {
         require(isAdmin(msg.sender) || (msg.sender == candidate));
-
-        if (!membersMap[candidate]) {
-            membersMap[candidate] = true;
-            membersNum++;
-        }
-
-        emit MemberAdded(candidate);
+        grantAccessInternal(candidate);
     }
 
     function revokeAccess(address payable candidate) public {

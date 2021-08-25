@@ -57,11 +57,13 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         string memory _symbol,
         string memory _contractURI,
         address _proxyRegistryAddress,
-        uint256 _baseTransferFee
+        uint256 _baseTransferFee,
+        uint256 _cap
     ) public ERC721Metadata(_name, _symbol) {
         proxyRegistryAddress = _proxyRegistryAddress;
         contractURI = _contractURI;
         baseTransferFee = _baseTransferFee;
+        cap = _cap;
     }
 
     string public contractURI;
@@ -69,6 +71,8 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
     function setContractURI(string memory _newContractURI) public onlyOwner {
         contractURI = _newContractURI;
     }
+
+    uint256 public cap;
 
     // straight from ERC721MetadataMintable in OpenZeppelin
     /**
@@ -79,6 +83,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
      * @return A boolean that indicates if the operation was successful.
     */
     function mintWithTokenURI(address to, uint256 tokenId, string memory tokenURI) public onlyMinter returns (bool) {
+        require(cap == 0 || totalSupply().add(1) <= cap);
         _mint(to, tokenId);
         _setTokenURI(tokenId, tokenURI);
         return true;
@@ -90,6 +95,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
 
     // _mint emits event Transfer(address(0), to, tokenId) - so will be indistinguishable
     function mintSignedWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        require(cap == 0 || totalSupply().add(1) <= cap);
         require(!_exists(tokenId));
         // require(msg.sender == to); // TODO: do we want this? any reason anyone can't submit the transaction?
         require(isMinterSigned(to, tokenId, tokenURI, v, r, s));

@@ -8,7 +8,10 @@ contract ElvTokenHelper is Ownable {
     function mintWithTokenURIMany(address[] memory tok, address[] memory to, uint256[] memory tokenId, string[] memory tokenURI)
     public onlyOwner returns (bool) {
         for (uint i = 0; i < tok.length; i++) {
-            ElvTradable(tok[i]).mintWithTokenURI(to[i], tokenId[i], tokenURI[i]);
+            ElvTradable et = ElvTradable(tok[i]);
+            if (!et.exists(tokenId[i])) {
+                et.mintWithTokenURI(to[i], tokenId[i], tokenURI[i]);
+            }
         }
         return true;
     }

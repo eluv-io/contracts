@@ -90,6 +90,10 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         _burn(tokenId);
     }
 
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _exists(tokenId);
+    }
+
     event SetTokenURI(uint256 indexed tokenId, string prevURI, string newURI);
 
     // allows the owner of a token to reset the URI.

@@ -19,6 +19,8 @@ import "./meta_object.sol";
 import "./transactable.sol";
 import "./lib_precompile.sol";
 import "./base_tenant_space.sol";
+import "./base_tenant_consumer_group.sol";
+import "./erc721_proxy.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released

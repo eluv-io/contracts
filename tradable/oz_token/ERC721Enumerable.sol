@@ -56,10 +56,6 @@ contract ERC721Enumerable is ERC165, ERC721, IERC721Enumerable {
         return _allTokens.length;
     }
 
-    function indexOfToken(uint256 tokenId) public view returns (uint256) {
-        return _allTokensIndex[tokenId];
-    }
-
     /**
      * @dev Gets the token ID at a given index of all the tokens in this contract
      * Reverts if the index is greater or equal to the total number of tokens

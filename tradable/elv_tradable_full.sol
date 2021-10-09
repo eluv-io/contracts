@@ -75,6 +75,15 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
     uint256 public cap;
     uint256 public minted;
 
+    // mapping from token id to ordinal position in which it was minted
+    // this is different from _allTokensIndex in ERC721Enumerable because the indexes there can change with burns
+    mapping(uint256 => uint256) private _allTokensOrds;
+
+    function ordinalOfToken(uint256 tokenId) public view returns (uint256) {
+        require(_exists(tokenId));
+        return _allTokensOrds[tokenId];
+    }
+
     // straight from ERC721MetadataMintable in OpenZeppelin
     /**
      * @dev Function to mint tokens
@@ -84,6 +93,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
      * @return A boolean that indicates if the operation was successful.
     */
     function mintWithTokenURI(address to, uint256 tokenId, string memory tokenURI) public onlyMinter returns (bool) {
+        _allTokensOrds[tokenId] = minted;
         minted = minted.add(1);
         require(cap == 0 || minted <= cap);
         _mint(to, tokenId);
@@ -97,6 +107,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
 
     // _mint emits event Transfer(address(0), to, tokenId) - so will be indistinguishable
     function mintSignedWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        _allTokensOrds[tokenId] = minted;
         minted = minted.add(1);
         require(cap == 0 || minted <= cap);
         require(!_exists(tokenId));

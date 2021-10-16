@@ -242,12 +242,17 @@ contract ElvTradableLocal is ElvTradable {
 
     mapping(uint256 => uint256) public _allTokensHolds;
 
+    function mintHoldWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint256 holdSecs) public onlyMinter returns (bool) {
+        _allTokensHolds[tokenId] = block.timestamp.add(holdSecs);
+        return super.mintWithTokenURI(to, tokenId, tokenURI);
+    }
+
     // override
     function mintWithTokenURI(address to, uint256 tokenId, string memory tokenURI) public onlyMinter returns (bool) {
         _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);
         return super.mintWithTokenURI(to, tokenId, tokenURI);
     }
-
+    
     // override
     function mintSignedWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
         _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);

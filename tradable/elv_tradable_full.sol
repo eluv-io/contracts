@@ -219,3 +219,68 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         return super.isApprovedForAll(owner, operator);
     }
 }
+
+// ElvTradableLocal
+
+contract ElvTradableLocal is ElvTradable {
+    using Strings for string;
+    using SafeMath for uint256;
+
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
+        address _proxyRegistryAddress,
+        uint256 _baseTransferFee,
+        uint256 _cap,
+        uint256 _defHoldSecs
+    ) public ElvTradable(_name, _symbol, _contractURI, _proxyRegistryAddress, _baseTransferFee, _cap) {
+        defHoldSecs = _defHoldSecs;
+    }
+
+    uint256 public defHoldSecs;
+
+    mapping(uint256 => uint256) public _allTokensHolds;
+
+    // override
+    function mintWithTokenURI(address to, uint256 tokenId, string memory tokenURI) public onlyMinter returns (bool) {
+        _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);
+        return super.mintWithTokenURI(to, tokenId, tokenURI);
+    }
+
+    // override
+    function mintSignedWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);
+        return super.mintSignedWithTokenURI(to, tokenId, tokenURI, v, r, s);
+    }
+
+    // override
+    function transferFrom(address from, address to, uint256 tokenId) public payable {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        super.transferFrom(from, to, tokenId);
+    }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId) public payable {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public payable {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        super.safeTransferFrom(from, to, tokenId, _data);
+    }
+
+    // override
+    function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        return super.burnSigned(from, tokenId, v, r, s);
+    }
+
+    // override
+    function burn(uint256 tokenId) public {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        return super.burn(tokenId);
+    }
+}

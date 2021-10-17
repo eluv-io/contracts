@@ -252,7 +252,7 @@ contract ElvTradableLocal is ElvTradable {
         _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);
         return super.mintWithTokenURI(to, tokenId, tokenURI);
     }
-    
+
     // override
     function mintSignedWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
         _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);

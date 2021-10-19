@@ -111,7 +111,6 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         minted = minted.add(1);
         require(cap == 0 || minted <= cap);
         require(!_exists(tokenId));
-        // require(msg.sender == to); // TODO: do we want this? any reason anyone can't submit the transaction?
         require(isMinterSigned(to, tokenId, tokenURI, v, r, s));
         _mint(to, tokenId);
         _setTokenURI(tokenId, tokenURI);
@@ -164,7 +163,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
     uint256 public baseTransferFee;
     address public transferFeeProxyAddress;
 
-    function setTransferFreeProxyAddress(address _newProxy) public onlyOwner {
+    function setTransferFeeProxyAddress(address _newProxy) public onlyOwner {
         emit SetProxyAddress(PROXY_TYPE_TRANSFER_FEE, transferFeeProxyAddress, _newProxy);
         transferFeeProxyAddress = _newProxy;
     }
@@ -188,12 +187,30 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         msg.sender.transfer(_amount);
     }
 
+    // override
     function transferFrom(address from, address to, uint256 tokenId) public payable {
         if (msg.value < getTransferFee(tokenId)) {
             require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender), "transfer w/o proxy requires fee");
         }
         super.transferFrom(from, to, tokenId);
     }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId) public payable {
+        if (msg.value < getTransferFee(tokenId)) {
+            require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender), "transfer w/o proxy requires fee");
+        }
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public payable {
+        if (msg.value < getTransferFee(tokenId)) {
+            require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender), "transfer w/o proxy requires fee");
+        }
+        super.safeTransferFrom(from, to, tokenId, _data);
+    }
+
 
     function isProxyApprovedForAll(address owner, address operator) public view returns (bool) {
         if (proxyRegistryAddress != address(0)) {
@@ -217,5 +234,63 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         if (isProxyApprovedForAll(owner, operator))
             return true;
         return super.isApprovedForAll(owner, operator);
+    }
+}
+
+// ElvTradableLocal
+
+contract ElvTradableLocal is ElvTradable {
+    using Strings for string;
+    using SafeMath for uint256;
+
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
+        address _proxyRegistryAddress,
+        uint256 _baseTransferFee,
+        uint256 _cap,
+        uint256 _defHoldSecs
+    ) public ElvTradable(_name, _symbol, _contractURI, _proxyRegistryAddress, _baseTransferFee, _cap) {
+        defHoldSecs = _defHoldSecs;
+    }
+
+    uint256 public defHoldSecs;
+
+    mapping(uint256 => uint256) public _allTokensHolds;
+
+    function mintHoldWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint256 holdSecs) public onlyMinter returns (bool) {
+        _allTokensHolds[tokenId] = block.timestamp.add(holdSecs);
+        return super.mintWithTokenURI(to, tokenId, tokenURI);
+    }
+
+    // override
+    function mintWithTokenURI(address to, uint256 tokenId, string memory tokenURI) public onlyMinter returns (bool) {
+        _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);
+        return super.mintWithTokenURI(to, tokenId, tokenURI);
+    }
+
+    // override
+    function mintSignedWithTokenURI(address to, uint256 tokenId, string memory tokenURI, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        _allTokensHolds[tokenId] = block.timestamp.add(defHoldSecs);
+        return super.mintSignedWithTokenURI(to, tokenId, tokenURI, v, r, s);
+    }
+
+    // override
+    function transferFrom(address from, address to, uint256 tokenId) public payable {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        super.transferFrom(from, to, tokenId);
+    }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId) public payable {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public payable {
+        require(block.timestamp >= _allTokensHolds[tokenId]);
+        super.safeTransferFrom(from, to, tokenId, _data);
     }
 }

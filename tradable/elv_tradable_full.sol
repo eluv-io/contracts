@@ -111,7 +111,6 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         minted = minted.add(1);
         require(cap == 0 || minted <= cap);
         require(!_exists(tokenId));
-        // require(msg.sender == to); // TODO: do we want this? any reason anyone can't submit the transaction?
         require(isMinterSigned(to, tokenId, tokenURI, v, r, s));
         _mint(to, tokenId);
         _setTokenURI(tokenId, tokenURI);
@@ -164,7 +163,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
     uint256 public baseTransferFee;
     address public transferFeeProxyAddress;
 
-    function setTransferFreeProxyAddress(address _newProxy) public onlyOwner {
+    function setTransferFeeProxyAddress(address _newProxy) public onlyOwner {
         emit SetProxyAddress(PROXY_TYPE_TRANSFER_FEE, transferFeeProxyAddress, _newProxy);
         transferFeeProxyAddress = _newProxy;
     }
@@ -188,12 +187,30 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         msg.sender.transfer(_amount);
     }
 
+    // override
     function transferFrom(address from, address to, uint256 tokenId) public payable {
         if (msg.value < getTransferFee(tokenId)) {
             require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender), "transfer w/o proxy requires fee");
         }
         super.transferFrom(from, to, tokenId);
     }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId) public payable {
+        if (msg.value < getTransferFee(tokenId)) {
+            require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender), "transfer w/o proxy requires fee");
+        }
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    // override
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public payable {
+        if (msg.value < getTransferFee(tokenId)) {
+            require(isProxyApprovedForAll(ownerOf(tokenId), msg.sender), "transfer w/o proxy requires fee");
+        }
+        super.safeTransferFrom(from, to, tokenId, _data);
+    }
+
 
     function isProxyApprovedForAll(address owner, address operator) public view returns (bool) {
         if (proxyRegistryAddress != address(0)) {
@@ -275,17 +292,5 @@ contract ElvTradableLocal is ElvTradable {
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public payable {
         require(block.timestamp >= _allTokensHolds[tokenId]);
         super.safeTransferFrom(from, to, tokenId, _data);
-    }
-
-    // override
-    function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
-        require(block.timestamp >= _allTokensHolds[tokenId]);
-        return super.burnSigned(from, tokenId, v, r, s);
-    }
-
-    // override
-    function burn(uint256 tokenId) public {
-        require(block.timestamp >= _allTokensHolds[tokenId]);
-        return super.burn(tokenId);
     }
 }

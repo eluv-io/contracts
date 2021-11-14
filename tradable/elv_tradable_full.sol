@@ -39,6 +39,34 @@ contract OwnerProxyRegistry is ProxyRegistry, Ownable {
     }
 }
 
+contract TransferProxyRegistry is ProxyRegistry, Ownable {
+
+    int public countDelegates;
+
+    // assumes that this contract is currently the transfer proxy of the target
+    function proxyTransferFrom(address target, address from, address to, uint256 tokenId) public onlyOwner payable {
+        if (proxies[from] == OwnableDelegateProxy(0)) {
+            proxies[from] = OwnableDelegateProxy(address(this));
+            countDelegates++;
+        }
+        IERC721(target).transferFrom(from, to, tokenId);
+    }
+
+    // assumes that this contract is currently the transfer proxy of the target
+    function proxySetTokenURI(address target, uint256 tokenId, string memory uri) public onlyOwner payable {
+        address from = IERC721(target).ownerOf(tokenId);
+        if (proxies[from] == OwnableDelegateProxy(0)) {
+            proxies[from] = OwnableDelegateProxy(address(this));
+            countDelegates++;
+        }
+        ElvTradable(target).setTokenURI(tokenId, uri);
+    }
+
+    function finalize() public onlyOwner {
+        selfdestruct(msg.sender);
+    }
+}
+
 interface TransferFeeProxy {
     function getTransferFee(uint256 _tokenId) external view returns (uint256);
 }

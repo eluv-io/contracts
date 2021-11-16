@@ -9,73 +9,13 @@ import "./Strings.sol";
 import "./elv_wrapped.sol";
 import "./elv_token.sol";
 import "./elv_token_helper.sol";
-
-contract OwnableDelegateProxy {}
-
-contract ProxyRegistry {
-    mapping(address => OwnableDelegateProxy) public proxies;
-}
-
-contract OwnerProxyRegistry is ProxyRegistry, Ownable {
-
-    int public countDelegates;
-
-    constructor (address[10] memory initDelegates) public {
-        for (uint i = 0; i < initDelegates.length; i++) {
-            if (initDelegates[i] != address(0)) {
-                addDelegate(initDelegates[i]);
-            }
-        }
-    }
-
-    function addDelegate(address from) public onlyOwner {
-        require(from != msg.sender);
-        proxies[from] = OwnableDelegateProxy(msg.sender);
-        countDelegates++;
-    }
-
-    function finalize() public onlyOwner {
-        selfdestruct(msg.sender);
-    }
-}
-
-contract TransferProxyRegistry is ProxyRegistry, Ownable {
-
-    int public countDelegates;
-
-    // assumes that this contract is currently the transfer proxy of the target
-    function proxyTransferFrom(address target, address from, address to, uint256 tokenId) public onlyOwner payable {
-        if (proxies[from] == OwnableDelegateProxy(0)) {
-            proxies[from] = OwnableDelegateProxy(address(this));
-            countDelegates++;
-        }
-        IERC721(target).transferFrom(from, to, tokenId);
-    }
-
-    // assumes that this contract is currently the transfer proxy of the target
-    function proxySetTokenURI(address target, uint256 tokenId, string memory uri) public onlyOwner payable {
-        address from = IERC721(target).ownerOf(tokenId);
-        if (proxies[from] == OwnableDelegateProxy(0)) {
-            proxies[from] = OwnableDelegateProxy(address(this));
-            countDelegates++;
-        }
-        ElvTradable(target).setTokenURI(tokenId, uri);
-    }
-
-    function finalize() public onlyOwner {
-        selfdestruct(msg.sender);
-    }
-}
-
-interface TransferFeeProxy {
-    function getTransferFee(uint256 _tokenId) external view returns (uint256);
-}
+import "./elv_proxy.sol";
 
 /**
  * @title ElvTradable
  * ElvTradable - ERC721 contract that whitelists a trading address, and has minting functionality.
  */
-contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ownable {
+contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableTokenURI, MinterRole, Ownable {
     using Strings for string;
 
     address public proxyRegistryAddress;

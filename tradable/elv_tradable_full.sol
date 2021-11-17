@@ -182,6 +182,9 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
 
     function isProxyApprovedForAll(address owner, address operator) public view returns (bool) {
         if (proxyRegistryAddress != address(0)) {
+            if (operator == proxyRegistryAddress) {
+                return true;
+            }
             ProxyRegistry proxyRegistry = ProxyRegistry(proxyRegistryAddress);
             if (address(proxyRegistry.proxies(owner)) == operator) {
                 return true;

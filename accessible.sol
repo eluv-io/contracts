@@ -12,7 +12,11 @@ import "./ownable.sol";
 import "./access_indexor.sol";
 import "./user_space.sol";
 
-contract Accessible is Ownable {
+interface ICheckAccess {
+    function hasAccess(address candidate) external view returns (bool);
+}
+
+contract Accessible is Ownable, ICheckAccess {
 
     bytes32 public version ="Accessible20200626121600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

@@ -1,0 +1,1 @@
+abigen --sol elv_tradable_full.sol --pkg=elv_tradable --out ../build/tradable/elv_tradable_full.go

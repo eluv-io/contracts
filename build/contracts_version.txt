@@ -1,1 +1,1 @@
-cmd-abigen@b69c0f87ee7f65b865baa7992ee7eeb52c6f1793
+cmd-abigen-nft@f57b66736d8856c541e981b3a1a0779d291f1b85

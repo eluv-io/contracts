@@ -57,8 +57,8 @@ abigen(){
     fi
 }
 
-abigen base_content_space.sol contracts base_content_space.go
-abigen tradable/elv_tradable_full.sol elv_tradable tradable/elv_tradable_full.go
+abigen base_content_space.sol contracts contracts-go/contracts/base_content_space.go
+abigen tradable/elv_tradable_full.sol elv_tradable contracts-go/tradable/elv_tradable_full.go
 
 
 rm ./abigen

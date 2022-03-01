@@ -11,6 +11,8 @@ import (
 	"reflect"
 	"strings"
 
+	c "github.com/eluv-io/contracts/contracts-go/events"
+
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -218,12 +220,15 @@ const (
 	E_VisibilityChanged        = "VisibilityChanged"
 )
 
+type EventInfo = c.EventInfo
+
+/*
 // EventInfo gather information about a 'unique event'.
 type EventInfo struct {
-	Name   string                                    // name of the event as in abi.Event
-	ID     common.Hash                               // ID of the event
-	Type   reflect.Type                              // type of the struct event
-	Unpack func(log types.Log, ev interface{}) error // unpack the given log into the given event
+	Name   string                                     // name of the event as in abi.Event
+	ID     common.Hash                                // ID of the event
+	Type   reflect.Type                               // type of the struct event
+	Unpack func(log types.Log, ev interface{}) error  // unpack the given log into the given event
 }
 
 func (ev *EventInfo) Value(log types.Log) (reflect.Value, error) {
@@ -246,6 +251,7 @@ func (ev *EventInfo) Event(log types.Log) (interface{}, error) {
 	}
 	return val.Interface(), nil
 }
+*/
 
 func init() {
 	ParsedABIS = make(map[string]*abi.ABI)

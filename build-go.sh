@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 ## WARNING: these are 'manual steps'
 ##          specifically the correct version of solc needs to be in the path
-##          as specified by comments
+##          as specified in comments
 
 # check solc
 if [[ ! -f /usr/local/bin/solc ]]
@@ -36,5 +36,6 @@ git checkout 53ee85a858257d32c9650ff76f50e5ee2a1379d9
 ../../abigen --sol base_content_space.sol --pkg contracts_20190331 --out ../../contracts-go/contracts_20190331/base_content_space.go
 git checkout 5ed6b64537175315be6c79fdbfb9a3d35086344d
 ../../abigen --sol base_content_space.sol --pkg contracts_20200206 --out ../../contracts-go/contracts_20200206/base_content_space.go
-git checkout 2536dfb9b29e394feedcc1c5c7d16f67d21a35bb
+git checkout 20200805
+git checkout 133cb66c6e67fc946c6b73d7f7db3bbb913d4859
 ../../abigen --sol base_content_space.sol --pkg contracts_20200803 --out ../../contracts-go/contracts_20200803/base_content_space.go

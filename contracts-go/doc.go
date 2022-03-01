@@ -3,7 +3,3 @@
 */
 
 package contracts_go
-
-var _ = none
-
-func none() {}

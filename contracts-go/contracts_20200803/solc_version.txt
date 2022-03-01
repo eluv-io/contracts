@@ -1,0 +1,3 @@
+solc: /usr/local/bin/solc
+solc, the solidity compiler commandline interface
+Version: 0.4.24+commit.e67f0147.Darwin.appleclang

@@ -46,16 +46,22 @@ revision=$(git rev-parse HEAD)
 echo "$branch@$revision" > "${out_dir}"/contracts_version.txt
 
 # abigen --sol ./base_content_space.sol --pkg=contracts --out build/base_content_space.go
-./abigen --sol "${sol_dir}/base_content_space.sol" --pkg=contracts --out "${out_dir}/base_content_space.go"
-ret=$?
-rm ./abigen
+abigen(){
+    ./abigen --sol "${sol_dir}/${1}" --pkg=${2} --out "${out_dir}/${3}"
+    ret=$?
+    if [[ $ret -ne 0 ]]; then
+        echo "FAILED  : error creating go binding for ${1}!"
+        exit 1
+    else
+        echo "SUCCESS : go binding for ${1} generated at ${out_dir}/${3}"
+    fi
+}
 
-if [[ $ret -ne 0 ]]; then
-    echo "FAILED : error occurred while creating go binding!"
-    exit 1
-else
-    echo "SUCCESS : The go binding for base_content_space.sol is present at ${out_dir}/base_content_space.go"
-fi
+abigen base_content_space.sol contracts base_content_space.go
+abigen tradable/elv_tradable_full.sol elv_tradable tradable/elv_tradable_full.go
+
+
+rm ./abigen
 echo -e "\n${separator}\n"
 
 run_solc "${sol_dir}/base_content_space.sol"
@@ -67,7 +73,10 @@ echo -e "\n${separator}\n"
 run_solc "${sol_dir}/tradable/elv_tradable_full.sol"
 echo -e "\n${separator}\n"
 
-go generate ./cmds/abi-parser
+pushd cmds > /dev/null 2>&1
+go generate ./abi-parser/abi-parser.go
+ret=$?
+popd > /dev/null 2>&1
 if [[ $? -ne 0 ]]; then
     echo "FAILED : error occurred while parsing abi"
     exit 1

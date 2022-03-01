@@ -1,3 +1,4 @@
+e39e2960: burnSignedAndMintMany(address,address,uint256,uint8,bytes32,bytes32,address[],address[],uint256[],string[])
 8f32d59b: isOwner()
 7d58f1de: mintWithTokenURIMany(address[],address[],uint256[],string[])
 8da5cb5b: owner()

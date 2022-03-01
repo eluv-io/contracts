@@ -1,3 +1,0 @@
-solc: /Users/gaillard/eluv.io/ws/src/contracts/solc
-solc, the solidity compiler commandline interface
-Version: 0.5.4+commit.9549d8ff.mod.Darwin.appleclang

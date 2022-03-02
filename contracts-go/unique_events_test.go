@@ -68,24 +68,36 @@ func TestDuplicateEvents(t *testing.T) {
 }
 
 func TestUniqueEvents(t *testing.T) {
-	names := []string{}
-	for name, _ := range UniqueEvents {
+	var names []string
+	for name := range UniqueEvents {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 
-	fm := func(s string, maxLen int) string {
-		for len(s) < maxLen {
-			s = s + " "
-		}
-		return s
-	}
-
 	fmt.Println(fmt.Sprintf("all events (%d)", len(UniqueEvents)))
 	for _, name := range names {
-		fmt.Println(fm(name, 35),
-			fm(fmt.Sprintf("%v", UniqueEvents[name].Type), 50),
-			UniqueEvents[name].ID.String())
-	}
+		event := UniqueEvents[name]
+		fmt.Println(fmt.Sprintf("%-35s", name),
+			fmt.Sprintf("%-50v", event.Type),
+			event.ID.String())
 
+		byName := EventsByName[name]
+		if byName != event {
+			t.Errorf("event by name differs - \n\texpected: %+v\n\tactual:   %+v", event, byName)
+		}
+
+		byID := EventsByID[event.ID]
+		if byID != event {
+			t.Errorf("event by ID differs - \n\texpected: %+v\n\tactual:   %+v", event, byID)
+		}
+
+		byType := EventsByType[event.Type]
+		if byType != event {
+			t.Errorf("event by type differs - \n\texpected: %+v\n\tactual:   %+v", event, byType)
+		}
+
+		if EventNamesByID[event.ID] != event.Name {
+			t.Errorf("event name by ID differs - ID %s name %s", event.ID.String(), event.Name)
+		}
+	}
 }

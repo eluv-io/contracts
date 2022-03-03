@@ -42,6 +42,6 @@ func (ev *EventInfo) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"name": ev.Name,
 		"id":   ev.ID.String(),
-		"type": fmt.Sprintf("%T", ev.Type),
+		"type": fmt.Sprintf("%v", ev.Type),
 	})
 }

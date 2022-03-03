@@ -1,6 +1,8 @@
 package events
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -34,4 +36,12 @@ func (ev *EventInfo) Event(log types.Log) (interface{}, error) {
 		return nil, err
 	}
 	return val.Interface(), nil
+}
+
+func (ev *EventInfo) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"name": ev.Name,
+		"id":   ev.ID.String(),
+		"type": fmt.Sprintf("%T", ev.Type),
+	})
 }

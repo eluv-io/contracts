@@ -50,7 +50,7 @@ func init() {
 	}
 
 	addEvents(contracts.UniqueEvents, "")
-	addEvents(elv_tradable.UniqueEvents, "tradable")
+	addEvents(tradable.UniqueEvents, "tradable")
 	addEvents(c202008.UniqueEvents, "20200803")
 	addEvents(c202002.UniqueEvents, "20200206")
 	addEvents(c201903.UniqueEvents, "20190331")

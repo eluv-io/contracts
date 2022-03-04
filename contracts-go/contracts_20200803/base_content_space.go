@@ -35,7 +35,11 @@ var (
 
 // Map of ABI names to *abi.ABI
 // ABI names are constants starting with K_
-var ParsedABIS map[string]*abi.ABI
+var ParsedABIS = map[string]*abi.ABI{}
+
+// Map of ABI names to *bind.BoundContract for log parsing only
+// ABI names are constants starting with K_
+var BoundContracts = map[string]*bind.BoundContract{}
 
 // Map of Unique events names to *EventInfo.
 // Unique events names are constants starting with E_
@@ -73,6 +77,19 @@ func ParsedABI(name string) (*abi.ABI, error) {
 		return pabi, nil
 	}
 	return parseABI(name)
+}
+
+func BoundContract(name string) *bind.BoundContract {
+	bc, ok := BoundContracts[name]
+	if !ok {
+		anABI, err := ParsedABI(name)
+		if err != nil {
+			panic(err)
+		}
+		bc = bind.NewBoundContract(common.Address{}, *anABI, nil, nil, nil)
+		BoundContracts[name] = bc
+	}
+	return bc
 }
 
 // Type names of contract binding
@@ -221,40 +238,9 @@ const (
 )
 
 type EventInfo = c.EventInfo
-
-/*
-// EventInfo gather information about a 'unique event'.
-type EventInfo struct {
-	Name   string                                     // name of the event as in abi.Event
-	ID     common.Hash                                // ID of the event
-	Type   reflect.Type                               // type of the struct event
-	Unpack func(log types.Log, ev interface{}) error  // unpack the given log into the given event
-}
-
-func (ev *EventInfo) Value(log types.Log) (reflect.Value, error) {
-	event := reflect.New(ev.Type.Elem())
-	err := ev.Unpack(log, event.Interface())
-	if err != nil {
-		return reflect.Value{}, err
-	}
-	f := event.Elem().FieldByName("Raw")
-	if f.IsValid() && f.CanSet() {
-		f.Set(reflect.ValueOf(log))
-	}
-	return event, nil
-}
-
-func (ev *EventInfo) Event(log types.Log) (interface{}, error) {
-	val, err := ev.Value(log)
-	if err != nil {
-		return nil, err
-	}
-	return val.Interface(), nil
-}
-*/
+type EventType = c.EventType
 
 func init() {
-	ParsedABIS = make(map[string]*abi.ABI)
 	for name, _ := range ABIS {
 		a, err := parseABI(name)
 		if err == nil {
@@ -266,1192 +252,970 @@ func init() {
 	ev = &EventInfo{
 		Name: "AccessComplete",
 		ID:   common.HexToHash("0x2c49ac638ee7bf3341004c40512c79847bb7fb8f17fb53151ff576a35630ac06"),
-		Type: reflect.TypeOf((*AccessComplete)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "AccessComplete", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessComplete)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_AccessComplete] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AccessCompleteV3",
 		ID:   common.HexToHash("0xd3e5b1d14681444d8159fa85b57104b685f47fb9164fd82b7fafe4e123dcc3a1"),
-		Type: reflect.TypeOf((*AccessCompleteV3)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "AccessCompleteV3", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessCompleteV3)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_AccessCompleteV3] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AccessRequest",
 		ID:   common.HexToHash("0x50f423e39e8beb25bb2da38a63e3d33b5368f261522813712756733eaf569a06"),
-		Type: reflect.TypeOf((*AccessRequest)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "AccessRequest", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessRequest)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_AccessRequest] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AccessRequestStakeholder",
 		ID:   common.HexToHash("0xb6e3239e521a6c66920ae634f8e921a37e6991d520ac44d52f8516397f41b684"),
-		Type: reflect.TypeOf((*AccessRequestStakeholder)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "AccessRequestStakeholder", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessRequestStakeholder)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_AccessRequestStakeholder] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AccessRequestV3",
 		ID:   common.HexToHash("0x545ceffc5093a8300777a74bb094968fbd62d128313df01eb72fd5350ec659c7"),
-		Type: reflect.TypeOf((*AccessRequestV3)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Accessible)
-			if err := anABI.Unpack(ev, "AccessRequestV3", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessRequestV3)(nil)),
+				BoundContract: BoundContract(K_Accessible),
+			},
 		},
 	}
 	UniqueEvents[E_AccessRequestV3] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AccessRequestValue",
 		ID:   common.HexToHash("0x515e0a48b385fce2a8e4d9f169a97c4f6ea669a752358f5e6ab37cc3c2e84c38"),
-		Type: reflect.TypeOf((*AccessRequestValue)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "AccessRequestValue", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessRequestValue)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_AccessRequestValue] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AccessorGroupAdded",
 		ID:   common.HexToHash("0x3a94857e4393737f73edb175a7d0c195c7f635d9ae995e12740616ec55c9d411"),
-		Type: reflect.TypeOf((*AccessorGroupAdded)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "AccessorGroupAdded", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessorGroupAdded)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_AccessorGroupAdded] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AccessorGroupRemoved",
 		ID:   common.HexToHash("0xc5224c4118417a068eeac7d714e6d8af6f99ec3fb611bc965185460b0e38f081"),
-		Type: reflect.TypeOf((*AccessorGroupRemoved)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "AccessorGroupRemoved", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessorGroupRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_AccessorGroupRemoved] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AddKMSLocator",
 		ID:   common.HexToHash("0xdf8127994c229011ce9c4764bdc0375bb71c06cf1544f034cd81a42f37233319"),
-		Type: reflect.TypeOf((*AddKMSLocator)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "AddKMSLocator", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AddKMSLocator)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_AddKMSLocator] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "AddNode",
 		ID:   common.HexToHash("0x2bb0f9ba138ffddb5a8f974e9885b65a7814d3002654f1cf3f2d3f619a4006c4"),
-		Type: reflect.TypeOf((*AddNode)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "AddNode", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AddNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_AddNode] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ApproveContent",
 		ID:   common.HexToHash("0x70234ce475fee4ab40e5e55cf533f67f12b47ef4c860e62dd7affa84ead4b442"),
-		Type: reflect.TypeOf((*ApproveContent)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ApproveContent", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApproveContent)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ApproveContent] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ApproveContentRequest",
 		ID:   common.HexToHash("0x0588a34cf0de4e025d359c89ca4bacbcbf175440909952d91c814412d9da996a"),
-		Type: reflect.TypeOf((*ApproveContentRequest)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ApproveContentRequest", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApproveContentRequest)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ApproveContentRequest] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "BindUserWallet",
 		ID:   common.HexToHash("0x05e3f3adaf96d565bb326088a1d8e0d78497549df2c99a8ab681e5fbc7a9b3f2"),
-		Type: reflect.TypeOf((*BindUserWallet)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "BindUserWallet", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*BindUserWallet)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_BindUserWallet] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CommitPending",
 		ID:   common.HexToHash("0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75"),
-		Type: reflect.TypeOf((*CommitPending)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "CommitPending", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CommitPending)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_CommitPending] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ContentObjectCreate",
 		ID:   common.HexToHash("0xc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19"),
-		Type: reflect.TypeOf((*ContentObjectCreate)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "ContentObjectCreate", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentObjectCreate)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_ContentObjectCreate] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ContentObjectCreated",
 		ID:   common.HexToHash("0xadc3945407fc9e1f5763b74624698197e96e741e6e7c683373498712ba3eb878"),
-		Type: reflect.TypeOf((*ContentObjectCreated)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ContentObjectCreated", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentObjectCreated)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ContentObjectCreated] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ContentObjectDeleted",
 		ID:   common.HexToHash("0x36500cee87b0da1746889a3483dccb525acfc40b8c0f2218e164c6cdf1482a3e"),
-		Type: reflect.TypeOf((*ContentObjectDeleted)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ContentObjectDeleted", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentObjectDeleted)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ContentObjectDeleted] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ContentTypeAdded",
 		ID:   common.HexToHash("0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7"),
-		Type: reflect.TypeOf((*ContentTypeAdded)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessWallet)
-			if err := anABI.Unpack(ev, "ContentTypeAdded", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentTypeAdded)(nil)),
+				BoundContract: BoundContract(K_BaseAccessWallet),
+			},
 		},
 	}
 	UniqueEvents[E_ContentTypeAdded] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ContentTypeRemoved",
 		ID:   common.HexToHash("0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2"),
-		Type: reflect.TypeOf((*ContentTypeRemoved)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessWallet)
-			if err := anABI.Unpack(ev, "ContentTypeRemoved", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentTypeRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseAccessWallet),
+			},
 		},
 	}
 	UniqueEvents[E_ContentTypeRemoved] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ContributorGroupAdded",
 		ID:   common.HexToHash("0x218673669018c25b89bfbf1b58d0075e37c8847ef16e707b92355b7833e97d61"),
-		Type: reflect.TypeOf((*ContributorGroupAdded)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ContributorGroupAdded", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContributorGroupAdded)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ContributorGroupAdded] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ContributorGroupRemoved",
 		ID:   common.HexToHash("0xbbd97daa1862eb12f77ed128a557406737cee07b131b1e2d7140dff2005e197c"),
-		Type: reflect.TypeOf((*ContributorGroupRemoved)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ContributorGroupRemoved", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContributorGroupRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ContributorGroupRemoved] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CreateAccessWallet",
 		ID:   common.HexToHash("0x56c4bf13bebaa9f2be39ac3f2f4619a0dd1b694bb8c5f43c6b244a6dba0f0cca"),
-		Type: reflect.TypeOf((*CreateAccessWallet)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "CreateAccessWallet", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateAccessWallet)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_CreateAccessWallet] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CreateContent",
 		ID:   common.HexToHash("0xa0633ea0b3cb5796607e5f551ae79c7eeee0dc7ee0c3ff8996506261651368ce"),
-		Type: reflect.TypeOf((*CreateContent)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "CreateContent", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateContent)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_CreateContent] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CreateContentType",
 		ID:   common.HexToHash("0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8"),
-		Type: reflect.TypeOf((*CreateContentType)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "CreateContentType", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateContentType)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_CreateContentType] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CreateExtUserWallet",
 		ID:   common.HexToHash("0x786a1cca426afc9bf7b81ff1382a573ebc21b93bddf4784c49f56a3ae8a691c8"),
-		Type: reflect.TypeOf((*CreateExtUserWallet)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ExternalUserWallet)
-			if err := anABI.Unpack(ev, "CreateExtUserWallet", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateExtUserWallet)(nil)),
+				BoundContract: BoundContract(K_ExternalUserWallet),
+			},
 		},
 	}
 	UniqueEvents[E_CreateExtUserWallet] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CreateGroup",
 		ID:   common.HexToHash("0xa3b1fe71ae61bad8cffa485b230e24e518938f76182a30fa0d9979e7237ad159"),
-		Type: reflect.TypeOf((*CreateGroup)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "CreateGroup", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateGroup)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_CreateGroup] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CreateLibrary",
 		ID:   common.HexToHash("0x473c07a6d0228c4fb8fe2be3b4617c3b5fb7c0f8cd9ba4b67e8631844b9b6571"),
-		Type: reflect.TypeOf((*CreateLibrary)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "CreateLibrary", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateLibrary)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_CreateLibrary] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "CreateSpace",
 		ID:   common.HexToHash("0x599bb380c80b69455450a615c515544b8da3b09f2efa116a5f0567682203cf54"),
-		Type: reflect.TypeOf((*CreateSpace)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "CreateSpace", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateSpace)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_CreateSpace] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "EngageAccountLibrary",
 		ID:   common.HexToHash("0x53ce35a7383a3ea3f695bdf0f87d7e5485ba816b382673e849bfdd24e7f5e3ca"),
-		Type: reflect.TypeOf((*EngageAccountLibrary)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "EngageAccountLibrary", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*EngageAccountLibrary)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_EngageAccountLibrary] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ExecStatus",
 		ID:   common.HexToHash("0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad"),
-		Type: reflect.TypeOf((*ExecStatus)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessWallet)
-			if err := anABI.Unpack(ev, "ExecStatus", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ExecStatus)(nil)),
+				BoundContract: BoundContract(K_BaseAccessWallet),
+			},
 		},
 	}
 	UniqueEvents[E_ExecStatus] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "GetAccessWallet",
 		ID:   common.HexToHash("0x1c917c3c2698bd5b98acb9772728da62f2ce3670e4578910a6465b955f63e157"),
-		Type: reflect.TypeOf((*GetAccessWallet)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "GetAccessWallet", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*GetAccessWallet)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_GetAccessWallet] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "InsufficientFunds",
 		ID:   common.HexToHash("0x03eb8b54a949acec2cd08fdb6d6bd4647a1f2c907d75d6900648effa92eb147f"),
-		Type: reflect.TypeOf((*InsufficientFunds)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "InsufficientFunds", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*InsufficientFunds)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_InsufficientFunds] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "InvokeCustomPostHook",
 		ID:   common.HexToHash("0x97d9c9779ed3ed8b9a6edfe16d17b1fdec843245747a19abfb621806e37d4a89"),
-		Type: reflect.TypeOf((*InvokeCustomPostHook)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "InvokeCustomPostHook", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*InvokeCustomPostHook)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_InvokeCustomPostHook] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "InvokeCustomPreHook",
 		ID:   common.HexToHash("0x12b04791b5caab768e2757268992f0c62801e3921d9e310c893f0d5f9caa5f71"),
-		Type: reflect.TypeOf((*InvokeCustomPreHook)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "InvokeCustomPreHook", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*InvokeCustomPreHook)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_InvokeCustomPreHook] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "Log",
 		ID:   common.HexToHash("0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab"),
-		Type: reflect.TypeOf((*Log)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "Log", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Log)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_Log] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "LogAddress",
 		ID:   common.HexToHash("0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e"),
-		Type: reflect.TypeOf((*LogAddress)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "LogAddress", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogAddress)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_LogAddress] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "LogBool",
 		ID:   common.HexToHash("0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47"),
-		Type: reflect.TypeOf((*LogBool)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "LogBool", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogBool)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_LogBool] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "LogBytes32",
 		ID:   common.HexToHash("0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7"),
-		Type: reflect.TypeOf((*LogBytes32)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "LogBytes32", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogBytes32)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_LogBytes32] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "LogInt256",
 		ID:   common.HexToHash("0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22"),
-		Type: reflect.TypeOf((*LogInt256)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "LogInt256", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogInt256)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_LogInt256] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "LogUint256",
 		ID:   common.HexToHash("0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d"),
-		Type: reflect.TypeOf((*LogUint256)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "LogUint256", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogUint256)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_LogUint256] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ManagerAccessGranted",
 		ID:   common.HexToHash("0x93bcaab179551bde429187645251f8e1fb8ac85801fcb1cf91eb2c9043d61117"),
-		Type: reflect.TypeOf((*ManagerAccessGranted)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "ManagerAccessGranted", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ManagerAccessGranted)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_ManagerAccessGranted] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ManagerAccessRevoked",
 		ID:   common.HexToHash("0x2d6aa1a9629d125e23a0cf692cda7cd6795dff1652eedd4673b38ec31e387b95"),
-		Type: reflect.TypeOf((*ManagerAccessRevoked)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "ManagerAccessRevoked", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ManagerAccessRevoked)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_ManagerAccessRevoked] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "MemberAdded",
 		ID:   common.HexToHash("0xb251eb052afc73ffd02ffe85ad79990a8b3fed60d76dbc2fa2fdd7123dffd914"),
-		Type: reflect.TypeOf((*MemberAdded)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "MemberAdded", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MemberAdded)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_MemberAdded] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "MemberRevoked",
 		ID:   common.HexToHash("0x745cd29407db644ed93e3ceb61cbcab96d1dfb496989ac5d5bf514fc5a9fab9c"),
-		Type: reflect.TypeOf((*MemberRevoked)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "MemberRevoked", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MemberRevoked)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_MemberRevoked] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "NodeApproved",
 		ID:   common.HexToHash("0xd644c8164f225d3b7fdbcc404f279bb1e823ef0d93f88dd4b24e85d0e7bc6a54"),
-		Type: reflect.TypeOf((*NodeApproved)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "NodeApproved", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*NodeApproved)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_NodeApproved] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "NodeSubmitted",
 		ID:   common.HexToHash("0xae5645569f32b946f7a747113c64094a29a6b84c5ddf55816ef4381ce8a3a46d"),
-		Type: reflect.TypeOf((*NodeSubmitted)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "NodeSubmitted", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*NodeSubmitted)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_NodeSubmitted] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "OAuthStatusChanged",
 		ID:   common.HexToHash("0x04c71e53d136838eea703132a77007b0526b9a7691cdb7a6017a93673f865cbb"),
-		Type: reflect.TypeOf((*OAuthStatusChanged)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "OAuthStatusChanged", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*OAuthStatusChanged)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_OAuthStatusChanged] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ObjectMetaChanged",
 		ID:   common.HexToHash("0xe2b310ec9dabdc05229a748e07666c3bc9c46c6ef465cce30d0aa3aa64a0644c"),
-		Type: reflect.TypeOf((*ObjectMetaChanged)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessWallet)
-			if err := anABI.Unpack(ev, "ObjectMetaChanged", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ObjectMetaChanged)(nil)),
+				BoundContract: BoundContract(K_BaseAccessWallet),
+			},
 		},
 	}
 	UniqueEvents[E_ObjectMetaChanged] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "Publish",
 		ID:   common.HexToHash("0xad9c5eacc073b2e1767affc883e050347e1dd379c9799cb5ac0a17bde80f5cf4"),
-		Type: reflect.TypeOf((*Publish)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "Publish", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Publish)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_Publish] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RegisterNode",
 		ID:   common.HexToHash("0x4575facd117046c9c28b69a3eb9c08939f2462a5a22ea6c6dcd4f79b8dd124e9"),
-		Type: reflect.TypeOf((*RegisterNode)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "RegisterNode", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RegisterNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_RegisterNode] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RemoveKMSLocator",
 		ID:   common.HexToHash("0x5f463eb53cddf646852b82c0d9bdb1d1ec215c3802b780e8b7beea8b6e99f94c"),
-		Type: reflect.TypeOf((*RemoveKMSLocator)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "RemoveKMSLocator", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RemoveKMSLocator)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_RemoveKMSLocator] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RemoveNode",
 		ID:   common.HexToHash("0x41ec5b9efdbf61871df6a18b687e04bea93d5793af5f8c8b4626e155b23dc19d"),
-		Type: reflect.TypeOf((*RemoveNode)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "RemoveNode", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RemoveNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_RemoveNode] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ReturnCustomHook",
 		ID:   common.HexToHash("0x8c693e8b27db7caf9b9637b66dcc11444760023a4d53e95407a3acef1b249f50"),
-		Type: reflect.TypeOf((*ReturnCustomHook)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "ReturnCustomHook", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ReturnCustomHook)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_ReturnCustomHook] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ReviewerGroupAdded",
 		ID:   common.HexToHash("0x1b88a571cc8ac2e87512f05648e79d184f5cc0cbb2889bc487c41f8b9a3202eb"),
-		Type: reflect.TypeOf((*ReviewerGroupAdded)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ReviewerGroupAdded", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ReviewerGroupAdded)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ReviewerGroupAdded] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ReviewerGroupRemoved",
 		ID:   common.HexToHash("0xdf9d78c5635b72b709c85300a786eb7238acbe5bffe01c60c16464e45c6eb6eb"),
-		Type: reflect.TypeOf((*ReviewerGroupRemoved)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "ReviewerGroupRemoved", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ReviewerGroupRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_ReviewerGroupRemoved] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RightsChanged",
 		ID:   common.HexToHash("0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4"),
-		Type: reflect.TypeOf((*RightsChanged)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_AccessIndexor)
-			if err := anABI.Unpack(ev, "RightsChanged", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RightsChanged)(nil)),
+				BoundContract: BoundContract(K_AccessIndexor),
+			},
 		},
 	}
 	UniqueEvents[E_RightsChanged] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RunAccess",
 		ID:   common.HexToHash("0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58"),
-		Type: reflect.TypeOf((*RunAccess)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "RunAccess", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunAccess)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_RunAccess] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RunAccessCharge",
 		ID:   common.HexToHash("0xe1f170f83120da6c17cd0ed37a683fc996637c63d2c94a60c806d4cb7466f47b"),
-		Type: reflect.TypeOf((*RunAccessCharge)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "RunAccessCharge", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunAccessCharge)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_RunAccessCharge] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RunCreate",
 		ID:   common.HexToHash("0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b"),
-		Type: reflect.TypeOf((*RunCreate)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "RunCreate", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunCreate)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_RunCreate] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RunFinalize",
 		ID:   common.HexToHash("0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891"),
-		Type: reflect.TypeOf((*RunFinalize)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "RunFinalize", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunFinalize)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_RunFinalize] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RunKill",
 		ID:   common.HexToHash("0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86"),
-		Type: reflect.TypeOf((*RunKill)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "RunKill", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunKill)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_RunKill] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "RunStatusChange",
 		ID:   common.HexToHash("0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff"),
-		Type: reflect.TypeOf((*RunStatusChange)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Content)
-			if err := anABI.Unpack(ev, "RunStatusChange", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunStatusChange)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
 		},
 	}
 	UniqueEvents[E_RunStatusChange] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "SetAccessCharge",
 		ID:   common.HexToHash("0x4114f8ef80b6de2161db580cbefa14e1892d15d3ebe2062c9914e4a5773114a3"),
-		Type: reflect.TypeOf((*SetAccessCharge)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "SetAccessCharge", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetAccessCharge)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_SetAccessCharge] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "SetContentContract",
 		ID:   common.HexToHash("0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7"),
-		Type: reflect.TypeOf((*SetContentContract)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "SetContentContract", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetContentContract)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_SetContentContract] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "SetContentType",
 		ID:   common.HexToHash("0x4f692e87baf302f7281e83eec109053efc2ca8e7bddfc6ce88c579cd9767f71f"),
-		Type: reflect.TypeOf((*SetContentType)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "SetContentType", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetContentType)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_SetContentType] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "SetFactory",
 		ID:   common.HexToHash("0x1c893ef9379093af30f458b9e74d2aba13c499660b68dec5e29af7b199c188b9"),
-		Type: reflect.TypeOf((*SetFactory)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "SetFactory", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetFactory)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_SetFactory] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "SetStatusCode",
 		ID:   common.HexToHash("0xda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a2"),
-		Type: reflect.TypeOf((*SetStatusCode)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContent)
-			if err := anABI.Unpack(ev, "SetStatusCode", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetStatusCode)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
 		},
 	}
 	UniqueEvents[E_SetStatusCode] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "UnauthorizedOperation",
 		ID:   common.HexToHash("0x23de2adc3e22f171f66b3e5a333e17feb9dc30ba9570933bd259cb6c13ef7ab7"),
-		Type: reflect.TypeOf((*UnauthorizedOperation)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "UnauthorizedOperation", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UnauthorizedOperation)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_UnauthorizedOperation] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "UnregisterNode",
 		ID:   common.HexToHash("0xb98695ab4c6cedb3b4dfe62479a9d39a59aa2cb38b8bd92bbb6ce5856e42bdf4"),
-		Type: reflect.TypeOf((*UnregisterNode)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseContentSpace)
-			if err := anABI.Unpack(ev, "UnregisterNode", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UnregisterNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
 		},
 	}
 	UniqueEvents[E_UnregisterNode] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "UpdateKmsAddress",
 		ID:   common.HexToHash("0x74538e2fbd034afddf32b42c5939d211ce86c7683f9768f1a4969746f81f8608"),
-		Type: reflect.TypeOf((*UpdateKmsAddress)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseLibrary)
-			if err := anABI.Unpack(ev, "UpdateKmsAddress", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UpdateKmsAddress)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
 		},
 	}
 	UniqueEvents[E_UpdateKmsAddress] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "UpdateRequest",
 		ID:   common.HexToHash("0x403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65"),
-		Type: reflect.TypeOf((*UpdateRequest)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "UpdateRequest", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UpdateRequest)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_UpdateRequest] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "VersionConfirm",
 		ID:   common.HexToHash("0xbdaffceabaaa783aa187fea6c2e815541d29e2290bf3f7d3c4fc53672b68f7df"),
-		Type: reflect.TypeOf((*VersionConfirm)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "VersionConfirm", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*VersionConfirm)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_VersionConfirm] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "VersionDelete",
 		ID:   common.HexToHash("0x238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51"),
-		Type: reflect.TypeOf((*VersionDelete)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_BaseAccessControlGroup)
-			if err := anABI.Unpack(ev, "VersionDelete", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*VersionDelete)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
 		},
 	}
 	UniqueEvents[E_VersionDelete] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "VisibilityChanged",
 		ID:   common.HexToHash("0x369a336baa7895746725663e717b3523139ebabfff8c32bc4b13e8f88e502500"),
-		Type: reflect.TypeOf((*VisibilityChanged)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_Accessible)
-			if err := anABI.Unpack(ev, "VisibilityChanged", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*VisibilityChanged)(nil)),
+				BoundContract: BoundContract(K_Accessible),
+			},
 		},
 	}
 	UniqueEvents[E_VisibilityChanged] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 }
 
 // Unique events structs
 
-// AccessComplete represents a AccessComplete event.
+// AccessComplete event with ID 0x2c49ac638ee7bf3341004c40512c79847bb7fb8f17fb53151ff576a35630ac06
 type AccessComplete struct {
 	RequestID            *big.Int
 	ScorePct             *big.Int
@@ -1459,7 +1223,7 @@ type AccessComplete struct {
 	Raw                  types.Log // Blockchain specific contextual infos
 }
 
-// AccessCompleteV3 represents a AccessCompleteV3 event.
+// AccessCompleteV3 event with ID 0xd3e5b1d14681444d8159fa85b57104b685f47fb9164fd82b7fafe4e123dcc3a1
 type AccessCompleteV3 struct {
 	RequestNonce         *big.Int
 	CustomContractResult bool
@@ -1470,7 +1234,7 @@ type AccessCompleteV3 struct {
 	Raw                  types.Log // Blockchain specific contextual infos
 }
 
-// AccessRequest represents a AccessRequest event.
+// AccessRequest event with ID 0x50f423e39e8beb25bb2da38a63e3d33b5368f261522813712756733eaf569a06
 type AccessRequest struct {
 	RequestID    *big.Int
 	Level        uint8
@@ -1480,13 +1244,13 @@ type AccessRequest struct {
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// AccessRequestStakeholder represents a AccessRequestStakeholder event.
+// AccessRequestStakeholder event with ID 0xb6e3239e521a6c66920ae634f8e921a37e6991d520ac44d52f8516397f41b684
 type AccessRequestStakeholder struct {
 	Stakeholder common.Address
 	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// AccessRequestV3 represents a AccessRequestV3 event.
+// AccessRequestV3 event with ID 0x545ceffc5093a8300777a74bb094968fbd62d128313df01eb72fd5350ec659c7
 type AccessRequestV3 struct {
 	RequestNonce     *big.Int
 	ParentAddress    common.Address
@@ -1496,39 +1260,39 @@ type AccessRequestV3 struct {
 	Raw              types.Log // Blockchain specific contextual infos
 }
 
-// AccessRequestValue represents a AccessRequestValue event.
+// AccessRequestValue event with ID 0x515e0a48b385fce2a8e4d9f169a97c4f6ea669a752358f5e6ab37cc3c2e84c38
 type AccessRequestValue struct {
 	CustomValue [32]byte
 	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// AccessorGroupAdded represents a AccessorGroupAdded event.
+// AccessorGroupAdded event with ID 0x3a94857e4393737f73edb175a7d0c195c7f635d9ae995e12740616ec55c9d411
 type AccessorGroupAdded struct {
 	Group common.Address
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// AccessorGroupRemoved represents a AccessorGroupRemoved event.
+// AccessorGroupRemoved event with ID 0xc5224c4118417a068eeac7d714e6d8af6f99ec3fb611bc965185460b0e38f081
 type AccessorGroupRemoved struct {
 	Group common.Address
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// AddKMSLocator represents a AddKMSLocator event.
+// AddKMSLocator event with ID 0xdf8127994c229011ce9c4764bdc0375bb71c06cf1544f034cd81a42f37233319
 type AddKMSLocator struct {
 	Sender common.Address
 	Status *big.Int
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// AddNode represents a AddNode event.
+// AddNode event with ID 0x2bb0f9ba138ffddb5a8f974e9885b65a7814d3002654f1cf3f2d3f619a4006c4
 type AddNode struct {
 	OwnerAddr common.Address
 	NodeAddr  common.Address
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// ApproveContent represents a ApproveContent event.
+// ApproveContent event with ID 0x70234ce475fee4ab40e5e55cf533f67f12b47ef4c860e62dd7affa84ead4b442
 type ApproveContent struct {
 	ContentAddress common.Address
 	Approved       bool
@@ -1536,21 +1300,21 @@ type ApproveContent struct {
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// ApproveContentRequest represents a ApproveContentRequest event.
+// ApproveContentRequest event with ID 0x0588a34cf0de4e025d359c89ca4bacbcbf175440909952d91c814412d9da996a
 type ApproveContentRequest struct {
 	ContentAddress common.Address
 	Submitter      common.Address
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// BindUserWallet represents a BindUserWallet event.
+// BindUserWallet event with ID 0x05e3f3adaf96d565bb326088a1d8e0d78497549df2c99a8ab681e5fbc7a9b3f2
 type BindUserWallet struct {
 	Wallet   common.Address
 	UserAddr common.Address
 	Raw      types.Log // Blockchain specific contextual infos
 }
 
-// CommitPending represents a CommitPending event.
+// CommitPending event with ID 0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75
 type CommitPending struct {
 	SpaceAddress  common.Address
 	ParentAddress common.Address
@@ -1558,13 +1322,13 @@ type CommitPending struct {
 	Raw           types.Log // Blockchain specific contextual infos
 }
 
-// ContentObjectCreate represents a ContentObjectCreate event.
+// ContentObjectCreate event with ID 0xc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19
 type ContentObjectCreate struct {
 	ContainingLibrary common.Address
 	Raw               types.Log // Blockchain specific contextual infos
 }
 
-// ContentObjectCreated represents a ContentObjectCreated event.
+// ContentObjectCreated event with ID 0xadc3945407fc9e1f5763b74624698197e96e741e6e7c683373498712ba3eb878
 type ContentObjectCreated struct {
 	ContentAddress common.Address
 	ContentType    common.Address
@@ -1572,212 +1336,212 @@ type ContentObjectCreated struct {
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// ContentObjectDeleted represents a ContentObjectDeleted event.
+// ContentObjectDeleted event with ID 0x36500cee87b0da1746889a3483dccb525acfc40b8c0f2218e164c6cdf1482a3e
 type ContentObjectDeleted struct {
 	ContentAddress common.Address
 	SpaceAddress   common.Address
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// ContentTypeAdded represents a ContentTypeAdded event.
+// ContentTypeAdded event with ID 0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7
 type ContentTypeAdded struct {
 	ContentType     common.Address
 	ContentContract common.Address
 	Raw             types.Log // Blockchain specific contextual infos
 }
 
-// ContentTypeRemoved represents a ContentTypeRemoved event.
+// ContentTypeRemoved event with ID 0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2
 type ContentTypeRemoved struct {
 	ContentType common.Address
 	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// ContributorGroupAdded represents a ContributorGroupAdded event.
+// ContributorGroupAdded event with ID 0x218673669018c25b89bfbf1b58d0075e37c8847ef16e707b92355b7833e97d61
 type ContributorGroupAdded struct {
 	Group common.Address
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// ContributorGroupRemoved represents a ContributorGroupRemoved event.
+// ContributorGroupRemoved event with ID 0xbbd97daa1862eb12f77ed128a557406737cee07b131b1e2d7140dff2005e197c
 type ContributorGroupRemoved struct {
 	Group common.Address
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// CreateAccessWallet represents a CreateAccessWallet event.
+// CreateAccessWallet event with ID 0x56c4bf13bebaa9f2be39ac3f2f4619a0dd1b694bb8c5f43c6b244a6dba0f0cca
 type CreateAccessWallet struct {
 	Wallet common.Address
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// CreateContent represents a CreateContent event.
+// CreateContent event with ID 0xa0633ea0b3cb5796607e5f551ae79c7eeee0dc7ee0c3ff8996506261651368ce
 type CreateContent struct {
 	ContentAddress common.Address
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// CreateContentType represents a CreateContentType event.
+// CreateContentType event with ID 0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8
 type CreateContentType struct {
 	ContentTypeAddress common.Address
 	Raw                types.Log // Blockchain specific contextual infos
 }
 
-// CreateExtUserWallet represents a CreateExtUserWallet event.
+// CreateExtUserWallet event with ID 0x786a1cca426afc9bf7b81ff1382a573ebc21b93bddf4784c49f56a3ae8a691c8
 type CreateExtUserWallet struct {
 	ContentSpace common.Address
 	ExtUserAddr  common.Address
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// CreateGroup represents a CreateGroup event.
+// CreateGroup event with ID 0xa3b1fe71ae61bad8cffa485b230e24e518938f76182a30fa0d9979e7237ad159
 type CreateGroup struct {
 	GroupAddress common.Address
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// CreateLibrary represents a CreateLibrary event.
+// CreateLibrary event with ID 0x473c07a6d0228c4fb8fe2be3b4617c3b5fb7c0f8cd9ba4b67e8631844b9b6571
 type CreateLibrary struct {
 	LibraryAddress common.Address
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// CreateSpace represents a CreateSpace event.
+// CreateSpace event with ID 0x599bb380c80b69455450a615c515544b8da3b09f2efa116a5f0567682203cf54
 type CreateSpace struct {
 	Version [32]byte
 	Owner   common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// EngageAccountLibrary represents a EngageAccountLibrary event.
+// EngageAccountLibrary event with ID 0x53ce35a7383a3ea3f695bdf0f87d7e5485ba816b382673e849bfdd24e7f5e3ca
 type EngageAccountLibrary struct {
 	AccountAddress common.Address
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// ExecStatus represents a ExecStatus event.
+// ExecStatus event with ID 0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad
 type ExecStatus struct {
 	Guarantor common.Address
 	Code      *big.Int
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// GetAccessWallet represents a GetAccessWallet event.
+// GetAccessWallet event with ID 0x1c917c3c2698bd5b98acb9772728da62f2ce3670e4578910a6465b955f63e157
 type GetAccessWallet struct {
 	WalletAddress common.Address
 	Raw           types.Log // Blockchain specific contextual infos
 }
 
-// InsufficientFunds represents a InsufficientFunds event.
+// InsufficientFunds event with ID 0x03eb8b54a949acec2cd08fdb6d6bd4647a1f2c907d75d6900648effa92eb147f
 type InsufficientFunds struct {
 	AccessCharge   *big.Int
 	AmountProvided *big.Int
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// InvokeCustomPostHook represents a InvokeCustomPostHook event.
+// InvokeCustomPostHook event with ID 0x97d9c9779ed3ed8b9a6edfe16d17b1fdec843245747a19abfb621806e37d4a89
 type InvokeCustomPostHook struct {
 	CustomContract common.Address
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// InvokeCustomPreHook represents a InvokeCustomPreHook event.
+// InvokeCustomPreHook event with ID 0x12b04791b5caab768e2757268992f0c62801e3921d9e310c893f0d5f9caa5f71
 type InvokeCustomPreHook struct {
 	CustomContract common.Address
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// Log represents a Log event.
+// Log event with ID 0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab
 type Log struct {
 	Label string
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// LogAddress represents a LogAddress event.
+// LogAddress event with ID 0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e
 type LogAddress struct {
 	Label string
 	A     common.Address
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// LogBool represents a LogBool event.
+// LogBool event with ID 0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47
 type LogBool struct {
 	Label string
 	B     bool
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// LogBytes32 represents a LogBytes32 event.
+// LogBytes32 event with ID 0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7
 type LogBytes32 struct {
 	Label string
 	B     [32]byte
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// LogInt256 represents a LogInt256 event.
+// LogInt256 event with ID 0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22
 type LogInt256 struct {
 	Label string
 	U     *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// LogUint256 represents a LogUint256 event.
+// LogUint256 event with ID 0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d
 type LogUint256 struct {
 	Label string
 	U     *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// ManagerAccessGranted represents a ManagerAccessGranted event.
+// ManagerAccessGranted event with ID 0x93bcaab179551bde429187645251f8e1fb8ac85801fcb1cf91eb2c9043d61117
 type ManagerAccessGranted struct {
 	Candidate common.Address
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// ManagerAccessRevoked represents a ManagerAccessRevoked event.
+// ManagerAccessRevoked event with ID 0x2d6aa1a9629d125e23a0cf692cda7cd6795dff1652eedd4673b38ec31e387b95
 type ManagerAccessRevoked struct {
 	Candidate common.Address
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// MemberAdded represents a MemberAdded event.
+// MemberAdded event with ID 0xb251eb052afc73ffd02ffe85ad79990a8b3fed60d76dbc2fa2fdd7123dffd914
 type MemberAdded struct {
 	Candidate common.Address
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// MemberRevoked represents a MemberRevoked event.
+// MemberRevoked event with ID 0x745cd29407db644ed93e3ceb61cbcab96d1dfb496989ac5d5bf514fc5a9fab9c
 type MemberRevoked struct {
 	Candidate common.Address
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// NodeApproved represents a NodeApproved event.
+// NodeApproved event with ID 0xd644c8164f225d3b7fdbcc404f279bb1e823ef0d93f88dd4b24e85d0e7bc6a54
 type NodeApproved struct {
 	Addr    common.Address
 	Locator []byte
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// NodeSubmitted represents a NodeSubmitted event.
+// NodeSubmitted event with ID 0xae5645569f32b946f7a747113c64094a29a6b84c5ddf55816ef4381ce8a3a46d
 type NodeSubmitted struct {
 	Addr    common.Address
 	Locator []byte
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// OAuthStatusChanged represents a OAuthStatusChanged event.
+// OAuthStatusChanged event with ID 0x04c71e53d136838eea703132a77007b0526b9a7691cdb7a6017a93673f865cbb
 type OAuthStatusChanged struct {
 	Enabled bool
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// ObjectMetaChanged represents a ObjectMetaChanged event.
+// ObjectMetaChanged event with ID 0xe2b310ec9dabdc05229a748e07666c3bc9c46c6ef465cce30d0aa3aa64a0644c
 type ObjectMetaChanged struct {
 	Key []byte
 	Raw types.Log // Blockchain specific contextual infos
 }
 
-// Publish represents a Publish event.
+// Publish event with ID 0xad9c5eacc073b2e1767affc883e050347e1dd379c9799cb5ac0a17bde80f5cf4
 type Publish struct {
 	RequestStatus bool
 	StatusCode    *big.Int
@@ -1785,46 +1549,46 @@ type Publish struct {
 	Raw           types.Log // Blockchain specific contextual infos
 }
 
-// RegisterNode represents a RegisterNode event.
+// RegisterNode event with ID 0x4575facd117046c9c28b69a3eb9c08939f2462a5a22ea6c6dcd4f79b8dd124e9
 type RegisterNode struct {
 	NodeObjAddr common.Address
 	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// RemoveKMSLocator represents a RemoveKMSLocator event.
+// RemoveKMSLocator event with ID 0x5f463eb53cddf646852b82c0d9bdb1d1ec215c3802b780e8b7beea8b6e99f94c
 type RemoveKMSLocator struct {
 	Sender common.Address
 	Status *big.Int
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// RemoveNode represents a RemoveNode event.
+// RemoveNode event with ID 0x41ec5b9efdbf61871df6a18b687e04bea93d5793af5f8c8b4626e155b23dc19d
 type RemoveNode struct {
 	OwnerAddr common.Address
 	NodeAddr  common.Address
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// ReturnCustomHook represents a ReturnCustomHook event.
+// ReturnCustomHook event with ID 0x8c693e8b27db7caf9b9637b66dcc11444760023a4d53e95407a3acef1b249f50
 type ReturnCustomHook struct {
 	CustomContract common.Address
 	Result         *big.Int
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// ReviewerGroupAdded represents a ReviewerGroupAdded event.
+// ReviewerGroupAdded event with ID 0x1b88a571cc8ac2e87512f05648e79d184f5cc0cbb2889bc487c41f8b9a3202eb
 type ReviewerGroupAdded struct {
 	Group common.Address
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// ReviewerGroupRemoved represents a ReviewerGroupRemoved event.
+// ReviewerGroupRemoved event with ID 0xdf9d78c5635b72b709c85300a786eb7238acbe5bffe01c60c16464e45c6eb6eb
 type ReviewerGroupRemoved struct {
 	Group common.Address
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// RightsChanged represents a RightsChanged event.
+// RightsChanged event with ID 0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4
 type RightsChanged struct {
 	Principal common.Address
 	Entity    common.Address
@@ -1832,102 +1596,102 @@ type RightsChanged struct {
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// RunAccess represents a RunAccess event.
+// RunAccess event with ID 0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58
 type RunAccess struct {
 	RequestNonce *big.Int
 	Result       *big.Int
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// RunAccessCharge represents a RunAccessCharge event.
+// RunAccessCharge event with ID 0xe1f170f83120da6c17cd0ed37a683fc996637c63d2c94a60c806d4cb7466f47b
 type RunAccessCharge struct {
 	CalculatedAccessCharge *big.Int
 	Raw                    types.Log // Blockchain specific contextual infos
 }
 
-// RunCreate represents a RunCreate event.
+// RunCreate event with ID 0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b
 type RunCreate struct {
 	Result *big.Int
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// RunFinalize represents a RunFinalize event.
+// RunFinalize event with ID 0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891
 type RunFinalize struct {
 	RequestNonce *big.Int
 	Result       *big.Int
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// RunKill represents a RunKill event.
+// RunKill event with ID 0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86
 type RunKill struct {
 	Result *big.Int
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// RunStatusChange represents a RunStatusChange event.
+// RunStatusChange event with ID 0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff
 type RunStatusChange struct {
 	ProposedStatusCode *big.Int
 	ReturnStatusCode   *big.Int
 	Raw                types.Log // Blockchain specific contextual infos
 }
 
-// SetAccessCharge represents a SetAccessCharge event.
+// SetAccessCharge event with ID 0x4114f8ef80b6de2161db580cbefa14e1892d15d3ebe2062c9914e4a5773114a3
 type SetAccessCharge struct {
 	AccessCharge *big.Int
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// SetContentContract represents a SetContentContract event.
+// SetContentContract event with ID 0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7
 type SetContentContract struct {
 	ContentContractAddress common.Address
 	Raw                    types.Log // Blockchain specific contextual infos
 }
 
-// SetContentType represents a SetContentType event.
+// SetContentType event with ID 0x4f692e87baf302f7281e83eec109053efc2ca8e7bddfc6ce88c579cd9767f71f
 type SetContentType struct {
 	ContentType            common.Address
 	ContentContractAddress common.Address
 	Raw                    types.Log // Blockchain specific contextual infos
 }
 
-// SetFactory represents a SetFactory event.
+// SetFactory event with ID 0x1c893ef9379093af30f458b9e74d2aba13c499660b68dec5e29af7b199c188b9
 type SetFactory struct {
 	Factory common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// SetStatusCode represents a SetStatusCode event.
+// SetStatusCode event with ID 0xda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a2
 type SetStatusCode struct {
 	StatusCode *big.Int
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// UnauthorizedOperation represents a UnauthorizedOperation event.
+// UnauthorizedOperation event with ID 0x23de2adc3e22f171f66b3e5a333e17feb9dc30ba9570933bd259cb6c13ef7ab7
 type UnauthorizedOperation struct {
 	OperationCode *big.Int
 	Candidate     common.Address
 	Raw           types.Log // Blockchain specific contextual infos
 }
 
-// UnregisterNode represents a UnregisterNode event.
+// UnregisterNode event with ID 0xb98695ab4c6cedb3b4dfe62479a9d39a59aa2cb38b8bd92bbb6ce5856e42bdf4
 type UnregisterNode struct {
 	NodeObjAddr common.Address
 	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// UpdateKmsAddress represents a UpdateKmsAddress event.
+// UpdateKmsAddress event with ID 0x74538e2fbd034afddf32b42c5939d211ce86c7683f9768f1a4969746f81f8608
 type UpdateKmsAddress struct {
 	AddressKms common.Address
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// UpdateRequest represents a UpdateRequest event.
+// UpdateRequest event with ID 0x403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65
 type UpdateRequest struct {
 	ObjectHash string
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// VersionConfirm represents a VersionConfirm event.
+// VersionConfirm event with ID 0xbdaffceabaaa783aa187fea6c2e815541d29e2290bf3f7d3c4fc53672b68f7df
 type VersionConfirm struct {
 	SpaceAddress  common.Address
 	ParentAddress common.Address
@@ -1935,7 +1699,7 @@ type VersionConfirm struct {
 	Raw           types.Log // Blockchain specific contextual infos
 }
 
-// VersionDelete represents a VersionDelete event.
+// VersionDelete event with ID 0x238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51
 type VersionDelete struct {
 	SpaceAddress common.Address
 	VersionHash  string
@@ -1943,7 +1707,7 @@ type VersionDelete struct {
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// VisibilityChanged represents a VisibilityChanged event.
+// VisibilityChanged event with ID 0x369a336baa7895746725663e717b3523139ebabfff8c32bc4b13e8f88e502500
 type VisibilityChanged struct {
 	ContentSpace  common.Address
 	ParentAddress common.Address

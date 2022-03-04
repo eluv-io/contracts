@@ -33,6 +33,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -167,12 +168,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 			events[original.Name] = tmplEv
 
 			// append to the all events global map
-			l, ok := allEvents[tmplEv.Normalized.ID()]
-			if !ok {
-				l = make([]*tmplEvent, 0)
-			}
-			l = append(l, tmplEv)
-			allEvents[tmplEv.Normalized.ID()] = l
+			allEvents[tmplEv.Normalized.ID()] = append(allEvents[tmplEv.Normalized.ID()], tmplEv)
 		}
 
 		// There is no easy way to pass arbitrary java objects to the Go side.
@@ -211,6 +207,8 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		}
 	}
 
+	log.Info("all events", "num", len(allEvents))
+
 	// before generating unique events drop those with duplicate names
 	allByName := make(map[string]common.Hash)
 	toRemove := make(map[common.Hash]bool)
@@ -224,6 +222,10 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		allByName[lev[0].Normalized.Name] = h
 	}
 	for h := range toRemove {
+		if h.String() == "0xed78a9defa7412748c9513ba9cf680f57703a46dd7e0fb0b1e94063423c73e88" {
+			// we keep these specific events, because they're actually used!
+			continue
+		}
 		log.Warn("Removing duplicate from unique events ",
 			"event", allEvents[h][0].Normalized.Name,
 			"hash", allEvents[h][0].Normalized.ID().String())
@@ -231,26 +233,53 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 	}
 
 	// generate unique events map
-	log.Info("unique events")
-	uniqueEvents := make(tmplEventList, 0)
+	uniqueEvents := make(tmplEventInfoList, 0)
 	for _, lev := range allEvents {
-		n := lev[0].Normalized.Name
-		for i := 1; i < len(lev); i++ {
-			if n != lev[i].Normalized.Name {
-				return "", errors.New("event name mismatch: " + n + ", " + lev[i].Normalized.Name)
+
+		type tmplEventWrapper struct {
+			ev        *tmplEvent
+			contracts []string
+		}
+
+		tei := tmplEventInfo{}
+
+		evByFullSig := make(map[common.Hash]*tmplEventWrapper)
+		for i, event := range lev {
+			if i == 0 {
+				tei.EventName = event.Normalized.Name
+				tei.EventID = event.Normalized.ID()
+			} else if tei.EventName != event.Normalized.Name {
+				return "", errors.New("event name mismatch: " + tei.EventName + ", " + event.Normalized.Name)
 			}
+			fid := fullID(event)
+			wrapper := evByFullSig[fid]
+			if wrapper == nil {
+				wrapper = &tmplEventWrapper{ev: event}
+				evByFullSig[fid] = wrapper
+			}
+			wrapper.contracts = append(wrapper.contracts, event.KType)
 		}
-		contracts := make([]string, 0)
-		for _, ev := range lev {
-			contracts = append(contracts, ev.KType)
+
+		for _, event := range evByFullSig {
+			sort.Strings(event.contracts)
+			log.Info(event.ev.Normalized.Name, "hash", event.ev.Normalized.ID().String(), "<-", strings.Join(event.contracts, ","))
+			//log.Info(event.ev.Normalized.Name, "<-", len(event.contracts))
+
+			event.ev.KType = event.contracts[0]
+			if len(evByFullSig) > 1 {
+				// create a copy if the tmplEvent in order to keep the original unchanged
+				cp := *event.ev
+				event.ev = &cp
+				// adapt the event name by adding the contract as suffix
+				event.ev.Normalized.Name = tei.EventName + event.ev.KType
+			}
+			tei.EventTypes = append(tei.EventTypes, event.ev)
 		}
-		sort.Strings(contracts)
-		log.Info(lev[0].Normalized.Name, "<-", strings.Join(contracts, ","))
-		ev := lev[0]
-		ev.KType = contracts[0]
-		uniqueEvents = append(uniqueEvents, ev)
+		sort.Sort(tei.EventTypes)
+		uniqueEvents = append(uniqueEvents, &tei)
 	}
 	sort.Sort(uniqueEvents)
+	log.Info("unique events", "num", len(allEvents))
 
 	// Check if that type has already been identified as a library
 	for i := 0; i < len(types); i++ {
@@ -274,10 +303,26 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		"formatevent":   formatEvent,
 		"capitalise":    capitalise,
 		"decapitalise":  decapitalise,
-		"eventId":       eventId,
+		"toString":      toString,
 	}
 
 	return withTemplate(lang, funcs, data)
+}
+
+func fullID(event *tmplEvent) common.Hash {
+	return common.BytesToHash(crypto.Keccak256([]byte(fullSig(event.Normalized))))
+}
+
+func fullSig(e abi.Event) string {
+	types := make([]string, len(e.Inputs))
+	for i, input := range e.Inputs {
+		indexed := ""
+		if input.Indexed {
+			indexed = "indexed "
+		}
+		types[i] = indexed + input.Type.String()
+	}
+	return fmt.Sprintf("%v(%v)", e.RawName, strings.Join(types, ","))
 }
 
 func withTemplate(lang Lang, funcs map[string]interface{}, data *tmplData) (string, error) {
@@ -707,6 +752,6 @@ func formatEvent(event abi.Event, structs map[string]*tmplStruct) string {
 	return fmt.Sprintf("event %v(%v)", event.RawName, strings.Join(inputs, ", "))
 }
 
-func eventId(event abi.Event) string {
-	return event.ID().String()
+func toString(s fmt.Stringer) string {
+	return s.String()
 }

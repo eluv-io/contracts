@@ -56,12 +56,15 @@ func init() {
 	addEvents(c201903.UniqueEvents, "20190331")
 
 	for name, event := range UniqueEvents {
-		ev, _ := EventsByType[event.Type]
-		if ev != nil {
-			panic(fmt.Sprintf("duplicate event: %s with type %v for %s and type %v",
-				ev.Name, ev.Type, name, event.Type))
+		for _, eventType := range event.Types {
+			evt := eventType.Type
+			ev, _ := EventsByType[evt]
+			if ev != nil {
+				panic(fmt.Sprintf("duplicate events for type %v: %s <-> %s",
+					evt, ev.Name, name))
+			}
+			EventsByType[evt] = event
 		}
-		EventsByType[event.Type] = event
 		EventNamesByID[event.ID] = event.Name
 	}
 }

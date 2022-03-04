@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package elv_tradable
+package tradable
 
 import (
 	"encoding/json"
@@ -35,7 +35,11 @@ var (
 
 // Map of ABI names to *abi.ABI
 // ABI names are constants starting with K_
-var ParsedABIS map[string]*abi.ABI
+var ParsedABIS = map[string]*abi.ABI{}
+
+// Map of ABI names to *bind.BoundContract for log parsing only
+// ABI names are constants starting with K_
+var BoundContracts = map[string]*bind.BoundContract{}
 
 // Map of Unique events names to *EventInfo.
 // Unique events names are constants starting with E_
@@ -73,6 +77,19 @@ func ParsedABI(name string) (*abi.ABI, error) {
 		return pabi, nil
 	}
 	return parseABI(name)
+}
+
+func BoundContract(name string) *bind.BoundContract {
+	bc, ok := BoundContracts[name]
+	if !ok {
+		anABI, err := ParsedABI(name)
+		if err != nil {
+			panic(err)
+		}
+		bc = bind.NewBoundContract(common.Address{}, *anABI, nil, nil, nil)
+		BoundContracts[name] = bc
+	}
+	return bc
 }
 
 // Type names of contract binding
@@ -168,39 +185,9 @@ const (
 )
 
 type EventInfo = c.EventInfo
-/*
-// EventInfo gather information about a 'unique event'.
-type EventInfo struct {
-	Name   string                                    // name of the event as in abi.Event
-	ID     common.Hash                               // ID of the event
-	Type   reflect.Type                              // type of the struct event
-	Unpack func(log types.Log, ev interface{}) error // unpack the given log into the given event
-}
-
-func (ev *EventInfo) Value(log types.Log) (reflect.Value, error) {
-	event := reflect.New(ev.Type.Elem())
-	err := ev.Unpack(log, event.Interface())
-	if err != nil {
-		return reflect.Value{}, err
-	}
-	f := event.Elem().FieldByName("Raw")
-	if f.IsValid() && f.CanSet() {
-		f.Set(reflect.ValueOf(log))
-	}
-	return event, nil
-}
-
-func (ev *EventInfo) Event(log types.Log) (interface{}, error) {
-	val, err := ev.Value(log)
-	if err != nil {
-		return nil, err
-	}
-	return val.Interface(), nil
-}
-*/
+type EventType = c.EventType
 
 func init() {
-	ParsedABIS = make(map[string]*abi.ABI)
 	for name, _ := range ABIS {
 		a, err := parseABI(name)
 		if err == nil {
@@ -212,256 +199,227 @@ func init() {
 	ev = &EventInfo{
 		Name: "Approval",
 		ID:   common.HexToHash("0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"),
-		Type: reflect.TypeOf((*Approval)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20)
-			if err := anABI.Unpack(ev, "Approval", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApprovalERC20)(nil)),
+				BoundContract: BoundContract(K_ERC20),
+			}, {
+				Type:          reflect.TypeOf((*ApprovalERC721)(nil)),
+				BoundContract: BoundContract(K_ERC721),
+			},
 		},
 	}
 	UniqueEvents[E_Approval] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
+	EventsByType[ev.Types[1].Type] = ev
 
 	ev = &EventInfo{
 		Name: "ApprovalForAll",
 		ID:   common.HexToHash("0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"),
-		Type: reflect.TypeOf((*ApprovalForAll)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC721)
-			if err := anABI.Unpack(ev, "ApprovalForAll", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApprovalForAll)(nil)),
+				BoundContract: BoundContract(K_ERC721),
+			},
 		},
 	}
 	UniqueEvents[E_ApprovalForAll] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "BaseTransferFeeSet",
 		ID:   common.HexToHash("0x0457965f5769a09114fd0629b0a97d67e8469821987a454045bbc1a4eed6a881"),
-		Type: reflect.TypeOf((*BaseTransferFeeSet)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ElvTradable)
-			if err := anABI.Unpack(ev, "BaseTransferFeeSet", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*BaseTransferFeeSet)(nil)),
+				BoundContract: BoundContract(K_ElvTradable),
+			},
 		},
 	}
 	UniqueEvents[E_BaseTransferFeeSet] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "Deposit",
 		ID:   common.HexToHash("0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c"),
-		Type: reflect.TypeOf((*Deposit)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_WELV9)
-			if err := anABI.Unpack(ev, "Deposit", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Deposit)(nil)),
+				BoundContract: BoundContract(K_WELV9),
+			},
 		},
 	}
 	UniqueEvents[E_Deposit] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "MinterAdded",
 		ID:   common.HexToHash("0x6ae172837ea30b801fbfcdd4108aa1d5bf8ff775444fd70256b44e6bf3dfc3f6"),
-		Type: reflect.TypeOf((*MinterAdded)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20Capped)
-			if err := anABI.Unpack(ev, "MinterAdded", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MinterAdded)(nil)),
+				BoundContract: BoundContract(K_ERC20Capped),
+			},
 		},
 	}
 	UniqueEvents[E_MinterAdded] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "MinterRemoved",
 		ID:   common.HexToHash("0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692"),
-		Type: reflect.TypeOf((*MinterRemoved)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20Capped)
-			if err := anABI.Unpack(ev, "MinterRemoved", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MinterRemoved)(nil)),
+				BoundContract: BoundContract(K_ERC20Capped),
+			},
 		},
 	}
 	UniqueEvents[E_MinterRemoved] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "OwnershipTransferred",
 		ID:   common.HexToHash("0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0"),
-		Type: reflect.TypeOf((*OwnershipTransferred)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ElvTokenHelper)
-			if err := anABI.Unpack(ev, "OwnershipTransferred", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*OwnershipTransferred)(nil)),
+				BoundContract: BoundContract(K_ElvTokenHelper),
+			},
 		},
 	}
 	UniqueEvents[E_OwnershipTransferred] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "Paused",
 		ID:   common.HexToHash("0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258"),
-		Type: reflect.TypeOf((*Paused)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20Pausable)
-			if err := anABI.Unpack(ev, "Paused", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Paused)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
 		},
 	}
 	UniqueEvents[E_Paused] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "PauserAdded",
 		ID:   common.HexToHash("0x6719d08c1888103bea251a4ed56406bd0c3e69723c8a1686e017e7bbe159b6f8"),
-		Type: reflect.TypeOf((*PauserAdded)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20Pausable)
-			if err := anABI.Unpack(ev, "PauserAdded", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*PauserAdded)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
 		},
 	}
 	UniqueEvents[E_PauserAdded] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "PauserRemoved",
 		ID:   common.HexToHash("0xcd265ebaf09df2871cc7bd4133404a235ba12eff2041bb89d9c714a2621c7c7e"),
-		Type: reflect.TypeOf((*PauserRemoved)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20Pausable)
-			if err := anABI.Unpack(ev, "PauserRemoved", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*PauserRemoved)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
 		},
 	}
 	UniqueEvents[E_PauserRemoved] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "SetProxyAddress",
 		ID:   common.HexToHash("0xee3e7531713ec20c8271432382d3162f5225f9bdac8f1f351cf2ceb699fb754c"),
-		Type: reflect.TypeOf((*SetProxyAddress)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ElvTradable)
-			if err := anABI.Unpack(ev, "SetProxyAddress", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetProxyAddress)(nil)),
+				BoundContract: BoundContract(K_ElvTradable),
+			},
 		},
 	}
 	UniqueEvents[E_SetProxyAddress] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "SetTokenURI",
 		ID:   common.HexToHash("0xaa425fdd80303549e5f891d43e81f503f03bc88d66e218ac44f385682ce6fe0b"),
-		Type: reflect.TypeOf((*SetTokenURI)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ElvTradable)
-			if err := anABI.Unpack(ev, "SetTokenURI", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetTokenURI)(nil)),
+				BoundContract: BoundContract(K_ElvTradable),
+			},
 		},
 	}
 	UniqueEvents[E_SetTokenURI] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "Transfer",
 		ID:   common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
-		Type: reflect.TypeOf((*Transfer)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20)
-			if err := anABI.Unpack(ev, "Transfer", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*TransferERC20)(nil)),
+				BoundContract: BoundContract(K_ERC20),
+			}, {
+				Type:          reflect.TypeOf((*TransferERC721)(nil)),
+				BoundContract: BoundContract(K_ERC721),
+			},
 		},
 	}
 	UniqueEvents[E_Transfer] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
+	EventsByType[ev.Types[1].Type] = ev
 
 	ev = &EventInfo{
 		Name: "Unpaused",
 		ID:   common.HexToHash("0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa"),
-		Type: reflect.TypeOf((*Unpaused)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_ERC20Pausable)
-			if err := anABI.Unpack(ev, "Unpaused", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Unpaused)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
 		},
 	}
 	UniqueEvents[E_Unpaused] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 	ev = &EventInfo{
 		Name: "Withdrawal",
 		ID:   common.HexToHash("0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65"),
-		Type: reflect.TypeOf((*Withdrawal)(nil)),
-		Unpack: func(log types.Log, ev interface{}) error {
-			anABI, _ := ParsedABI(K_WELV9)
-			if err := anABI.Unpack(ev, "Withdrawal", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Withdrawal)(nil)),
+				BoundContract: BoundContract(K_WELV9),
+			},
 		},
 	}
 	UniqueEvents[E_Withdrawal] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	EventsByType[ev.Types[0].Type] = ev
 
 }
 
 // Unique events structs
 
-// Approval represents a Approval event.
-type Approval struct {
+// ApprovalERC20 event with ID 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925
+type ApprovalERC20 struct {
+	Owner   common.Address
+	Spender common.Address
+	Value   *big.Int
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// ApprovalERC721 event with ID 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925
+type ApprovalERC721 struct {
 	Owner    common.Address
 	Approved common.Address
 	TokenId  *big.Int
 	Raw      types.Log // Blockchain specific contextual infos
 }
 
-// ApprovalForAll represents a ApprovalForAll event.
+// ApprovalForAll event with ID 0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31
 type ApprovalForAll struct {
 	Owner    common.Address
 	Operator common.Address
@@ -469,58 +427,58 @@ type ApprovalForAll struct {
 	Raw      types.Log // Blockchain specific contextual infos
 }
 
-// BaseTransferFeeSet represents a BaseTransferFeeSet event.
+// BaseTransferFeeSet event with ID 0x0457965f5769a09114fd0629b0a97d67e8469821987a454045bbc1a4eed6a881
 type BaseTransferFeeSet struct {
 	PrevFee *big.Int
 	NewFee  *big.Int
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// Deposit represents a Deposit event.
+// Deposit event with ID 0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c
 type Deposit struct {
 	Dst common.Address
 	Wad *big.Int
 	Raw types.Log // Blockchain specific contextual infos
 }
 
-// MinterAdded represents a MinterAdded event.
+// MinterAdded event with ID 0x6ae172837ea30b801fbfcdd4108aa1d5bf8ff775444fd70256b44e6bf3dfc3f6
 type MinterAdded struct {
 	Account common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// MinterRemoved represents a MinterRemoved event.
+// MinterRemoved event with ID 0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692
 type MinterRemoved struct {
 	Account common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// OwnershipTransferred represents a OwnershipTransferred event.
+// OwnershipTransferred event with ID 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0
 type OwnershipTransferred struct {
 	PreviousOwner common.Address
 	NewOwner      common.Address
 	Raw           types.Log // Blockchain specific contextual infos
 }
 
-// Paused represents a Paused event.
+// Paused event with ID 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258
 type Paused struct {
 	Account common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// PauserAdded represents a PauserAdded event.
+// PauserAdded event with ID 0x6719d08c1888103bea251a4ed56406bd0c3e69723c8a1686e017e7bbe159b6f8
 type PauserAdded struct {
 	Account common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// PauserRemoved represents a PauserRemoved event.
+// PauserRemoved event with ID 0xcd265ebaf09df2871cc7bd4133404a235ba12eff2041bb89d9c714a2621c7c7e
 type PauserRemoved struct {
 	Account common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// SetProxyAddress represents a SetProxyAddress event.
+// SetProxyAddress event with ID 0xee3e7531713ec20c8271432382d3162f5225f9bdac8f1f351cf2ceb699fb754c
 type SetProxyAddress struct {
 	ProxyType *big.Int
 	PrevAddr  common.Address
@@ -528,7 +486,7 @@ type SetProxyAddress struct {
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// SetTokenURI represents a SetTokenURI event.
+// SetTokenURI event with ID 0xaa425fdd80303549e5f891d43e81f503f03bc88d66e218ac44f385682ce6fe0b
 type SetTokenURI struct {
 	TokenId *big.Int
 	PrevURI string
@@ -536,21 +494,29 @@ type SetTokenURI struct {
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// Transfer represents a Transfer event.
-type Transfer struct {
+// TransferERC20 event with ID 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+type TransferERC20 struct {
+	From  common.Address
+	To    common.Address
+	Value *big.Int
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// TransferERC721 event with ID 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+type TransferERC721 struct {
 	From    common.Address
 	To      common.Address
 	TokenId *big.Int
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// Unpaused represents a Unpaused event.
+// Unpaused event with ID 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa
 type Unpaused struct {
 	Account common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// Withdrawal represents a Withdrawal event.
+// Withdrawal event with ID 0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65
 type Withdrawal struct {
 	Src common.Address
 	Wad *big.Int

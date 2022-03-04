@@ -16,7 +16,10 @@
 
 package bind
 
-import "github.com/ethereum/go-ethereum/accounts/abi"
+import (
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+)
 
 // tmplData is the data structure required to fill the binding template.
 type tmplData struct {
@@ -24,7 +27,7 @@ type tmplData struct {
 	Contracts map[string]*tmplContract // List of contracts to generate into this file
 	Libraries map[string]string        // Map the bytecode's link pattern to the library name
 	Structs   map[string]*tmplStruct   // Contract struct type definitions
-	Events    []*tmplEvent             // list of events with unique name and ID
+	Events    []*tmplEventInfo         // list of events with unique name and ID
 }
 
 // tmplContract contains the data needed to generate an individual contract binding.
@@ -70,6 +73,32 @@ func (l tmplEventList) Swap(i, j int) {
 	l[i], l[j] = l[j], l[i]
 }
 
+// tmplEventInfo is a container for an event and its subtypes. Multiple subtypes are only present when there are
+// multiple events with
+//	a) the same name
+//	b) the same ID, i.e. the same number of arguments and identical types
+//	c) different "indexed" definitions for the arguments, i.e. one event defines an arg as indexed, while the other
+//	   event doesn't. E.g. see "Transfer" event defined in IERC20 and IERC721.
+type tmplEventInfo struct {
+	EventName  string
+	EventID    common.Hash
+	EventTypes tmplEventList
+}
+
+type tmplEventInfoList []*tmplEventInfo
+
+func (l tmplEventInfoList) Len() int {
+	return len(l)
+}
+
+func (l tmplEventInfoList) Less(i, j int) bool {
+	return l[i].EventName < l[j].EventName
+}
+
+func (l tmplEventInfoList) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
+}
+
 // tmplField is a wrapper around a struct field with binding language
 // struct type definition and relative filed name.
 type tmplField struct {
@@ -93,7 +122,6 @@ var tmplSource = map[Lang]string{
 }
 
 // tmplSourceGo is the Go source template use to generate the contract binding
-// based on.
 const tmplSourceGo = `
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
@@ -132,7 +160,11 @@ var (
 
 // Map of ABI names to *abi.ABI
 // ABI names are constants starting with K_
-var ParsedABIS map[string]*abi.ABI
+var ParsedABIS = map[string]*abi.ABI{}
+
+// Map of ABI names to *bind.BoundContract for log parsing only
+// ABI names are constants starting with K_
+var BoundContracts = map[string]*bind.BoundContract{}
 
 // Map of Unique events names to *EventInfo. 
 // Unique events names are constants starting with E_ 
@@ -182,6 +214,19 @@ func ParsedABI(name string) (*abi.ABI, error) {
 	}
 {{end}}
 
+func BoundContract(name string) (*bind.BoundContract) {
+	bc, ok := BoundContracts[name]
+	if !ok {
+		anABI, err := ParsedABI(name)
+		if err != nil {
+			panic(err)
+		}
+		bc = bind.NewBoundContract(common.Address{}, *anABI, nil, nil, nil)
+		BoundContracts[name] = bc
+	}
+	return bc
+}
+
 // Type names of contract binding
 const (
 {{range $contract := .Contracts}}
@@ -197,44 +242,13 @@ var ABIS = map[string]string{
 // Unique events are events whose ID and name are unique across contracts. 
 const (
 	{{range $event := .Events}}
-	E_{{.Normalized.Name}} = "{{.Normalized.Name}}"{{end}} 
+	E_{{.EventName}} = "{{.EventName}}"{{end}} 
 )
 
 type EventInfo = c.EventInfo
-
-/*
-// EventInfo gather information about a 'unique event'.
-type EventInfo struct {
-	Name   string                                     // name of the event as in abi.Event 
-	ID     common.Hash                                // ID of the event 
-	Type   reflect.Type                               // type of the struct event 
-	Unpack func(log types.Log, ev interface{}) error  // unpack the given log into the given event
-}
-
-func (ev *EventInfo) Value(log types.Log) (reflect.Value, error) {
-	event := reflect.New(ev.Type.Elem())
-	err := ev.Unpack(log, event.Interface())
-	if err != nil {
-		return reflect.Value{}, err
-	}
-	f := event.Elem().FieldByName("Raw")
-	if f.IsValid() && f.CanSet() {
-		f.Set(reflect.ValueOf(log))
-	}
-	return event, nil
-}
-
-func (ev *EventInfo) Event(log types.Log) (interface{}, error) {
-	val, err := ev.Value(log)
-	if err != nil {
-		return nil, err
-	}
-	return val.Interface(), nil
-}
-*/
+type EventType = c.EventType
 
 func init() {
-	ParsedABIS = make(map[string]*abi.ABI)
 	for name, _ := range ABIS {
 		a, err := parseABI(name)
 		if err == nil {
@@ -242,32 +256,35 @@ func init() {
 		}
 	}
 	var ev *EventInfo
-	{{range $event := .Events}}
+	{{range .Events}}
 	ev = &EventInfo{
-		Name:   "{{.Original.Name}}",
-		ID:     common.HexToHash("{{eventId .Normalized}}"), 
-		Type:   reflect.TypeOf((*{{.Normalized.Name}})(nil)),
-		Unpack: func(log types.Log, ev interface{}) error{
-			anABI, _ := ParsedABI(K_{{.KType}})
-			if err := anABI.Unpack(ev, "{{.Original.Name}}", log.Data); err != nil {
-				return err
-			}
-			return nil
+		Name:   "{{.EventName}}",
+		ID:     common.HexToHash("{{toString .EventID}}"), 
+		Types: []EventType{
+			{{range .EventTypes -}}
+			{
+				Type:          reflect.TypeOf((*{{.Normalized.Name}})(nil)),
+				BoundContract: BoundContract(K_{{.KType}}),
+			},{{end}}
 		},
 	}
-	UniqueEvents[E_{{.Normalized.Name}}] = ev
-	EventsByType[ev.Type] = ev
-	EventsByID[ev.ID] = ev
+	UniqueEvents[E_{{.EventName}}] = ev
+	{{range $index, $element := .EventTypes -}}
+	EventsByType[ev.Types[{{$index}}].Type] = ev
+	{{end}}
 	{{end}}
 }
 
 // Unique events structs
 {{range $event := .Events}}
-// {{.Normalized.Name}} represents a {{.Normalized.Name}} event.
-type {{.Normalized.Name}} struct { {{range .Normalized.Inputs}}
+{{range .EventTypes}}
+// {{.Normalized.Name}} event with ID {{toString $event.EventID}}
+type {{.Normalized.Name}} struct {
+{{range .Normalized.Inputs}}
 	{{capitalise .Name}} {{if .Indexed}}{{bindtopictype .Type $structs}}{{else}}{{bindtype .Type $structs}}{{end}}; {{end}}
 	Raw types.Log // Blockchain specific contextual infos
 }
+{{end}}
 {{end}}
 
 {{range $contract := .Contracts}}
@@ -546,6 +563,8 @@ type {{.Normalized.Name}} struct { {{range .Normalized.Inputs}}
  	{{end}}
 {{end}}
 `
+
+// based on.
 
 // tmplSourceJava is the Java source template use to generate the contract binding
 // based on.

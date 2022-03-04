@@ -77,27 +77,29 @@ func TestUniqueEvents(t *testing.T) {
 	fmt.Println(fmt.Sprintf("all events (%d)", len(UniqueEvents)))
 	for _, name := range names {
 		event := UniqueEvents[name]
-		fmt.Println(fmt.Sprintf("%-35s", name),
-			fmt.Sprintf("%-50v", event.Type),
-			event.ID.String())
+		for _, eventType := range event.Types {
+			fmt.Println(fmt.Sprintf("%-35s", name),
+				fmt.Sprintf("%-50v", eventType.Type),
+				event.ID.String())
 
-		byName := EventsByName[name]
-		if byName != event {
-			t.Errorf("event by name differs - \n\texpected: %+v\n\tactual:   %+v", event, byName)
-		}
+			byName := EventsByName[name]
+			if byName != event {
+				t.Errorf("event by name differs - \n\texpected: %+v\n\tactual:   %+v", event, byName)
+			}
 
-		byID := EventsByID[event.ID]
-		if byID != event {
-			t.Errorf("event by ID differs - \n\texpected: %+v\n\tactual:   %+v", event, byID)
-		}
+			byID := EventsByID[event.ID]
+			if byID != event {
+				t.Errorf("event by ID differs - \n\texpected: %+v\n\tactual:   %+v", event, byID)
+			}
 
-		byType := EventsByType[event.Type]
-		if byType != event {
-			t.Errorf("event by type differs - \n\texpected: %+v\n\tactual:   %+v", event, byType)
-		}
+			byType := EventsByType[eventType.Type]
+			if byType != event {
+				t.Errorf("event by type differs - \n\texpected: %+v\n\tactual:   %+v", event, byType)
+			}
 
-		if EventNamesByID[event.ID] != event.Name {
-			t.Errorf("event name by ID differs - ID %s name %s", event.ID.String(), event.Name)
+			if EventNamesByID[event.ID] != event.Name {
+				t.Errorf("event name by ID differs - ID %s name %s", event.ID.String(), event.Name)
+			}
 		}
 	}
 }

@@ -1,5 +1,7 @@
 # Prerequisites
+
 Build solc. The version must be 0.5.4
+
 ```shell
 # Install solc using brew (instructions from soliditylang.org)
 git clone https://github.com/ethereum/homebrew-ethereum.git
@@ -29,13 +31,17 @@ export PATH=$PATH:$GOPATH/bin
 ./build.sh
 ```
 
-
-
 In order to link with the libraries, solc should be used as follows:
 ```
-solc da_file_to_compile.sol --bin --libraries libraries --optimize
+solc my_contract.sol --bin --libraries libraries --optimize
 ```
 
 Notes:
-* "--optimize" cuts the size of the binary by 40%, which is important - otherwise we are above limit for our main contract
+* "--optimize" cuts the size of the binary by 40%, which is important - otherwise some contracts are over the size limit
 * "--libraries libraries" indicates that the library linking to use are contained in the libraries file. Each line in that file contains a link and provides the address at which that library was deployed
+
+
+## Version History
+
+- tag `2.0.0` - Base contracts corresponding to the Content Fabric 'auth v2' version
+- tag `3.0.0` - Base contracts correspondnig to the Content Fabric 'auth v3' version

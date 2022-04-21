@@ -20,10 +20,7 @@ hash solc || {
 
 # we should also check the version here
 hash abigen || {
-    echo "Error : abigen is not found, install ethereum using Homebrew"
-    echo "Steps"
-    echo "- brew tap ethereum/ethereum"
-    echo "- brew install ethereum"
+    echo "Error : abigen is not found (must use go-ethereum/cmd/abigen)"
     exit 1
 }
 

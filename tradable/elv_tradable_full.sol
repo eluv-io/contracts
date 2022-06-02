@@ -89,8 +89,35 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
         return _isApprovedOrOwner(ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId)), v, r, s), tokenId);
     }
 
+    function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
+        return _isApprovedOrOwner(ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId))), v, r, s), tokenId);
+    }
+
+    /**
+     * @dev Returns an Ethereum Signed Message, created from a `hash`. This
+     * produces hash corresponding to the one signed with the
+     * https://eth.wiki/json-rpc/API#eth_sign[`eth_sign`]
+     * JSON-RPC method as part of EIP-191.
+     *
+     * See {recover}.
+     *
+     * Copied from openzeppelin-contracts ECDSA.sol
+     */
+    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
+        // 32 is the length in bytes of hash,
+        // enforced by the type signature above
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    }
+
     function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
         require(isOwnerSigned(from, tokenId, v, r, s));
+        require(msg.sender == from && isMinter(from));
+        _burn(tokenId);
+        return true;
+    }
+
+    function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        require(isOwnerSignedEIP191(from, tokenId, v, r, s));
         require(msg.sender == from && isMinter(from));
         _burn(tokenId);
         return true;

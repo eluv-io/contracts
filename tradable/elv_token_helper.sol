@@ -43,6 +43,11 @@ contract ElvTokenHelper is Ownable {
         return t.burnSigned(address(this), tokenId, v, r, s);
     }
 
+    function burnSignedEIP191(address token, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public onlyOwner returns (bool) {
+        ElvTradable t = ElvTradable(token);
+        return t.burnSignedEIP191(address(this), tokenId, v, r, s);
+    }
+
     // Deprecated - superceded by burnSignedAndMint
     // for this to work the 'from' address needs to be *this* contract
     function burnSignedAndMintMany(address burnAddr, address from, uint256 burnTokenId, uint8 v, bytes32 r, bytes32 s,
@@ -89,6 +94,35 @@ contract ElvTokenHelper is Ownable {
         for (uint i = 0; i < burnTokens.length; i++) {
             ElvTradable etBurn = ElvTradable(burnTokens[i]);
             etBurn.burnSigned(address(this), burnTokenIds[i], v[i], r[i], s[i]);
+        }
+
+        if (overrideHoldSecs != 0) {
+            for (uint i = 0; i < mintTokens.length; i++) {
+                ElvTradableLocal et = ElvTradableLocal(mintTokens[i]);
+                if (!et.exists(mintTokenIds[i])) {
+                    et.mintHoldWithTokenURI(to[i], mintTokenIds[i], mintTokenURIs[i], overrideHoldSecs);
+                }
+            }
+            return true;
+        } else {
+            return mintWithTokenURIMany(mintTokens, to, mintTokenIds, mintTokenURIs);
+        }
+    }
+
+    function burnSignedEIP191AndMint(
+        address[] memory burnTokens,
+        uint256[] memory burnTokenIds,
+        uint8[] memory v,
+        bytes32[] memory r,
+        bytes32[] memory s,
+        address[] memory to,
+        address[] memory mintTokens,
+        uint256[] memory mintTokenIds,
+        string[] memory mintTokenURIs
+    ) public onlyOwner returns (bool) {
+        for (uint i = 0; i < burnTokens.length; i++) {
+            ElvTradable etBurn = ElvTradable(burnTokens[i]);
+            etBurn.burnSignedEIP191(address(this), burnTokenIds[i], v[i], r[i], s[i]);
         }
 
         if (overrideHoldSecs != 0) {

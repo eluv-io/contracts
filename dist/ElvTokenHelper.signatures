@@ -1,6 +1,8 @@
 7b3d203d: burnSigned(address,uint256,uint8,bytes32,bytes32)
 10b7b3a9: burnSignedAndMint(address[],uint256[],uint8[],bytes32[],bytes32[],address[],address[],uint256[],string[])
 e39e2960: burnSignedAndMintMany(address,address,uint256,uint8,bytes32,bytes32,address[],address[],uint256[],string[])
+61433e71: burnSignedEIP191(address,uint256,uint8,bytes32,bytes32)
+3e100c07: burnSignedEIP191AndMint(address[],uint256[],uint8[],bytes32[],bytes32[],address[],address[],uint256[],string[])
 8f32d59b: isOwner()
 7d58f1de: mintWithTokenURIMany(address[],address[],uint256[],string[])
 6a6cb8b3: overrideHoldSecs()

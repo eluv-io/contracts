@@ -1,0 +1,8 @@
+e71bdf41: addDelegate(address)
+453494bf: countDelegates()
+4bb278f3: finalize()
+8f32d59b: isOwner()
+8da5cb5b: owner()
+c4552791: proxies(address)
+715018a6: renounceOwnership()
+f2fde38b: transferOwnership(address)

@@ -18,32 +18,37 @@ hash solc || {
     exit 1
 }
 
-# we should also check the version here
-hash abigen || {
-    echo "Error : abigen is not found (must use go-ethereum/cmd/abigen)"
-    exit 1
+
+# please use build-go.sh for generating go bindings
+abigen_old() {
+    # we should also check the version here
+    hash abigen || {
+        echo "Error : abigen is not found (must use go-ethereum/cmd/abigen)"
+        exit 1
+    }
+
+    out_dir="$( mkdir -p "$sol_dir/build" && cd "$sol_dir/build" && pwd )"
+
+    # abigen --sol ./base_content_space.sol --pkg=contracts --out build/base_content_space.go
+    if abigen --sol "${sol_dir}/base_content_space.sol" --pkg=contracts --out "${out_dir}/base_content_space.go"; then
+        echo "SUCCESS : The go binding for base_content_space.sol is present at ${out_dir}/base_content_space.go"
+    else
+        echo "FAILED : error occurred while creating go binding!"
+        exit 1
+    fi
+    echo -e "\n${separator}\n"
+
+    # abigen --sol ./tradable/elv_tradable_full.sol --pkg=elv_tradable --out build/tradable/elv_tradable_full.go
+    if abigen --sol "${sol_dir}/tradable/elv_tradable_full.sol" --pkg=elv_tradable --out "${out_dir}/tradable/elv_tradable_full.go"; then
+        echo "SUCCESS : The go binding for elv_tradable_full.sol is present at ${out_dir}/tradable/elv_tradable_full.go"
+    else
+        echo "FAILED : error occurred while creating tradable go binding!"
+        exit 1
+    fi
+    echo -e "\n${separator}\n"
 }
 
-out_dir="$( mkdir -p "$sol_dir/build" && cd "$sol_dir/build" && pwd )"
 abi_dir=$sol_dir/dist
-
-# abigen --sol ./base_content_space.sol --pkg=contracts --out build/base_content_space.go
-if abigen --sol "${sol_dir}/base_content_space.sol" --pkg=contracts --out "${out_dir}/base_content_space.go"; then
-    echo "SUCCESS : The go binding for base_content_space.sol is present at ${out_dir}/base_content_space.go"
-else
-    echo "FAILED : error occurred while creating go binding!"
-    exit 1
-fi
-echo -e "\n${separator}\n"
-
-# abigen --sol ./tradable/elv_tradable_full.sol --pkg=elv_tradable --out build/tradable/elv_tradable_full.go
-if abigen --sol "${sol_dir}/tradable/elv_tradable_full.sol" --pkg=elv_tradable --out "${out_dir}/tradable/elv_tradable_full.go"; then
-    echo "SUCCESS : The go binding for elv_tradable_full.sol is present at ${out_dir}/tradable/elv_tradable_full.go"
-else
-    echo "FAILED : error occurred while creating tradable go binding!"
-    exit 1
-fi
-echo -e "\n${separator}\n"
 
 run_solc "${sol_dir}/base_content_space.sol"
 echo -e "\n${separator}\n"

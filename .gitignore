@@ -1,2 +1,10 @@
-.idea/
-
+*~
+.DS_Store
+*.tmp
+/.project
+/.settings/
+/.vscode/
+/.idea/
+/bin/
+/_bin/
+/_build_contracts_go/

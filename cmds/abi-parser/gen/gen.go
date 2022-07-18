@@ -38,7 +38,7 @@ func main() {
 			}
 
 			for e, info := range parsedABI.Events {
-				eventsMap[e] = EventStruct{Event: info.String(), Topic: info.ID().String()}
+				eventsMap[e] = EventStruct{Event: info.String(), Topic: info.ID.String()}
 			}
 
 			if len(eventsMap) > 0 {

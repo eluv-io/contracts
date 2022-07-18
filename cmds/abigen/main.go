@@ -25,6 +25,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/params"
+
 	"github.com/eluv-io/contracts/cmds/abigen/bind"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -100,8 +102,30 @@ var (
 	}
 )
 
+// newApp creates an app with sane defaults.
+func newApp(gitCommit, gitDate, usage string) *cli.App {
+	app := cli.NewApp()
+	app.Name = filepath.Base(os.Args[0])
+	app.Author = ""
+	app.Email = ""
+	app.Version = params.VersionWithCommit(gitCommit, gitDate)
+	app.Usage = usage
+	return app
+}
+
+var originCommandHelpTemplate = `{{.Name}}{{if .Subcommands}} command{{end}}{{if .Flags}} [command options]{{end}} [arguments...]
+{{if .Description}}{{.Description}}
+{{end}}{{if .Subcommands}}
+SUBCOMMANDS:
+  {{range .Subcommands}}{{.Name}}{{with .ShortName}}, {{.}}{{end}}{{ "\t" }}{{.Usage}}
+  {{end}}{{end}}{{if .Flags}}
+OPTIONS:
+{{range $.Flags}}   {{.}}
+{{end}}
+{{end}}`
+
 func init() {
-	app = utils.NewApp(gitCommit, gitDate, "ethereum checkpoint helper tool")
+	app = newApp(gitCommit, gitDate, "ethereum checkpoint helper tool")
 	app.Flags = []cli.Flag{
 		abiFlag,
 		binFlag,
@@ -118,7 +142,7 @@ func init() {
 		aliasFlag,
 	}
 	app.Action = utils.MigrateFlags(abigen)
-	cli.CommandHelpTemplate = utils.OriginCommandHelpTemplate
+	cli.CommandHelpTemplate = originCommandHelpTemplate
 }
 
 func abigen(c *cli.Context) error {

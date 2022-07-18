@@ -83,6 +83,8 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 			calls     = make(map[string]*tmplMethod)
 			transacts = make(map[string]*tmplMethod)
 			events    = make(map[string]*tmplEvent)
+			fallback  *tmplMethod
+			receive   *tmplMethod
 
 			// identifiers are used to detect duplicated identifier of function
 			// and event. For all calls, transacts and events, abigen will generate
@@ -98,7 +100,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 			normalizedName := methodNormalizer[lang](alias(aliases, original.Name))
 			// Ensure there is no duplicated identifier
 			var identifiers = callIdentifiers
-			if !original.Const {
+			if !original.IsConstant() {
 				identifiers = transactIdentifiers
 			}
 			if identifiers[normalizedName] {
@@ -127,7 +129,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 				}
 			}
 			// Append the methods to the call or transact lists
-			if original.Const {
+			if original.IsConstant() {
 				calls[original.Name] = &tmplMethod{Original: original, Normalized: normalized, Structured: structured(original.Outputs)}
 			} else {
 				transacts[original.Name] = &tmplMethod{Original: original, Normalized: normalized, Structured: structured(original.Outputs)}
@@ -168,7 +170,14 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 			events[original.Name] = tmplEv
 
 			// append to the all events global map
-			allEvents[tmplEv.Normalized.ID()] = append(allEvents[tmplEv.Normalized.ID()], tmplEv)
+			allEvents[tmplEv.Normalized.ID] = append(allEvents[tmplEv.Normalized.ID], tmplEv)
+		}
+		// Add two special fallback functions if they exist
+		if evmABI.HasFallback() {
+			fallback = &tmplMethod{Original: evmABI.Fallback}
+		}
+		if evmABI.HasReceive() {
+			receive = &tmplMethod{Original: evmABI.Receive}
 		}
 
 		// There is no easy way to pass arbitrary java objects to the Go side.
@@ -183,6 +192,8 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 			Constructor: evmABI.Constructor,
 			Calls:       calls,
 			Transacts:   transacts,
+			Fallback:    fallback,
+			Receive:     receive,
 			Events:      events,
 			Libraries:   make(map[string]string),
 		}
@@ -228,7 +239,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		}
 		log.Warn("Removing duplicate from unique events ",
 			"event", allEvents[h][0].Normalized.Name,
-			"hash", allEvents[h][0].Normalized.ID().String())
+			"hash", allEvents[h][0].Normalized.ID.String())
 		delete(allEvents, h)
 	}
 
@@ -247,7 +258,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		for i, event := range lev {
 			if i == 0 {
 				tei.EventName = event.Normalized.Name
-				tei.EventID = event.Normalized.ID()
+				tei.EventID = event.Normalized.ID
 			} else if tei.EventName != event.Normalized.Name {
 				return "", errors.New("event name mismatch: " + tei.EventName + ", " + event.Normalized.Name)
 			}
@@ -262,7 +273,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 
 		for _, event := range evByFullSig {
 			sort.Strings(event.contracts)
-			log.Info(event.ev.Normalized.Name, "hash", event.ev.Normalized.ID().String(), "<-", strings.Join(event.contracts, ","))
+			log.Info(event.ev.Normalized.Name, "hash", event.ev.Normalized.ID.String(), "<-", strings.Join(event.contracts, ","))
 			//log.Info(event.ev.Normalized.Name, "<-", len(event.contracts))
 
 			event.ev.KType = event.contracts[0]
@@ -733,7 +744,7 @@ func formatMethod(method abi.Method, structs map[string]*tmplStruct) string {
 		}
 	}
 	constant := ""
-	if method.Const {
+	if method.IsConstant() {
 		constant = "constant "
 	}
 	return fmt.Sprintf("function %v(%v) %sreturns(%v)", method.RawName, strings.Join(inputs, ", "), constant, strings.Join(outputs, ", "))

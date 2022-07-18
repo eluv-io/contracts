@@ -9,45 +9,13 @@ import "./Strings.sol";
 import "./elv_wrapped.sol";
 import "./elv_token.sol";
 import "./elv_token_helper.sol";
-
-contract OwnableDelegateProxy {}
-
-contract ProxyRegistry {
-    mapping(address => OwnableDelegateProxy) public proxies;
-}
-
-contract OwnerProxyRegistry is ProxyRegistry, Ownable {
-
-    int public countDelegates;
-
-    constructor (address[10] memory initDelegates) public {
-        for (uint i = 0; i < initDelegates.length; i++) {
-            if (initDelegates[i] != address(0)) {
-                addDelegate(initDelegates[i]);
-            }
-        }
-    }
-
-    function addDelegate(address from) public onlyOwner {
-        require(from != msg.sender);
-        proxies[from] = OwnableDelegateProxy(msg.sender);
-        countDelegates++;
-    }
-
-    function finalize() public onlyOwner {
-        selfdestruct(msg.sender);
-    }
-}
-
-interface TransferFeeProxy {
-    function getTransferFee(uint256 _tokenId) external view returns (uint256);
-}
+import "./elv_proxy.sol";
 
 /**
  * @title ElvTradable
  * ElvTradable - ERC721 contract that whitelists a trading address, and has minting functionality.
  */
-contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ownable {
+contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableTokenURI, MinterRole, Ownable {
     using Strings for string;
 
     address public proxyRegistryAddress;
@@ -121,8 +89,35 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
         return _isApprovedOrOwner(ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId)), v, r, s), tokenId);
     }
 
+    function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
+        return _isApprovedOrOwner(ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId))), v, r, s), tokenId);
+    }
+
+    /**
+     * @dev Returns an Ethereum Signed Message, created from a `hash`. This
+     * produces hash corresponding to the one signed with the
+     * https://eth.wiki/json-rpc/API#eth_sign[`eth_sign`]
+     * JSON-RPC method as part of EIP-191.
+     *
+     * See {recover}.
+     *
+     * Copied from openzeppelin-contracts ECDSA.sol
+     */
+    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
+        // 32 is the length in bytes of hash,
+        // enforced by the type signature above
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    }
+
     function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
         require(isOwnerSigned(from, tokenId, v, r, s));
+        require(msg.sender == from && isMinter(from));
+        _burn(tokenId);
+        return true;
+    }
+
+    function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
+        require(isOwnerSignedEIP191(from, tokenId, v, r, s));
         require(msg.sender == from && isMinter(from));
         _burn(tokenId);
         return true;
@@ -214,6 +209,9 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, MinterRole, Ow
 
     function isProxyApprovedForAll(address owner, address operator) public view returns (bool) {
         if (proxyRegistryAddress != address(0)) {
+            if (operator == proxyRegistryAddress) {
+                return true;
+            }
             ProxyRegistry proxyRegistry = ProxyRegistry(proxyRegistryAddress);
             if (address(proxyRegistry.proxies(owner)) == operator) {
                 return true;

@@ -134,6 +134,7 @@ package {{.Package}}
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"

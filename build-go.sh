@@ -18,7 +18,6 @@ set -Eeuo pipefail
   go build -o ../abigen ./abigen
   popd
 )
-abigen_dir=$(realpath "$1")
 
 
 #
@@ -31,6 +30,7 @@ solc_versions=(${solc_0_4_24} ${solc_0_5_4})
 
 curr_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 bin_folder="_bin"
+abigen_dir=$(realpath "$curr_dir")
 
 platform=""
 case $(uname) in
@@ -155,4 +155,3 @@ cp contracts-go/contracts_20190331/base_content_space.go build/20190331/base_con
 cp contracts-go/contracts_20200206/base_content_space.go build/20200206/base_content_space.go
 cp contracts-go/contracts_20200803/base_content_space.go build/20200803/base_content_space.go
 cp contracts-go/tradable/elv_tradable_full.go build/tradable/elv_tradable_full.go
-rm -rf contracts-go

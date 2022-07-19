@@ -4,9 +4,15 @@
 package contracts_20190331
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"math/big"
+	"reflect"
 	"strings"
+
+	c "github.com/eluv-io/contracts/contracts-go/events"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -27,6 +33,1924 @@ var (
 	_ = types.BloomLookup
 	_ = event.NewSubscription
 )
+
+// Map of ABI names to *abi.ABI
+// ABI names are constants starting with K_
+var ParsedABIS = map[string]*abi.ABI{}
+
+// Map of ABI names to *bind.BoundContract for log parsing only
+// ABI names are constants starting with K_
+var BoundContracts = map[string]*bind.BoundContract{}
+
+// Map of Unique events names to *EventInfo.
+// Unique events names are constants starting with E_
+var UniqueEvents = map[string]*EventInfo{}
+
+// Map of Unique events types to *EventInfo
+var EventsByType = map[reflect.Type]*EventInfo{}
+
+// Map of Unique events IDs to *EventInfo
+var EventsByID = map[common.Hash]*EventInfo{}
+
+// JSON returns a parsed ABI interface and error if it failed.
+func JSON(reader io.Reader) (*abi.ABI, error) {
+	dec := json.NewDecoder(reader)
+
+	var anAbi abi.ABI
+	if err := dec.Decode(&anAbi); err != nil {
+		return nil, err
+	}
+
+	return &anAbi, nil
+}
+
+func parseABI(name string) (*abi.ABI, error) {
+	sabi := ABIS[name]
+	if sabi == "" {
+		return nil, fmt.Errorf("no such ABI %s", name)
+	}
+	return JSON(strings.NewReader(sabi))
+}
+
+func ParsedABI(name string) (*abi.ABI, error) {
+	pabi, ok := ParsedABIS[name]
+	if ok {
+		return pabi, nil
+	}
+	return parseABI(name)
+}
+
+func BoundContract(name string) *bind.BoundContract {
+	bc, ok := BoundContracts[name]
+	if !ok {
+		anABI, err := ParsedABI(name)
+		if err != nil {
+			panic(err)
+		}
+		bc = bind.NewBoundContract(common.Address{}, *anABI, nil, nil, nil)
+		BoundContracts[name] = bc
+	}
+	return bc
+}
+
+// Type names of contract binding
+const (
+	K_AccessIndexor           = "AccessIndexor"
+	K_Accessible              = "Accessible"
+	K_BaseAccessControlGroup  = "BaseAccessControlGroup"
+	K_BaseAccessWallet        = "BaseAccessWallet"
+	K_BaseAccessWalletFactory = "BaseAccessWalletFactory"
+	K_BaseContent             = "BaseContent"
+	K_BaseContentFactory      = "BaseContentFactory"
+	K_BaseContentFactoryExt   = "BaseContentFactoryExt"
+	K_BaseContentSpace        = "BaseContentSpace"
+	K_BaseContentType         = "BaseContentType"
+	K_BaseFactory             = "BaseFactory"
+	K_BaseGroupFactory        = "BaseGroupFactory"
+	K_BaseLibrary             = "BaseLibrary"
+	K_BaseLibraryFactory      = "BaseLibraryFactory"
+	K_Container               = "Container"
+	K_Content                 = "Content"
+	K_Editable                = "Editable"
+	K_LvRecordableStream      = "LvRecordableStream"
+	K_LvRecording             = "LvRecording"
+	K_LvStreamRightsHolder    = "LvStreamRightsHolder"
+	K_MetaObject              = "MetaObject"
+	K_Node                    = "Node"
+	K_NodeSpace               = "NodeSpace"
+	K_Ownable                 = "Ownable"
+	K_Precompile              = "Precompile"
+	K_Transactable            = "Transactable"
+	K_UserSpace               = "UserSpace"
+	K_Strings                 = "Strings"
+)
+
+var ABIS = map[string]string{
+
+	K_AccessIndexor:           AccessIndexorABI,
+	K_Accessible:              AccessibleABI,
+	K_BaseAccessControlGroup:  BaseAccessControlGroupABI,
+	K_BaseAccessWallet:        BaseAccessWalletABI,
+	K_BaseAccessWalletFactory: BaseAccessWalletFactoryABI,
+	K_BaseContent:             BaseContentABI,
+	K_BaseContentFactory:      BaseContentFactoryABI,
+	K_BaseContentFactoryExt:   BaseContentFactoryExtABI,
+	K_BaseContentSpace:        BaseContentSpaceABI,
+	K_BaseContentType:         BaseContentTypeABI,
+	K_BaseFactory:             BaseFactoryABI,
+	K_BaseGroupFactory:        BaseGroupFactoryABI,
+	K_BaseLibrary:             BaseLibraryABI,
+	K_BaseLibraryFactory:      BaseLibraryFactoryABI,
+	K_Container:               ContainerABI,
+	K_Content:                 ContentABI,
+	K_Editable:                EditableABI,
+	K_LvRecordableStream:      LvRecordableStreamABI,
+	K_LvRecording:             LvRecordingABI,
+	K_LvStreamRightsHolder:    LvStreamRightsHolderABI,
+	K_MetaObject:              MetaObjectABI,
+	K_Node:                    NodeABI,
+	K_NodeSpace:               NodeSpaceABI,
+	K_Ownable:                 OwnableABI,
+	K_Precompile:              PrecompileABI,
+	K_Transactable:            TransactableABI,
+	K_UserSpace:               UserSpaceABI,
+	K_Strings:                 StringsABI,
+}
+
+// Unique events names.
+// Unique events are events whose ID and name are unique across contracts.
+const (
+	E_AccessGrant                = "AccessGrant"
+	E_AccessRequest              = "AccessRequest"
+	E_AccessRequestStakeholder   = "AccessRequestStakeholder"
+	E_AccessRequestValue         = "AccessRequestValue"
+	E_AccessorGroupAdded         = "AccessorGroupAdded"
+	E_AccessorGroupRemoved       = "AccessorGroupRemoved"
+	E_AddKMSLocator              = "AddKMSLocator"
+	E_AddNode                    = "AddNode"
+	E_ApproveContent             = "ApproveContent"
+	E_ApproveContentRequest      = "ApproveContentRequest"
+	E_CommitPending              = "CommitPending"
+	E_ContentObjectCreate        = "ContentObjectCreate"
+	E_ContentObjectCreated       = "ContentObjectCreated"
+	E_ContentObjectDeleted       = "ContentObjectDeleted"
+	E_ContentTypeAdded           = "ContentTypeAdded"
+	E_ContentTypeRemoved         = "ContentTypeRemoved"
+	E_ContributorGroupAdded      = "ContributorGroupAdded"
+	E_ContributorGroupRemoved    = "ContributorGroupRemoved"
+	E_CreateAccessWallet         = "CreateAccessWallet"
+	E_CreateContent              = "CreateContent"
+	E_CreateContentType          = "CreateContentType"
+	E_CreateGroup                = "CreateGroup"
+	E_CreateLibrary              = "CreateLibrary"
+	E_CreateRecording            = "CreateRecording"
+	E_CreateSpace                = "CreateSpace"
+	E_DbgAccess                  = "DbgAccess"
+	E_DbgAccessCode              = "DbgAccessCode"
+	E_DbgAddress                 = "DbgAddress"
+	E_DeleteRecording            = "DeleteRecording"
+	E_EngageAccountLibrary       = "EngageAccountLibrary"
+	E_ExecStatus                 = "ExecStatus"
+	E_GetAccessCharge            = "GetAccessCharge"
+	E_GetAccessWallet            = "GetAccessWallet"
+	E_InsufficientFunds          = "InsufficientFunds"
+	E_InvokeCustomPostHook       = "InvokeCustomPostHook"
+	E_InvokeCustomPreHook        = "InvokeCustomPreHook"
+	E_Log                        = "Log"
+	E_LogAddress                 = "LogAddress"
+	E_LogBool                    = "LogBool"
+	E_LogBytes32                 = "LogBytes32"
+	E_LogInt256                  = "LogInt256"
+	E_LogUint256                 = "LogUint256"
+	E_ManagerAccessGranted       = "ManagerAccessGranted"
+	E_ManagerAccessRevoked       = "ManagerAccessRevoked"
+	E_MemberAdded                = "MemberAdded"
+	E_MemberRevoked              = "MemberRevoked"
+	E_MembershipGroupAdded       = "MembershipGroupAdded"
+	E_MembershipGroupRemoved     = "MembershipGroupRemoved"
+	E_NodeApproved               = "NodeApproved"
+	E_NodeSubmitted              = "NodeSubmitted"
+	E_Publish                    = "Publish"
+	E_RecordProgramId            = "RecordProgramId"
+	E_RecordedProgramId          = "RecordedProgramId"
+	E_RecordingPlaybackCompleted = "RecordingPlaybackCompleted"
+	E_RecordingPlaybackStarted   = "RecordingPlaybackStarted"
+	E_RegisterNode               = "RegisterNode"
+	E_RemoveKMSLocator           = "RemoveKMSLocator"
+	E_RemoveNode                 = "RemoveNode"
+	E_ReturnCustomHook           = "ReturnCustomHook"
+	E_ReviewerGroupAdded         = "ReviewerGroupAdded"
+	E_ReviewerGroupRemoved       = "ReviewerGroupRemoved"
+	E_RightsChanged              = "RightsChanged"
+	E_RunAccess                  = "RunAccess"
+	E_RunAccessCharge            = "RunAccessCharge"
+	E_RunCreate                  = "RunCreate"
+	E_RunFinalize                = "RunFinalize"
+	E_RunKill                    = "RunKill"
+	E_RunStatusChange            = "RunStatusChange"
+	E_SetAccessCharge            = "SetAccessCharge"
+	E_SetContentContract         = "SetContentContract"
+	E_SetContentType             = "SetContentType"
+	E_SetFactory                 = "SetFactory"
+	E_SetRecordingStatus         = "SetRecordingStatus"
+	E_SetRecordingTimes          = "SetRecordingTimes"
+	E_SetStatusCode              = "SetStatusCode"
+	E_SetTimes                   = "SetTimes"
+	E_StartStream                = "StartStream"
+	E_StopStream                 = "StopStream"
+	E_UnauthorizedOperation      = "UnauthorizedOperation"
+	E_UnregisterNode             = "UnregisterNode"
+	E_UpdateKmsAddress           = "UpdateKmsAddress"
+	E_UpdateRecordingStatus      = "UpdateRecordingStatus"
+	E_UpdateRequest              = "UpdateRequest"
+	E_VersionConfirm             = "VersionConfirm"
+	E_VersionDelete              = "VersionDelete"
+)
+
+type EventInfo = c.EventInfo
+type EventType = c.EventType
+
+func init() {
+	for name, _ := range ABIS {
+		a, err := parseABI(name)
+		if err == nil {
+			ParsedABIS[name] = a
+		}
+	}
+	var ev *EventInfo
+
+	ev = &EventInfo{
+		Name: "AccessGrant",
+		ID:   common.HexToHash("0x475e9d68ca61f129cebee5af694af00ed0e3b3b0d4b74071fbb81d0e2b912718"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessGrant)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_AccessGrant] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "AccessRequest",
+		ID:   common.HexToHash("0xed78a9defa7412748c9513ba9cf680f57703a46dd7e0fb0b1e94063423c73e88"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessRequest)(nil)),
+				BoundContract: BoundContract(K_Accessible),
+			},
+		},
+	}
+	UniqueEvents[E_AccessRequest] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "AccessRequestStakeholder",
+		ID:   common.HexToHash("0xb6e3239e521a6c66920ae634f8e921a37e6991d520ac44d52f8516397f41b684"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessRequestStakeholder)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_AccessRequestStakeholder] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "AccessRequestValue",
+		ID:   common.HexToHash("0x515e0a48b385fce2a8e4d9f169a97c4f6ea669a752358f5e6ab37cc3c2e84c38"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessRequestValue)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_AccessRequestValue] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "AccessorGroupAdded",
+		ID:   common.HexToHash("0x3a94857e4393737f73edb175a7d0c195c7f635d9ae995e12740616ec55c9d411"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessorGroupAdded)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_AccessorGroupAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "AccessorGroupRemoved",
+		ID:   common.HexToHash("0xc5224c4118417a068eeac7d714e6d8af6f99ec3fb611bc965185460b0e38f081"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AccessorGroupRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_AccessorGroupRemoved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "AddKMSLocator",
+		ID:   common.HexToHash("0xdf8127994c229011ce9c4764bdc0375bb71c06cf1544f034cd81a42f37233319"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AddKMSLocator)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_AddKMSLocator] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "AddNode",
+		ID:   common.HexToHash("0x2bb0f9ba138ffddb5a8f974e9885b65a7814d3002654f1cf3f2d3f619a4006c4"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*AddNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_AddNode] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ApproveContent",
+		ID:   common.HexToHash("0x70234ce475fee4ab40e5e55cf533f67f12b47ef4c860e62dd7affa84ead4b442"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApproveContent)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ApproveContent] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ApproveContentRequest",
+		ID:   common.HexToHash("0x0588a34cf0de4e025d359c89ca4bacbcbf175440909952d91c814412d9da996a"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApproveContentRequest)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ApproveContentRequest] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CommitPending",
+		ID:   common.HexToHash("0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CommitPending)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_CommitPending] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ContentObjectCreate",
+		ID:   common.HexToHash("0xc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentObjectCreate)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_ContentObjectCreate] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ContentObjectCreated",
+		ID:   common.HexToHash("0xadc3945407fc9e1f5763b74624698197e96e741e6e7c683373498712ba3eb878"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentObjectCreated)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ContentObjectCreated] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ContentObjectDeleted",
+		ID:   common.HexToHash("0x36500cee87b0da1746889a3483dccb525acfc40b8c0f2218e164c6cdf1482a3e"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentObjectDeleted)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ContentObjectDeleted] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ContentTypeAdded",
+		ID:   common.HexToHash("0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentTypeAdded)(nil)),
+				BoundContract: BoundContract(K_BaseAccessWallet),
+			},
+		},
+	}
+	UniqueEvents[E_ContentTypeAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ContentTypeRemoved",
+		ID:   common.HexToHash("0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContentTypeRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseAccessWallet),
+			},
+		},
+	}
+	UniqueEvents[E_ContentTypeRemoved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ContributorGroupAdded",
+		ID:   common.HexToHash("0x218673669018c25b89bfbf1b58d0075e37c8847ef16e707b92355b7833e97d61"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContributorGroupAdded)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ContributorGroupAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ContributorGroupRemoved",
+		ID:   common.HexToHash("0xbbd97daa1862eb12f77ed128a557406737cee07b131b1e2d7140dff2005e197c"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ContributorGroupRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ContributorGroupRemoved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CreateAccessWallet",
+		ID:   common.HexToHash("0x56c4bf13bebaa9f2be39ac3f2f4619a0dd1b694bb8c5f43c6b244a6dba0f0cca"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateAccessWallet)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_CreateAccessWallet] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CreateContent",
+		ID:   common.HexToHash("0xa0633ea0b3cb5796607e5f551ae79c7eeee0dc7ee0c3ff8996506261651368ce"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateContent)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_CreateContent] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CreateContentType",
+		ID:   common.HexToHash("0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateContentType)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_CreateContentType] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CreateGroup",
+		ID:   common.HexToHash("0xa3b1fe71ae61bad8cffa485b230e24e518938f76182a30fa0d9979e7237ad159"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateGroup)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_CreateGroup] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CreateLibrary",
+		ID:   common.HexToHash("0x473c07a6d0228c4fb8fe2be3b4617c3b5fb7c0f8cd9ba4b67e8631844b9b6571"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateLibrary)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_CreateLibrary] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CreateRecording",
+		ID:   common.HexToHash("0x41b90676ca6c9f288172c8f4f1f0253bfc527115acd3f7a972a5219ea4b0d0c5"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateRecording)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_CreateRecording] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "CreateSpace",
+		ID:   common.HexToHash("0x599bb380c80b69455450a615c515544b8da3b09f2efa116a5f0567682203cf54"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*CreateSpace)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_CreateSpace] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "DbgAccess",
+		ID:   common.HexToHash("0xfdcd1c148f180968772efab9ef7e26a2ec7a58d82572587ad224c36c91236175"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*DbgAccess)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_DbgAccess] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "DbgAccessCode",
+		ID:   common.HexToHash("0x14c078593b5fe597db0b1293557c1a5315f2b7e708477ea38b41929534d96bdd"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*DbgAccessCode)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_DbgAccessCode] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "DbgAddress",
+		ID:   common.HexToHash("0xa33a9370a938260eee2537d9480ca0caa9789521da8e57afb3a0699d3ff9b260"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*DbgAddress)(nil)),
+				BoundContract: BoundContract(K_AccessIndexor),
+			},
+		},
+	}
+	UniqueEvents[E_DbgAddress] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "DeleteRecording",
+		ID:   common.HexToHash("0x9d3bb073bb2ef4d4a880f32fbbc665abfad2b29f532a231d93ab2207396f0b25"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*DeleteRecording)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_DeleteRecording] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "EngageAccountLibrary",
+		ID:   common.HexToHash("0x53ce35a7383a3ea3f695bdf0f87d7e5485ba816b382673e849bfdd24e7f5e3ca"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*EngageAccountLibrary)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_EngageAccountLibrary] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ExecStatus",
+		ID:   common.HexToHash("0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ExecStatus)(nil)),
+				BoundContract: BoundContract(K_BaseAccessWallet),
+			},
+		},
+	}
+	UniqueEvents[E_ExecStatus] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "GetAccessCharge",
+		ID:   common.HexToHash("0xa58326ee5bb617cb8b4f0d0f5f557c469d2d05d7a738f777037deda9c724b370"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*GetAccessCharge)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_GetAccessCharge] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "GetAccessWallet",
+		ID:   common.HexToHash("0x1c917c3c2698bd5b98acb9772728da62f2ce3670e4578910a6465b955f63e157"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*GetAccessWallet)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_GetAccessWallet] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "InsufficientFunds",
+		ID:   common.HexToHash("0x03eb8b54a949acec2cd08fdb6d6bd4647a1f2c907d75d6900648effa92eb147f"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*InsufficientFunds)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_InsufficientFunds] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "InvokeCustomPostHook",
+		ID:   common.HexToHash("0x97d9c9779ed3ed8b9a6edfe16d17b1fdec843245747a19abfb621806e37d4a89"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*InvokeCustomPostHook)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_InvokeCustomPostHook] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "InvokeCustomPreHook",
+		ID:   common.HexToHash("0x12b04791b5caab768e2757268992f0c62801e3921d9e310c893f0d5f9caa5f71"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*InvokeCustomPreHook)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_InvokeCustomPreHook] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "Log",
+		ID:   common.HexToHash("0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Log)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_Log] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "LogAddress",
+		ID:   common.HexToHash("0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogAddress)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_LogAddress] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "LogBool",
+		ID:   common.HexToHash("0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogBool)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_LogBool] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "LogBytes32",
+		ID:   common.HexToHash("0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogBytes32)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_LogBytes32] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "LogInt256",
+		ID:   common.HexToHash("0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogInt256)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_LogInt256] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "LogUint256",
+		ID:   common.HexToHash("0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*LogUint256)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_LogUint256] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ManagerAccessGranted",
+		ID:   common.HexToHash("0x93bcaab179551bde429187645251f8e1fb8ac85801fcb1cf91eb2c9043d61117"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ManagerAccessGranted)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_ManagerAccessGranted] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ManagerAccessRevoked",
+		ID:   common.HexToHash("0x2d6aa1a9629d125e23a0cf692cda7cd6795dff1652eedd4673b38ec31e387b95"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ManagerAccessRevoked)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_ManagerAccessRevoked] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "MemberAdded",
+		ID:   common.HexToHash("0xb251eb052afc73ffd02ffe85ad79990a8b3fed60d76dbc2fa2fdd7123dffd914"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MemberAdded)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_MemberAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "MemberRevoked",
+		ID:   common.HexToHash("0x745cd29407db644ed93e3ceb61cbcab96d1dfb496989ac5d5bf514fc5a9fab9c"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MemberRevoked)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_MemberRevoked] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "MembershipGroupAdded",
+		ID:   common.HexToHash("0x467a7c1305f91e354a8a1e9046906d4d1a4852f958a073a392555d809be313a7"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MembershipGroupAdded)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_MembershipGroupAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "MembershipGroupRemoved",
+		ID:   common.HexToHash("0x7b4822b1021af568bad37d56a35fbc255dc67153c544aa4116a289632a4e5955"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MembershipGroupRemoved)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_MembershipGroupRemoved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "NodeApproved",
+		ID:   common.HexToHash("0xd644c8164f225d3b7fdbcc404f279bb1e823ef0d93f88dd4b24e85d0e7bc6a54"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*NodeApproved)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_NodeApproved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "NodeSubmitted",
+		ID:   common.HexToHash("0xae5645569f32b946f7a747113c64094a29a6b84c5ddf55816ef4381ce8a3a46d"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*NodeSubmitted)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_NodeSubmitted] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "Publish",
+		ID:   common.HexToHash("0xad9c5eacc073b2e1767affc883e050347e1dd379c9799cb5ac0a17bde80f5cf4"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Publish)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_Publish] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RecordProgramId",
+		ID:   common.HexToHash("0x453384b91e17e6c44d171f27d5d32a864cf9cc9740578ffd6552d323aa973372"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RecordProgramId)(nil)),
+				BoundContract: BoundContract(K_LvRecording),
+			},
+		},
+	}
+	UniqueEvents[E_RecordProgramId] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RecordedProgramId",
+		ID:   common.HexToHash("0xcddd560f6a99df10337f1469b38ea8180453522d5f5d199786c39eab27e25d2e"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RecordedProgramId)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_RecordedProgramId] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RecordingPlaybackCompleted",
+		ID:   common.HexToHash("0x866782e28e44a4d70c03424400263ca66123fc80169e55d609304bb6c2735f2d"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RecordingPlaybackCompleted)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_RecordingPlaybackCompleted] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RecordingPlaybackStarted",
+		ID:   common.HexToHash("0xc61a2a2e8a2557b79670b411852a149a0fa08362d65b5fae5c80f3707895fab6"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RecordingPlaybackStarted)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_RecordingPlaybackStarted] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RegisterNode",
+		ID:   common.HexToHash("0x4575facd117046c9c28b69a3eb9c08939f2462a5a22ea6c6dcd4f79b8dd124e9"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RegisterNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_RegisterNode] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RemoveKMSLocator",
+		ID:   common.HexToHash("0x5f463eb53cddf646852b82c0d9bdb1d1ec215c3802b780e8b7beea8b6e99f94c"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RemoveKMSLocator)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_RemoveKMSLocator] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RemoveNode",
+		ID:   common.HexToHash("0x41ec5b9efdbf61871df6a18b687e04bea93d5793af5f8c8b4626e155b23dc19d"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RemoveNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_RemoveNode] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ReturnCustomHook",
+		ID:   common.HexToHash("0x8c693e8b27db7caf9b9637b66dcc11444760023a4d53e95407a3acef1b249f50"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ReturnCustomHook)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_ReturnCustomHook] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ReviewerGroupAdded",
+		ID:   common.HexToHash("0x1b88a571cc8ac2e87512f05648e79d184f5cc0cbb2889bc487c41f8b9a3202eb"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ReviewerGroupAdded)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ReviewerGroupAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ReviewerGroupRemoved",
+		ID:   common.HexToHash("0xdf9d78c5635b72b709c85300a786eb7238acbe5bffe01c60c16464e45c6eb6eb"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ReviewerGroupRemoved)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_ReviewerGroupRemoved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RightsChanged",
+		ID:   common.HexToHash("0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RightsChanged)(nil)),
+				BoundContract: BoundContract(K_AccessIndexor),
+			},
+		},
+	}
+	UniqueEvents[E_RightsChanged] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RunAccess",
+		ID:   common.HexToHash("0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunAccess)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_RunAccess] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RunAccessCharge",
+		ID:   common.HexToHash("0xffadad18ab3777a19f664019a6261b011ab9405749e01a45950d44fb9360b385"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunAccessCharge)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_RunAccessCharge] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RunCreate",
+		ID:   common.HexToHash("0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunCreate)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_RunCreate] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RunFinalize",
+		ID:   common.HexToHash("0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunFinalize)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_RunFinalize] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RunKill",
+		ID:   common.HexToHash("0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunKill)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_RunKill] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "RunStatusChange",
+		ID:   common.HexToHash("0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*RunStatusChange)(nil)),
+				BoundContract: BoundContract(K_Content),
+			},
+		},
+	}
+	UniqueEvents[E_RunStatusChange] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetAccessCharge",
+		ID:   common.HexToHash("0x4114f8ef80b6de2161db580cbefa14e1892d15d3ebe2062c9914e4a5773114a3"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetAccessCharge)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_SetAccessCharge] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetContentContract",
+		ID:   common.HexToHash("0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetContentContract)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_SetContentContract] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetContentType",
+		ID:   common.HexToHash("0x4f692e87baf302f7281e83eec109053efc2ca8e7bddfc6ce88c579cd9767f71f"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetContentType)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_SetContentType] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetFactory",
+		ID:   common.HexToHash("0x1c893ef9379093af30f458b9e74d2aba13c499660b68dec5e29af7b199c188b9"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetFactory)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_SetFactory] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetRecordingStatus",
+		ID:   common.HexToHash("0x93ee8bc66b5d08a5dc39e788b1f78aa5f9ff2deda9e1387aa1fe22f9c329ed85"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetRecordingStatus)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_SetRecordingStatus] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetRecordingTimes",
+		ID:   common.HexToHash("0x8e6b298cf577550234f0d0de33a4910d4bf1c4e08fe31b1173b2c6232297b3f4"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetRecordingTimes)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_SetRecordingTimes] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetStatusCode",
+		ID:   common.HexToHash("0xda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a2"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetStatusCode)(nil)),
+				BoundContract: BoundContract(K_BaseContent),
+			},
+		},
+	}
+	UniqueEvents[E_SetStatusCode] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetTimes",
+		ID:   common.HexToHash("0x3e5026851758e1ab6e995b071b048e26e92f459b047600ff68914479d5074c54"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetTimes)(nil)),
+				BoundContract: BoundContract(K_LvRecording),
+			},
+		},
+	}
+	UniqueEvents[E_SetTimes] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "StartStream",
+		ID:   common.HexToHash("0x8d7e6a8f23ccc8845c41fd09bebe570a0885272343268bbdfd71090b878b4b21"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*StartStream)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_StartStream] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "StopStream",
+		ID:   common.HexToHash("0x1b01b687e3428bc184341f729ec8a57bdd569536206cfb59e5d0cecb30dfcb7e"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*StopStream)(nil)),
+				BoundContract: BoundContract(K_LvRecordableStream),
+			},
+		},
+	}
+	UniqueEvents[E_StopStream] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "UnauthorizedOperation",
+		ID:   common.HexToHash("0x23de2adc3e22f171f66b3e5a333e17feb9dc30ba9570933bd259cb6c13ef7ab7"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UnauthorizedOperation)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_UnauthorizedOperation] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "UnregisterNode",
+		ID:   common.HexToHash("0xb98695ab4c6cedb3b4dfe62479a9d39a59aa2cb38b8bd92bbb6ce5856e42bdf4"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UnregisterNode)(nil)),
+				BoundContract: BoundContract(K_BaseContentSpace),
+			},
+		},
+	}
+	UniqueEvents[E_UnregisterNode] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "UpdateKmsAddress",
+		ID:   common.HexToHash("0x74538e2fbd034afddf32b42c5939d211ce86c7683f9768f1a4969746f81f8608"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UpdateKmsAddress)(nil)),
+				BoundContract: BoundContract(K_BaseLibrary),
+			},
+		},
+	}
+	UniqueEvents[E_UpdateKmsAddress] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "UpdateRecordingStatus",
+		ID:   common.HexToHash("0x6fff8c8938f3906f27a679f8d6b6652c28d82df5e27e55ef5cdc5f96b06dee09"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UpdateRecordingStatus)(nil)),
+				BoundContract: BoundContract(K_LvRecording),
+			},
+		},
+	}
+	UniqueEvents[E_UpdateRecordingStatus] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "UpdateRequest",
+		ID:   common.HexToHash("0x403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*UpdateRequest)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_UpdateRequest] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "VersionConfirm",
+		ID:   common.HexToHash("0x482875da75e6d9f93f74a5c1a61f14cf08822057c01232f44cb92ae998e30d8e"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*VersionConfirm)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_VersionConfirm] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "VersionDelete",
+		ID:   common.HexToHash("0x238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*VersionDelete)(nil)),
+				BoundContract: BoundContract(K_BaseAccessControlGroup),
+			},
+		},
+	}
+	UniqueEvents[E_VersionDelete] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+}
+
+// Unique events structs
+
+// AccessGrant event with ID 0x475e9d68ca61f129cebee5af694af00ed0e3b3b0d4b74071fbb81d0e2b912718
+type AccessGrant struct {
+	RequestID       *big.Int
+	AccessGranted   bool
+	ReKey           string
+	EncryptedAESKey string
+	Raw             types.Log // Blockchain specific contextual infos
+}
+
+// AccessRequest event with ID 0xed78a9defa7412748c9513ba9cf680f57703a46dd7e0fb0b1e94063423c73e88
+type AccessRequest struct {
+	Raw types.Log // Blockchain specific contextual infos
+}
+
+// AccessRequestStakeholder event with ID 0xb6e3239e521a6c66920ae634f8e921a37e6991d520ac44d52f8516397f41b684
+type AccessRequestStakeholder struct {
+	Stakeholder common.Address
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// AccessRequestValue event with ID 0x515e0a48b385fce2a8e4d9f169a97c4f6ea669a752358f5e6ab37cc3c2e84c38
+type AccessRequestValue struct {
+	CustomValue [32]byte
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// AccessorGroupAdded event with ID 0x3a94857e4393737f73edb175a7d0c195c7f635d9ae995e12740616ec55c9d411
+type AccessorGroupAdded struct {
+	Group common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// AccessorGroupRemoved event with ID 0xc5224c4118417a068eeac7d714e6d8af6f99ec3fb611bc965185460b0e38f081
+type AccessorGroupRemoved struct {
+	Group common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// AddKMSLocator event with ID 0xdf8127994c229011ce9c4764bdc0375bb71c06cf1544f034cd81a42f37233319
+type AddKMSLocator struct {
+	Sender common.Address
+	Status *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// AddNode event with ID 0x2bb0f9ba138ffddb5a8f974e9885b65a7814d3002654f1cf3f2d3f619a4006c4
+type AddNode struct {
+	OwnerAddr common.Address
+	NodeAddr  common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// ApproveContent event with ID 0x70234ce475fee4ab40e5e55cf533f67f12b47ef4c860e62dd7affa84ead4b442
+type ApproveContent struct {
+	ContentAddress common.Address
+	Approved       bool
+	Note           string
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// ApproveContentRequest event with ID 0x0588a34cf0de4e025d359c89ca4bacbcbf175440909952d91c814412d9da996a
+type ApproveContentRequest struct {
+	ContentAddress common.Address
+	Submitter      common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// CommitPending event with ID 0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75
+type CommitPending struct {
+	SpaceAddress  common.Address
+	ParentAddress common.Address
+	ObjectHash    string
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// ContentObjectCreate event with ID 0xc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19
+type ContentObjectCreate struct {
+	ContainingLibrary common.Address
+	Raw               types.Log // Blockchain specific contextual infos
+}
+
+// ContentObjectCreated event with ID 0xadc3945407fc9e1f5763b74624698197e96e741e6e7c683373498712ba3eb878
+type ContentObjectCreated struct {
+	ContentAddress common.Address
+	ContentType    common.Address
+	SpaceAddress   common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// ContentObjectDeleted event with ID 0x36500cee87b0da1746889a3483dccb525acfc40b8c0f2218e164c6cdf1482a3e
+type ContentObjectDeleted struct {
+	ContentAddress common.Address
+	SpaceAddress   common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// ContentTypeAdded event with ID 0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7
+type ContentTypeAdded struct {
+	ContentType     common.Address
+	ContentContract common.Address
+	Raw             types.Log // Blockchain specific contextual infos
+}
+
+// ContentTypeRemoved event with ID 0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2
+type ContentTypeRemoved struct {
+	ContentType common.Address
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// ContributorGroupAdded event with ID 0x218673669018c25b89bfbf1b58d0075e37c8847ef16e707b92355b7833e97d61
+type ContributorGroupAdded struct {
+	Group common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// ContributorGroupRemoved event with ID 0xbbd97daa1862eb12f77ed128a557406737cee07b131b1e2d7140dff2005e197c
+type ContributorGroupRemoved struct {
+	Group common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// CreateAccessWallet event with ID 0x56c4bf13bebaa9f2be39ac3f2f4619a0dd1b694bb8c5f43c6b244a6dba0f0cca
+type CreateAccessWallet struct {
+	Wallet common.Address
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// CreateContent event with ID 0xa0633ea0b3cb5796607e5f551ae79c7eeee0dc7ee0c3ff8996506261651368ce
+type CreateContent struct {
+	ContentAddress common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// CreateContentType event with ID 0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8
+type CreateContentType struct {
+	ContentTypeAddress common.Address
+	Raw                types.Log // Blockchain specific contextual infos
+}
+
+// CreateGroup event with ID 0xa3b1fe71ae61bad8cffa485b230e24e518938f76182a30fa0d9979e7237ad159
+type CreateGroup struct {
+	GroupAddress common.Address
+	Raw          types.Log // Blockchain specific contextual infos
+}
+
+// CreateLibrary event with ID 0x473c07a6d0228c4fb8fe2be3b4617c3b5fb7c0f8cd9ba4b67e8631844b9b6571
+type CreateLibrary struct {
+	LibraryAddress common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// CreateRecording event with ID 0x41b90676ca6c9f288172c8f4f1f0253bfc527115acd3f7a972a5219ea4b0d0c5
+type CreateRecording struct {
+	Timestamp   *big.Int
+	Accessor    common.Address
+	RecObj      common.Address
+	RecContract common.Address
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// CreateSpace event with ID 0x599bb380c80b69455450a615c515544b8da3b09f2efa116a5f0567682203cf54
+type CreateSpace struct {
+	Version [32]byte
+	Owner   common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// DbgAccess event with ID 0xfdcd1c148f180968772efab9ef7e26a2ec7a58d82572587ad224c36c91236175
+type DbgAccess struct {
+	Charged   *big.Int
+	Received  *big.Int
+	Converted *big.Int
+	Enough    bool
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// DbgAccessCode event with ID 0x14c078593b5fe597db0b1293557c1a5315f2b7e708477ea38b41929534d96bdd
+type DbgAccessCode struct {
+	Code uint8
+	Raw  types.Log // Blockchain specific contextual infos
+}
+
+// DbgAddress event with ID 0xa33a9370a938260eee2537d9480ca0caa9789521da8e57afb3a0699d3ff9b260
+type DbgAddress struct {
+	Label string
+	Index *big.Int
+	A     common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// DeleteRecording event with ID 0x9d3bb073bb2ef4d4a880f32fbbc665abfad2b29f532a231d93ab2207396f0b25
+type DeleteRecording struct {
+	Timestamp   *big.Int
+	Accessor    common.Address
+	RecObj      common.Address
+	RecContract common.Address
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// EngageAccountLibrary event with ID 0x53ce35a7383a3ea3f695bdf0f87d7e5485ba816b382673e849bfdd24e7f5e3ca
+type EngageAccountLibrary struct {
+	AccountAddress common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// ExecStatus event with ID 0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad
+type ExecStatus struct {
+	Guarantor common.Address
+	Code      *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// GetAccessCharge event with ID 0xa58326ee5bb617cb8b4f0d0f5f557c469d2d05d7a738f777037deda9c724b370
+type GetAccessCharge struct {
+	Level        uint8
+	AccessCharge *big.Int
+	Raw          types.Log // Blockchain specific contextual infos
+}
+
+// GetAccessWallet event with ID 0x1c917c3c2698bd5b98acb9772728da62f2ce3670e4578910a6465b955f63e157
+type GetAccessWallet struct {
+	WalletAddress common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// InsufficientFunds event with ID 0x03eb8b54a949acec2cd08fdb6d6bd4647a1f2c907d75d6900648effa92eb147f
+type InsufficientFunds struct {
+	AccessCharge   *big.Int
+	AmountProvided *big.Int
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// InvokeCustomPostHook event with ID 0x97d9c9779ed3ed8b9a6edfe16d17b1fdec843245747a19abfb621806e37d4a89
+type InvokeCustomPostHook struct {
+	CustomContract common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// InvokeCustomPreHook event with ID 0x12b04791b5caab768e2757268992f0c62801e3921d9e310c893f0d5f9caa5f71
+type InvokeCustomPreHook struct {
+	CustomContract common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// Log event with ID 0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab
+type Log struct {
+	Label string
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// LogAddress event with ID 0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e
+type LogAddress struct {
+	Label string
+	A     common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// LogBool event with ID 0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47
+type LogBool struct {
+	Label string
+	B     bool
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// LogBytes32 event with ID 0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7
+type LogBytes32 struct {
+	Label string
+	B     [32]byte
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// LogInt256 event with ID 0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22
+type LogInt256 struct {
+	Label string
+	U     *big.Int
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// LogUint256 event with ID 0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d
+type LogUint256 struct {
+	Label string
+	U     *big.Int
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// ManagerAccessGranted event with ID 0x93bcaab179551bde429187645251f8e1fb8ac85801fcb1cf91eb2c9043d61117
+type ManagerAccessGranted struct {
+	Candidate common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// ManagerAccessRevoked event with ID 0x2d6aa1a9629d125e23a0cf692cda7cd6795dff1652eedd4673b38ec31e387b95
+type ManagerAccessRevoked struct {
+	Candidate common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// MemberAdded event with ID 0xb251eb052afc73ffd02ffe85ad79990a8b3fed60d76dbc2fa2fdd7123dffd914
+type MemberAdded struct {
+	Candidate common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// MemberRevoked event with ID 0x745cd29407db644ed93e3ceb61cbcab96d1dfb496989ac5d5bf514fc5a9fab9c
+type MemberRevoked struct {
+	Candidate common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// MembershipGroupAdded event with ID 0x467a7c1305f91e354a8a1e9046906d4d1a4852f958a073a392555d809be313a7
+type MembershipGroupAdded struct {
+	Timestamp *big.Int
+	Group     common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// MembershipGroupRemoved event with ID 0x7b4822b1021af568bad37d56a35fbc255dc67153c544aa4116a289632a4e5955
+type MembershipGroupRemoved struct {
+	Timestamp *big.Int
+	Group     common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// NodeApproved event with ID 0xd644c8164f225d3b7fdbcc404f279bb1e823ef0d93f88dd4b24e85d0e7bc6a54
+type NodeApproved struct {
+	Addr    common.Address
+	Locator []byte
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// NodeSubmitted event with ID 0xae5645569f32b946f7a747113c64094a29a6b84c5ddf55816ef4381ce8a3a46d
+type NodeSubmitted struct {
+	Addr    common.Address
+	Locator []byte
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// Publish event with ID 0xad9c5eacc073b2e1767affc883e050347e1dd379c9799cb5ac0a17bde80f5cf4
+type Publish struct {
+	RequestStatus bool
+	StatusCode    *big.Int
+	ObjectHash    string
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// RecordProgramId event with ID 0x453384b91e17e6c44d171f27d5d32a864cf9cc9740578ffd6552d323aa973372
+type RecordProgramId struct {
+	Timestamp *big.Int
+	ProgramId string
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// RecordedProgramId event with ID 0xcddd560f6a99df10337f1469b38ea8180453522d5f5d199786c39eab27e25d2e
+type RecordedProgramId struct {
+	Timestamp *big.Int
+	Accessor  common.Address
+	RecObj    common.Address
+	ProgramId string
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// RecordingPlaybackCompleted event with ID 0x866782e28e44a4d70c03424400263ca66123fc80169e55d609304bb6c2735f2d
+type RecordingPlaybackCompleted struct {
+	Timestamp     *big.Int
+	Accessor      common.Address
+	RecObj        common.Address
+	RequestID     *big.Int
+	PercentPlayed uint8
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// RecordingPlaybackStarted event with ID 0xc61a2a2e8a2557b79670b411852a149a0fa08362d65b5fae5c80f3707895fab6
+type RecordingPlaybackStarted struct {
+	Timestamp *big.Int
+	Accessor  common.Address
+	RecObj    common.Address
+	RequestID *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// RegisterNode event with ID 0x4575facd117046c9c28b69a3eb9c08939f2462a5a22ea6c6dcd4f79b8dd124e9
+type RegisterNode struct {
+	NodeObjAddr common.Address
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// RemoveKMSLocator event with ID 0x5f463eb53cddf646852b82c0d9bdb1d1ec215c3802b780e8b7beea8b6e99f94c
+type RemoveKMSLocator struct {
+	Sender common.Address
+	Status *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// RemoveNode event with ID 0x41ec5b9efdbf61871df6a18b687e04bea93d5793af5f8c8b4626e155b23dc19d
+type RemoveNode struct {
+	OwnerAddr common.Address
+	NodeAddr  common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// ReturnCustomHook event with ID 0x8c693e8b27db7caf9b9637b66dcc11444760023a4d53e95407a3acef1b249f50
+type ReturnCustomHook struct {
+	CustomContract common.Address
+	Result         *big.Int
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// ReviewerGroupAdded event with ID 0x1b88a571cc8ac2e87512f05648e79d184f5cc0cbb2889bc487c41f8b9a3202eb
+type ReviewerGroupAdded struct {
+	Group common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// ReviewerGroupRemoved event with ID 0xdf9d78c5635b72b709c85300a786eb7238acbe5bffe01c60c16464e45c6eb6eb
+type ReviewerGroupRemoved struct {
+	Group common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// RightsChanged event with ID 0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4
+type RightsChanged struct {
+	Principal common.Address
+	Entity    common.Address
+	Aggregate uint8
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// RunAccess event with ID 0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58
+type RunAccess struct {
+	RequestID *big.Int
+	Result    *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// RunAccessCharge event with ID 0xffadad18ab3777a19f664019a6261b011ab9405749e01a45950d44fb9360b385
+type RunAccessCharge struct {
+	Level                 uint8
+	CalculateAccessCharge *big.Int
+	Raw                   types.Log // Blockchain specific contextual infos
+}
+
+// RunCreate event with ID 0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b
+type RunCreate struct {
+	Result *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// RunFinalize event with ID 0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891
+type RunFinalize struct {
+	RequestID *big.Int
+	Result    *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// RunKill event with ID 0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86
+type RunKill struct {
+	Result *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// RunStatusChange event with ID 0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff
+type RunStatusChange struct {
+	ProposedStatusCode *big.Int
+	ReturnStatusCode   *big.Int
+	Raw                types.Log // Blockchain specific contextual infos
+}
+
+// SetAccessCharge event with ID 0x4114f8ef80b6de2161db580cbefa14e1892d15d3ebe2062c9914e4a5773114a3
+type SetAccessCharge struct {
+	AccessCharge *big.Int
+	Raw          types.Log // Blockchain specific contextual infos
+}
+
+// SetContentContract event with ID 0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7
+type SetContentContract struct {
+	ContentContractAddress common.Address
+	Raw                    types.Log // Blockchain specific contextual infos
+}
+
+// SetContentType event with ID 0x4f692e87baf302f7281e83eec109053efc2ca8e7bddfc6ce88c579cd9767f71f
+type SetContentType struct {
+	ContentType            common.Address
+	ContentContractAddress common.Address
+	Raw                    types.Log // Blockchain specific contextual infos
+}
+
+// SetFactory event with ID 0x1c893ef9379093af30f458b9e74d2aba13c499660b68dec5e29af7b199c188b9
+type SetFactory struct {
+	Factory common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// SetRecordingStatus event with ID 0x93ee8bc66b5d08a5dc39e788b1f78aa5f9ff2deda9e1387aa1fe22f9c329ed85
+type SetRecordingStatus struct {
+	Timestamp *big.Int
+	Accessor  common.Address
+	RecObj    common.Address
+	RecStatus string
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// SetRecordingTimes event with ID 0x8e6b298cf577550234f0d0de33a4910d4bf1c4e08fe31b1173b2c6232297b3f4
+type SetRecordingTimes struct {
+	Timestamp    *big.Int
+	Accessor     common.Address
+	RecObj       common.Address
+	RecStartTime *big.Int
+	RecEndTime   *big.Int
+	Raw          types.Log // Blockchain specific contextual infos
+}
+
+// SetStatusCode event with ID 0xda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a2
+type SetStatusCode struct {
+	StatusCode *big.Int
+	Raw        types.Log // Blockchain specific contextual infos
+}
+
+// SetTimes event with ID 0x3e5026851758e1ab6e995b071b048e26e92f459b047600ff68914479d5074c54
+type SetTimes struct {
+	Timestamp *big.Int
+	StartTime *big.Int
+	EndTime   *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// StartStream event with ID 0x8d7e6a8f23ccc8845c41fd09bebe570a0885272343268bbdfd71090b878b4b21
+type StartStream struct {
+	Timestamp *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// StopStream event with ID 0x1b01b687e3428bc184341f729ec8a57bdd569536206cfb59e5d0cecb30dfcb7e
+type StopStream struct {
+	Timestamp *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// UnauthorizedOperation event with ID 0x23de2adc3e22f171f66b3e5a333e17feb9dc30ba9570933bd259cb6c13ef7ab7
+type UnauthorizedOperation struct {
+	OperationCode *big.Int
+	Candidate     common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// UnregisterNode event with ID 0xb98695ab4c6cedb3b4dfe62479a9d39a59aa2cb38b8bd92bbb6ce5856e42bdf4
+type UnregisterNode struct {
+	NodeObjAddr common.Address
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// UpdateKmsAddress event with ID 0x74538e2fbd034afddf32b42c5939d211ce86c7683f9768f1a4969746f81f8608
+type UpdateKmsAddress struct {
+	AddressKms common.Address
+	Raw        types.Log // Blockchain specific contextual infos
+}
+
+// UpdateRecordingStatus event with ID 0x6fff8c8938f3906f27a679f8d6b6652c28d82df5e27e55ef5cdc5f96b06dee09
+type UpdateRecordingStatus struct {
+	Timestamp *big.Int
+	Status    uint8
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// UpdateRequest event with ID 0x403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65
+type UpdateRequest struct {
+	ObjectHash string
+	Raw        types.Log // Blockchain specific contextual infos
+}
+
+// VersionConfirm event with ID 0x482875da75e6d9f93f74a5c1a61f14cf08822057c01232f44cb92ae998e30d8e
+type VersionConfirm struct {
+	SpaceAddress common.Address
+	ObjectHash   string
+	Raw          types.Log // Blockchain specific contextual infos
+}
+
+// VersionDelete event with ID 0x238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51
+type VersionDelete struct {
+	SpaceAddress common.Address
+	VersionHash  string
+	Index        *big.Int
+	Raw          types.Log // Blockchain specific contextual infos
+}
 
 // AccessIndexorMetaData contains all meta data concerning the AccessIndexor contract.
 var AccessIndexorMetaData = &bind.MetaData{
@@ -109,7 +2033,7 @@ var AccessIndexorBin = AccessIndexorMetaData.Bin
 
 // DeployAccessIndexor deploys a new Ethereum contract, binding an instance of AccessIndexor to it.
 func DeployAccessIndexor(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *AccessIndexor, error) {
-	parsed, err := AccessIndexorMetaData.GetAbi()
+	parsed, err := ParsedABI(K_AccessIndexor)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -144,43 +2068,6 @@ type AccessIndexorTransactor struct {
 // AccessIndexorFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type AccessIndexorFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// AccessIndexorSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type AccessIndexorSession struct {
-	Contract     *AccessIndexor    // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// AccessIndexorCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type AccessIndexorCallerSession struct {
-	Contract *AccessIndexorCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts        // Call options to use throughout this session
-}
-
-// AccessIndexorTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type AccessIndexorTransactorSession struct {
-	Contract     *AccessIndexorTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts        // Transaction auth options to use throughout this session
-}
-
-// AccessIndexorRaw is an auto generated low-level Go binding around an Ethereum contract.
-type AccessIndexorRaw struct {
-	Contract *AccessIndexor // Generic contract binding to access the raw methods on
-}
-
-// AccessIndexorCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type AccessIndexorCallerRaw struct {
-	Contract *AccessIndexorCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// AccessIndexorTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type AccessIndexorTransactorRaw struct {
-	Contract *AccessIndexorTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewAccessIndexor creates a new instance of AccessIndexor, bound to a specific deployed contract.
@@ -221,49 +2108,11 @@ func NewAccessIndexorFilterer(address common.Address, filterer bind.ContractFilt
 
 // bindAccessIndexor binds a generic wrapper to an already deployed contract.
 func bindAccessIndexor(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(AccessIndexorABI))
+	parsed, err := ParsedABI(K_AccessIndexor)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_AccessIndexor *AccessIndexorRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _AccessIndexor.Contract.AccessIndexorCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_AccessIndexor *AccessIndexorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.AccessIndexorTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_AccessIndexor *AccessIndexorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.AccessIndexorTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_AccessIndexor *AccessIndexorCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _AccessIndexor.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_AccessIndexor *AccessIndexorTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_AccessIndexor *AccessIndexorTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
@@ -283,20 +2132,6 @@ func (_AccessIndexor *AccessIndexorCaller) ACCESSCONFIRMED(opts *bind.CallOpts) 
 
 }
 
-// ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
-//
-// Solidity: function ACCESS_CONFIRMED() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) ACCESSCONFIRMED() (uint8, error) {
-	return _AccessIndexor.Contract.ACCESSCONFIRMED(&_AccessIndexor.CallOpts)
-}
-
-// ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
-//
-// Solidity: function ACCESS_CONFIRMED() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) ACCESSCONFIRMED() (uint8, error) {
-	return _AccessIndexor.Contract.ACCESSCONFIRMED(&_AccessIndexor.CallOpts)
-}
-
 // ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
 //
 // Solidity: function ACCESS_NONE() view returns(uint8)
@@ -312,20 +2147,6 @@ func (_AccessIndexor *AccessIndexorCaller) ACCESSNONE(opts *bind.CallOpts) (uint
 
 	return out0, err
 
-}
-
-// ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
-//
-// Solidity: function ACCESS_NONE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) ACCESSNONE() (uint8, error) {
-	return _AccessIndexor.Contract.ACCESSNONE(&_AccessIndexor.CallOpts)
-}
-
-// ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
-//
-// Solidity: function ACCESS_NONE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) ACCESSNONE() (uint8, error) {
-	return _AccessIndexor.Contract.ACCESSNONE(&_AccessIndexor.CallOpts)
 }
 
 // ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
@@ -345,20 +2166,6 @@ func (_AccessIndexor *AccessIndexorCaller) ACCESSTENTATIVE(opts *bind.CallOpts) 
 
 }
 
-// ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
-//
-// Solidity: function ACCESS_TENTATIVE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) ACCESSTENTATIVE() (uint8, error) {
-	return _AccessIndexor.Contract.ACCESSTENTATIVE(&_AccessIndexor.CallOpts)
-}
-
-// ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
-//
-// Solidity: function ACCESS_TENTATIVE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) ACCESSTENTATIVE() (uint8, error) {
-	return _AccessIndexor.Contract.ACCESSTENTATIVE(&_AccessIndexor.CallOpts)
-}
-
 // CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
 //
 // Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
@@ -374,20 +2181,6 @@ func (_AccessIndexor *AccessIndexorCaller) CATEGORYCONTENTOBJECT(opts *bind.Call
 
 	return out0, err
 
-}
-
-// CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
-//
-// Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) CATEGORYCONTENTOBJECT() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYCONTENTOBJECT(&_AccessIndexor.CallOpts)
-}
-
-// CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
-//
-// Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) CATEGORYCONTENTOBJECT() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYCONTENTOBJECT(&_AccessIndexor.CallOpts)
 }
 
 // CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
@@ -407,20 +2200,6 @@ func (_AccessIndexor *AccessIndexorCaller) CATEGORYCONTENTTYPE(opts *bind.CallOp
 
 }
 
-// CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
-//
-// Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) CATEGORYCONTENTTYPE() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYCONTENTTYPE(&_AccessIndexor.CallOpts)
-}
-
-// CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
-//
-// Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) CATEGORYCONTENTTYPE() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYCONTENTTYPE(&_AccessIndexor.CallOpts)
-}
-
 // CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
 //
 // Solidity: function CATEGORY_CONTRACT() view returns(uint8)
@@ -436,20 +2215,6 @@ func (_AccessIndexor *AccessIndexorCaller) CATEGORYCONTRACT(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
-//
-// Solidity: function CATEGORY_CONTRACT() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) CATEGORYCONTRACT() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYCONTRACT(&_AccessIndexor.CallOpts)
-}
-
-// CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
-//
-// Solidity: function CATEGORY_CONTRACT() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) CATEGORYCONTRACT() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYCONTRACT(&_AccessIndexor.CallOpts)
 }
 
 // CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
@@ -469,20 +2234,6 @@ func (_AccessIndexor *AccessIndexorCaller) CATEGORYGROUP(opts *bind.CallOpts) (u
 
 }
 
-// CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
-//
-// Solidity: function CATEGORY_GROUP() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) CATEGORYGROUP() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYGROUP(&_AccessIndexor.CallOpts)
-}
-
-// CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
-//
-// Solidity: function CATEGORY_GROUP() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) CATEGORYGROUP() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYGROUP(&_AccessIndexor.CallOpts)
-}
-
 // CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
 //
 // Solidity: function CATEGORY_LIBRARY() view returns(uint8)
@@ -498,20 +2249,6 @@ func (_AccessIndexor *AccessIndexorCaller) CATEGORYLIBRARY(opts *bind.CallOpts) 
 
 	return out0, err
 
-}
-
-// CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
-//
-// Solidity: function CATEGORY_LIBRARY() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) CATEGORYLIBRARY() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYLIBRARY(&_AccessIndexor.CallOpts)
-}
-
-// CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
-//
-// Solidity: function CATEGORY_LIBRARY() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) CATEGORYLIBRARY() (uint8, error) {
-	return _AccessIndexor.Contract.CATEGORYLIBRARY(&_AccessIndexor.CallOpts)
 }
 
 // TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
@@ -531,20 +2268,6 @@ func (_AccessIndexor *AccessIndexorCaller) TYPEACCESS(opts *bind.CallOpts) (uint
 
 }
 
-// TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
-//
-// Solidity: function TYPE_ACCESS() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) TYPEACCESS() (uint8, error) {
-	return _AccessIndexor.Contract.TYPEACCESS(&_AccessIndexor.CallOpts)
-}
-
-// TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
-//
-// Solidity: function TYPE_ACCESS() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) TYPEACCESS() (uint8, error) {
-	return _AccessIndexor.Contract.TYPEACCESS(&_AccessIndexor.CallOpts)
-}
-
 // TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
 //
 // Solidity: function TYPE_EDIT() view returns(uint8)
@@ -562,20 +2285,6 @@ func (_AccessIndexor *AccessIndexorCaller) TYPEEDIT(opts *bind.CallOpts) (uint8,
 
 }
 
-// TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
-//
-// Solidity: function TYPE_EDIT() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) TYPEEDIT() (uint8, error) {
-	return _AccessIndexor.Contract.TYPEEDIT(&_AccessIndexor.CallOpts)
-}
-
-// TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
-//
-// Solidity: function TYPE_EDIT() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) TYPEEDIT() (uint8, error) {
-	return _AccessIndexor.Contract.TYPEEDIT(&_AccessIndexor.CallOpts)
-}
-
 // TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
 //
 // Solidity: function TYPE_SEE() view returns(uint8)
@@ -591,20 +2300,6 @@ func (_AccessIndexor *AccessIndexorCaller) TYPESEE(opts *bind.CallOpts) (uint8, 
 
 	return out0, err
 
-}
-
-// TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
-//
-// Solidity: function TYPE_SEE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) TYPESEE() (uint8, error) {
-	return _AccessIndexor.Contract.TYPESEE(&_AccessIndexor.CallOpts)
-}
-
-// TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
-//
-// Solidity: function TYPE_SEE() view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) TYPESEE() (uint8, error) {
-	return _AccessIndexor.Contract.TYPESEE(&_AccessIndexor.CallOpts)
 }
 
 // AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
@@ -632,26 +2327,6 @@ func (_AccessIndexor *AccessIndexorCaller) AccessGroups(opts *bind.CallOpts) (st
 
 }
 
-// AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
-//
-// Solidity: function accessGroups() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorSession) AccessGroups() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.AccessGroups(&_AccessIndexor.CallOpts)
-}
-
-// AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
-//
-// Solidity: function accessGroups() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorCallerSession) AccessGroups() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.AccessGroups(&_AccessIndexor.CallOpts)
-}
-
 // CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
 //
 // Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
@@ -667,20 +2342,6 @@ func (_AccessIndexor *AccessIndexorCaller) CheckAccessGroupRights(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
-//
-// Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) CheckAccessGroupRights(group common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckAccessGroupRights(&_AccessIndexor.CallOpts, group, access_type)
-}
-
-// CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
-//
-// Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) CheckAccessGroupRights(group common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckAccessGroupRights(&_AccessIndexor.CallOpts, group, access_type)
 }
 
 // CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
@@ -700,20 +2361,6 @@ func (_AccessIndexor *AccessIndexorCaller) CheckContentObjectRights(opts *bind.C
 
 }
 
-// CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
-//
-// Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) CheckContentObjectRights(obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckContentObjectRights(&_AccessIndexor.CallOpts, obj, access_type)
-}
-
-// CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
-//
-// Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) CheckContentObjectRights(obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckContentObjectRights(&_AccessIndexor.CallOpts, obj, access_type)
-}
-
 // CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
 //
 // Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
@@ -729,20 +2376,6 @@ func (_AccessIndexor *AccessIndexorCaller) CheckContentTypeRights(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
-//
-// Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) CheckContentTypeRights(obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckContentTypeRights(&_AccessIndexor.CallOpts, obj, access_type)
-}
-
-// CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
-//
-// Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) CheckContentTypeRights(obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckContentTypeRights(&_AccessIndexor.CallOpts, obj, access_type)
 }
 
 // CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
@@ -762,20 +2395,6 @@ func (_AccessIndexor *AccessIndexorCaller) CheckContractRights(opts *bind.CallOp
 
 }
 
-// CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
-//
-// Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) CheckContractRights(obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckContractRights(&_AccessIndexor.CallOpts, obj, access_type)
-}
-
-// CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
-//
-// Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) CheckContractRights(obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckContractRights(&_AccessIndexor.CallOpts, obj, access_type)
-}
-
 // CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
 //
 // Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
@@ -791,20 +2410,6 @@ func (_AccessIndexor *AccessIndexorCaller) CheckDirectRights(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
-//
-// Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) CheckDirectRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckDirectRights(&_AccessIndexor.CallOpts, index_type, obj, access_type)
-}
-
-// CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
-//
-// Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) CheckDirectRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckDirectRights(&_AccessIndexor.CallOpts, index_type, obj, access_type)
 }
 
 // CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
@@ -824,20 +2429,6 @@ func (_AccessIndexor *AccessIndexorCaller) CheckLibraryRights(opts *bind.CallOpt
 
 }
 
-// CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
-//
-// Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) CheckLibraryRights(lib common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckLibraryRights(&_AccessIndexor.CallOpts, lib, access_type)
-}
-
-// CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
-//
-// Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) CheckLibraryRights(lib common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckLibraryRights(&_AccessIndexor.CallOpts, lib, access_type)
-}
-
 // CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
 //
 // Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
@@ -853,20 +2444,6 @@ func (_AccessIndexor *AccessIndexorCaller) CheckRights(opts *bind.CallOpts, inde
 
 	return out0, err
 
-}
-
-// CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
-//
-// Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) CheckRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckRights(&_AccessIndexor.CallOpts, index_type, obj, access_type)
-}
-
-// CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
-//
-// Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) CheckRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _AccessIndexor.Contract.CheckRights(&_AccessIndexor.CallOpts, index_type, obj, access_type)
 }
 
 // ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
@@ -894,26 +2471,6 @@ func (_AccessIndexor *AccessIndexorCaller) ContentObjects(opts *bind.CallOpts) (
 
 }
 
-// ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
-//
-// Solidity: function contentObjects() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorSession) ContentObjects() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.ContentObjects(&_AccessIndexor.CallOpts)
-}
-
-// ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
-//
-// Solidity: function contentObjects() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorCallerSession) ContentObjects() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.ContentObjects(&_AccessIndexor.CallOpts)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -929,20 +2486,6 @@ func (_AccessIndexor *AccessIndexorCaller) ContentSpace(opts *bind.CallOpts) (co
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_AccessIndexor *AccessIndexorSession) ContentSpace() (common.Address, error) {
-	return _AccessIndexor.Contract.ContentSpace(&_AccessIndexor.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) ContentSpace() (common.Address, error) {
-	return _AccessIndexor.Contract.ContentSpace(&_AccessIndexor.CallOpts)
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
@@ -970,26 +2513,6 @@ func (_AccessIndexor *AccessIndexorCaller) ContentTypes(opts *bind.CallOpts) (st
 
 }
 
-// ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
-//
-// Solidity: function contentTypes() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorSession) ContentTypes() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.ContentTypes(&_AccessIndexor.CallOpts)
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
-//
-// Solidity: function contentTypes() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorCallerSession) ContentTypes() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.ContentTypes(&_AccessIndexor.CallOpts)
-}
-
 // ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
 //
 // Solidity: function contractExists(address addr) view returns(bool)
@@ -1005,20 +2528,6 @@ func (_AccessIndexor *AccessIndexorCaller) ContractExists(opts *bind.CallOpts, a
 
 	return out0, err
 
-}
-
-// ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
-//
-// Solidity: function contractExists(address addr) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) ContractExists(addr common.Address) (bool, error) {
-	return _AccessIndexor.Contract.ContractExists(&_AccessIndexor.CallOpts, addr)
-}
-
-// ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
-//
-// Solidity: function contractExists(address addr) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) ContractExists(addr common.Address) (bool, error) {
-	return _AccessIndexor.Contract.ContractExists(&_AccessIndexor.CallOpts, addr)
 }
 
 // Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
@@ -1046,26 +2555,6 @@ func (_AccessIndexor *AccessIndexorCaller) Contracts(opts *bind.CallOpts) (struc
 
 }
 
-// Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
-//
-// Solidity: function contracts() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorSession) Contracts() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.Contracts(&_AccessIndexor.CallOpts)
-}
-
-// Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
-//
-// Solidity: function contracts() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorCallerSession) Contracts() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.Contracts(&_AccessIndexor.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -1081,20 +2570,6 @@ func (_AccessIndexor *AccessIndexorCaller) Creator(opts *bind.CallOpts) (common.
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_AccessIndexor *AccessIndexorSession) Creator() (common.Address, error) {
-	return _AccessIndexor.Contract.Creator(&_AccessIndexor.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) Creator() (common.Address, error) {
-	return _AccessIndexor.Contract.Creator(&_AccessIndexor.CallOpts)
 }
 
 // GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
@@ -1114,20 +2589,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetAccessGroup(opts *bind.CallOpts, p
 
 }
 
-// GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
-//
-// Solidity: function getAccessGroup(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorSession) GetAccessGroup(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetAccessGroup(&_AccessIndexor.CallOpts, position)
-}
-
-// GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
-//
-// Solidity: function getAccessGroup(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) GetAccessGroup(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetAccessGroup(&_AccessIndexor.CallOpts, position)
-}
-
 // GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
 //
 // Solidity: function getAccessGroupRights(address group) view returns(uint8)
@@ -1143,20 +2604,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetAccessGroupRights(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
-//
-// Solidity: function getAccessGroupRights(address group) view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) GetAccessGroupRights(group common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetAccessGroupRights(&_AccessIndexor.CallOpts, group)
-}
-
-// GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
-//
-// Solidity: function getAccessGroupRights(address group) view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) GetAccessGroupRights(group common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetAccessGroupRights(&_AccessIndexor.CallOpts, group)
 }
 
 // GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
@@ -1176,20 +2623,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetAccessGroupsLength(opts *bind.Call
 
 }
 
-// GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
-//
-// Solidity: function getAccessGroupsLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) GetAccessGroupsLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetAccessGroupsLength(&_AccessIndexor.CallOpts)
-}
-
-// GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
-//
-// Solidity: function getAccessGroupsLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorCallerSession) GetAccessGroupsLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetAccessGroupsLength(&_AccessIndexor.CallOpts)
-}
-
 // GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
 //
 // Solidity: function getContentObject(uint256 position) view returns(address)
@@ -1205,20 +2638,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContentObject(opts *bind.CallOpts,
 
 	return out0, err
 
-}
-
-// GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
-//
-// Solidity: function getContentObject(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorSession) GetContentObject(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetContentObject(&_AccessIndexor.CallOpts, position)
-}
-
-// GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
-//
-// Solidity: function getContentObject(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContentObject(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetContentObject(&_AccessIndexor.CallOpts, position)
 }
 
 // GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
@@ -1238,20 +2657,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContentObjectRights(opts *bind.Cal
 
 }
 
-// GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
-//
-// Solidity: function getContentObjectRights(address obj) view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) GetContentObjectRights(obj common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetContentObjectRights(&_AccessIndexor.CallOpts, obj)
-}
-
-// GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
-//
-// Solidity: function getContentObjectRights(address obj) view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContentObjectRights(obj common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetContentObjectRights(&_AccessIndexor.CallOpts, obj)
-}
-
 // GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
 //
 // Solidity: function getContentObjectsLength() view returns(uint256)
@@ -1267,20 +2672,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContentObjectsLength(opts *bind.Ca
 
 	return out0, err
 
-}
-
-// GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
-//
-// Solidity: function getContentObjectsLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) GetContentObjectsLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetContentObjectsLength(&_AccessIndexor.CallOpts)
-}
-
-// GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
-//
-// Solidity: function getContentObjectsLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContentObjectsLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetContentObjectsLength(&_AccessIndexor.CallOpts)
 }
 
 // GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
@@ -1300,20 +2691,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContentType(opts *bind.CallOpts, p
 
 }
 
-// GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
-//
-// Solidity: function getContentType(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorSession) GetContentType(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetContentType(&_AccessIndexor.CallOpts, position)
-}
-
-// GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
-//
-// Solidity: function getContentType(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContentType(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetContentType(&_AccessIndexor.CallOpts, position)
-}
-
 // GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
 //
 // Solidity: function getContentTypeRights(address obj) view returns(uint8)
@@ -1329,20 +2706,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContentTypeRights(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
-//
-// Solidity: function getContentTypeRights(address obj) view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) GetContentTypeRights(obj common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetContentTypeRights(&_AccessIndexor.CallOpts, obj)
-}
-
-// GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
-//
-// Solidity: function getContentTypeRights(address obj) view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContentTypeRights(obj common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetContentTypeRights(&_AccessIndexor.CallOpts, obj)
 }
 
 // GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
@@ -1362,20 +2725,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContentTypesLength(opts *bind.Call
 
 }
 
-// GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
-//
-// Solidity: function getContentTypesLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) GetContentTypesLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetContentTypesLength(&_AccessIndexor.CallOpts)
-}
-
-// GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
-//
-// Solidity: function getContentTypesLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContentTypesLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetContentTypesLength(&_AccessIndexor.CallOpts)
-}
-
 // GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
 //
 // Solidity: function getContract(uint256 position) view returns(address)
@@ -1391,20 +2740,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContract(opts *bind.CallOpts, posi
 
 	return out0, err
 
-}
-
-// GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
-//
-// Solidity: function getContract(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorSession) GetContract(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetContract(&_AccessIndexor.CallOpts, position)
-}
-
-// GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
-//
-// Solidity: function getContract(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContract(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetContract(&_AccessIndexor.CallOpts, position)
 }
 
 // GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
@@ -1424,20 +2759,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContractRights(opts *bind.CallOpts
 
 }
 
-// GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
-//
-// Solidity: function getContractRights(address obj) view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) GetContractRights(obj common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetContractRights(&_AccessIndexor.CallOpts, obj)
-}
-
-// GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
-//
-// Solidity: function getContractRights(address obj) view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContractRights(obj common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetContractRights(&_AccessIndexor.CallOpts, obj)
-}
-
 // GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
 //
 // Solidity: function getContractsLength() view returns(uint256)
@@ -1453,20 +2774,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetContractsLength(opts *bind.CallOpt
 
 	return out0, err
 
-}
-
-// GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
-//
-// Solidity: function getContractsLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) GetContractsLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetContractsLength(&_AccessIndexor.CallOpts)
-}
-
-// GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
-//
-// Solidity: function getContractsLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorCallerSession) GetContractsLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetContractsLength(&_AccessIndexor.CallOpts)
 }
 
 // GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
@@ -1486,20 +2793,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetLibrariesLength(opts *bind.CallOpt
 
 }
 
-// GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
-//
-// Solidity: function getLibrariesLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) GetLibrariesLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetLibrariesLength(&_AccessIndexor.CallOpts)
-}
-
-// GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
-//
-// Solidity: function getLibrariesLength() view returns(uint256)
-func (_AccessIndexor *AccessIndexorCallerSession) GetLibrariesLength() (*big.Int, error) {
-	return _AccessIndexor.Contract.GetLibrariesLength(&_AccessIndexor.CallOpts)
-}
-
 // GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
 //
 // Solidity: function getLibrary(uint256 position) view returns(address)
@@ -1515,20 +2808,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetLibrary(opts *bind.CallOpts, posit
 
 	return out0, err
 
-}
-
-// GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
-//
-// Solidity: function getLibrary(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorSession) GetLibrary(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetLibrary(&_AccessIndexor.CallOpts, position)
-}
-
-// GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
-//
-// Solidity: function getLibrary(uint256 position) view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) GetLibrary(position *big.Int) (common.Address, error) {
-	return _AccessIndexor.Contract.GetLibrary(&_AccessIndexor.CallOpts, position)
 }
 
 // GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
@@ -1548,20 +2827,6 @@ func (_AccessIndexor *AccessIndexorCaller) GetLibraryRights(opts *bind.CallOpts,
 
 }
 
-// GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
-//
-// Solidity: function getLibraryRights(address lib) view returns(uint8)
-func (_AccessIndexor *AccessIndexorSession) GetLibraryRights(lib common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetLibraryRights(&_AccessIndexor.CallOpts, lib)
-}
-
-// GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
-//
-// Solidity: function getLibraryRights(address lib) view returns(uint8)
-func (_AccessIndexor *AccessIndexorCallerSession) GetLibraryRights(lib common.Address) (uint8, error) {
-	return _AccessIndexor.Contract.GetLibraryRights(&_AccessIndexor.CallOpts, lib)
-}
-
 // HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
 //
 // Solidity: function hasManagerAccess(address candidate) view returns(bool)
@@ -1577,20 +2842,6 @@ func (_AccessIndexor *AccessIndexorCaller) HasManagerAccess(opts *bind.CallOpts,
 
 	return out0, err
 
-}
-
-// HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
-//
-// Solidity: function hasManagerAccess(address candidate) view returns(bool)
-func (_AccessIndexor *AccessIndexorSession) HasManagerAccess(candidate common.Address) (bool, error) {
-	return _AccessIndexor.Contract.HasManagerAccess(&_AccessIndexor.CallOpts, candidate)
-}
-
-// HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
-//
-// Solidity: function hasManagerAccess(address candidate) view returns(bool)
-func (_AccessIndexor *AccessIndexorCallerSession) HasManagerAccess(candidate common.Address) (bool, error) {
-	return _AccessIndexor.Contract.HasManagerAccess(&_AccessIndexor.CallOpts, candidate)
 }
 
 // Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
@@ -1618,26 +2869,6 @@ func (_AccessIndexor *AccessIndexorCaller) Libraries(opts *bind.CallOpts) (struc
 
 }
 
-// Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
-//
-// Solidity: function libraries() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorSession) Libraries() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.Libraries(&_AccessIndexor.CallOpts)
-}
-
-// Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
-//
-// Solidity: function libraries() view returns(uint8 category, uint256 length)
-func (_AccessIndexor *AccessIndexorCallerSession) Libraries() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _AccessIndexor.Contract.Libraries(&_AccessIndexor.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -1653,20 +2884,6 @@ func (_AccessIndexor *AccessIndexorCaller) Owner(opts *bind.CallOpts) (common.Ad
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_AccessIndexor *AccessIndexorSession) Owner() (common.Address, error) {
-	return _AccessIndexor.Contract.Owner(&_AccessIndexor.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_AccessIndexor *AccessIndexorCallerSession) Owner() (common.Address, error) {
-	return _AccessIndexor.Contract.Owner(&_AccessIndexor.CallOpts)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -1686,39 +2903,11 @@ func (_AccessIndexor *AccessIndexorCaller) Version(opts *bind.CallOpts) ([32]byt
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_AccessIndexor *AccessIndexorSession) Version() ([32]byte, error) {
-	return _AccessIndexor.Contract.Version(&_AccessIndexor.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_AccessIndexor *AccessIndexorCallerSession) Version() ([32]byte, error) {
-	return _AccessIndexor.Contract.Version(&_AccessIndexor.CallOpts)
-}
-
 // CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
 //
 // Solidity: function cleanUpAccessGroups() returns(uint256)
 func (_AccessIndexor *AccessIndexorTransactor) CleanUpAccessGroups(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _AccessIndexor.contract.Transact(opts, "cleanUpAccessGroups")
-}
-
-// CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
-//
-// Solidity: function cleanUpAccessGroups() returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) CleanUpAccessGroups() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpAccessGroups(&_AccessIndexor.TransactOpts)
-}
-
-// CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
-//
-// Solidity: function cleanUpAccessGroups() returns(uint256)
-func (_AccessIndexor *AccessIndexorTransactorSession) CleanUpAccessGroups() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpAccessGroups(&_AccessIndexor.TransactOpts)
 }
 
 // CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
@@ -1728,39 +2917,11 @@ func (_AccessIndexor *AccessIndexorTransactor) CleanUpAll(opts *bind.TransactOpt
 	return _AccessIndexor.contract.Transact(opts, "cleanUpAll")
 }
 
-// CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
-//
-// Solidity: function cleanUpAll() returns(uint256, uint256, uint256, uint256, uint256)
-func (_AccessIndexor *AccessIndexorSession) CleanUpAll() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpAll(&_AccessIndexor.TransactOpts)
-}
-
-// CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
-//
-// Solidity: function cleanUpAll() returns(uint256, uint256, uint256, uint256, uint256)
-func (_AccessIndexor *AccessIndexorTransactorSession) CleanUpAll() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpAll(&_AccessIndexor.TransactOpts)
-}
-
 // CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
 //
 // Solidity: function cleanUpContentObjects() returns(uint256)
 func (_AccessIndexor *AccessIndexorTransactor) CleanUpContentObjects(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _AccessIndexor.contract.Transact(opts, "cleanUpContentObjects")
-}
-
-// CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
-//
-// Solidity: function cleanUpContentObjects() returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) CleanUpContentObjects() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpContentObjects(&_AccessIndexor.TransactOpts)
-}
-
-// CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
-//
-// Solidity: function cleanUpContentObjects() returns(uint256)
-func (_AccessIndexor *AccessIndexorTransactorSession) CleanUpContentObjects() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpContentObjects(&_AccessIndexor.TransactOpts)
 }
 
 // CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
@@ -1770,39 +2931,11 @@ func (_AccessIndexor *AccessIndexorTransactor) CleanUpContentTypes(opts *bind.Tr
 	return _AccessIndexor.contract.Transact(opts, "cleanUpContentTypes")
 }
 
-// CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
-//
-// Solidity: function cleanUpContentTypes() returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) CleanUpContentTypes() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpContentTypes(&_AccessIndexor.TransactOpts)
-}
-
-// CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
-//
-// Solidity: function cleanUpContentTypes() returns(uint256)
-func (_AccessIndexor *AccessIndexorTransactorSession) CleanUpContentTypes() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpContentTypes(&_AccessIndexor.TransactOpts)
-}
-
 // CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
 //
 // Solidity: function cleanUpLibraries() returns(uint256)
 func (_AccessIndexor *AccessIndexorTransactor) CleanUpLibraries(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _AccessIndexor.contract.Transact(opts, "cleanUpLibraries")
-}
-
-// CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
-//
-// Solidity: function cleanUpLibraries() returns(uint256)
-func (_AccessIndexor *AccessIndexorSession) CleanUpLibraries() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpLibraries(&_AccessIndexor.TransactOpts)
-}
-
-// CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
-//
-// Solidity: function cleanUpLibraries() returns(uint256)
-func (_AccessIndexor *AccessIndexorTransactorSession) CleanUpLibraries() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.CleanUpLibraries(&_AccessIndexor.TransactOpts)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -1812,39 +2945,11 @@ func (_AccessIndexor *AccessIndexorTransactor) Kill(opts *bind.TransactOpts) (*t
 	return _AccessIndexor.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_AccessIndexor *AccessIndexorSession) Kill() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.Kill(&_AccessIndexor.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) Kill() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.Kill(&_AccessIndexor.TransactOpts)
-}
-
 // SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
 //
 // Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
 func (_AccessIndexor *AccessIndexorTransactor) SetAccessGroupRights(opts *bind.TransactOpts, group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _AccessIndexor.contract.Transact(opts, "setAccessGroupRights", group, access_type, access)
-}
-
-// SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
-//
-// Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorSession) SetAccessGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetAccessGroupRights(&_AccessIndexor.TransactOpts, group, access_type, access)
-}
-
-// SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
-//
-// Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) SetAccessGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetAccessGroupRights(&_AccessIndexor.TransactOpts, group, access_type, access)
 }
 
 // SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
@@ -1854,39 +2959,11 @@ func (_AccessIndexor *AccessIndexorTransactor) SetAccessRights(opts *bind.Transa
 	return _AccessIndexor.contract.Transact(opts, "setAccessRights")
 }
 
-// SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
-//
-// Solidity: function setAccessRights() returns()
-func (_AccessIndexor *AccessIndexorSession) SetAccessRights() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetAccessRights(&_AccessIndexor.TransactOpts)
-}
-
-// SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
-//
-// Solidity: function setAccessRights() returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) SetAccessRights() (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetAccessRights(&_AccessIndexor.TransactOpts)
-}
-
 // SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
 //
 // Solidity: function setContentObjectRights(address obj, uint8 access_type, uint8 access) returns()
 func (_AccessIndexor *AccessIndexorTransactor) SetContentObjectRights(opts *bind.TransactOpts, obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _AccessIndexor.contract.Transact(opts, "setContentObjectRights", obj, access_type, access)
-}
-
-// SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
-//
-// Solidity: function setContentObjectRights(address obj, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorSession) SetContentObjectRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContentObjectRights(&_AccessIndexor.TransactOpts, obj, access_type, access)
-}
-
-// SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
-//
-// Solidity: function setContentObjectRights(address obj, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) SetContentObjectRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContentObjectRights(&_AccessIndexor.TransactOpts, obj, access_type, access)
 }
 
 // SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
@@ -1896,39 +2973,11 @@ func (_AccessIndexor *AccessIndexorTransactor) SetContentSpace(opts *bind.Transa
 	return _AccessIndexor.contract.Transact(opts, "setContentSpace", content_space)
 }
 
-// SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
-//
-// Solidity: function setContentSpace(address content_space) returns()
-func (_AccessIndexor *AccessIndexorSession) SetContentSpace(content_space common.Address) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContentSpace(&_AccessIndexor.TransactOpts, content_space)
-}
-
-// SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
-//
-// Solidity: function setContentSpace(address content_space) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) SetContentSpace(content_space common.Address) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContentSpace(&_AccessIndexor.TransactOpts, content_space)
-}
-
 // SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
 //
 // Solidity: function setContentTypeRights(address obj, uint8 access_type, uint8 access) returns()
 func (_AccessIndexor *AccessIndexorTransactor) SetContentTypeRights(opts *bind.TransactOpts, obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _AccessIndexor.contract.Transact(opts, "setContentTypeRights", obj, access_type, access)
-}
-
-// SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
-//
-// Solidity: function setContentTypeRights(address obj, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorSession) SetContentTypeRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContentTypeRights(&_AccessIndexor.TransactOpts, obj, access_type, access)
-}
-
-// SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
-//
-// Solidity: function setContentTypeRights(address obj, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) SetContentTypeRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContentTypeRights(&_AccessIndexor.TransactOpts, obj, access_type, access)
 }
 
 // SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
@@ -1938,39 +2987,11 @@ func (_AccessIndexor *AccessIndexorTransactor) SetContractRights(opts *bind.Tran
 	return _AccessIndexor.contract.Transact(opts, "setContractRights", obj, access_type, access)
 }
 
-// SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
-//
-// Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorSession) SetContractRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContractRights(&_AccessIndexor.TransactOpts, obj, access_type, access)
-}
-
-// SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
-//
-// Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) SetContractRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetContractRights(&_AccessIndexor.TransactOpts, obj, access_type, access)
-}
-
 // SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
 //
 // Solidity: function setLibraryRights(address lib, uint8 access_type, uint8 access) returns()
 func (_AccessIndexor *AccessIndexorTransactor) SetLibraryRights(opts *bind.TransactOpts, lib common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _AccessIndexor.contract.Transact(opts, "setLibraryRights", lib, access_type, access)
-}
-
-// SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
-//
-// Solidity: function setLibraryRights(address lib, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorSession) SetLibraryRights(lib common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetLibraryRights(&_AccessIndexor.TransactOpts, lib, access_type, access)
-}
-
-// SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
-//
-// Solidity: function setLibraryRights(address lib, uint8 access_type, uint8 access) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) SetLibraryRights(lib common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.SetLibraryRights(&_AccessIndexor.TransactOpts, lib, access_type, access)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -1980,20 +3001,6 @@ func (_AccessIndexor *AccessIndexorTransactor) TransferCreatorship(opts *bind.Tr
 	return _AccessIndexor.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_AccessIndexor *AccessIndexorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.TransferCreatorship(&_AccessIndexor.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.TransferCreatorship(&_AccessIndexor.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -2001,39 +3008,11 @@ func (_AccessIndexor *AccessIndexorTransactor) TransferOwnership(opts *bind.Tran
 	return _AccessIndexor.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_AccessIndexor *AccessIndexorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.TransferOwnership(&_AccessIndexor.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.TransferOwnership(&_AccessIndexor.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_AccessIndexor *AccessIndexorTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _AccessIndexor.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_AccessIndexor *AccessIndexorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.Fallback(&_AccessIndexor.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_AccessIndexor *AccessIndexorTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _AccessIndexor.Contract.Fallback(&_AccessIndexor.TransactOpts, calldata)
 }
 
 // AccessIndexorRightsChangedIterator is returned from FilterRightsChanged and is used to iterate over the raw logs and unpacked data for RightsChanged events raised by the AccessIndexor contract.
@@ -2332,7 +3311,7 @@ var AccessibleBin = AccessibleMetaData.Bin
 
 // DeployAccessible deploys a new Ethereum contract, binding an instance of Accessible to it.
 func DeployAccessible(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Accessible, error) {
-	parsed, err := AccessibleMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Accessible)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -2367,43 +3346,6 @@ type AccessibleTransactor struct {
 // AccessibleFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type AccessibleFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// AccessibleSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type AccessibleSession struct {
-	Contract     *Accessible       // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// AccessibleCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type AccessibleCallerSession struct {
-	Contract *AccessibleCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts     // Call options to use throughout this session
-}
-
-// AccessibleTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type AccessibleTransactorSession struct {
-	Contract     *AccessibleTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
-}
-
-// AccessibleRaw is an auto generated low-level Go binding around an Ethereum contract.
-type AccessibleRaw struct {
-	Contract *Accessible // Generic contract binding to access the raw methods on
-}
-
-// AccessibleCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type AccessibleCallerRaw struct {
-	Contract *AccessibleCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// AccessibleTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type AccessibleTransactorRaw struct {
-	Contract *AccessibleTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewAccessible creates a new instance of Accessible, bound to a specific deployed contract.
@@ -2444,49 +3386,11 @@ func NewAccessibleFilterer(address common.Address, filterer bind.ContractFiltere
 
 // bindAccessible binds a generic wrapper to an already deployed contract.
 func bindAccessible(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(AccessibleABI))
+	parsed, err := ParsedABI(K_Accessible)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Accessible *AccessibleRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Accessible.Contract.AccessibleCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Accessible *AccessibleRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Accessible.Contract.AccessibleTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Accessible *AccessibleRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Accessible.Contract.AccessibleTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Accessible *AccessibleCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Accessible.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Accessible *AccessibleTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Accessible.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Accessible *AccessibleTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Accessible.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -2506,39 +3410,11 @@ func (_Accessible *AccessibleCaller) Version(opts *bind.CallOpts) ([32]byte, err
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Accessible *AccessibleSession) Version() ([32]byte, error) {
-	return _Accessible.Contract.Version(&_Accessible.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Accessible *AccessibleCallerSession) Version() ([32]byte, error) {
-	return _Accessible.Contract.Version(&_Accessible.CallOpts)
-}
-
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
 //
 // Solidity: function accessRequest() returns(bool)
 func (_Accessible *AccessibleTransactor) AccessRequest(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Accessible.contract.Transact(opts, "accessRequest")
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_Accessible *AccessibleSession) AccessRequest() (*types.Transaction, error) {
-	return _Accessible.Contract.AccessRequest(&_Accessible.TransactOpts)
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_Accessible *AccessibleTransactorSession) AccessRequest() (*types.Transaction, error) {
-	return _Accessible.Contract.AccessRequest(&_Accessible.TransactOpts)
 }
 
 // AccessibleAccessRequestIterator is returned from FilterAccessRequest and is used to iterate over the raw logs and unpacked data for AccessRequest events raised by the Accessible contract.
@@ -2777,7 +3653,7 @@ var BaseAccessControlGroupBin = BaseAccessControlGroupMetaData.Bin
 
 // DeployBaseAccessControlGroup deploys a new Ethereum contract, binding an instance of BaseAccessControlGroup to it.
 func DeployBaseAccessControlGroup(auth *bind.TransactOpts, backend bind.ContractBackend, content_space common.Address) (common.Address, *types.Transaction, *BaseAccessControlGroup, error) {
-	parsed, err := BaseAccessControlGroupMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseAccessControlGroup)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -2812,43 +3688,6 @@ type BaseAccessControlGroupTransactor struct {
 // BaseAccessControlGroupFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseAccessControlGroupFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseAccessControlGroupSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseAccessControlGroupSession struct {
-	Contract     *BaseAccessControlGroup // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts           // Call options to use throughout this session
-	TransactOpts bind.TransactOpts       // Transaction auth options to use throughout this session
-}
-
-// BaseAccessControlGroupCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseAccessControlGroupCallerSession struct {
-	Contract *BaseAccessControlGroupCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts                 // Call options to use throughout this session
-}
-
-// BaseAccessControlGroupTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseAccessControlGroupTransactorSession struct {
-	Contract     *BaseAccessControlGroupTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts                 // Transaction auth options to use throughout this session
-}
-
-// BaseAccessControlGroupRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseAccessControlGroupRaw struct {
-	Contract *BaseAccessControlGroup // Generic contract binding to access the raw methods on
-}
-
-// BaseAccessControlGroupCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseAccessControlGroupCallerRaw struct {
-	Contract *BaseAccessControlGroupCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseAccessControlGroupTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseAccessControlGroupTransactorRaw struct {
-	Contract *BaseAccessControlGroupTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseAccessControlGroup creates a new instance of BaseAccessControlGroup, bound to a specific deployed contract.
@@ -2889,49 +3728,11 @@ func NewBaseAccessControlGroupFilterer(address common.Address, filterer bind.Con
 
 // bindBaseAccessControlGroup binds a generic wrapper to an already deployed contract.
 func bindBaseAccessControlGroup(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseAccessControlGroupABI))
+	parsed, err := ParsedABI(K_BaseAccessControlGroup)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseAccessControlGroup *BaseAccessControlGroupRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseAccessControlGroup.Contract.BaseAccessControlGroupCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseAccessControlGroup *BaseAccessControlGroupRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.BaseAccessControlGroupTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseAccessControlGroup *BaseAccessControlGroupRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.BaseAccessControlGroupTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseAccessControlGroup.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
@@ -2951,20 +3752,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ACCESSCONFIRMED(opt
 
 }
 
-// ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
-//
-// Solidity: function ACCESS_CONFIRMED() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ACCESSCONFIRMED() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.ACCESSCONFIRMED(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
-//
-// Solidity: function ACCESS_CONFIRMED() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ACCESSCONFIRMED() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.ACCESSCONFIRMED(&_BaseAccessControlGroup.CallOpts)
-}
-
 // ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
 //
 // Solidity: function ACCESS_NONE() view returns(uint8)
@@ -2980,20 +3767,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ACCESSNONE(opts *bi
 
 	return out0, err
 
-}
-
-// ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
-//
-// Solidity: function ACCESS_NONE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ACCESSNONE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.ACCESSNONE(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
-//
-// Solidity: function ACCESS_NONE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ACCESSNONE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.ACCESSNONE(&_BaseAccessControlGroup.CallOpts)
 }
 
 // ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
@@ -3013,20 +3786,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ACCESSTENTATIVE(opt
 
 }
 
-// ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
-//
-// Solidity: function ACCESS_TENTATIVE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ACCESSTENTATIVE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.ACCESSTENTATIVE(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
-//
-// Solidity: function ACCESS_TENTATIVE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ACCESSTENTATIVE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.ACCESSTENTATIVE(&_BaseAccessControlGroup.CallOpts)
-}
-
 // CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
 //
 // Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
@@ -3042,20 +3801,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYCONTENTOBJE
 
 	return out0, err
 
-}
-
-// CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
-//
-// Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CATEGORYCONTENTOBJECT() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYCONTENTOBJECT(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
-//
-// Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CATEGORYCONTENTOBJECT() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYCONTENTOBJECT(&_BaseAccessControlGroup.CallOpts)
 }
 
 // CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
@@ -3075,20 +3820,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYCONTENTTYPE
 
 }
 
-// CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
-//
-// Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CATEGORYCONTENTTYPE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYCONTENTTYPE(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
-//
-// Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CATEGORYCONTENTTYPE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYCONTENTTYPE(&_BaseAccessControlGroup.CallOpts)
-}
-
 // CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
 //
 // Solidity: function CATEGORY_CONTRACT() view returns(uint8)
@@ -3104,20 +3835,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYCONTRACT(op
 
 	return out0, err
 
-}
-
-// CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
-//
-// Solidity: function CATEGORY_CONTRACT() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CATEGORYCONTRACT() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYCONTRACT(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
-//
-// Solidity: function CATEGORY_CONTRACT() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CATEGORYCONTRACT() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYCONTRACT(&_BaseAccessControlGroup.CallOpts)
 }
 
 // CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
@@ -3137,20 +3854,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYGROUP(opts 
 
 }
 
-// CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
-//
-// Solidity: function CATEGORY_GROUP() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CATEGORYGROUP() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYGROUP(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
-//
-// Solidity: function CATEGORY_GROUP() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CATEGORYGROUP() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYGROUP(&_BaseAccessControlGroup.CallOpts)
-}
-
 // CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
 //
 // Solidity: function CATEGORY_LIBRARY() view returns(uint8)
@@ -3166,20 +3869,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYLIBRARY(opt
 
 	return out0, err
 
-}
-
-// CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
-//
-// Solidity: function CATEGORY_LIBRARY() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CATEGORYLIBRARY() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYLIBRARY(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
-//
-// Solidity: function CATEGORY_LIBRARY() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CATEGORYLIBRARY() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.CATEGORYLIBRARY(&_BaseAccessControlGroup.CallOpts)
 }
 
 // TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
@@ -3199,20 +3888,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) TYPEACCESS(opts *bi
 
 }
 
-// TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
-//
-// Solidity: function TYPE_ACCESS() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) TYPEACCESS() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.TYPEACCESS(&_BaseAccessControlGroup.CallOpts)
-}
-
-// TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
-//
-// Solidity: function TYPE_ACCESS() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) TYPEACCESS() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.TYPEACCESS(&_BaseAccessControlGroup.CallOpts)
-}
-
 // TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
 //
 // Solidity: function TYPE_EDIT() view returns(uint8)
@@ -3230,20 +3905,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) TYPEEDIT(opts *bind
 
 }
 
-// TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
-//
-// Solidity: function TYPE_EDIT() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) TYPEEDIT() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.TYPEEDIT(&_BaseAccessControlGroup.CallOpts)
-}
-
-// TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
-//
-// Solidity: function TYPE_EDIT() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) TYPEEDIT() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.TYPEEDIT(&_BaseAccessControlGroup.CallOpts)
-}
-
 // TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
 //
 // Solidity: function TYPE_SEE() view returns(uint8)
@@ -3259,20 +3920,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) TYPESEE(opts *bind.
 
 	return out0, err
 
-}
-
-// TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
-//
-// Solidity: function TYPE_SEE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) TYPESEE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.TYPESEE(&_BaseAccessControlGroup.CallOpts)
-}
-
-// TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
-//
-// Solidity: function TYPE_SEE() view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) TYPESEE() (uint8, error) {
-	return _BaseAccessControlGroup.Contract.TYPESEE(&_BaseAccessControlGroup.CallOpts)
 }
 
 // AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
@@ -3300,26 +3947,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) AccessGroups(opts *
 
 }
 
-// AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
-//
-// Solidity: function accessGroups() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) AccessGroups() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.AccessGroups(&_BaseAccessControlGroup.CallOpts)
-}
-
-// AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
-//
-// Solidity: function accessGroups() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) AccessGroups() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.AccessGroups(&_BaseAccessControlGroup.CallOpts)
-}
-
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
@@ -3335,20 +3962,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CanCommit(opts *bin
 
 	return out0, err
 
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CanCommit() (bool, error) {
-	return _BaseAccessControlGroup.Contract.CanCommit(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CanCommit() (bool, error) {
-	return _BaseAccessControlGroup.Contract.CanCommit(&_BaseAccessControlGroup.CallOpts)
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
@@ -3368,20 +3981,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CanConfirm(opts *bi
 
 }
 
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CanConfirm() (bool, error) {
-	return _BaseAccessControlGroup.Contract.CanConfirm(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CanConfirm() (bool, error) {
-	return _BaseAccessControlGroup.Contract.CanConfirm(&_BaseAccessControlGroup.CallOpts)
-}
-
 // CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
 //
 // Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
@@ -3397,20 +3996,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckAccessGroupRig
 
 	return out0, err
 
-}
-
-// CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
-//
-// Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CheckAccessGroupRights(group common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckAccessGroupRights(&_BaseAccessControlGroup.CallOpts, group, access_type)
-}
-
-// CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
-//
-// Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CheckAccessGroupRights(group common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckAccessGroupRights(&_BaseAccessControlGroup.CallOpts, group, access_type)
 }
 
 // CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
@@ -3430,20 +4015,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckContentObjectR
 
 }
 
-// CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
-//
-// Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CheckContentObjectRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckContentObjectRights(&_BaseAccessControlGroup.CallOpts, obj, access_type)
-}
-
-// CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
-//
-// Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CheckContentObjectRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckContentObjectRights(&_BaseAccessControlGroup.CallOpts, obj, access_type)
-}
-
 // CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
 //
 // Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
@@ -3459,20 +4030,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckContentTypeRig
 
 	return out0, err
 
-}
-
-// CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
-//
-// Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CheckContentTypeRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckContentTypeRights(&_BaseAccessControlGroup.CallOpts, obj, access_type)
-}
-
-// CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
-//
-// Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CheckContentTypeRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckContentTypeRights(&_BaseAccessControlGroup.CallOpts, obj, access_type)
 }
 
 // CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
@@ -3492,20 +4049,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckContractRights
 
 }
 
-// CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
-//
-// Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CheckContractRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckContractRights(&_BaseAccessControlGroup.CallOpts, obj, access_type)
-}
-
-// CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
-//
-// Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CheckContractRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckContractRights(&_BaseAccessControlGroup.CallOpts, obj, access_type)
-}
-
 // CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
 //
 // Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
@@ -3521,20 +4064,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckDirectRights(o
 
 	return out0, err
 
-}
-
-// CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
-//
-// Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CheckDirectRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckDirectRights(&_BaseAccessControlGroup.CallOpts, index_type, obj, access_type)
-}
-
-// CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
-//
-// Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CheckDirectRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckDirectRights(&_BaseAccessControlGroup.CallOpts, index_type, obj, access_type)
 }
 
 // CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
@@ -3554,20 +4083,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckLibraryRights(
 
 }
 
-// CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
-//
-// Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CheckLibraryRights(lib common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckLibraryRights(&_BaseAccessControlGroup.CallOpts, lib, access_type)
-}
-
-// CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
-//
-// Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CheckLibraryRights(lib common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckLibraryRights(&_BaseAccessControlGroup.CallOpts, lib, access_type)
-}
-
 // CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
 //
 // Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
@@ -3583,20 +4098,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckRights(opts *b
 
 	return out0, err
 
-}
-
-// CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
-//
-// Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CheckRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckRights(&_BaseAccessControlGroup.CallOpts, index_type, obj, access_type)
-}
-
-// CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
-//
-// Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CheckRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessControlGroup.Contract.CheckRights(&_BaseAccessControlGroup.CallOpts, index_type, obj, access_type)
 }
 
 // ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
@@ -3624,26 +4125,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContentObjects(opts
 
 }
 
-// ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
-//
-// Solidity: function contentObjects() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ContentObjects() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.ContentObjects(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
-//
-// Solidity: function contentObjects() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ContentObjects() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.ContentObjects(&_BaseAccessControlGroup.CallOpts)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -3659,20 +4140,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContentSpace(opts *
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ContentSpace() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.ContentSpace(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.ContentSpace(&_BaseAccessControlGroup.CallOpts)
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
@@ -3700,26 +4167,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContentTypes(opts *
 
 }
 
-// ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
-//
-// Solidity: function contentTypes() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ContentTypes() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.ContentTypes(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
-//
-// Solidity: function contentTypes() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ContentTypes() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.ContentTypes(&_BaseAccessControlGroup.CallOpts)
-}
-
 // ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
 //
 // Solidity: function contractExists(address addr) view returns(bool)
@@ -3735,20 +4182,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContractExists(opts
 
 	return out0, err
 
-}
-
-// ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
-//
-// Solidity: function contractExists(address addr) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ContractExists(addr common.Address) (bool, error) {
-	return _BaseAccessControlGroup.Contract.ContractExists(&_BaseAccessControlGroup.CallOpts, addr)
-}
-
-// ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
-//
-// Solidity: function contractExists(address addr) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ContractExists(addr common.Address) (bool, error) {
-	return _BaseAccessControlGroup.Contract.ContractExists(&_BaseAccessControlGroup.CallOpts, addr)
 }
 
 // Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
@@ -3776,26 +4209,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Contracts(opts *bin
 
 }
 
-// Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
-//
-// Solidity: function contracts() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Contracts() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.Contracts(&_BaseAccessControlGroup.CallOpts)
-}
-
-// Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
-//
-// Solidity: function contracts() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) Contracts() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.Contracts(&_BaseAccessControlGroup.CallOpts)
-}
-
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
@@ -3811,20 +4224,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CountVersionHashes(
 
 	return out0, err
 
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.CountVersionHashes(&_BaseAccessControlGroup.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.CountVersionHashes(&_BaseAccessControlGroup.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -3844,20 +4243,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Creator(opts *bind.
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Creator() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.Creator(&_BaseAccessControlGroup.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) Creator() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.Creator(&_BaseAccessControlGroup.CallOpts)
-}
-
 // GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
 //
 // Solidity: function getAccessGroup(uint256 position) view returns(address)
@@ -3873,20 +4258,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetAccessGroup(opts
 
 	return out0, err
 
-}
-
-// GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
-//
-// Solidity: function getAccessGroup(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetAccessGroup(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetAccessGroup(&_BaseAccessControlGroup.CallOpts, position)
-}
-
-// GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
-//
-// Solidity: function getAccessGroup(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetAccessGroup(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetAccessGroup(&_BaseAccessControlGroup.CallOpts, position)
 }
 
 // GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
@@ -3906,20 +4277,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetAccessGroupRight
 
 }
 
-// GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
-//
-// Solidity: function getAccessGroupRights(address group) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetAccessGroupRights(group common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetAccessGroupRights(&_BaseAccessControlGroup.CallOpts, group)
-}
-
-// GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
-//
-// Solidity: function getAccessGroupRights(address group) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetAccessGroupRights(group common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetAccessGroupRights(&_BaseAccessControlGroup.CallOpts, group)
-}
-
 // GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
 //
 // Solidity: function getAccessGroupsLength() view returns(uint256)
@@ -3935,20 +4292,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetAccessGroupsLeng
 
 	return out0, err
 
-}
-
-// GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
-//
-// Solidity: function getAccessGroupsLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetAccessGroupsLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetAccessGroupsLength(&_BaseAccessControlGroup.CallOpts)
-}
-
-// GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
-//
-// Solidity: function getAccessGroupsLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetAccessGroupsLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetAccessGroupsLength(&_BaseAccessControlGroup.CallOpts)
 }
 
 // GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
@@ -3968,20 +4311,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentObject(op
 
 }
 
-// GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
-//
-// Solidity: function getContentObject(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContentObject(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetContentObject(&_BaseAccessControlGroup.CallOpts, position)
-}
-
-// GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
-//
-// Solidity: function getContentObject(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContentObject(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetContentObject(&_BaseAccessControlGroup.CallOpts, position)
-}
-
 // GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
 //
 // Solidity: function getContentObjectRights(address obj) view returns(uint8)
@@ -3997,20 +4326,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentObjectRig
 
 	return out0, err
 
-}
-
-// GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
-//
-// Solidity: function getContentObjectRights(address obj) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContentObjectRights(obj common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetContentObjectRights(&_BaseAccessControlGroup.CallOpts, obj)
-}
-
-// GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
-//
-// Solidity: function getContentObjectRights(address obj) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContentObjectRights(obj common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetContentObjectRights(&_BaseAccessControlGroup.CallOpts, obj)
 }
 
 // GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
@@ -4030,20 +4345,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentObjectsLe
 
 }
 
-// GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
-//
-// Solidity: function getContentObjectsLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContentObjectsLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetContentObjectsLength(&_BaseAccessControlGroup.CallOpts)
-}
-
-// GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
-//
-// Solidity: function getContentObjectsLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContentObjectsLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetContentObjectsLength(&_BaseAccessControlGroup.CallOpts)
-}
-
 // GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
 //
 // Solidity: function getContentType(uint256 position) view returns(address)
@@ -4059,20 +4360,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentType(opts
 
 	return out0, err
 
-}
-
-// GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
-//
-// Solidity: function getContentType(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContentType(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetContentType(&_BaseAccessControlGroup.CallOpts, position)
-}
-
-// GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
-//
-// Solidity: function getContentType(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContentType(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetContentType(&_BaseAccessControlGroup.CallOpts, position)
 }
 
 // GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
@@ -4092,20 +4379,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentTypeRight
 
 }
 
-// GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
-//
-// Solidity: function getContentTypeRights(address obj) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContentTypeRights(obj common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetContentTypeRights(&_BaseAccessControlGroup.CallOpts, obj)
-}
-
-// GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
-//
-// Solidity: function getContentTypeRights(address obj) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContentTypeRights(obj common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetContentTypeRights(&_BaseAccessControlGroup.CallOpts, obj)
-}
-
 // GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
 //
 // Solidity: function getContentTypesLength() view returns(uint256)
@@ -4121,20 +4394,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentTypesLeng
 
 	return out0, err
 
-}
-
-// GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
-//
-// Solidity: function getContentTypesLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContentTypesLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetContentTypesLength(&_BaseAccessControlGroup.CallOpts)
-}
-
-// GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
-//
-// Solidity: function getContentTypesLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContentTypesLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetContentTypesLength(&_BaseAccessControlGroup.CallOpts)
 }
 
 // GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
@@ -4154,20 +4413,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContract(opts *b
 
 }
 
-// GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
-//
-// Solidity: function getContract(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContract(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetContract(&_BaseAccessControlGroup.CallOpts, position)
-}
-
-// GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
-//
-// Solidity: function getContract(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContract(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetContract(&_BaseAccessControlGroup.CallOpts, position)
-}
-
 // GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
 //
 // Solidity: function getContractRights(address obj) view returns(uint8)
@@ -4183,20 +4428,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContractRights(o
 
 	return out0, err
 
-}
-
-// GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
-//
-// Solidity: function getContractRights(address obj) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContractRights(obj common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetContractRights(&_BaseAccessControlGroup.CallOpts, obj)
-}
-
-// GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
-//
-// Solidity: function getContractRights(address obj) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContractRights(obj common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetContractRights(&_BaseAccessControlGroup.CallOpts, obj)
 }
 
 // GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
@@ -4216,20 +4447,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContractsLength(
 
 }
 
-// GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
-//
-// Solidity: function getContractsLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetContractsLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetContractsLength(&_BaseAccessControlGroup.CallOpts)
-}
-
-// GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
-//
-// Solidity: function getContractsLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetContractsLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetContractsLength(&_BaseAccessControlGroup.CallOpts)
-}
-
 // GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
 //
 // Solidity: function getLibrariesLength() view returns(uint256)
@@ -4245,20 +4462,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetLibrariesLength(
 
 	return out0, err
 
-}
-
-// GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
-//
-// Solidity: function getLibrariesLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetLibrariesLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetLibrariesLength(&_BaseAccessControlGroup.CallOpts)
-}
-
-// GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
-//
-// Solidity: function getLibrariesLength() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetLibrariesLength() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.GetLibrariesLength(&_BaseAccessControlGroup.CallOpts)
 }
 
 // GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
@@ -4278,20 +4481,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetLibrary(opts *bi
 
 }
 
-// GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
-//
-// Solidity: function getLibrary(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetLibrary(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetLibrary(&_BaseAccessControlGroup.CallOpts, position)
-}
-
-// GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
-//
-// Solidity: function getLibrary(uint256 position) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetLibrary(position *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.GetLibrary(&_BaseAccessControlGroup.CallOpts, position)
-}
-
 // GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
 //
 // Solidity: function getLibraryRights(address lib) view returns(uint8)
@@ -4307,20 +4496,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetLibraryRights(op
 
 	return out0, err
 
-}
-
-// GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
-//
-// Solidity: function getLibraryRights(address lib) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GetLibraryRights(lib common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetLibraryRights(&_BaseAccessControlGroup.CallOpts, lib)
-}
-
-// GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
-//
-// Solidity: function getLibraryRights(address lib) view returns(uint8)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) GetLibraryRights(lib common.Address) (uint8, error) {
-	return _BaseAccessControlGroup.Contract.GetLibraryRights(&_BaseAccessControlGroup.CallOpts, lib)
 }
 
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
@@ -4340,20 +4515,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) HasAccess(opts *bin
 
 }
 
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address candidate) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) HasAccess(candidate common.Address) (bool, error) {
-	return _BaseAccessControlGroup.Contract.HasAccess(&_BaseAccessControlGroup.CallOpts, candidate)
-}
-
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address candidate) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) HasAccess(candidate common.Address) (bool, error) {
-	return _BaseAccessControlGroup.Contract.HasAccess(&_BaseAccessControlGroup.CallOpts, candidate)
-}
-
 // HasAccessRight is a free data retrieval call binding the contract method 0xd8961c8d.
 //
 // Solidity: function hasAccessRight(address candidate, bool mgr) view returns(bool)
@@ -4371,20 +4532,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) HasAccessRight(opts
 
 }
 
-// HasAccessRight is a free data retrieval call binding the contract method 0xd8961c8d.
-//
-// Solidity: function hasAccessRight(address candidate, bool mgr) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) HasAccessRight(candidate common.Address, mgr bool) (bool, error) {
-	return _BaseAccessControlGroup.Contract.HasAccessRight(&_BaseAccessControlGroup.CallOpts, candidate, mgr)
-}
-
-// HasAccessRight is a free data retrieval call binding the contract method 0xd8961c8d.
-//
-// Solidity: function hasAccessRight(address candidate, bool mgr) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) HasAccessRight(candidate common.Address, mgr bool) (bool, error) {
-	return _BaseAccessControlGroup.Contract.HasAccessRight(&_BaseAccessControlGroup.CallOpts, candidate, mgr)
-}
-
 // HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
 //
 // Solidity: function hasManagerAccess(address candidate) view returns(bool)
@@ -4400,20 +4547,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) HasManagerAccess(op
 
 	return out0, err
 
-}
-
-// HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
-//
-// Solidity: function hasManagerAccess(address candidate) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) HasManagerAccess(candidate common.Address) (bool, error) {
-	return _BaseAccessControlGroup.Contract.HasManagerAccess(&_BaseAccessControlGroup.CallOpts, candidate)
-}
-
-// HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
-//
-// Solidity: function hasManagerAccess(address candidate) view returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) HasManagerAccess(candidate common.Address) (bool, error) {
-	return _BaseAccessControlGroup.Contract.HasManagerAccess(&_BaseAccessControlGroup.CallOpts, candidate)
 }
 
 // Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
@@ -4441,26 +4574,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Libraries(opts *bin
 
 }
 
-// Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
-//
-// Solidity: function libraries() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Libraries() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.Libraries(&_BaseAccessControlGroup.CallOpts)
-}
-
-// Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
-//
-// Solidity: function libraries() view returns(uint8 category, uint256 length)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) Libraries() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessControlGroup.Contract.Libraries(&_BaseAccessControlGroup.CallOpts)
-}
-
 // ManagersList is a free data retrieval call binding the contract method 0x1fcd7794.
 //
 // Solidity: function managersList(uint256 ) view returns(address)
@@ -4476,20 +4589,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ManagersList(opts *
 
 	return out0, err
 
-}
-
-// ManagersList is a free data retrieval call binding the contract method 0x1fcd7794.
-//
-// Solidity: function managersList(uint256 ) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ManagersList(arg0 *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.ManagersList(&_BaseAccessControlGroup.CallOpts, arg0)
-}
-
-// ManagersList is a free data retrieval call binding the contract method 0x1fcd7794.
-//
-// Solidity: function managersList(uint256 ) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ManagersList(arg0 *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.ManagersList(&_BaseAccessControlGroup.CallOpts, arg0)
 }
 
 // ManagersNum is a free data retrieval call binding the contract method 0x638d0290.
@@ -4509,20 +4608,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ManagersNum(opts *b
 
 }
 
-// ManagersNum is a free data retrieval call binding the contract method 0x638d0290.
-//
-// Solidity: function managersNum() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ManagersNum() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.ManagersNum(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ManagersNum is a free data retrieval call binding the contract method 0x638d0290.
-//
-// Solidity: function managersNum() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ManagersNum() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.ManagersNum(&_BaseAccessControlGroup.CallOpts)
-}
-
 // MembersList is a free data retrieval call binding the contract method 0x13b8ad31.
 //
 // Solidity: function membersList(uint256 ) view returns(address)
@@ -4538,20 +4623,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) MembersList(opts *b
 
 	return out0, err
 
-}
-
-// MembersList is a free data retrieval call binding the contract method 0x13b8ad31.
-//
-// Solidity: function membersList(uint256 ) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) MembersList(arg0 *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.MembersList(&_BaseAccessControlGroup.CallOpts, arg0)
-}
-
-// MembersList is a free data retrieval call binding the contract method 0x13b8ad31.
-//
-// Solidity: function membersList(uint256 ) view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) MembersList(arg0 *big.Int) (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.MembersList(&_BaseAccessControlGroup.CallOpts, arg0)
 }
 
 // MembersNum is a free data retrieval call binding the contract method 0x55277a5b.
@@ -4571,20 +4642,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) MembersNum(opts *bi
 
 }
 
-// MembersNum is a free data retrieval call binding the contract method 0x55277a5b.
-//
-// Solidity: function membersNum() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) MembersNum() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.MembersNum(&_BaseAccessControlGroup.CallOpts)
-}
-
-// MembersNum is a free data retrieval call binding the contract method 0x55277a5b.
-//
-// Solidity: function membersNum() view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) MembersNum() (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.MembersNum(&_BaseAccessControlGroup.CallOpts)
-}
-
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
@@ -4600,20 +4657,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ObjectHash(opts *bi
 
 	return out0, err
 
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ObjectHash() (string, error) {
-	return _BaseAccessControlGroup.Contract.ObjectHash(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ObjectHash() (string, error) {
-	return _BaseAccessControlGroup.Contract.ObjectHash(&_BaseAccessControlGroup.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -4633,20 +4676,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Owner(opts *bind.Ca
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Owner() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.Owner(&_BaseAccessControlGroup.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) Owner() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.Owner(&_BaseAccessControlGroup.CallOpts)
-}
-
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
@@ -4662,20 +4691,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ParentAddress(opts 
 
 	return out0, err
 
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ParentAddress() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.ParentAddress(&_BaseAccessControlGroup.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) ParentAddress() (common.Address, error) {
-	return _BaseAccessControlGroup.Contract.ParentAddress(&_BaseAccessControlGroup.CallOpts)
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
@@ -4695,20 +4710,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) PendingHash(opts *b
 
 }
 
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) PendingHash() (string, error) {
-	return _BaseAccessControlGroup.Contract.PendingHash(&_BaseAccessControlGroup.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) PendingHash() (string, error) {
-	return _BaseAccessControlGroup.Contract.PendingHash(&_BaseAccessControlGroup.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -4724,20 +4725,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Version(opts *bind.
 
 	return out0, err
 
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Version() ([32]byte, error) {
-	return _BaseAccessControlGroup.Contract.Version(&_BaseAccessControlGroup.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) Version() ([32]byte, error) {
-	return _BaseAccessControlGroup.Contract.Version(&_BaseAccessControlGroup.CallOpts)
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
@@ -4757,20 +4744,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) VersionHashes(opts 
 
 }
 
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseAccessControlGroup.Contract.VersionHashes(&_BaseAccessControlGroup.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseAccessControlGroup.Contract.VersionHashes(&_BaseAccessControlGroup.CallOpts, arg0)
-}
-
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
@@ -4788,39 +4761,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) VersionTimestamp(op
 
 }
 
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.VersionTimestamp(&_BaseAccessControlGroup.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseAccessControlGroup.Contract.VersionTimestamp(&_BaseAccessControlGroup.CallOpts, arg0)
-}
-
 // CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
 //
 // Solidity: function cleanUpAccessGroups() returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) CleanUpAccessGroups(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "cleanUpAccessGroups")
-}
-
-// CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
-//
-// Solidity: function cleanUpAccessGroups() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CleanUpAccessGroups() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpAccessGroups(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
-//
-// Solidity: function cleanUpAccessGroups() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) CleanUpAccessGroups() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpAccessGroups(&_BaseAccessControlGroup.TransactOpts)
 }
 
 // CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
@@ -4830,39 +4775,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) CleanUpAll(opts
 	return _BaseAccessControlGroup.contract.Transact(opts, "cleanUpAll")
 }
 
-// CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
-//
-// Solidity: function cleanUpAll() returns(uint256, uint256, uint256, uint256, uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CleanUpAll() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpAll(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
-//
-// Solidity: function cleanUpAll() returns(uint256, uint256, uint256, uint256, uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) CleanUpAll() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpAll(&_BaseAccessControlGroup.TransactOpts)
-}
-
 // CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
 //
 // Solidity: function cleanUpContentObjects() returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) CleanUpContentObjects(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "cleanUpContentObjects")
-}
-
-// CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
-//
-// Solidity: function cleanUpContentObjects() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CleanUpContentObjects() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpContentObjects(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
-//
-// Solidity: function cleanUpContentObjects() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) CleanUpContentObjects() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpContentObjects(&_BaseAccessControlGroup.TransactOpts)
 }
 
 // CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
@@ -4872,39 +4789,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) CleanUpContentT
 	return _BaseAccessControlGroup.contract.Transact(opts, "cleanUpContentTypes")
 }
 
-// CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
-//
-// Solidity: function cleanUpContentTypes() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CleanUpContentTypes() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpContentTypes(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
-//
-// Solidity: function cleanUpContentTypes() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) CleanUpContentTypes() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpContentTypes(&_BaseAccessControlGroup.TransactOpts)
-}
-
 // CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
 //
 // Solidity: function cleanUpLibraries() returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) CleanUpLibraries(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "cleanUpLibraries")
-}
-
-// CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
-//
-// Solidity: function cleanUpLibraries() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) CleanUpLibraries() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpLibraries(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
-//
-// Solidity: function cleanUpLibraries() returns(uint256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) CleanUpLibraries() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.CleanUpLibraries(&_BaseAccessControlGroup.TransactOpts)
 }
 
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
@@ -4914,39 +4803,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) Commit(opts *bi
 	return _BaseAccessControlGroup.contract.Transact(opts, "commit", _objectHash)
 }
 
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.Commit(&_BaseAccessControlGroup.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.Commit(&_BaseAccessControlGroup.TransactOpts, _objectHash)
-}
-
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
 //
 // Solidity: function confirmCommit() payable returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) ConfirmCommit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "confirmCommit")
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.ConfirmCommit(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.ConfirmCommit(&_BaseAccessControlGroup.TransactOpts)
 }
 
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
@@ -4956,39 +4817,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) DeleteVersion(o
 	return _BaseAccessControlGroup.contract.Transact(opts, "deleteVersion", _versionHash)
 }
 
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.DeleteVersion(&_BaseAccessControlGroup.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.DeleteVersion(&_BaseAccessControlGroup.TransactOpts, _versionHash)
-}
-
 // GrantAccess is a paid mutator transaction binding the contract method 0x0ae5e739.
 //
 // Solidity: function grantAccess(address candidate) returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) GrantAccess(opts *bind.TransactOpts, candidate common.Address) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "grantAccess", candidate)
-}
-
-// GrantAccess is a paid mutator transaction binding the contract method 0x0ae5e739.
-//
-// Solidity: function grantAccess(address candidate) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GrantAccess(candidate common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.GrantAccess(&_BaseAccessControlGroup.TransactOpts, candidate)
-}
-
-// GrantAccess is a paid mutator transaction binding the contract method 0x0ae5e739.
-//
-// Solidity: function grantAccess(address candidate) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) GrantAccess(candidate common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.GrantAccess(&_BaseAccessControlGroup.TransactOpts, candidate)
 }
 
 // GrantManagerAccess is a paid mutator transaction binding the contract method 0x75861a95.
@@ -4998,39 +4831,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) GrantManagerAcc
 	return _BaseAccessControlGroup.contract.Transact(opts, "grantManagerAccess", manager)
 }
 
-// GrantManagerAccess is a paid mutator transaction binding the contract method 0x75861a95.
-//
-// Solidity: function grantManagerAccess(address manager) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) GrantManagerAccess(manager common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.GrantManagerAccess(&_BaseAccessControlGroup.TransactOpts, manager)
-}
-
-// GrantManagerAccess is a paid mutator transaction binding the contract method 0x75861a95.
-//
-// Solidity: function grantManagerAccess(address manager) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) GrantManagerAccess(manager common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.GrantManagerAccess(&_BaseAccessControlGroup.TransactOpts, manager)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Kill() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.Kill(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.Kill(&_BaseAccessControlGroup.TransactOpts)
 }
 
 // RevokeAccess is a paid mutator transaction binding the contract method 0x85e68531.
@@ -5040,39 +4845,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) RevokeAccess(op
 	return _BaseAccessControlGroup.contract.Transact(opts, "revokeAccess", candidate)
 }
 
-// RevokeAccess is a paid mutator transaction binding the contract method 0x85e68531.
-//
-// Solidity: function revokeAccess(address candidate) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) RevokeAccess(candidate common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.RevokeAccess(&_BaseAccessControlGroup.TransactOpts, candidate)
-}
-
-// RevokeAccess is a paid mutator transaction binding the contract method 0x85e68531.
-//
-// Solidity: function revokeAccess(address candidate) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) RevokeAccess(candidate common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.RevokeAccess(&_BaseAccessControlGroup.TransactOpts, candidate)
-}
-
 // RevokeManagerAccess is a paid mutator transaction binding the contract method 0xcdb849b7.
 //
 // Solidity: function revokeManagerAccess(address manager) returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) RevokeManagerAccess(opts *bind.TransactOpts, manager common.Address) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "revokeManagerAccess", manager)
-}
-
-// RevokeManagerAccess is a paid mutator transaction binding the contract method 0xcdb849b7.
-//
-// Solidity: function revokeManagerAccess(address manager) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) RevokeManagerAccess(manager common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.RevokeManagerAccess(&_BaseAccessControlGroup.TransactOpts, manager)
-}
-
-// RevokeManagerAccess is a paid mutator transaction binding the contract method 0xcdb849b7.
-//
-// Solidity: function revokeManagerAccess(address manager) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) RevokeManagerAccess(manager common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.RevokeManagerAccess(&_BaseAccessControlGroup.TransactOpts, manager)
 }
 
 // SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
@@ -5082,39 +4859,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) SetAccessGroupR
 	return _BaseAccessControlGroup.contract.Transact(opts, "setAccessGroupRights", group, access_type, access)
 }
 
-// SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
-//
-// Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) SetAccessGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetAccessGroupRights(&_BaseAccessControlGroup.TransactOpts, group, access_type, access)
-}
-
-// SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
-//
-// Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) SetAccessGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetAccessGroupRights(&_BaseAccessControlGroup.TransactOpts, group, access_type, access)
-}
-
 // SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
 //
 // Solidity: function setAccessRights() returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) SetAccessRights(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "setAccessRights")
-}
-
-// SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
-//
-// Solidity: function setAccessRights() returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) SetAccessRights() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetAccessRights(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
-//
-// Solidity: function setAccessRights() returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) SetAccessRights() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetAccessRights(&_BaseAccessControlGroup.TransactOpts)
 }
 
 // SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
@@ -5124,39 +4873,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) SetContentObjec
 	return _BaseAccessControlGroup.contract.Transact(opts, "setContentObjectRights", obj, access_type, access)
 }
 
-// SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
-//
-// Solidity: function setContentObjectRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) SetContentObjectRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContentObjectRights(&_BaseAccessControlGroup.TransactOpts, obj, access_type, access)
-}
-
-// SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
-//
-// Solidity: function setContentObjectRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) SetContentObjectRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContentObjectRights(&_BaseAccessControlGroup.TransactOpts, obj, access_type, access)
-}
-
 // SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
 //
 // Solidity: function setContentSpace(address content_space) returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) SetContentSpace(opts *bind.TransactOpts, content_space common.Address) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "setContentSpace", content_space)
-}
-
-// SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
-//
-// Solidity: function setContentSpace(address content_space) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) SetContentSpace(content_space common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContentSpace(&_BaseAccessControlGroup.TransactOpts, content_space)
-}
-
-// SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
-//
-// Solidity: function setContentSpace(address content_space) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) SetContentSpace(content_space common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContentSpace(&_BaseAccessControlGroup.TransactOpts, content_space)
 }
 
 // SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
@@ -5166,39 +4887,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) SetContentTypeR
 	return _BaseAccessControlGroup.contract.Transact(opts, "setContentTypeRights", obj, access_type, access)
 }
 
-// SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
-//
-// Solidity: function setContentTypeRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) SetContentTypeRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContentTypeRights(&_BaseAccessControlGroup.TransactOpts, obj, access_type, access)
-}
-
-// SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
-//
-// Solidity: function setContentTypeRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) SetContentTypeRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContentTypeRights(&_BaseAccessControlGroup.TransactOpts, obj, access_type, access)
-}
-
 // SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
 //
 // Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) SetContractRights(opts *bind.TransactOpts, obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "setContractRights", obj, access_type, access)
-}
-
-// SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
-//
-// Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) SetContractRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContractRights(&_BaseAccessControlGroup.TransactOpts, obj, access_type, access)
-}
-
-// SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
-//
-// Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) SetContractRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetContractRights(&_BaseAccessControlGroup.TransactOpts, obj, access_type, access)
 }
 
 // SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
@@ -5208,39 +4901,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) SetLibraryRight
 	return _BaseAccessControlGroup.contract.Transact(opts, "setLibraryRights", lib, access_type, access)
 }
 
-// SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
-//
-// Solidity: function setLibraryRights(address lib, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) SetLibraryRights(lib common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetLibraryRights(&_BaseAccessControlGroup.TransactOpts, lib, access_type, access)
-}
-
-// SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
-//
-// Solidity: function setLibraryRights(address lib, uint8 access_type, uint8 access) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) SetLibraryRights(lib common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.SetLibraryRights(&_BaseAccessControlGroup.TransactOpts, lib, access_type, access)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.TransferCreatorship(&_BaseAccessControlGroup.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.TransferCreatorship(&_BaseAccessControlGroup.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -5250,20 +4915,6 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) TransferOwnersh
 	return _BaseAccessControlGroup.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.TransferOwnership(&_BaseAccessControlGroup.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.TransferOwnership(&_BaseAccessControlGroup.TransactOpts, newOwner)
-}
-
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
 //
 // Solidity: function updateRequest() returns()
@@ -5271,39 +4922,11 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) UpdateRequest(o
 	return _BaseAccessControlGroup.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.UpdateRequest(&_BaseAccessControlGroup.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.UpdateRequest(&_BaseAccessControlGroup.TransactOpts)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseAccessControlGroup *BaseAccessControlGroupTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseAccessControlGroup.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.Fallback(&_BaseAccessControlGroup.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseAccessControlGroup *BaseAccessControlGroupTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseAccessControlGroup.Contract.Fallback(&_BaseAccessControlGroup.TransactOpts, calldata)
 }
 
 // BaseAccessControlGroupCommitPendingIterator is returned from FilterCommitPending and is used to iterate over the raw logs and unpacked data for CommitPending events raised by the BaseAccessControlGroup contract.
@@ -6914,7 +6537,7 @@ var BaseAccessWalletBin = BaseAccessWalletMetaData.Bin
 
 // DeployBaseAccessWallet deploys a new Ethereum contract, binding an instance of BaseAccessWallet to it.
 func DeployBaseAccessWallet(auth *bind.TransactOpts, backend bind.ContractBackend, content_space common.Address) (common.Address, *types.Transaction, *BaseAccessWallet, error) {
-	parsed, err := BaseAccessWalletMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseAccessWallet)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -6949,43 +6572,6 @@ type BaseAccessWalletTransactor struct {
 // BaseAccessWalletFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseAccessWalletFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseAccessWalletSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseAccessWalletSession struct {
-	Contract     *BaseAccessWallet // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// BaseAccessWalletCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseAccessWalletCallerSession struct {
-	Contract *BaseAccessWalletCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts           // Call options to use throughout this session
-}
-
-// BaseAccessWalletTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseAccessWalletTransactorSession struct {
-	Contract     *BaseAccessWalletTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
-}
-
-// BaseAccessWalletRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseAccessWalletRaw struct {
-	Contract *BaseAccessWallet // Generic contract binding to access the raw methods on
-}
-
-// BaseAccessWalletCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseAccessWalletCallerRaw struct {
-	Contract *BaseAccessWalletCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseAccessWalletTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseAccessWalletTransactorRaw struct {
-	Contract *BaseAccessWalletTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseAccessWallet creates a new instance of BaseAccessWallet, bound to a specific deployed contract.
@@ -7026,49 +6612,11 @@ func NewBaseAccessWalletFilterer(address common.Address, filterer bind.ContractF
 
 // bindBaseAccessWallet binds a generic wrapper to an already deployed contract.
 func bindBaseAccessWallet(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseAccessWalletABI))
+	parsed, err := ParsedABI(K_BaseAccessWallet)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseAccessWallet *BaseAccessWalletRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseAccessWallet.Contract.BaseAccessWalletCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseAccessWallet *BaseAccessWalletRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.BaseAccessWalletTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseAccessWallet *BaseAccessWalletRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.BaseAccessWalletTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseAccessWallet *BaseAccessWalletCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseAccessWallet.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseAccessWallet *BaseAccessWalletTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseAccessWallet *BaseAccessWalletTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
@@ -7088,20 +6636,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ACCESSCONFIRMED(opts *bind.Call
 
 }
 
-// ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
-//
-// Solidity: function ACCESS_CONFIRMED() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) ACCESSCONFIRMED() (uint8, error) {
-	return _BaseAccessWallet.Contract.ACCESSCONFIRMED(&_BaseAccessWallet.CallOpts)
-}
-
-// ACCESSCONFIRMED is a free data retrieval call binding the contract method 0x18689733.
-//
-// Solidity: function ACCESS_CONFIRMED() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ACCESSCONFIRMED() (uint8, error) {
-	return _BaseAccessWallet.Contract.ACCESSCONFIRMED(&_BaseAccessWallet.CallOpts)
-}
-
 // ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
 //
 // Solidity: function ACCESS_NONE() view returns(uint8)
@@ -7117,20 +6651,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ACCESSNONE(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
-//
-// Solidity: function ACCESS_NONE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) ACCESSNONE() (uint8, error) {
-	return _BaseAccessWallet.Contract.ACCESSNONE(&_BaseAccessWallet.CallOpts)
-}
-
-// ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
-//
-// Solidity: function ACCESS_NONE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ACCESSNONE() (uint8, error) {
-	return _BaseAccessWallet.Contract.ACCESSNONE(&_BaseAccessWallet.CallOpts)
 }
 
 // ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
@@ -7150,20 +6670,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ACCESSTENTATIVE(opts *bind.Call
 
 }
 
-// ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
-//
-// Solidity: function ACCESS_TENTATIVE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) ACCESSTENTATIVE() (uint8, error) {
-	return _BaseAccessWallet.Contract.ACCESSTENTATIVE(&_BaseAccessWallet.CallOpts)
-}
-
-// ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
-//
-// Solidity: function ACCESS_TENTATIVE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ACCESSTENTATIVE() (uint8, error) {
-	return _BaseAccessWallet.Contract.ACCESSTENTATIVE(&_BaseAccessWallet.CallOpts)
-}
-
 // CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
 //
 // Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
@@ -7179,20 +6685,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYCONTENTOBJECT(opts *bin
 
 	return out0, err
 
-}
-
-// CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
-//
-// Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) CATEGORYCONTENTOBJECT() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYCONTENTOBJECT(&_BaseAccessWallet.CallOpts)
-}
-
-// CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
-//
-// Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CATEGORYCONTENTOBJECT() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYCONTENTOBJECT(&_BaseAccessWallet.CallOpts)
 }
 
 // CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
@@ -7212,20 +6704,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYCONTENTTYPE(opts *bind.
 
 }
 
-// CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
-//
-// Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) CATEGORYCONTENTTYPE() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYCONTENTTYPE(&_BaseAccessWallet.CallOpts)
-}
-
-// CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
-//
-// Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CATEGORYCONTENTTYPE() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYCONTENTTYPE(&_BaseAccessWallet.CallOpts)
-}
-
 // CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
 //
 // Solidity: function CATEGORY_CONTRACT() view returns(uint8)
@@ -7241,20 +6719,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYCONTRACT(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
-//
-// Solidity: function CATEGORY_CONTRACT() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) CATEGORYCONTRACT() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYCONTRACT(&_BaseAccessWallet.CallOpts)
-}
-
-// CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
-//
-// Solidity: function CATEGORY_CONTRACT() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CATEGORYCONTRACT() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYCONTRACT(&_BaseAccessWallet.CallOpts)
 }
 
 // CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
@@ -7274,20 +6738,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYGROUP(opts *bind.CallOp
 
 }
 
-// CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
-//
-// Solidity: function CATEGORY_GROUP() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) CATEGORYGROUP() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYGROUP(&_BaseAccessWallet.CallOpts)
-}
-
-// CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
-//
-// Solidity: function CATEGORY_GROUP() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CATEGORYGROUP() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYGROUP(&_BaseAccessWallet.CallOpts)
-}
-
 // CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
 //
 // Solidity: function CATEGORY_LIBRARY() view returns(uint8)
@@ -7303,20 +6753,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYLIBRARY(opts *bind.Call
 
 	return out0, err
 
-}
-
-// CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
-//
-// Solidity: function CATEGORY_LIBRARY() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) CATEGORYLIBRARY() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYLIBRARY(&_BaseAccessWallet.CallOpts)
-}
-
-// CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
-//
-// Solidity: function CATEGORY_LIBRARY() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CATEGORYLIBRARY() (uint8, error) {
-	return _BaseAccessWallet.Contract.CATEGORYLIBRARY(&_BaseAccessWallet.CallOpts)
 }
 
 // TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
@@ -7336,20 +6772,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) TYPEACCESS(opts *bind.CallOpts)
 
 }
 
-// TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
-//
-// Solidity: function TYPE_ACCESS() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) TYPEACCESS() (uint8, error) {
-	return _BaseAccessWallet.Contract.TYPEACCESS(&_BaseAccessWallet.CallOpts)
-}
-
-// TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
-//
-// Solidity: function TYPE_ACCESS() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) TYPEACCESS() (uint8, error) {
-	return _BaseAccessWallet.Contract.TYPEACCESS(&_BaseAccessWallet.CallOpts)
-}
-
 // TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
 //
 // Solidity: function TYPE_EDIT() view returns(uint8)
@@ -7365,20 +6787,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) TYPEEDIT(opts *bind.CallOpts) (
 
 	return out0, err
 
-}
-
-// TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
-//
-// Solidity: function TYPE_EDIT() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) TYPEEDIT() (uint8, error) {
-	return _BaseAccessWallet.Contract.TYPEEDIT(&_BaseAccessWallet.CallOpts)
-}
-
-// TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
-//
-// Solidity: function TYPE_EDIT() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) TYPEEDIT() (uint8, error) {
-	return _BaseAccessWallet.Contract.TYPEEDIT(&_BaseAccessWallet.CallOpts)
 }
 
 // TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
@@ -7398,20 +6806,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) TYPESEE(opts *bind.CallOpts) (u
 
 }
 
-// TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
-//
-// Solidity: function TYPE_SEE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) TYPESEE() (uint8, error) {
-	return _BaseAccessWallet.Contract.TYPESEE(&_BaseAccessWallet.CallOpts)
-}
-
-// TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
-//
-// Solidity: function TYPE_SEE() view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) TYPESEE() (uint8, error) {
-	return _BaseAccessWallet.Contract.TYPESEE(&_BaseAccessWallet.CallOpts)
-}
-
 // AccessCompleteMsg is a free data retrieval call binding the contract method 0x97510671.
 //
 // Solidity: function accessCompleteMsg(address content_address, uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) pure returns(bytes32)
@@ -7427,20 +6821,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) AccessCompleteMsg(opts *bind.Ca
 
 	return out0, err
 
-}
-
-// AccessCompleteMsg is a free data retrieval call binding the contract method 0x97510671.
-//
-// Solidity: function accessCompleteMsg(address content_address, uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) pure returns(bytes32)
-func (_BaseAccessWallet *BaseAccessWalletSession) AccessCompleteMsg(content_address common.Address, request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) ([32]byte, error) {
-	return _BaseAccessWallet.Contract.AccessCompleteMsg(&_BaseAccessWallet.CallOpts, content_address, request_ID, score_pct, ml_out_hash)
-}
-
-// AccessCompleteMsg is a free data retrieval call binding the contract method 0x97510671.
-//
-// Solidity: function accessCompleteMsg(address content_address, uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) pure returns(bytes32)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) AccessCompleteMsg(content_address common.Address, request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) ([32]byte, error) {
-	return _BaseAccessWallet.Contract.AccessCompleteMsg(&_BaseAccessWallet.CallOpts, content_address, request_ID, score_pct, ml_out_hash)
 }
 
 // AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
@@ -7468,26 +6848,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) AccessGroups(opts *bind.CallOpt
 
 }
 
-// AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
-//
-// Solidity: function accessGroups() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletSession) AccessGroups() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.AccessGroups(&_BaseAccessWallet.CallOpts)
-}
-
-// AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
-//
-// Solidity: function accessGroups() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) AccessGroups() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.AccessGroups(&_BaseAccessWallet.CallOpts)
-}
-
 // AccessRequestMsg is a free data retrieval call binding the contract method 0x957a3aa4.
 //
 // Solidity: function accessRequestMsg(address content_address, uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) pure returns(bytes32)
@@ -7503,20 +6863,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) AccessRequestMsg(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// AccessRequestMsg is a free data retrieval call binding the contract method 0x957a3aa4.
-//
-// Solidity: function accessRequestMsg(address content_address, uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) pure returns(bytes32)
-func (_BaseAccessWallet *BaseAccessWalletSession) AccessRequestMsg(content_address common.Address, level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) ([32]byte, error) {
-	return _BaseAccessWallet.Contract.AccessRequestMsg(&_BaseAccessWallet.CallOpts, content_address, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
-}
-
-// AccessRequestMsg is a free data retrieval call binding the contract method 0x957a3aa4.
-//
-// Solidity: function accessRequestMsg(address content_address, uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) pure returns(bytes32)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) AccessRequestMsg(content_address common.Address, level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) ([32]byte, error) {
-	return _BaseAccessWallet.Contract.AccessRequestMsg(&_BaseAccessWallet.CallOpts, content_address, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
@@ -7536,20 +6882,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) AddressKMS(opts *bind.CallOpts)
 
 }
 
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) AddressKMS() (common.Address, error) {
-	return _BaseAccessWallet.Contract.AddressKMS(&_BaseAccessWallet.CallOpts)
-}
-
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) AddressKMS() (common.Address, error) {
-	return _BaseAccessWallet.Contract.AddressKMS(&_BaseAccessWallet.CallOpts)
-}
-
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
@@ -7565,20 +6897,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CanCommit(opts *bind.CallOpts) 
 
 	return out0, err
 
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CanCommit() (bool, error) {
-	return _BaseAccessWallet.Contract.CanCommit(&_BaseAccessWallet.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CanCommit() (bool, error) {
-	return _BaseAccessWallet.Contract.CanCommit(&_BaseAccessWallet.CallOpts)
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
@@ -7598,20 +6916,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CanConfirm(opts *bind.CallOpts)
 
 }
 
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CanConfirm() (bool, error) {
-	return _BaseAccessWallet.Contract.CanConfirm(&_BaseAccessWallet.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CanConfirm() (bool, error) {
-	return _BaseAccessWallet.Contract.CanConfirm(&_BaseAccessWallet.CallOpts)
-}
-
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
@@ -7627,20 +6931,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CanContribute(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CanContribute(_candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanContribute(&_BaseAccessWallet.CallOpts, _candidate)
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CanContribute(_candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanContribute(&_BaseAccessWallet.CallOpts, _candidate)
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
@@ -7660,20 +6950,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CanNodePublish(opts *bind.CallO
 
 }
 
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanNodePublish(&_BaseAccessWallet.CallOpts, candidate)
-}
-
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanNodePublish(&_BaseAccessWallet.CallOpts, candidate)
-}
-
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
@@ -7689,20 +6965,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CanPublish(opts *bind.CallOpts,
 
 	return out0, err
 
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CanPublish(_candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanPublish(&_BaseAccessWallet.CallOpts, _candidate)
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CanPublish(_candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanPublish(&_BaseAccessWallet.CallOpts, _candidate)
 }
 
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
@@ -7722,20 +6984,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CanReview(opts *bind.CallOpts, 
 
 }
 
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address ) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CanReview(arg0 common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanReview(&_BaseAccessWallet.CallOpts, arg0)
-}
-
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address ) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CanReview(arg0 common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.CanReview(&_BaseAccessWallet.CallOpts, arg0)
-}
-
 // CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
 //
 // Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
@@ -7751,20 +6999,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CheckAccessGroupRights(opts *bi
 
 	return out0, err
 
-}
-
-// CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
-//
-// Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CheckAccessGroupRights(group common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckAccessGroupRights(&_BaseAccessWallet.CallOpts, group, access_type)
-}
-
-// CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
-//
-// Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CheckAccessGroupRights(group common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckAccessGroupRights(&_BaseAccessWallet.CallOpts, group, access_type)
 }
 
 // CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
@@ -7784,20 +7018,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CheckContentObjectRights(opts *
 
 }
 
-// CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
-//
-// Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CheckContentObjectRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckContentObjectRights(&_BaseAccessWallet.CallOpts, obj, access_type)
-}
-
-// CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
-//
-// Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CheckContentObjectRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckContentObjectRights(&_BaseAccessWallet.CallOpts, obj, access_type)
-}
-
 // CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
 //
 // Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
@@ -7813,20 +7033,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CheckContentTypeRights(opts *bi
 
 	return out0, err
 
-}
-
-// CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
-//
-// Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CheckContentTypeRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckContentTypeRights(&_BaseAccessWallet.CallOpts, obj, access_type)
-}
-
-// CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
-//
-// Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CheckContentTypeRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckContentTypeRights(&_BaseAccessWallet.CallOpts, obj, access_type)
 }
 
 // CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
@@ -7846,20 +7052,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CheckContractRights(opts *bind.
 
 }
 
-// CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
-//
-// Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CheckContractRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckContractRights(&_BaseAccessWallet.CallOpts, obj, access_type)
-}
-
-// CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
-//
-// Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CheckContractRights(obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckContractRights(&_BaseAccessWallet.CallOpts, obj, access_type)
-}
-
 // CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
 //
 // Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
@@ -7875,20 +7067,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CheckDirectRights(opts *bind.Ca
 
 	return out0, err
 
-}
-
-// CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
-//
-// Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CheckDirectRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckDirectRights(&_BaseAccessWallet.CallOpts, index_type, obj, access_type)
-}
-
-// CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
-//
-// Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CheckDirectRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckDirectRights(&_BaseAccessWallet.CallOpts, index_type, obj, access_type)
 }
 
 // CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
@@ -7908,20 +7086,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CheckLibraryRights(opts *bind.C
 
 }
 
-// CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
-//
-// Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CheckLibraryRights(lib common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckLibraryRights(&_BaseAccessWallet.CallOpts, lib, access_type)
-}
-
-// CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
-//
-// Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CheckLibraryRights(lib common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckLibraryRights(&_BaseAccessWallet.CallOpts, lib, access_type)
-}
-
 // CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
 //
 // Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
@@ -7937,20 +7101,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CheckRights(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
-//
-// Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) CheckRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckRights(&_BaseAccessWallet.CallOpts, index_type, obj, access_type)
-}
-
-// CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
-//
-// Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CheckRights(index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	return _BaseAccessWallet.Contract.CheckRights(&_BaseAccessWallet.CallOpts, index_type, obj, access_type)
 }
 
 // ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
@@ -7978,26 +7128,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentObjects(opts *bind.CallO
 
 }
 
-// ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
-//
-// Solidity: function contentObjects() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentObjects() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.ContentObjects(&_BaseAccessWallet.CallOpts)
-}
-
-// ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
-//
-// Solidity: function contentObjects() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ContentObjects() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.ContentObjects(&_BaseAccessWallet.CallOpts)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -8013,20 +7143,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentSpace(opts *bind.CallOpt
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentSpace() (common.Address, error) {
-	return _BaseAccessWallet.Contract.ContentSpace(&_BaseAccessWallet.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseAccessWallet.Contract.ContentSpace(&_BaseAccessWallet.CallOpts)
 }
 
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
@@ -8046,20 +7162,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypeContracts(opts *bind
 
 }
 
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _BaseAccessWallet.Contract.ContentTypeContracts(&_BaseAccessWallet.CallOpts, arg0)
-}
-
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _BaseAccessWallet.Contract.ContentTypeContracts(&_BaseAccessWallet.CallOpts, arg0)
-}
-
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
 //
 // Solidity: function contentTypes(uint256 ) view returns(address)
@@ -8075,20 +7177,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypes(opts *bind.CallOpt
 
 	return out0, err
 
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.ContentTypes(&_BaseAccessWallet.CallOpts, arg0)
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.ContentTypes(&_BaseAccessWallet.CallOpts, arg0)
 }
 
 // ContentTypes0 is a free data retrieval call binding the contract method 0x9f46133e.
@@ -8116,26 +7204,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypes0(opts *bind.CallOp
 
 }
 
-// ContentTypes0 is a free data retrieval call binding the contract method 0x9f46133e.
-//
-// Solidity: function contentTypes() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentTypes0() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.ContentTypes0(&_BaseAccessWallet.CallOpts)
-}
-
-// ContentTypes0 is a free data retrieval call binding the contract method 0x9f46133e.
-//
-// Solidity: function contentTypes() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ContentTypes0() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.ContentTypes0(&_BaseAccessWallet.CallOpts)
-}
-
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
 //
 // Solidity: function contentTypesLength() view returns(uint256)
@@ -8153,20 +7221,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypesLength(opts *bind.C
 
 }
 
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentTypesLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ContentTypesLength(&_BaseAccessWallet.CallOpts)
-}
-
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ContentTypesLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ContentTypesLength(&_BaseAccessWallet.CallOpts)
-}
-
 // ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
 //
 // Solidity: function contractExists(address addr) view returns(bool)
@@ -8182,20 +7236,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContractExists(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
-//
-// Solidity: function contractExists(address addr) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContractExists(addr common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.ContractExists(&_BaseAccessWallet.CallOpts, addr)
-}
-
-// ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
-//
-// Solidity: function contractExists(address addr) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ContractExists(addr common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.ContractExists(&_BaseAccessWallet.CallOpts, addr)
 }
 
 // Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
@@ -8223,26 +7263,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) Contracts(opts *bind.CallOpts) 
 
 }
 
-// Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
-//
-// Solidity: function contracts() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletSession) Contracts() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.Contracts(&_BaseAccessWallet.CallOpts)
-}
-
-// Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
-//
-// Solidity: function contracts() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) Contracts() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.Contracts(&_BaseAccessWallet.CallOpts)
-}
-
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
@@ -8258,20 +7278,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CountVersionHashes(opts *bind.C
 
 	return out0, err
 
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.CountVersionHashes(&_BaseAccessWallet.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.CountVersionHashes(&_BaseAccessWallet.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -8291,20 +7297,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) Creator(opts *bind.CallOpts) (c
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) Creator() (common.Address, error) {
-	return _BaseAccessWallet.Contract.Creator(&_BaseAccessWallet.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) Creator() (common.Address, error) {
-	return _BaseAccessWallet.Contract.Creator(&_BaseAccessWallet.CallOpts)
-}
-
 // CurrentTimestamp is a free data retrieval call binding the contract method 0x1e2ff94f.
 //
 // Solidity: function currentTimestamp() view returns(uint256)
@@ -8320,20 +7312,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) CurrentTimestamp(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// CurrentTimestamp is a free data retrieval call binding the contract method 0x1e2ff94f.
-//
-// Solidity: function currentTimestamp() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) CurrentTimestamp() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.CurrentTimestamp(&_BaseAccessWallet.CallOpts)
-}
-
-// CurrentTimestamp is a free data retrieval call binding the contract method 0x1e2ff94f.
-//
-// Solidity: function currentTimestamp() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) CurrentTimestamp() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.CurrentTimestamp(&_BaseAccessWallet.CallOpts)
 }
 
 // ExecStatusBalanceFail is a free data retrieval call binding the contract method 0x9476c478.
@@ -8353,20 +7331,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusBalanceFail(opts *bin
 
 }
 
-// ExecStatusBalanceFail is a free data retrieval call binding the contract method 0x9476c478.
-//
-// Solidity: function execStatusBalanceFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletSession) ExecStatusBalanceFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusBalanceFail(&_BaseAccessWallet.CallOpts)
-}
-
-// ExecStatusBalanceFail is a free data retrieval call binding the contract method 0x9476c478.
-//
-// Solidity: function execStatusBalanceFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ExecStatusBalanceFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusBalanceFail(&_BaseAccessWallet.CallOpts)
-}
-
 // ExecStatusNonceFail is a free data retrieval call binding the contract method 0x04f55daf.
 //
 // Solidity: function execStatusNonceFail() view returns(int256)
@@ -8382,20 +7346,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusNonceFail(opts *bind.
 
 	return out0, err
 
-}
-
-// ExecStatusNonceFail is a free data retrieval call binding the contract method 0x04f55daf.
-//
-// Solidity: function execStatusNonceFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletSession) ExecStatusNonceFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusNonceFail(&_BaseAccessWallet.CallOpts)
-}
-
-// ExecStatusNonceFail is a free data retrieval call binding the contract method 0x04f55daf.
-//
-// Solidity: function execStatusNonceFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ExecStatusNonceFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusNonceFail(&_BaseAccessWallet.CallOpts)
 }
 
 // ExecStatusOk is a free data retrieval call binding the contract method 0x95ba60ba.
@@ -8415,20 +7365,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusOk(opts *bind.CallOpt
 
 }
 
-// ExecStatusOk is a free data retrieval call binding the contract method 0x95ba60ba.
-//
-// Solidity: function execStatusOk() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletSession) ExecStatusOk() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusOk(&_BaseAccessWallet.CallOpts)
-}
-
-// ExecStatusOk is a free data retrieval call binding the contract method 0x95ba60ba.
-//
-// Solidity: function execStatusOk() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ExecStatusOk() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusOk(&_BaseAccessWallet.CallOpts)
-}
-
 // ExecStatusSendFail is a free data retrieval call binding the contract method 0x07a08237.
 //
 // Solidity: function execStatusSendFail() view returns(int256)
@@ -8444,20 +7380,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusSendFail(opts *bind.C
 
 	return out0, err
 
-}
-
-// ExecStatusSendFail is a free data retrieval call binding the contract method 0x07a08237.
-//
-// Solidity: function execStatusSendFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletSession) ExecStatusSendFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusSendFail(&_BaseAccessWallet.CallOpts)
-}
-
-// ExecStatusSendFail is a free data retrieval call binding the contract method 0x07a08237.
-//
-// Solidity: function execStatusSendFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ExecStatusSendFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusSendFail(&_BaseAccessWallet.CallOpts)
 }
 
 // ExecStatusSigFail is a free data retrieval call binding the contract method 0xeb23b7aa.
@@ -8477,20 +7399,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusSigFail(opts *bind.Ca
 
 }
 
-// ExecStatusSigFail is a free data retrieval call binding the contract method 0xeb23b7aa.
-//
-// Solidity: function execStatusSigFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletSession) ExecStatusSigFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusSigFail(&_BaseAccessWallet.CallOpts)
-}
-
-// ExecStatusSigFail is a free data retrieval call binding the contract method 0xeb23b7aa.
-//
-// Solidity: function execStatusSigFail() view returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ExecStatusSigFail() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.ExecStatusSigFail(&_BaseAccessWallet.CallOpts)
-}
-
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
 //
 // Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
@@ -8506,20 +7414,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) FindTypeByHash(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _BaseAccessWallet.Contract.FindTypeByHash(&_BaseAccessWallet.CallOpts, typeHash)
-}
-
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _BaseAccessWallet.Contract.FindTypeByHash(&_BaseAccessWallet.CallOpts, typeHash)
 }
 
 // GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
@@ -8539,20 +7433,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetAccessGroup(opts *bind.CallO
 
 }
 
-// GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
-//
-// Solidity: function getAccessGroup(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetAccessGroup(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetAccessGroup(&_BaseAccessWallet.CallOpts, position)
-}
-
-// GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
-//
-// Solidity: function getAccessGroup(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetAccessGroup(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetAccessGroup(&_BaseAccessWallet.CallOpts, position)
-}
-
 // GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
 //
 // Solidity: function getAccessGroupRights(address group) view returns(uint8)
@@ -8568,20 +7448,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetAccessGroupRights(opts *bind
 
 	return out0, err
 
-}
-
-// GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
-//
-// Solidity: function getAccessGroupRights(address group) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetAccessGroupRights(group common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetAccessGroupRights(&_BaseAccessWallet.CallOpts, group)
-}
-
-// GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
-//
-// Solidity: function getAccessGroupRights(address group) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetAccessGroupRights(group common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetAccessGroupRights(&_BaseAccessWallet.CallOpts, group)
 }
 
 // GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
@@ -8601,20 +7467,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetAccessGroupsLength(opts *bin
 
 }
 
-// GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
-//
-// Solidity: function getAccessGroupsLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetAccessGroupsLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetAccessGroupsLength(&_BaseAccessWallet.CallOpts)
-}
-
-// GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
-//
-// Solidity: function getAccessGroupsLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetAccessGroupsLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetAccessGroupsLength(&_BaseAccessWallet.CallOpts)
-}
-
 // GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
 //
 // Solidity: function getContentObject(uint256 position) view returns(address)
@@ -8630,20 +7482,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentObject(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
-//
-// Solidity: function getContentObject(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContentObject(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetContentObject(&_BaseAccessWallet.CallOpts, position)
-}
-
-// GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
-//
-// Solidity: function getContentObject(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContentObject(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetContentObject(&_BaseAccessWallet.CallOpts, position)
 }
 
 // GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
@@ -8663,20 +7501,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentObjectRights(opts *bi
 
 }
 
-// GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
-//
-// Solidity: function getContentObjectRights(address obj) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContentObjectRights(obj common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetContentObjectRights(&_BaseAccessWallet.CallOpts, obj)
-}
-
-// GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
-//
-// Solidity: function getContentObjectRights(address obj) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContentObjectRights(obj common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetContentObjectRights(&_BaseAccessWallet.CallOpts, obj)
-}
-
 // GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
 //
 // Solidity: function getContentObjectsLength() view returns(uint256)
@@ -8692,20 +7516,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentObjectsLength(opts *b
 
 	return out0, err
 
-}
-
-// GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
-//
-// Solidity: function getContentObjectsLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContentObjectsLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetContentObjectsLength(&_BaseAccessWallet.CallOpts)
-}
-
-// GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
-//
-// Solidity: function getContentObjectsLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContentObjectsLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetContentObjectsLength(&_BaseAccessWallet.CallOpts)
 }
 
 // GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
@@ -8725,20 +7535,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentType(opts *bind.CallO
 
 }
 
-// GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
-//
-// Solidity: function getContentType(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContentType(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetContentType(&_BaseAccessWallet.CallOpts, position)
-}
-
-// GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
-//
-// Solidity: function getContentType(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContentType(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetContentType(&_BaseAccessWallet.CallOpts, position)
-}
-
 // GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
 //
 // Solidity: function getContentTypeRights(address obj) view returns(uint8)
@@ -8754,20 +7550,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentTypeRights(opts *bind
 
 	return out0, err
 
-}
-
-// GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
-//
-// Solidity: function getContentTypeRights(address obj) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContentTypeRights(obj common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetContentTypeRights(&_BaseAccessWallet.CallOpts, obj)
-}
-
-// GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
-//
-// Solidity: function getContentTypeRights(address obj) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContentTypeRights(obj common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetContentTypeRights(&_BaseAccessWallet.CallOpts, obj)
 }
 
 // GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
@@ -8787,20 +7569,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentTypesLength(opts *bin
 
 }
 
-// GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
-//
-// Solidity: function getContentTypesLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContentTypesLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetContentTypesLength(&_BaseAccessWallet.CallOpts)
-}
-
-// GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
-//
-// Solidity: function getContentTypesLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContentTypesLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetContentTypesLength(&_BaseAccessWallet.CallOpts)
-}
-
 // GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
 //
 // Solidity: function getContract(uint256 position) view returns(address)
@@ -8816,20 +7584,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContract(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
-//
-// Solidity: function getContract(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContract(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetContract(&_BaseAccessWallet.CallOpts, position)
-}
-
-// GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
-//
-// Solidity: function getContract(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContract(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetContract(&_BaseAccessWallet.CallOpts, position)
 }
 
 // GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
@@ -8849,20 +7603,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContractRights(opts *bind.Ca
 
 }
 
-// GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
-//
-// Solidity: function getContractRights(address obj) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContractRights(obj common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetContractRights(&_BaseAccessWallet.CallOpts, obj)
-}
-
-// GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
-//
-// Solidity: function getContractRights(address obj) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContractRights(obj common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetContractRights(&_BaseAccessWallet.CallOpts, obj)
-}
-
 // GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
 //
 // Solidity: function getContractsLength() view returns(uint256)
@@ -8878,20 +7618,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetContractsLength(opts *bind.C
 
 	return out0, err
 
-}
-
-// GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
-//
-// Solidity: function getContractsLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetContractsLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetContractsLength(&_BaseAccessWallet.CallOpts)
-}
-
-// GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
-//
-// Solidity: function getContractsLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetContractsLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetContractsLength(&_BaseAccessWallet.CallOpts)
 }
 
 // GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
@@ -8911,20 +7637,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetLibrariesLength(opts *bind.C
 
 }
 
-// GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
-//
-// Solidity: function getLibrariesLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetLibrariesLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetLibrariesLength(&_BaseAccessWallet.CallOpts)
-}
-
-// GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
-//
-// Solidity: function getLibrariesLength() view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetLibrariesLength() (*big.Int, error) {
-	return _BaseAccessWallet.Contract.GetLibrariesLength(&_BaseAccessWallet.CallOpts)
-}
-
 // GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
 //
 // Solidity: function getLibrary(uint256 position) view returns(address)
@@ -8940,20 +7652,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetLibrary(opts *bind.CallOpts,
 
 	return out0, err
 
-}
-
-// GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
-//
-// Solidity: function getLibrary(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetLibrary(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetLibrary(&_BaseAccessWallet.CallOpts, position)
-}
-
-// GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
-//
-// Solidity: function getLibrary(uint256 position) view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetLibrary(position *big.Int) (common.Address, error) {
-	return _BaseAccessWallet.Contract.GetLibrary(&_BaseAccessWallet.CallOpts, position)
 }
 
 // GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
@@ -8973,20 +7671,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) GetLibraryRights(opts *bind.Cal
 
 }
 
-// GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
-//
-// Solidity: function getLibraryRights(address lib) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletSession) GetLibraryRights(lib common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetLibraryRights(&_BaseAccessWallet.CallOpts, lib)
-}
-
-// GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
-//
-// Solidity: function getLibraryRights(address lib) view returns(uint8)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) GetLibraryRights(lib common.Address) (uint8, error) {
-	return _BaseAccessWallet.Contract.GetLibraryRights(&_BaseAccessWallet.CallOpts, lib)
-}
-
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address ) view returns(bool)
@@ -9004,20 +7688,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) HasAccess(opts *bind.CallOpts, 
 
 }
 
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address ) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) HasAccess(arg0 common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.HasAccess(&_BaseAccessWallet.CallOpts, arg0)
-}
-
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address ) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) HasAccess(arg0 common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.HasAccess(&_BaseAccessWallet.CallOpts, arg0)
-}
-
 // HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
 //
 // Solidity: function hasManagerAccess(address candidate) view returns(bool)
@@ -9033,20 +7703,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) HasManagerAccess(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
-//
-// Solidity: function hasManagerAccess(address candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) HasManagerAccess(candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.HasManagerAccess(&_BaseAccessWallet.CallOpts, candidate)
-}
-
-// HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
-//
-// Solidity: function hasManagerAccess(address candidate) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) HasManagerAccess(candidate common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.HasManagerAccess(&_BaseAccessWallet.CallOpts, candidate)
 }
 
 // Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
@@ -9074,26 +7730,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) Libraries(opts *bind.CallOpts) 
 
 }
 
-// Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
-//
-// Solidity: function libraries() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletSession) Libraries() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.Libraries(&_BaseAccessWallet.CallOpts)
-}
-
-// Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
-//
-// Solidity: function libraries() view returns(uint8 category, uint256 length)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) Libraries() (struct {
-	Category uint8
-	Length   *big.Int
-}, error) {
-	return _BaseAccessWallet.Contract.Libraries(&_BaseAccessWallet.CallOpts)
-}
-
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
@@ -9109,20 +7745,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ObjectHash(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseAccessWallet *BaseAccessWalletSession) ObjectHash() (string, error) {
-	return _BaseAccessWallet.Contract.ObjectHash(&_BaseAccessWallet.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ObjectHash() (string, error) {
-	return _BaseAccessWallet.Contract.ObjectHash(&_BaseAccessWallet.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -9142,20 +7764,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) Owner(opts *bind.CallOpts) (com
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) Owner() (common.Address, error) {
-	return _BaseAccessWallet.Contract.Owner(&_BaseAccessWallet.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) Owner() (common.Address, error) {
-	return _BaseAccessWallet.Contract.Owner(&_BaseAccessWallet.CallOpts)
-}
-
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
@@ -9171,20 +7779,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ParentAddress(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletSession) ParentAddress() (common.Address, error) {
-	return _BaseAccessWallet.Contract.ParentAddress(&_BaseAccessWallet.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ParentAddress() (common.Address, error) {
-	return _BaseAccessWallet.Contract.ParentAddress(&_BaseAccessWallet.CallOpts)
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
@@ -9204,20 +7798,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) PendingHash(opts *bind.CallOpts
 
 }
 
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseAccessWallet *BaseAccessWalletSession) PendingHash() (string, error) {
-	return _BaseAccessWallet.Contract.PendingHash(&_BaseAccessWallet.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) PendingHash() (string, error) {
-	return _BaseAccessWallet.Contract.PendingHash(&_BaseAccessWallet.CallOpts)
-}
-
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
 //
 // Solidity: function requiresReview() view returns(bool)
@@ -9233,20 +7813,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) RequiresReview(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) RequiresReview() (bool, error) {
-	return _BaseAccessWallet.Contract.RequiresReview(&_BaseAccessWallet.CallOpts)
-}
-
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) RequiresReview() (bool, error) {
-	return _BaseAccessWallet.Contract.RequiresReview(&_BaseAccessWallet.CallOpts)
 }
 
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
@@ -9266,20 +7832,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ValidType(opts *bind.CallOpts, 
 
 }
 
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) ValidType(content_type common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.ValidType(&_BaseAccessWallet.CallOpts, content_type)
-}
-
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ValidType(content_type common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.ValidType(&_BaseAccessWallet.CallOpts, content_type)
-}
-
 // ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
 //
 // Solidity: function validateTimestamp(uint256 _ts) view returns(bool)
@@ -9295,20 +7847,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ValidateTimestamp(opts *bind.Ca
 
 	return out0, err
 
-}
-
-// ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
-//
-// Solidity: function validateTimestamp(uint256 _ts) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) ValidateTimestamp(_ts *big.Int) (bool, error) {
-	return _BaseAccessWallet.Contract.ValidateTimestamp(&_BaseAccessWallet.CallOpts, _ts)
-}
-
-// ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
-//
-// Solidity: function validateTimestamp(uint256 _ts) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ValidateTimestamp(_ts *big.Int) (bool, error) {
-	return _BaseAccessWallet.Contract.ValidateTimestamp(&_BaseAccessWallet.CallOpts, _ts)
 }
 
 // ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
@@ -9328,20 +7866,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ValidateTransaction(opts *bind.
 
 }
 
-// ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
-//
-// Solidity: function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) ValidateTransaction(_v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (bool, error) {
-	return _BaseAccessWallet.Contract.ValidateTransaction(&_BaseAccessWallet.CallOpts, _v, _r, _s, _dest, _value, _ts)
-}
-
-// ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
-//
-// Solidity: function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) ValidateTransaction(_v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (bool, error) {
-	return _BaseAccessWallet.Contract.ValidateTransaction(&_BaseAccessWallet.CallOpts, _v, _r, _s, _dest, _value, _ts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -9357,20 +7881,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) Version(opts *bind.CallOpts) ([
 
 	return out0, err
 
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseAccessWallet *BaseAccessWalletSession) Version() ([32]byte, error) {
-	return _BaseAccessWallet.Contract.Version(&_BaseAccessWallet.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) Version() ([32]byte, error) {
-	return _BaseAccessWallet.Contract.Version(&_BaseAccessWallet.CallOpts)
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
@@ -9390,20 +7900,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) VersionHashes(opts *bind.CallOp
 
 }
 
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseAccessWallet *BaseAccessWalletSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseAccessWallet.Contract.VersionHashes(&_BaseAccessWallet.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseAccessWallet.Contract.VersionHashes(&_BaseAccessWallet.CallOpts, arg0)
-}
-
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
@@ -9419,20 +7915,6 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) VersionTimestamp(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseAccessWallet.Contract.VersionTimestamp(&_BaseAccessWallet.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseAccessWallet.Contract.VersionTimestamp(&_BaseAccessWallet.CallOpts, arg0)
 }
 
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
@@ -9452,39 +7934,11 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) WhitelistedType(opts *bind.Call
 
 }
 
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.WhitelistedType(&_BaseAccessWallet.CallOpts, content_type)
-}
-
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletCallerSession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _BaseAccessWallet.Contract.WhitelistedType(&_BaseAccessWallet.CallOpts, content_type)
-}
-
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
 //
 // Solidity: function accessRequest() returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) AccessRequest(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "accessRequest")
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) AccessRequest() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.AccessRequest(&_BaseAccessWallet.TransactOpts)
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) AccessRequest() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.AccessRequest(&_BaseAccessWallet.TransactOpts)
 }
 
 // AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
@@ -9494,39 +7948,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) AddContentType(opts *bind.T
 	return _BaseAccessWallet.contract.Transact(opts, "addContentType", content_type, content_contract)
 }
 
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.AddContentType(&_BaseAccessWallet.TransactOpts, content_type, content_contract)
-}
-
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.AddContentType(&_BaseAccessWallet.TransactOpts, content_type, content_contract)
-}
-
 // CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
 //
 // Solidity: function cleanUpAccessGroups() returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) CleanUpAccessGroups(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "cleanUpAccessGroups")
-}
-
-// CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
-//
-// Solidity: function cleanUpAccessGroups() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) CleanUpAccessGroups() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpAccessGroups(&_BaseAccessWallet.TransactOpts)
-}
-
-// CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
-//
-// Solidity: function cleanUpAccessGroups() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) CleanUpAccessGroups() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpAccessGroups(&_BaseAccessWallet.TransactOpts)
 }
 
 // CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
@@ -9536,39 +7962,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) CleanUpAll(opts *bind.Trans
 	return _BaseAccessWallet.contract.Transact(opts, "cleanUpAll")
 }
 
-// CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
-//
-// Solidity: function cleanUpAll() returns(uint256, uint256, uint256, uint256, uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) CleanUpAll() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpAll(&_BaseAccessWallet.TransactOpts)
-}
-
-// CleanUpAll is a paid mutator transaction binding the contract method 0x2fa5c842.
-//
-// Solidity: function cleanUpAll() returns(uint256, uint256, uint256, uint256, uint256)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) CleanUpAll() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpAll(&_BaseAccessWallet.TransactOpts)
-}
-
 // CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
 //
 // Solidity: function cleanUpContentObjects() returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) CleanUpContentObjects(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "cleanUpContentObjects")
-}
-
-// CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
-//
-// Solidity: function cleanUpContentObjects() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) CleanUpContentObjects() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpContentObjects(&_BaseAccessWallet.TransactOpts)
-}
-
-// CleanUpContentObjects is a paid mutator transaction binding the contract method 0x048bd529.
-//
-// Solidity: function cleanUpContentObjects() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) CleanUpContentObjects() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpContentObjects(&_BaseAccessWallet.TransactOpts)
 }
 
 // CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
@@ -9578,39 +7976,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) CleanUpContentTypes(opts *b
 	return _BaseAccessWallet.contract.Transact(opts, "cleanUpContentTypes")
 }
 
-// CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
-//
-// Solidity: function cleanUpContentTypes() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) CleanUpContentTypes() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpContentTypes(&_BaseAccessWallet.TransactOpts)
-}
-
-// CleanUpContentTypes is a paid mutator transaction binding the contract method 0x85e0a200.
-//
-// Solidity: function cleanUpContentTypes() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) CleanUpContentTypes() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpContentTypes(&_BaseAccessWallet.TransactOpts)
-}
-
 // CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
 //
 // Solidity: function cleanUpLibraries() returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) CleanUpLibraries(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "cleanUpLibraries")
-}
-
-// CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
-//
-// Solidity: function cleanUpLibraries() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) CleanUpLibraries() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpLibraries(&_BaseAccessWallet.TransactOpts)
-}
-
-// CleanUpLibraries is a paid mutator transaction binding the contract method 0x92297d7b.
-//
-// Solidity: function cleanUpLibraries() returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) CleanUpLibraries() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.CleanUpLibraries(&_BaseAccessWallet.TransactOpts)
 }
 
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
@@ -9620,39 +7990,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) Commit(opts *bind.TransactO
 	return _BaseAccessWallet.contract.Transact(opts, "commit", _objectHash)
 }
 
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Commit(&_BaseAccessWallet.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Commit(&_BaseAccessWallet.TransactOpts, _objectHash)
-}
-
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
 //
 // Solidity: function confirmCommit() payable returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) ConfirmCommit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "confirmCommit")
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.ConfirmCommit(&_BaseAccessWallet.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.ConfirmCommit(&_BaseAccessWallet.TransactOpts)
 }
 
 // ContentAccessComplete is a paid mutator transaction binding the contract method 0x3abaae55.
@@ -9662,39 +8004,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) ContentAccessComplete(opts 
 	return _BaseAccessWallet.contract.Transact(opts, "contentAccessComplete", content_address, arg1, request_ID, score_pct, ml_out_hash)
 }
 
-// ContentAccessComplete is a paid mutator transaction binding the contract method 0x3abaae55.
-//
-// Solidity: function contentAccessComplete(address content_address, bytes , uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) payable returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentAccessComplete(content_address common.Address, arg1 []byte, request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.ContentAccessComplete(&_BaseAccessWallet.TransactOpts, content_address, arg1, request_ID, score_pct, ml_out_hash)
-}
-
-// ContentAccessComplete is a paid mutator transaction binding the contract method 0x3abaae55.
-//
-// Solidity: function contentAccessComplete(address content_address, bytes , uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) payable returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) ContentAccessComplete(content_address common.Address, arg1 []byte, request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.ContentAccessComplete(&_BaseAccessWallet.TransactOpts, content_address, arg1, request_ID, score_pct, ml_out_hash)
-}
-
 // ContentAccessRequest is a paid mutator transaction binding the contract method 0x0add6d2a.
 //
 // Solidity: function contentAccessRequest(address content_address, bytes , uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) ContentAccessRequest(opts *bind.TransactOpts, content_address common.Address, arg1 []byte, level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "contentAccessRequest", content_address, arg1, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
-}
-
-// ContentAccessRequest is a paid mutator transaction binding the contract method 0x0add6d2a.
-//
-// Solidity: function contentAccessRequest(address content_address, bytes , uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletSession) ContentAccessRequest(content_address common.Address, arg1 []byte, level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.ContentAccessRequest(&_BaseAccessWallet.TransactOpts, content_address, arg1, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
-}
-
-// ContentAccessRequest is a paid mutator transaction binding the contract method 0x0add6d2a.
-//
-// Solidity: function contentAccessRequest(address content_address, bytes , uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) returns(uint256)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) ContentAccessRequest(content_address common.Address, arg1 []byte, level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.ContentAccessRequest(&_BaseAccessWallet.TransactOpts, content_address, arg1, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
 }
 
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
@@ -9704,39 +8018,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) DeleteVersion(opts *bind.Tr
 	return _BaseAccessWallet.contract.Transact(opts, "deleteVersion", _versionHash)
 }
 
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.DeleteVersion(&_BaseAccessWallet.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.DeleteVersion(&_BaseAccessWallet.TransactOpts, _versionHash)
-}
-
 // Execute is a paid mutator transaction binding the contract method 0x508ad278.
 //
 // Solidity: function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) Execute(opts *bind.TransactOpts, _guarantor common.Address, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "execute", _guarantor, _v, _r, _s, _dest, _value, _ts)
-}
-
-// Execute is a paid mutator transaction binding the contract method 0x508ad278.
-//
-// Solidity: function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) Execute(_guarantor common.Address, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Execute(&_BaseAccessWallet.TransactOpts, _guarantor, _v, _r, _s, _dest, _value, _ts)
-}
-
-// Execute is a paid mutator transaction binding the contract method 0x508ad278.
-//
-// Solidity: function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) Execute(_guarantor common.Address, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Execute(&_BaseAccessWallet.TransactOpts, _guarantor, _v, _r, _s, _dest, _value, _ts)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -9746,39 +8032,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) Kill(opts *bind.TransactOpt
 	return _BaseAccessWallet.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) Kill() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Kill(&_BaseAccessWallet.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Kill(&_BaseAccessWallet.TransactOpts)
-}
-
 // Publish is a paid mutator transaction binding the contract method 0x2cf99422.
 //
 // Solidity: function publish(address contentObj) returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletTransactor) Publish(opts *bind.TransactOpts, contentObj common.Address) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "publish", contentObj)
-}
-
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Publish(&_BaseAccessWallet.TransactOpts, contentObj)
-}
-
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Publish(&_BaseAccessWallet.TransactOpts, contentObj)
 }
 
 // RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
@@ -9788,39 +8046,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) RemoveContentType(opts *bin
 	return _BaseAccessWallet.contract.Transact(opts, "removeContentType", content_type)
 }
 
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletSession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.RemoveContentType(&_BaseAccessWallet.TransactOpts, content_type)
-}
-
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.RemoveContentType(&_BaseAccessWallet.TransactOpts, content_type)
-}
-
 // SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
 //
 // Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
 func (_BaseAccessWallet *BaseAccessWalletTransactor) SetAccessGroupRights(opts *bind.TransactOpts, group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "setAccessGroupRights", group, access_type, access)
-}
-
-// SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
-//
-// Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetAccessGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetAccessGroupRights(&_BaseAccessWallet.TransactOpts, group, access_type, access)
-}
-
-// SetAccessGroupRights is a paid mutator transaction binding the contract method 0xf17bda91.
-//
-// Solidity: function setAccessGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetAccessGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetAccessGroupRights(&_BaseAccessWallet.TransactOpts, group, access_type, access)
 }
 
 // SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
@@ -9830,39 +8060,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) SetAccessRights(opts *bind.
 	return _BaseAccessWallet.contract.Transact(opts, "setAccessRights")
 }
 
-// SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
-//
-// Solidity: function setAccessRights() returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetAccessRights() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetAccessRights(&_BaseAccessWallet.TransactOpts)
-}
-
-// SetAccessRights is a paid mutator transaction binding the contract method 0xb8ff1dba.
-//
-// Solidity: function setAccessRights() returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetAccessRights() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetAccessRights(&_BaseAccessWallet.TransactOpts)
-}
-
 // SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
 //
 // Solidity: function setAddressKMS(address address_KMS) returns()
 func (_BaseAccessWallet *BaseAccessWalletTransactor) SetAddressKMS(opts *bind.TransactOpts, address_KMS common.Address) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "setAddressKMS", address_KMS)
-}
-
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetAddressKMS(&_BaseAccessWallet.TransactOpts, address_KMS)
-}
-
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetAddressKMS(&_BaseAccessWallet.TransactOpts, address_KMS)
 }
 
 // SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
@@ -9872,39 +8074,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) SetContentObjectRights(opts
 	return _BaseAccessWallet.contract.Transact(opts, "setContentObjectRights", obj, access_type, access)
 }
 
-// SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
-//
-// Solidity: function setContentObjectRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetContentObjectRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContentObjectRights(&_BaseAccessWallet.TransactOpts, obj, access_type, access)
-}
-
-// SetContentObjectRights is a paid mutator transaction binding the contract method 0x3def5140.
-//
-// Solidity: function setContentObjectRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetContentObjectRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContentObjectRights(&_BaseAccessWallet.TransactOpts, obj, access_type, access)
-}
-
 // SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
 //
 // Solidity: function setContentSpace(address content_space) returns()
 func (_BaseAccessWallet *BaseAccessWalletTransactor) SetContentSpace(opts *bind.TransactOpts, content_space common.Address) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "setContentSpace", content_space)
-}
-
-// SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
-//
-// Solidity: function setContentSpace(address content_space) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetContentSpace(content_space common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContentSpace(&_BaseAccessWallet.TransactOpts, content_space)
-}
-
-// SetContentSpace is a paid mutator transaction binding the contract method 0x055af48f.
-//
-// Solidity: function setContentSpace(address content_space) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetContentSpace(content_space common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContentSpace(&_BaseAccessWallet.TransactOpts, content_space)
 }
 
 // SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
@@ -9914,39 +8088,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) SetContentTypeRights(opts *
 	return _BaseAccessWallet.contract.Transact(opts, "setContentTypeRights", obj, access_type, access)
 }
 
-// SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
-//
-// Solidity: function setContentTypeRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetContentTypeRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContentTypeRights(&_BaseAccessWallet.TransactOpts, obj, access_type, access)
-}
-
-// SetContentTypeRights is a paid mutator transaction binding the contract method 0x8635adb5.
-//
-// Solidity: function setContentTypeRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetContentTypeRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContentTypeRights(&_BaseAccessWallet.TransactOpts, obj, access_type, access)
-}
-
 // SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
 //
 // Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
 func (_BaseAccessWallet *BaseAccessWalletTransactor) SetContractRights(opts *bind.TransactOpts, obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "setContractRights", obj, access_type, access)
-}
-
-// SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
-//
-// Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetContractRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContractRights(&_BaseAccessWallet.TransactOpts, obj, access_type, access)
-}
-
-// SetContractRights is a paid mutator transaction binding the contract method 0x224dcba0.
-//
-// Solidity: function setContractRights(address obj, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetContractRights(obj common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetContractRights(&_BaseAccessWallet.TransactOpts, obj, access_type, access)
 }
 
 // SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
@@ -9956,39 +8102,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) SetLibraryRights(opts *bind
 	return _BaseAccessWallet.contract.Transact(opts, "setLibraryRights", lib, access_type, access)
 }
 
-// SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
-//
-// Solidity: function setLibraryRights(address lib, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) SetLibraryRights(lib common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetLibraryRights(&_BaseAccessWallet.TransactOpts, lib, access_type, access)
-}
-
-// SetLibraryRights is a paid mutator transaction binding the contract method 0x7cbb7bf2.
-//
-// Solidity: function setLibraryRights(address lib, uint8 access_type, uint8 access) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) SetLibraryRights(lib common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.SetLibraryRights(&_BaseAccessWallet.TransactOpts, lib, access_type, access)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseAccessWallet *BaseAccessWalletTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.TransferCreatorship(&_BaseAccessWallet.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.TransferCreatorship(&_BaseAccessWallet.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -9998,20 +8116,6 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) TransferOwnership(opts *bin
 	return _BaseAccessWallet.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.TransferOwnership(&_BaseAccessWallet.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.TransferOwnership(&_BaseAccessWallet.TransactOpts, newOwner)
-}
-
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
 //
 // Solidity: function updateRequest() returns()
@@ -10019,39 +8123,11 @@ func (_BaseAccessWallet *BaseAccessWalletTransactor) UpdateRequest(opts *bind.Tr
 	return _BaseAccessWallet.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.UpdateRequest(&_BaseAccessWallet.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.UpdateRequest(&_BaseAccessWallet.TransactOpts)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseAccessWallet *BaseAccessWalletTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseAccessWallet.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseAccessWallet *BaseAccessWalletSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Fallback(&_BaseAccessWallet.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseAccessWallet *BaseAccessWalletTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseAccessWallet.Contract.Fallback(&_BaseAccessWallet.TransactOpts, calldata)
 }
 
 // BaseAccessWalletAccessRequestIterator is returned from FilterAccessRequest and is used to iterate over the raw logs and unpacked data for AccessRequest events raised by the BaseAccessWallet contract.
@@ -11434,7 +9510,7 @@ var BaseAccessWalletFactoryBin = BaseAccessWalletFactoryMetaData.Bin
 
 // DeployBaseAccessWalletFactory deploys a new Ethereum contract, binding an instance of BaseAccessWalletFactory to it.
 func DeployBaseAccessWalletFactory(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BaseAccessWalletFactory, error) {
-	parsed, err := BaseAccessWalletFactoryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseAccessWalletFactory)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -11469,43 +9545,6 @@ type BaseAccessWalletFactoryTransactor struct {
 // BaseAccessWalletFactoryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseAccessWalletFactoryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseAccessWalletFactorySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseAccessWalletFactorySession struct {
-	Contract     *BaseAccessWalletFactory // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts            // Call options to use throughout this session
-	TransactOpts bind.TransactOpts        // Transaction auth options to use throughout this session
-}
-
-// BaseAccessWalletFactoryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseAccessWalletFactoryCallerSession struct {
-	Contract *BaseAccessWalletFactoryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts                  // Call options to use throughout this session
-}
-
-// BaseAccessWalletFactoryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseAccessWalletFactoryTransactorSession struct {
-	Contract     *BaseAccessWalletFactoryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts                  // Transaction auth options to use throughout this session
-}
-
-// BaseAccessWalletFactoryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseAccessWalletFactoryRaw struct {
-	Contract *BaseAccessWalletFactory // Generic contract binding to access the raw methods on
-}
-
-// BaseAccessWalletFactoryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseAccessWalletFactoryCallerRaw struct {
-	Contract *BaseAccessWalletFactoryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseAccessWalletFactoryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseAccessWalletFactoryTransactorRaw struct {
-	Contract *BaseAccessWalletFactoryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseAccessWalletFactory creates a new instance of BaseAccessWalletFactory, bound to a specific deployed contract.
@@ -11546,49 +9585,11 @@ func NewBaseAccessWalletFactoryFilterer(address common.Address, filterer bind.Co
 
 // bindBaseAccessWalletFactory binds a generic wrapper to an already deployed contract.
 func bindBaseAccessWalletFactory(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseAccessWalletFactoryABI))
+	parsed, err := ParsedABI(K_BaseAccessWalletFactory)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseAccessWalletFactory.Contract.BaseAccessWalletFactoryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.BaseAccessWalletFactoryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.BaseAccessWalletFactoryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseAccessWalletFactory.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -11608,20 +9609,6 @@ func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) ContentSpace(opts
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) ContentSpace() (common.Address, error) {
-	return _BaseAccessWalletFactory.Contract.ContentSpace(&_BaseAccessWalletFactory.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseAccessWalletFactory.Contract.ContentSpace(&_BaseAccessWalletFactory.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -11637,20 +9624,6 @@ func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) Creator(opts *bin
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) Creator() (common.Address, error) {
-	return _BaseAccessWalletFactory.Contract.Creator(&_BaseAccessWalletFactory.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCallerSession) Creator() (common.Address, error) {
-	return _BaseAccessWalletFactory.Contract.Creator(&_BaseAccessWalletFactory.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -11670,20 +9643,6 @@ func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) Owner(opts *bind.
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) Owner() (common.Address, error) {
-	return _BaseAccessWalletFactory.Contract.Owner(&_BaseAccessWalletFactory.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCallerSession) Owner() (common.Address, error) {
-	return _BaseAccessWalletFactory.Contract.Owner(&_BaseAccessWalletFactory.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -11701,39 +9660,11 @@ func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) Version(opts *bin
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) Version() ([32]byte, error) {
-	return _BaseAccessWalletFactory.Contract.Version(&_BaseAccessWalletFactory.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCallerSession) Version() ([32]byte, error) {
-	return _BaseAccessWalletFactory.Contract.Version(&_BaseAccessWalletFactory.CallOpts)
-}
-
 // CreateAccessWallet is a paid mutator transaction binding the contract method 0x7708bc41.
 //
 // Solidity: function createAccessWallet() returns(address)
 func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactor) CreateAccessWallet(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseAccessWalletFactory.contract.Transact(opts, "createAccessWallet")
-}
-
-// CreateAccessWallet is a paid mutator transaction binding the contract method 0x7708bc41.
-//
-// Solidity: function createAccessWallet() returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) CreateAccessWallet() (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.CreateAccessWallet(&_BaseAccessWalletFactory.TransactOpts)
-}
-
-// CreateAccessWallet is a paid mutator transaction binding the contract method 0x7708bc41.
-//
-// Solidity: function createAccessWallet() returns(address)
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactorSession) CreateAccessWallet() (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.CreateAccessWallet(&_BaseAccessWalletFactory.TransactOpts)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -11743,39 +9674,11 @@ func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactor) Kill(opts *bi
 	return _BaseAccessWalletFactory.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) Kill() (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.Kill(&_BaseAccessWalletFactory.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.Kill(&_BaseAccessWalletFactory.TransactOpts)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseAccessWalletFactory.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.TransferCreatorship(&_BaseAccessWalletFactory.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.TransferCreatorship(&_BaseAccessWalletFactory.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -11785,39 +9688,11 @@ func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactor) TransferOwner
 	return _BaseAccessWalletFactory.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.TransferOwnership(&_BaseAccessWalletFactory.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.TransferOwnership(&_BaseAccessWalletFactory.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseAccessWalletFactory.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactorySession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.Fallback(&_BaseAccessWalletFactory.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseAccessWalletFactory *BaseAccessWalletFactoryTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseAccessWalletFactory.Contract.Fallback(&_BaseAccessWalletFactory.TransactOpts, calldata)
 }
 
 // BaseContentMetaData contains all meta data concerning the BaseContent contract.
@@ -11897,7 +9772,7 @@ var BaseContentBin = BaseContentMetaData.Bin
 
 // DeployBaseContent deploys a new Ethereum contract, binding an instance of BaseContent to it.
 func DeployBaseContent(auth *bind.TransactOpts, backend bind.ContractBackend, content_space common.Address, lib common.Address, content_type common.Address) (common.Address, *types.Transaction, *BaseContent, error) {
-	parsed, err := BaseContentMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseContent)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -11932,43 +9807,6 @@ type BaseContentTransactor struct {
 // BaseContentFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseContentFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseContentSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseContentSession struct {
-	Contract     *BaseContent      // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// BaseContentCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseContentCallerSession struct {
-	Contract *BaseContentCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts      // Call options to use throughout this session
-}
-
-// BaseContentTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseContentTransactorSession struct {
-	Contract     *BaseContentTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// BaseContentRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseContentRaw struct {
-	Contract *BaseContent // Generic contract binding to access the raw methods on
-}
-
-// BaseContentCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseContentCallerRaw struct {
-	Contract *BaseContentCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseContentTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseContentTransactorRaw struct {
-	Contract *BaseContentTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseContent creates a new instance of BaseContent, bound to a specific deployed contract.
@@ -12009,49 +9847,11 @@ func NewBaseContentFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindBaseContent binds a generic wrapper to an already deployed contract.
 func bindBaseContent(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseContentABI))
+	parsed, err := ParsedABI(K_BaseContent)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContent *BaseContentRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContent.Contract.BaseContentCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContent *BaseContentRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContent.Contract.BaseContentTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContent *BaseContentRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContent.Contract.BaseContentTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContent *BaseContentCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContent.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContent *BaseContentTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContent.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContent *BaseContentTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContent.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // CANACCESS is a free data retrieval call binding the contract method 0x97ac4fd2.
@@ -12071,20 +9871,6 @@ func (_BaseContent *BaseContentCaller) CANACCESS(opts *bind.CallOpts) (uint8, er
 
 }
 
-// CANACCESS is a free data retrieval call binding the contract method 0x97ac4fd2.
-//
-// Solidity: function CAN_ACCESS() view returns(uint8)
-func (_BaseContent *BaseContentSession) CANACCESS() (uint8, error) {
-	return _BaseContent.Contract.CANACCESS(&_BaseContent.CallOpts)
-}
-
-// CANACCESS is a free data retrieval call binding the contract method 0x97ac4fd2.
-//
-// Solidity: function CAN_ACCESS() view returns(uint8)
-func (_BaseContent *BaseContentCallerSession) CANACCESS() (uint8, error) {
-	return _BaseContent.Contract.CANACCESS(&_BaseContent.CallOpts)
-}
-
 // CANEDIT is a free data retrieval call binding the contract method 0xef1d7dc2.
 //
 // Solidity: function CAN_EDIT() view returns(uint8)
@@ -12100,20 +9886,6 @@ func (_BaseContent *BaseContentCaller) CANEDIT(opts *bind.CallOpts) (uint8, erro
 
 	return out0, err
 
-}
-
-// CANEDIT is a free data retrieval call binding the contract method 0xef1d7dc2.
-//
-// Solidity: function CAN_EDIT() view returns(uint8)
-func (_BaseContent *BaseContentSession) CANEDIT() (uint8, error) {
-	return _BaseContent.Contract.CANEDIT(&_BaseContent.CallOpts)
-}
-
-// CANEDIT is a free data retrieval call binding the contract method 0xef1d7dc2.
-//
-// Solidity: function CAN_EDIT() view returns(uint8)
-func (_BaseContent *BaseContentCallerSession) CANEDIT() (uint8, error) {
-	return _BaseContent.Contract.CANEDIT(&_BaseContent.CallOpts)
 }
 
 // CANSEE is a free data retrieval call binding the contract method 0x100508a2.
@@ -12133,20 +9905,6 @@ func (_BaseContent *BaseContentCaller) CANSEE(opts *bind.CallOpts) (uint8, error
 
 }
 
-// CANSEE is a free data retrieval call binding the contract method 0x100508a2.
-//
-// Solidity: function CAN_SEE() view returns(uint8)
-func (_BaseContent *BaseContentSession) CANSEE() (uint8, error) {
-	return _BaseContent.Contract.CANSEE(&_BaseContent.CallOpts)
-}
-
-// CANSEE is a free data retrieval call binding the contract method 0x100508a2.
-//
-// Solidity: function CAN_SEE() view returns(uint8)
-func (_BaseContent *BaseContentCallerSession) CANSEE() (uint8, error) {
-	return _BaseContent.Contract.CANSEE(&_BaseContent.CallOpts)
-}
-
 // STATUSDRAFT is a free data retrieval call binding the contract method 0x4dd70788.
 //
 // Solidity: function STATUS_DRAFT() view returns(bytes32)
@@ -12162,20 +9920,6 @@ func (_BaseContent *BaseContentCaller) STATUSDRAFT(opts *bind.CallOpts) ([32]byt
 
 	return out0, err
 
-}
-
-// STATUSDRAFT is a free data retrieval call binding the contract method 0x4dd70788.
-//
-// Solidity: function STATUS_DRAFT() view returns(bytes32)
-func (_BaseContent *BaseContentSession) STATUSDRAFT() ([32]byte, error) {
-	return _BaseContent.Contract.STATUSDRAFT(&_BaseContent.CallOpts)
-}
-
-// STATUSDRAFT is a free data retrieval call binding the contract method 0x4dd70788.
-//
-// Solidity: function STATUS_DRAFT() view returns(bytes32)
-func (_BaseContent *BaseContentCallerSession) STATUSDRAFT() ([32]byte, error) {
-	return _BaseContent.Contract.STATUSDRAFT(&_BaseContent.CallOpts)
 }
 
 // STATUSPUBLISHED is a free data retrieval call binding the contract method 0x0017de98.
@@ -12195,20 +9939,6 @@ func (_BaseContent *BaseContentCaller) STATUSPUBLISHED(opts *bind.CallOpts) ([32
 
 }
 
-// STATUSPUBLISHED is a free data retrieval call binding the contract method 0x0017de98.
-//
-// Solidity: function STATUS_PUBLISHED() view returns(bytes32)
-func (_BaseContent *BaseContentSession) STATUSPUBLISHED() ([32]byte, error) {
-	return _BaseContent.Contract.STATUSPUBLISHED(&_BaseContent.CallOpts)
-}
-
-// STATUSPUBLISHED is a free data retrieval call binding the contract method 0x0017de98.
-//
-// Solidity: function STATUS_PUBLISHED() view returns(bytes32)
-func (_BaseContent *BaseContentCallerSession) STATUSPUBLISHED() ([32]byte, error) {
-	return _BaseContent.Contract.STATUSPUBLISHED(&_BaseContent.CallOpts)
-}
-
 // STATUSREVIEW is a free data retrieval call binding the contract method 0xd810f8c8.
 //
 // Solidity: function STATUS_REVIEW() view returns(bytes32)
@@ -12224,20 +9954,6 @@ func (_BaseContent *BaseContentCaller) STATUSREVIEW(opts *bind.CallOpts) ([32]by
 
 	return out0, err
 
-}
-
-// STATUSREVIEW is a free data retrieval call binding the contract method 0xd810f8c8.
-//
-// Solidity: function STATUS_REVIEW() view returns(bytes32)
-func (_BaseContent *BaseContentSession) STATUSREVIEW() ([32]byte, error) {
-	return _BaseContent.Contract.STATUSREVIEW(&_BaseContent.CallOpts)
-}
-
-// STATUSREVIEW is a free data retrieval call binding the contract method 0xd810f8c8.
-//
-// Solidity: function STATUS_REVIEW() view returns(bytes32)
-func (_BaseContent *BaseContentCallerSession) STATUSREVIEW() ([32]byte, error) {
-	return _BaseContent.Contract.STATUSREVIEW(&_BaseContent.CallOpts)
 }
 
 // AccessCharge is a free data retrieval call binding the contract method 0x64ade32b.
@@ -12257,20 +9973,6 @@ func (_BaseContent *BaseContentCaller) AccessCharge(opts *bind.CallOpts) (*big.I
 
 }
 
-// AccessCharge is a free data retrieval call binding the contract method 0x64ade32b.
-//
-// Solidity: function accessCharge() view returns(uint256)
-func (_BaseContent *BaseContentSession) AccessCharge() (*big.Int, error) {
-	return _BaseContent.Contract.AccessCharge(&_BaseContent.CallOpts)
-}
-
-// AccessCharge is a free data retrieval call binding the contract method 0x64ade32b.
-//
-// Solidity: function accessCharge() view returns(uint256)
-func (_BaseContent *BaseContentCallerSession) AccessCharge() (*big.Int, error) {
-	return _BaseContent.Contract.AccessCharge(&_BaseContent.CallOpts)
-}
-
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
 //
 // Solidity: function addressKMS() view returns(address)
@@ -12286,20 +9988,6 @@ func (_BaseContent *BaseContentCaller) AddressKMS(opts *bind.CallOpts) (common.A
 
 	return out0, err
 
-}
-
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseContent *BaseContentSession) AddressKMS() (common.Address, error) {
-	return _BaseContent.Contract.AddressKMS(&_BaseContent.CallOpts)
-}
-
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseContent *BaseContentCallerSession) AddressKMS() (common.Address, error) {
-	return _BaseContent.Contract.AddressKMS(&_BaseContent.CallOpts)
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
@@ -12319,20 +10007,6 @@ func (_BaseContent *BaseContentCaller) CanCommit(opts *bind.CallOpts) (bool, err
 
 }
 
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseContent *BaseContentSession) CanCommit() (bool, error) {
-	return _BaseContent.Contract.CanCommit(&_BaseContent.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseContent *BaseContentCallerSession) CanCommit() (bool, error) {
-	return _BaseContent.Contract.CanCommit(&_BaseContent.CallOpts)
-}
-
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
@@ -12348,20 +10022,6 @@ func (_BaseContent *BaseContentCaller) CanConfirm(opts *bind.CallOpts) (bool, er
 
 	return out0, err
 
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseContent *BaseContentSession) CanConfirm() (bool, error) {
-	return _BaseContent.Contract.CanConfirm(&_BaseContent.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseContent *BaseContentCallerSession) CanConfirm() (bool, error) {
-	return _BaseContent.Contract.CanConfirm(&_BaseContent.CallOpts)
 }
 
 // CanEdit is a free data retrieval call binding the contract method 0x81beeb64.
@@ -12381,20 +10041,6 @@ func (_BaseContent *BaseContentCaller) CanEdit(opts *bind.CallOpts) (bool, error
 
 }
 
-// CanEdit is a free data retrieval call binding the contract method 0x81beeb64.
-//
-// Solidity: function canEdit() view returns(bool)
-func (_BaseContent *BaseContentSession) CanEdit() (bool, error) {
-	return _BaseContent.Contract.CanEdit(&_BaseContent.CallOpts)
-}
-
-// CanEdit is a free data retrieval call binding the contract method 0x81beeb64.
-//
-// Solidity: function canEdit() view returns(bool)
-func (_BaseContent *BaseContentCallerSession) CanEdit() (bool, error) {
-	return _BaseContent.Contract.CanEdit(&_BaseContent.CallOpts)
-}
-
 // CanPublish is a free data retrieval call binding the contract method 0xcbcd4461.
 //
 // Solidity: function canPublish() view returns(bool)
@@ -12410,20 +10056,6 @@ func (_BaseContent *BaseContentCaller) CanPublish(opts *bind.CallOpts) (bool, er
 
 	return out0, err
 
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0xcbcd4461.
-//
-// Solidity: function canPublish() view returns(bool)
-func (_BaseContent *BaseContentSession) CanPublish() (bool, error) {
-	return _BaseContent.Contract.CanPublish(&_BaseContent.CallOpts)
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0xcbcd4461.
-//
-// Solidity: function canPublish() view returns(bool)
-func (_BaseContent *BaseContentCallerSession) CanPublish() (bool, error) {
-	return _BaseContent.Contract.CanPublish(&_BaseContent.CallOpts)
 }
 
 // ContentContractAddress is a free data retrieval call binding the contract method 0x2310167f.
@@ -12443,20 +10075,6 @@ func (_BaseContent *BaseContentCaller) ContentContractAddress(opts *bind.CallOpt
 
 }
 
-// ContentContractAddress is a free data retrieval call binding the contract method 0x2310167f.
-//
-// Solidity: function contentContractAddress() view returns(address)
-func (_BaseContent *BaseContentSession) ContentContractAddress() (common.Address, error) {
-	return _BaseContent.Contract.ContentContractAddress(&_BaseContent.CallOpts)
-}
-
-// ContentContractAddress is a free data retrieval call binding the contract method 0x2310167f.
-//
-// Solidity: function contentContractAddress() view returns(address)
-func (_BaseContent *BaseContentCallerSession) ContentContractAddress() (common.Address, error) {
-	return _BaseContent.Contract.ContentContractAddress(&_BaseContent.CallOpts)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -12472,20 +10090,6 @@ func (_BaseContent *BaseContentCaller) ContentSpace(opts *bind.CallOpts) (common
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContent *BaseContentSession) ContentSpace() (common.Address, error) {
-	return _BaseContent.Contract.ContentSpace(&_BaseContent.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContent *BaseContentCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseContent.Contract.ContentSpace(&_BaseContent.CallOpts)
 }
 
 // ContentType is a free data retrieval call binding the contract method 0x36ebffca.
@@ -12505,20 +10109,6 @@ func (_BaseContent *BaseContentCaller) ContentType(opts *bind.CallOpts) (common.
 
 }
 
-// ContentType is a free data retrieval call binding the contract method 0x36ebffca.
-//
-// Solidity: function contentType() view returns(address)
-func (_BaseContent *BaseContentSession) ContentType() (common.Address, error) {
-	return _BaseContent.Contract.ContentType(&_BaseContent.CallOpts)
-}
-
-// ContentType is a free data retrieval call binding the contract method 0x36ebffca.
-//
-// Solidity: function contentType() view returns(address)
-func (_BaseContent *BaseContentCallerSession) ContentType() (common.Address, error) {
-	return _BaseContent.Contract.ContentType(&_BaseContent.CallOpts)
-}
-
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
@@ -12536,20 +10126,6 @@ func (_BaseContent *BaseContentCaller) CountVersionHashes(opts *bind.CallOpts) (
 
 }
 
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseContent *BaseContentSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseContent.Contract.CountVersionHashes(&_BaseContent.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseContent *BaseContentCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseContent.Contract.CountVersionHashes(&_BaseContent.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -12565,20 +10141,6 @@ func (_BaseContent *BaseContentCaller) Creator(opts *bind.CallOpts) (common.Addr
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContent *BaseContentSession) Creator() (common.Address, error) {
-	return _BaseContent.Contract.Creator(&_BaseContent.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContent *BaseContentCallerSession) Creator() (common.Address, error) {
-	return _BaseContent.Contract.Creator(&_BaseContent.CallOpts)
 }
 
 // GetAccessInfo is a free data retrieval call binding the contract method 0x38d0f504.
@@ -12600,20 +10162,6 @@ func (_BaseContent *BaseContentCaller) GetAccessInfo(opts *bind.CallOpts, level 
 
 }
 
-// GetAccessInfo is a free data retrieval call binding the contract method 0x38d0f504.
-//
-// Solidity: function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) view returns(uint8, uint8, uint256)
-func (_BaseContent *BaseContentSession) GetAccessInfo(level uint8, custom_values [][32]byte, stakeholders []common.Address) (uint8, uint8, *big.Int, error) {
-	return _BaseContent.Contract.GetAccessInfo(&_BaseContent.CallOpts, level, custom_values, stakeholders)
-}
-
-// GetAccessInfo is a free data retrieval call binding the contract method 0x38d0f504.
-//
-// Solidity: function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) view returns(uint8, uint8, uint256)
-func (_BaseContent *BaseContentCallerSession) GetAccessInfo(level uint8, custom_values [][32]byte, stakeholders []common.Address) (uint8, uint8, *big.Int, error) {
-	return _BaseContent.Contract.GetAccessInfo(&_BaseContent.CallOpts, level, custom_values, stakeholders)
-}
-
 // GetCustomInfo is a free data retrieval call binding the contract method 0x3ba58afb.
 //
 // Solidity: function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) view returns(uint8, uint8, uint256)
@@ -12631,20 +10179,6 @@ func (_BaseContent *BaseContentCaller) GetCustomInfo(opts *bind.CallOpts, level 
 
 	return out0, out1, out2, err
 
-}
-
-// GetCustomInfo is a free data retrieval call binding the contract method 0x3ba58afb.
-//
-// Solidity: function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) view returns(uint8, uint8, uint256)
-func (_BaseContent *BaseContentSession) GetCustomInfo(level uint8, custom_values [][32]byte, stakeholders []common.Address) (uint8, uint8, *big.Int, error) {
-	return _BaseContent.Contract.GetCustomInfo(&_BaseContent.CallOpts, level, custom_values, stakeholders)
-}
-
-// GetCustomInfo is a free data retrieval call binding the contract method 0x3ba58afb.
-//
-// Solidity: function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) view returns(uint8, uint8, uint256)
-func (_BaseContent *BaseContentCallerSession) GetCustomInfo(level uint8, custom_values [][32]byte, stakeholders []common.Address) (uint8, uint8, *big.Int, error) {
-	return _BaseContent.Contract.GetCustomInfo(&_BaseContent.CallOpts, level, custom_values, stakeholders)
 }
 
 // GetKMSInfo is a free data retrieval call binding the contract method 0xa8d4160e.
@@ -12665,20 +10199,6 @@ func (_BaseContent *BaseContentCaller) GetKMSInfo(opts *bind.CallOpts, prefix []
 
 }
 
-// GetKMSInfo is a free data retrieval call binding the contract method 0xa8d4160e.
-//
-// Solidity: function getKMSInfo(bytes prefix) view returns(string, string)
-func (_BaseContent *BaseContentSession) GetKMSInfo(prefix []byte) (string, string, error) {
-	return _BaseContent.Contract.GetKMSInfo(&_BaseContent.CallOpts, prefix)
-}
-
-// GetKMSInfo is a free data retrieval call binding the contract method 0xa8d4160e.
-//
-// Solidity: function getKMSInfo(bytes prefix) view returns(string, string)
-func (_BaseContent *BaseContentCallerSession) GetKMSInfo(prefix []byte) (string, string, error) {
-	return _BaseContent.Contract.GetKMSInfo(&_BaseContent.CallOpts, prefix)
-}
-
 // LibraryAddress is a free data retrieval call binding the contract method 0xb816f513.
 //
 // Solidity: function libraryAddress() view returns(address)
@@ -12694,20 +10214,6 @@ func (_BaseContent *BaseContentCaller) LibraryAddress(opts *bind.CallOpts) (comm
 
 	return out0, err
 
-}
-
-// LibraryAddress is a free data retrieval call binding the contract method 0xb816f513.
-//
-// Solidity: function libraryAddress() view returns(address)
-func (_BaseContent *BaseContentSession) LibraryAddress() (common.Address, error) {
-	return _BaseContent.Contract.LibraryAddress(&_BaseContent.CallOpts)
-}
-
-// LibraryAddress is a free data retrieval call binding the contract method 0xb816f513.
-//
-// Solidity: function libraryAddress() view returns(address)
-func (_BaseContent *BaseContentCallerSession) LibraryAddress() (common.Address, error) {
-	return _BaseContent.Contract.LibraryAddress(&_BaseContent.CallOpts)
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
@@ -12727,20 +10233,6 @@ func (_BaseContent *BaseContentCaller) ObjectHash(opts *bind.CallOpts) (string, 
 
 }
 
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseContent *BaseContentSession) ObjectHash() (string, error) {
-	return _BaseContent.Contract.ObjectHash(&_BaseContent.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseContent *BaseContentCallerSession) ObjectHash() (string, error) {
-	return _BaseContent.Contract.ObjectHash(&_BaseContent.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -12756,20 +10248,6 @@ func (_BaseContent *BaseContentCaller) Owner(opts *bind.CallOpts) (common.Addres
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContent *BaseContentSession) Owner() (common.Address, error) {
-	return _BaseContent.Contract.Owner(&_BaseContent.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContent *BaseContentCallerSession) Owner() (common.Address, error) {
-	return _BaseContent.Contract.Owner(&_BaseContent.CallOpts)
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
@@ -12789,20 +10267,6 @@ func (_BaseContent *BaseContentCaller) ParentAddress(opts *bind.CallOpts) (commo
 
 }
 
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseContent *BaseContentSession) ParentAddress() (common.Address, error) {
-	return _BaseContent.Contract.ParentAddress(&_BaseContent.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseContent *BaseContentCallerSession) ParentAddress() (common.Address, error) {
-	return _BaseContent.Contract.ParentAddress(&_BaseContent.CallOpts)
-}
-
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
@@ -12820,20 +10284,6 @@ func (_BaseContent *BaseContentCaller) PendingHash(opts *bind.CallOpts) (string,
 
 }
 
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseContent *BaseContentSession) PendingHash() (string, error) {
-	return _BaseContent.Contract.PendingHash(&_BaseContent.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseContent *BaseContentCallerSession) PendingHash() (string, error) {
-	return _BaseContent.Contract.PendingHash(&_BaseContent.CallOpts)
-}
-
 // RequestID is a free data retrieval call binding the contract method 0x8f779201.
 //
 // Solidity: function requestID() view returns(uint256)
@@ -12849,20 +10299,6 @@ func (_BaseContent *BaseContentCaller) RequestID(opts *bind.CallOpts) (*big.Int,
 
 	return out0, err
 
-}
-
-// RequestID is a free data retrieval call binding the contract method 0x8f779201.
-//
-// Solidity: function requestID() view returns(uint256)
-func (_BaseContent *BaseContentSession) RequestID() (*big.Int, error) {
-	return _BaseContent.Contract.RequestID(&_BaseContent.CallOpts)
-}
-
-// RequestID is a free data retrieval call binding the contract method 0x8f779201.
-//
-// Solidity: function requestID() view returns(uint256)
-func (_BaseContent *BaseContentCallerSession) RequestID() (*big.Int, error) {
-	return _BaseContent.Contract.RequestID(&_BaseContent.CallOpts)
 }
 
 // RequestMap is a free data retrieval call binding the contract method 0x1a735f18.
@@ -12896,30 +10332,6 @@ func (_BaseContent *BaseContentCaller) RequestMap(opts *bind.CallOpts, arg0 *big
 
 }
 
-// RequestMap is a free data retrieval call binding the contract method 0x1a735f18.
-//
-// Solidity: function requestMap(uint256 ) view returns(address originator, uint256 amountPaid, int8 status, uint256 settled)
-func (_BaseContent *BaseContentSession) RequestMap(arg0 *big.Int) (struct {
-	Originator common.Address
-	AmountPaid *big.Int
-	Status     int8
-	Settled    *big.Int
-}, error) {
-	return _BaseContent.Contract.RequestMap(&_BaseContent.CallOpts, arg0)
-}
-
-// RequestMap is a free data retrieval call binding the contract method 0x1a735f18.
-//
-// Solidity: function requestMap(uint256 ) view returns(address originator, uint256 amountPaid, int8 status, uint256 settled)
-func (_BaseContent *BaseContentCallerSession) RequestMap(arg0 *big.Int) (struct {
-	Originator common.Address
-	AmountPaid *big.Int
-	Status     int8
-	Settled    *big.Int
-}, error) {
-	return _BaseContent.Contract.RequestMap(&_BaseContent.CallOpts, arg0)
-}
-
 // StatusCode is a free data retrieval call binding the contract method 0x27c1c21d.
 //
 // Solidity: function statusCode() view returns(int256)
@@ -12935,20 +10347,6 @@ func (_BaseContent *BaseContentCaller) StatusCode(opts *bind.CallOpts) (*big.Int
 
 	return out0, err
 
-}
-
-// StatusCode is a free data retrieval call binding the contract method 0x27c1c21d.
-//
-// Solidity: function statusCode() view returns(int256)
-func (_BaseContent *BaseContentSession) StatusCode() (*big.Int, error) {
-	return _BaseContent.Contract.StatusCode(&_BaseContent.CallOpts)
-}
-
-// StatusCode is a free data retrieval call binding the contract method 0x27c1c21d.
-//
-// Solidity: function statusCode() view returns(int256)
-func (_BaseContent *BaseContentCallerSession) StatusCode() (*big.Int, error) {
-	return _BaseContent.Contract.StatusCode(&_BaseContent.CallOpts)
 }
 
 // StatusCodeDescription is a free data retrieval call binding the contract method 0x38864284.
@@ -12968,20 +10366,6 @@ func (_BaseContent *BaseContentCaller) StatusCodeDescription(opts *bind.CallOpts
 
 }
 
-// StatusCodeDescription is a free data retrieval call binding the contract method 0x38864284.
-//
-// Solidity: function statusCodeDescription(int256 status_code) view returns(bytes32)
-func (_BaseContent *BaseContentSession) StatusCodeDescription(status_code *big.Int) ([32]byte, error) {
-	return _BaseContent.Contract.StatusCodeDescription(&_BaseContent.CallOpts, status_code)
-}
-
-// StatusCodeDescription is a free data retrieval call binding the contract method 0x38864284.
-//
-// Solidity: function statusCodeDescription(int256 status_code) view returns(bytes32)
-func (_BaseContent *BaseContentCallerSession) StatusCodeDescription(status_code *big.Int) ([32]byte, error) {
-	return _BaseContent.Contract.StatusCodeDescription(&_BaseContent.CallOpts, status_code)
-}
-
 // StatusDescription is a free data retrieval call binding the contract method 0xf81ab0ae.
 //
 // Solidity: function statusDescription() view returns(bytes32)
@@ -12997,20 +10381,6 @@ func (_BaseContent *BaseContentCaller) StatusDescription(opts *bind.CallOpts) ([
 
 	return out0, err
 
-}
-
-// StatusDescription is a free data retrieval call binding the contract method 0xf81ab0ae.
-//
-// Solidity: function statusDescription() view returns(bytes32)
-func (_BaseContent *BaseContentSession) StatusDescription() ([32]byte, error) {
-	return _BaseContent.Contract.StatusDescription(&_BaseContent.CallOpts)
-}
-
-// StatusDescription is a free data retrieval call binding the contract method 0xf81ab0ae.
-//
-// Solidity: function statusDescription() view returns(bytes32)
-func (_BaseContent *BaseContentCallerSession) StatusDescription() ([32]byte, error) {
-	return _BaseContent.Contract.StatusDescription(&_BaseContent.CallOpts)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -13030,20 +10400,6 @@ func (_BaseContent *BaseContentCaller) Version(opts *bind.CallOpts) ([32]byte, e
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContent *BaseContentSession) Version() ([32]byte, error) {
-	return _BaseContent.Contract.Version(&_BaseContent.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContent *BaseContentCallerSession) Version() ([32]byte, error) {
-	return _BaseContent.Contract.Version(&_BaseContent.CallOpts)
-}
-
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
@@ -13059,20 +10415,6 @@ func (_BaseContent *BaseContentCaller) VersionHashes(opts *bind.CallOpts, arg0 *
 
 	return out0, err
 
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseContent *BaseContentSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseContent.Contract.VersionHashes(&_BaseContent.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseContent *BaseContentCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseContent.Contract.VersionHashes(&_BaseContent.CallOpts, arg0)
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
@@ -13092,20 +10434,6 @@ func (_BaseContent *BaseContentCaller) VersionTimestamp(opts *bind.CallOpts, arg
 
 }
 
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseContent *BaseContentSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseContent.Contract.VersionTimestamp(&_BaseContent.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseContent *BaseContentCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseContent.Contract.VersionTimestamp(&_BaseContent.CallOpts, arg0)
-}
-
 // Visibility is a free data retrieval call binding the contract method 0x29adec14.
 //
 // Solidity: function visibility() view returns(uint8)
@@ -13123,39 +10451,11 @@ func (_BaseContent *BaseContentCaller) Visibility(opts *bind.CallOpts) (uint8, e
 
 }
 
-// Visibility is a free data retrieval call binding the contract method 0x29adec14.
-//
-// Solidity: function visibility() view returns(uint8)
-func (_BaseContent *BaseContentSession) Visibility() (uint8, error) {
-	return _BaseContent.Contract.Visibility(&_BaseContent.CallOpts)
-}
-
-// Visibility is a free data retrieval call binding the contract method 0x29adec14.
-//
-// Solidity: function visibility() view returns(uint8)
-func (_BaseContent *BaseContentCallerSession) Visibility() (uint8, error) {
-	return _BaseContent.Contract.Visibility(&_BaseContent.CallOpts)
-}
-
 // AccessComplete is a paid mutator transaction binding the contract method 0x5cc4aa9b.
 //
 // Solidity: function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) payable returns(bool)
 func (_BaseContent *BaseContentTransactor) AccessComplete(opts *bind.TransactOpts, request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "accessComplete", request_ID, score_pct, ml_out_hash)
-}
-
-// AccessComplete is a paid mutator transaction binding the contract method 0x5cc4aa9b.
-//
-// Solidity: function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) payable returns(bool)
-func (_BaseContent *BaseContentSession) AccessComplete(request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) (*types.Transaction, error) {
-	return _BaseContent.Contract.AccessComplete(&_BaseContent.TransactOpts, request_ID, score_pct, ml_out_hash)
-}
-
-// AccessComplete is a paid mutator transaction binding the contract method 0x5cc4aa9b.
-//
-// Solidity: function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) payable returns(bool)
-func (_BaseContent *BaseContentTransactorSession) AccessComplete(request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) (*types.Transaction, error) {
-	return _BaseContent.Contract.AccessComplete(&_BaseContent.TransactOpts, request_ID, score_pct, ml_out_hash)
 }
 
 // AccessGrant is a paid mutator transaction binding the contract method 0xee56d767.
@@ -13165,39 +10465,11 @@ func (_BaseContent *BaseContentTransactor) AccessGrant(opts *bind.TransactOpts, 
 	return _BaseContent.contract.Transact(opts, "accessGrant", request_ID, access_granted, re_key, encrypted_AES_key)
 }
 
-// AccessGrant is a paid mutator transaction binding the contract method 0xee56d767.
-//
-// Solidity: function accessGrant(uint256 request_ID, bool access_granted, string re_key, string encrypted_AES_key) returns(bool)
-func (_BaseContent *BaseContentSession) AccessGrant(request_ID *big.Int, access_granted bool, re_key string, encrypted_AES_key string) (*types.Transaction, error) {
-	return _BaseContent.Contract.AccessGrant(&_BaseContent.TransactOpts, request_ID, access_granted, re_key, encrypted_AES_key)
-}
-
-// AccessGrant is a paid mutator transaction binding the contract method 0xee56d767.
-//
-// Solidity: function accessGrant(uint256 request_ID, bool access_granted, string re_key, string encrypted_AES_key) returns(bool)
-func (_BaseContent *BaseContentTransactorSession) AccessGrant(request_ID *big.Int, access_granted bool, re_key string, encrypted_AES_key string) (*types.Transaction, error) {
-	return _BaseContent.Contract.AccessGrant(&_BaseContent.TransactOpts, request_ID, access_granted, re_key, encrypted_AES_key)
-}
-
 // AccessRequest is a paid mutator transaction binding the contract method 0xa1ff106e.
 //
 // Solidity: function accessRequest(uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) payable returns(uint256)
 func (_BaseContent *BaseContentTransactor) AccessRequest(opts *bind.TransactOpts, level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "accessRequest", level, pke_requestor, pke_AFGH, custom_values, stakeholders)
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xa1ff106e.
-//
-// Solidity: function accessRequest(uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) payable returns(uint256)
-func (_BaseContent *BaseContentSession) AccessRequest(level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.AccessRequest(&_BaseContent.TransactOpts, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xa1ff106e.
-//
-// Solidity: function accessRequest(uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) payable returns(uint256)
-func (_BaseContent *BaseContentTransactorSession) AccessRequest(level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.AccessRequest(&_BaseContent.TransactOpts, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
 }
 
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
@@ -13207,39 +10479,11 @@ func (_BaseContent *BaseContentTransactor) Commit(opts *bind.TransactOpts, _obje
 	return _BaseContent.contract.Transact(opts, "commit", _objectHash)
 }
 
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseContent *BaseContentSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseContent.Contract.Commit(&_BaseContent.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseContent *BaseContentTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseContent.Contract.Commit(&_BaseContent.TransactOpts, _objectHash)
-}
-
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
 //
 // Solidity: function confirmCommit() payable returns(bool)
 func (_BaseContent *BaseContentTransactor) ConfirmCommit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "confirmCommit")
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseContent *BaseContentSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseContent.Contract.ConfirmCommit(&_BaseContent.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseContent *BaseContentTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseContent.Contract.ConfirmCommit(&_BaseContent.TransactOpts)
 }
 
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
@@ -13249,39 +10493,11 @@ func (_BaseContent *BaseContentTransactor) DeleteVersion(opts *bind.TransactOpts
 	return _BaseContent.contract.Transact(opts, "deleteVersion", _versionHash)
 }
 
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseContent *BaseContentSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseContent.Contract.DeleteVersion(&_BaseContent.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseContent *BaseContentTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseContent.Contract.DeleteVersion(&_BaseContent.TransactOpts, _versionHash)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_BaseContent *BaseContentTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContent *BaseContentSession) Kill() (*types.Transaction, error) {
-	return _BaseContent.Contract.Kill(&_BaseContent.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContent *BaseContentTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseContent.Contract.Kill(&_BaseContent.TransactOpts)
 }
 
 // Migrate is a paid mutator transaction binding the contract method 0x8c8c61e9.
@@ -13291,39 +10507,11 @@ func (_BaseContent *BaseContentTransactor) Migrate(opts *bind.TransactOpts, _con
 	return _BaseContent.contract.Transact(opts, "migrate", _contentType, _addressKMS, _contentContractAddress, _accessCharge, _statusCode, _requestID, _visibility, _objectHash, _versionHashes)
 }
 
-// Migrate is a paid mutator transaction binding the contract method 0x8c8c61e9.
-//
-// Solidity: function migrate(address _contentType, address _addressKMS, address _contentContractAddress, uint256 _accessCharge, int256 _statusCode, uint256 _requestID, uint8 _visibility, string _objectHash, string _versionHashes) returns()
-func (_BaseContent *BaseContentSession) Migrate(_contentType common.Address, _addressKMS common.Address, _contentContractAddress common.Address, _accessCharge *big.Int, _statusCode *big.Int, _requestID *big.Int, _visibility uint8, _objectHash string, _versionHashes string) (*types.Transaction, error) {
-	return _BaseContent.Contract.Migrate(&_BaseContent.TransactOpts, _contentType, _addressKMS, _contentContractAddress, _accessCharge, _statusCode, _requestID, _visibility, _objectHash, _versionHashes)
-}
-
-// Migrate is a paid mutator transaction binding the contract method 0x8c8c61e9.
-//
-// Solidity: function migrate(address _contentType, address _addressKMS, address _contentContractAddress, uint256 _accessCharge, int256 _statusCode, uint256 _requestID, uint8 _visibility, string _objectHash, string _versionHashes) returns()
-func (_BaseContent *BaseContentTransactorSession) Migrate(_contentType common.Address, _addressKMS common.Address, _contentContractAddress common.Address, _accessCharge *big.Int, _statusCode *big.Int, _requestID *big.Int, _visibility uint8, _objectHash string, _versionHashes string) (*types.Transaction, error) {
-	return _BaseContent.Contract.Migrate(&_BaseContent.TransactOpts, _contentType, _addressKMS, _contentContractAddress, _accessCharge, _statusCode, _requestID, _visibility, _objectHash, _versionHashes)
-}
-
 // ProcessRequestPayment is a paid mutator transaction binding the contract method 0x0c6d3f93.
 //
 // Solidity: function processRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) returns(bool)
 func (_BaseContent *BaseContentTransactor) ProcessRequestPayment(opts *bind.TransactOpts, request_ID *big.Int, payee common.Address, label string, amount *big.Int) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "processRequestPayment", request_ID, payee, label, amount)
-}
-
-// ProcessRequestPayment is a paid mutator transaction binding the contract method 0x0c6d3f93.
-//
-// Solidity: function processRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) returns(bool)
-func (_BaseContent *BaseContentSession) ProcessRequestPayment(request_ID *big.Int, payee common.Address, label string, amount *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.ProcessRequestPayment(&_BaseContent.TransactOpts, request_ID, payee, label, amount)
-}
-
-// ProcessRequestPayment is a paid mutator transaction binding the contract method 0x0c6d3f93.
-//
-// Solidity: function processRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) returns(bool)
-func (_BaseContent *BaseContentTransactorSession) ProcessRequestPayment(request_ID *big.Int, payee common.Address, label string, amount *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.ProcessRequestPayment(&_BaseContent.TransactOpts, request_ID, payee, label, amount)
 }
 
 // Publish is a paid mutator transaction binding the contract method 0x075d4782.
@@ -13333,39 +10521,11 @@ func (_BaseContent *BaseContentTransactor) Publish(opts *bind.TransactOpts) (*ty
 	return _BaseContent.contract.Transact(opts, "publish")
 }
 
-// Publish is a paid mutator transaction binding the contract method 0x075d4782.
-//
-// Solidity: function publish() payable returns(bool)
-func (_BaseContent *BaseContentSession) Publish() (*types.Transaction, error) {
-	return _BaseContent.Contract.Publish(&_BaseContent.TransactOpts)
-}
-
-// Publish is a paid mutator transaction binding the contract method 0x075d4782.
-//
-// Solidity: function publish() payable returns(bool)
-func (_BaseContent *BaseContentTransactorSession) Publish() (*types.Transaction, error) {
-	return _BaseContent.Contract.Publish(&_BaseContent.TransactOpts)
-}
-
 // SetAccessCharge is a paid mutator transaction binding the contract method 0xf4d9bae8.
 //
 // Solidity: function setAccessCharge(uint256 charge) returns(uint256)
 func (_BaseContent *BaseContentTransactor) SetAccessCharge(opts *bind.TransactOpts, charge *big.Int) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "setAccessCharge", charge)
-}
-
-// SetAccessCharge is a paid mutator transaction binding the contract method 0xf4d9bae8.
-//
-// Solidity: function setAccessCharge(uint256 charge) returns(uint256)
-func (_BaseContent *BaseContentSession) SetAccessCharge(charge *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetAccessCharge(&_BaseContent.TransactOpts, charge)
-}
-
-// SetAccessCharge is a paid mutator transaction binding the contract method 0xf4d9bae8.
-//
-// Solidity: function setAccessCharge(uint256 charge) returns(uint256)
-func (_BaseContent *BaseContentTransactorSession) SetAccessCharge(charge *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetAccessCharge(&_BaseContent.TransactOpts, charge)
 }
 
 // SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
@@ -13375,39 +10535,11 @@ func (_BaseContent *BaseContentTransactor) SetAddressKMS(opts *bind.TransactOpts
 	return _BaseContent.contract.Transact(opts, "setAddressKMS", address_KMS)
 }
 
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseContent *BaseContentSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetAddressKMS(&_BaseContent.TransactOpts, address_KMS)
-}
-
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseContent *BaseContentTransactorSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetAddressKMS(&_BaseContent.TransactOpts, address_KMS)
-}
-
 // SetContentContractAddress is a paid mutator transaction binding the contract method 0xe5385303.
 //
 // Solidity: function setContentContractAddress(address addr) returns()
 func (_BaseContent *BaseContentTransactor) SetContentContractAddress(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "setContentContractAddress", addr)
-}
-
-// SetContentContractAddress is a paid mutator transaction binding the contract method 0xe5385303.
-//
-// Solidity: function setContentContractAddress(address addr) returns()
-func (_BaseContent *BaseContentSession) SetContentContractAddress(addr common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetContentContractAddress(&_BaseContent.TransactOpts, addr)
-}
-
-// SetContentContractAddress is a paid mutator transaction binding the contract method 0xe5385303.
-//
-// Solidity: function setContentContractAddress(address addr) returns()
-func (_BaseContent *BaseContentTransactorSession) SetContentContractAddress(addr common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetContentContractAddress(&_BaseContent.TransactOpts, addr)
 }
 
 // SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
@@ -13417,39 +10549,11 @@ func (_BaseContent *BaseContentTransactor) SetGroupRights(opts *bind.TransactOpt
 	return _BaseContent.contract.Transact(opts, "setGroupRights", group, access_type, access)
 }
 
-// SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
-//
-// Solidity: function setGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseContent *BaseContentSession) SetGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetGroupRights(&_BaseContent.TransactOpts, group, access_type, access)
-}
-
-// SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
-//
-// Solidity: function setGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseContent *BaseContentTransactorSession) SetGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetGroupRights(&_BaseContent.TransactOpts, group, access_type, access)
-}
-
 // SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
 //
 // Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
 func (_BaseContent *BaseContentTransactor) SetRights(opts *bind.TransactOpts, stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "setRights", stakeholder, access_type, access)
-}
-
-// SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
-//
-// Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
-func (_BaseContent *BaseContentSession) SetRights(stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetRights(&_BaseContent.TransactOpts, stakeholder, access_type, access)
-}
-
-// SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
-//
-// Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
-func (_BaseContent *BaseContentTransactorSession) SetRights(stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetRights(&_BaseContent.TransactOpts, stakeholder, access_type, access)
 }
 
 // SetStatusCode is a paid mutator transaction binding the contract method 0x5267db44.
@@ -13459,39 +10563,11 @@ func (_BaseContent *BaseContentTransactor) SetStatusCode(opts *bind.TransactOpts
 	return _BaseContent.contract.Transact(opts, "setStatusCode", status_code)
 }
 
-// SetStatusCode is a paid mutator transaction binding the contract method 0x5267db44.
-//
-// Solidity: function setStatusCode(int256 status_code) returns(int256)
-func (_BaseContent *BaseContentSession) SetStatusCode(status_code *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetStatusCode(&_BaseContent.TransactOpts, status_code)
-}
-
-// SetStatusCode is a paid mutator transaction binding the contract method 0x5267db44.
-//
-// Solidity: function setStatusCode(int256 status_code) returns(int256)
-func (_BaseContent *BaseContentTransactorSession) SetStatusCode(status_code *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetStatusCode(&_BaseContent.TransactOpts, status_code)
-}
-
 // SetVisibility is a paid mutator transaction binding the contract method 0xaa024e8b.
 //
 // Solidity: function setVisibility(uint8 visibility_code) returns()
 func (_BaseContent *BaseContentTransactor) SetVisibility(opts *bind.TransactOpts, visibility_code uint8) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "setVisibility", visibility_code)
-}
-
-// SetVisibility is a paid mutator transaction binding the contract method 0xaa024e8b.
-//
-// Solidity: function setVisibility(uint8 visibility_code) returns()
-func (_BaseContent *BaseContentSession) SetVisibility(visibility_code uint8) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetVisibility(&_BaseContent.TransactOpts, visibility_code)
-}
-
-// SetVisibility is a paid mutator transaction binding the contract method 0xaa024e8b.
-//
-// Solidity: function setVisibility(uint8 visibility_code) returns()
-func (_BaseContent *BaseContentTransactorSession) SetVisibility(visibility_code uint8) (*types.Transaction, error) {
-	return _BaseContent.Contract.SetVisibility(&_BaseContent.TransactOpts, visibility_code)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -13501,39 +10577,11 @@ func (_BaseContent *BaseContentTransactor) TransferCreatorship(opts *bind.Transa
 	return _BaseContent.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContent *BaseContentSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.TransferCreatorship(&_BaseContent.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContent *BaseContentTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.TransferCreatorship(&_BaseContent.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_BaseContent *BaseContentTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
 	return _BaseContent.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContent *BaseContentSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.TransferOwnership(&_BaseContent.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContent *BaseContentTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContent.Contract.TransferOwnership(&_BaseContent.TransactOpts, newOwner)
 }
 
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
@@ -13543,20 +10591,6 @@ func (_BaseContent *BaseContentTransactor) UpdateRequest(opts *bind.TransactOpts
 	return _BaseContent.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseContent *BaseContentSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseContent.Contract.UpdateRequest(&_BaseContent.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseContent *BaseContentTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseContent.Contract.UpdateRequest(&_BaseContent.TransactOpts)
-}
-
 // UpdateStatus is a paid mutator transaction binding the contract method 0x8280dd8f.
 //
 // Solidity: function updateStatus(int256 status_code) returns(int256)
@@ -13564,39 +10598,11 @@ func (_BaseContent *BaseContentTransactor) UpdateStatus(opts *bind.TransactOpts,
 	return _BaseContent.contract.Transact(opts, "updateStatus", status_code)
 }
 
-// UpdateStatus is a paid mutator transaction binding the contract method 0x8280dd8f.
-//
-// Solidity: function updateStatus(int256 status_code) returns(int256)
-func (_BaseContent *BaseContentSession) UpdateStatus(status_code *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.UpdateStatus(&_BaseContent.TransactOpts, status_code)
-}
-
-// UpdateStatus is a paid mutator transaction binding the contract method 0x8280dd8f.
-//
-// Solidity: function updateStatus(int256 status_code) returns(int256)
-func (_BaseContent *BaseContentTransactorSession) UpdateStatus(status_code *big.Int) (*types.Transaction, error) {
-	return _BaseContent.Contract.UpdateStatus(&_BaseContent.TransactOpts, status_code)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseContent *BaseContentTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseContent.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContent *BaseContentSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContent.Contract.Fallback(&_BaseContent.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContent *BaseContentTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContent.Contract.Fallback(&_BaseContent.TransactOpts, calldata)
 }
 
 // BaseContentAccessCompleteIterator is returned from FilterAccessComplete and is used to iterate over the raw logs and unpacked data for AccessComplete events raised by the BaseContent contract.
@@ -16737,7 +13743,7 @@ var BaseContentFactoryBin = BaseContentFactoryMetaData.Bin
 
 // DeployBaseContentFactory deploys a new Ethereum contract, binding an instance of BaseContentFactory to it.
 func DeployBaseContentFactory(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BaseContentFactory, error) {
-	parsed, err := BaseContentFactoryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseContentFactory)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -16772,43 +13778,6 @@ type BaseContentFactoryTransactor struct {
 // BaseContentFactoryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseContentFactoryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseContentFactorySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseContentFactorySession struct {
-	Contract     *BaseContentFactory // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts       // Call options to use throughout this session
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// BaseContentFactoryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseContentFactoryCallerSession struct {
-	Contract *BaseContentFactoryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts             // Call options to use throughout this session
-}
-
-// BaseContentFactoryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseContentFactoryTransactorSession struct {
-	Contract     *BaseContentFactoryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts             // Transaction auth options to use throughout this session
-}
-
-// BaseContentFactoryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseContentFactoryRaw struct {
-	Contract *BaseContentFactory // Generic contract binding to access the raw methods on
-}
-
-// BaseContentFactoryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseContentFactoryCallerRaw struct {
-	Contract *BaseContentFactoryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseContentFactoryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseContentFactoryTransactorRaw struct {
-	Contract *BaseContentFactoryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseContentFactory creates a new instance of BaseContentFactory, bound to a specific deployed contract.
@@ -16849,49 +13818,11 @@ func NewBaseContentFactoryFilterer(address common.Address, filterer bind.Contrac
 
 // bindBaseContentFactory binds a generic wrapper to an already deployed contract.
 func bindBaseContentFactory(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseContentFactoryABI))
+	parsed, err := ParsedABI(K_BaseContentFactory)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentFactory *BaseContentFactoryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentFactory.Contract.BaseContentFactoryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentFactory *BaseContentFactoryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.BaseContentFactoryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentFactory *BaseContentFactoryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.BaseContentFactoryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentFactory *BaseContentFactoryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentFactory.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentFactory *BaseContentFactoryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentFactory *BaseContentFactoryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -16911,20 +13842,6 @@ func (_BaseContentFactory *BaseContentFactoryCaller) ContentSpace(opts *bind.Cal
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentFactory *BaseContentFactorySession) ContentSpace() (common.Address, error) {
-	return _BaseContentFactory.Contract.ContentSpace(&_BaseContentFactory.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentFactory *BaseContentFactoryCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseContentFactory.Contract.ContentSpace(&_BaseContentFactory.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -16940,20 +13857,6 @@ func (_BaseContentFactory *BaseContentFactoryCaller) Creator(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentFactory *BaseContentFactorySession) Creator() (common.Address, error) {
-	return _BaseContentFactory.Contract.Creator(&_BaseContentFactory.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentFactory *BaseContentFactoryCallerSession) Creator() (common.Address, error) {
-	return _BaseContentFactory.Contract.Creator(&_BaseContentFactory.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -16973,20 +13876,6 @@ func (_BaseContentFactory *BaseContentFactoryCaller) Owner(opts *bind.CallOpts) 
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentFactory *BaseContentFactorySession) Owner() (common.Address, error) {
-	return _BaseContentFactory.Contract.Owner(&_BaseContentFactory.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentFactory *BaseContentFactoryCallerSession) Owner() (common.Address, error) {
-	return _BaseContentFactory.Contract.Owner(&_BaseContentFactory.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -17004,39 +13893,11 @@ func (_BaseContentFactory *BaseContentFactoryCaller) Version(opts *bind.CallOpts
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentFactory *BaseContentFactorySession) Version() ([32]byte, error) {
-	return _BaseContentFactory.Contract.Version(&_BaseContentFactory.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentFactory *BaseContentFactoryCallerSession) Version() ([32]byte, error) {
-	return _BaseContentFactory.Contract.Version(&_BaseContentFactory.CallOpts)
-}
-
 // CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
 //
 // Solidity: function createContent(address lib, address content_type) returns(address)
 func (_BaseContentFactory *BaseContentFactoryTransactor) CreateContent(opts *bind.TransactOpts, lib common.Address, content_type common.Address) (*types.Transaction, error) {
 	return _BaseContentFactory.contract.Transact(opts, "createContent", lib, content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
-//
-// Solidity: function createContent(address lib, address content_type) returns(address)
-func (_BaseContentFactory *BaseContentFactorySession) CreateContent(lib common.Address, content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.CreateContent(&_BaseContentFactory.TransactOpts, lib, content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
-//
-// Solidity: function createContent(address lib, address content_type) returns(address)
-func (_BaseContentFactory *BaseContentFactoryTransactorSession) CreateContent(lib common.Address, content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.CreateContent(&_BaseContentFactory.TransactOpts, lib, content_type)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -17046,39 +13907,11 @@ func (_BaseContentFactory *BaseContentFactoryTransactor) Kill(opts *bind.Transac
 	return _BaseContentFactory.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentFactory *BaseContentFactorySession) Kill() (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.Kill(&_BaseContentFactory.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentFactory *BaseContentFactoryTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.Kill(&_BaseContentFactory.TransactOpts)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseContentFactory *BaseContentFactoryTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseContentFactory.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentFactory *BaseContentFactorySession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.TransferCreatorship(&_BaseContentFactory.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentFactory *BaseContentFactoryTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.TransferCreatorship(&_BaseContentFactory.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -17088,39 +13921,11 @@ func (_BaseContentFactory *BaseContentFactoryTransactor) TransferOwnership(opts 
 	return _BaseContentFactory.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentFactory *BaseContentFactorySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.TransferOwnership(&_BaseContentFactory.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentFactory *BaseContentFactoryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.TransferOwnership(&_BaseContentFactory.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseContentFactory *BaseContentFactoryTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseContentFactory.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentFactory *BaseContentFactorySession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.Fallback(&_BaseContentFactory.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentFactory *BaseContentFactoryTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentFactory.Contract.Fallback(&_BaseContentFactory.TransactOpts, calldata)
 }
 
 // BaseContentFactoryExtMetaData contains all meta data concerning the BaseContentFactoryExt contract.
@@ -17156,7 +13961,7 @@ var BaseContentFactoryExtBin = BaseContentFactoryExtMetaData.Bin
 
 // DeployBaseContentFactoryExt deploys a new Ethereum contract, binding an instance of BaseContentFactoryExt to it.
 func DeployBaseContentFactoryExt(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BaseContentFactoryExt, error) {
-	parsed, err := BaseContentFactoryExtMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseContentFactoryExt)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -17191,43 +13996,6 @@ type BaseContentFactoryExtTransactor struct {
 // BaseContentFactoryExtFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseContentFactoryExtFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseContentFactoryExtSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseContentFactoryExtSession struct {
-	Contract     *BaseContentFactoryExt // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts          // Call options to use throughout this session
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// BaseContentFactoryExtCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseContentFactoryExtCallerSession struct {
-	Contract *BaseContentFactoryExtCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts                // Call options to use throughout this session
-}
-
-// BaseContentFactoryExtTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseContentFactoryExtTransactorSession struct {
-	Contract     *BaseContentFactoryExtTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts                // Transaction auth options to use throughout this session
-}
-
-// BaseContentFactoryExtRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseContentFactoryExtRaw struct {
-	Contract *BaseContentFactoryExt // Generic contract binding to access the raw methods on
-}
-
-// BaseContentFactoryExtCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseContentFactoryExtCallerRaw struct {
-	Contract *BaseContentFactoryExtCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseContentFactoryExtTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseContentFactoryExtTransactorRaw struct {
-	Contract *BaseContentFactoryExtTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseContentFactoryExt creates a new instance of BaseContentFactoryExt, bound to a specific deployed contract.
@@ -17268,49 +14036,11 @@ func NewBaseContentFactoryExtFilterer(address common.Address, filterer bind.Cont
 
 // bindBaseContentFactoryExt binds a generic wrapper to an already deployed contract.
 func bindBaseContentFactoryExt(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseContentFactoryExtABI))
+	parsed, err := ParsedABI(K_BaseContentFactoryExt)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentFactoryExt *BaseContentFactoryExtRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentFactoryExt.Contract.BaseContentFactoryExtCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentFactoryExt *BaseContentFactoryExtRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.BaseContentFactoryExtTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentFactoryExt *BaseContentFactoryExtRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.BaseContentFactoryExtTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentFactoryExt *BaseContentFactoryExtCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentFactoryExt.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // OPACCESSCOMPLETE is a free data retrieval call binding the contract method 0x4d887374.
@@ -17330,20 +14060,6 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) OPACCESSCOMPLETE(opts
 
 }
 
-// OPACCESSCOMPLETE is a free data retrieval call binding the contract method 0x4d887374.
-//
-// Solidity: function OP_ACCESS_COMPLETE() view returns(uint32)
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) OPACCESSCOMPLETE() (uint32, error) {
-	return _BaseContentFactoryExt.Contract.OPACCESSCOMPLETE(&_BaseContentFactoryExt.CallOpts)
-}
-
-// OPACCESSCOMPLETE is a free data retrieval call binding the contract method 0x4d887374.
-//
-// Solidity: function OP_ACCESS_COMPLETE() view returns(uint32)
-func (_BaseContentFactoryExt *BaseContentFactoryExtCallerSession) OPACCESSCOMPLETE() (uint32, error) {
-	return _BaseContentFactoryExt.Contract.OPACCESSCOMPLETE(&_BaseContentFactoryExt.CallOpts)
-}
-
 // OPACCESSREQUEST is a free data retrieval call binding the contract method 0x52344328.
 //
 // Solidity: function OP_ACCESS_REQUEST() view returns(uint32)
@@ -17359,20 +14075,6 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) OPACCESSREQUEST(opts 
 
 	return out0, err
 
-}
-
-// OPACCESSREQUEST is a free data retrieval call binding the contract method 0x52344328.
-//
-// Solidity: function OP_ACCESS_REQUEST() view returns(uint32)
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) OPACCESSREQUEST() (uint32, error) {
-	return _BaseContentFactoryExt.Contract.OPACCESSREQUEST(&_BaseContentFactoryExt.CallOpts)
-}
-
-// OPACCESSREQUEST is a free data retrieval call binding the contract method 0x52344328.
-//
-// Solidity: function OP_ACCESS_REQUEST() view returns(uint32)
-func (_BaseContentFactoryExt *BaseContentFactoryExtCallerSession) OPACCESSREQUEST() (uint32, error) {
-	return _BaseContentFactoryExt.Contract.OPACCESSREQUEST(&_BaseContentFactoryExt.CallOpts)
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -17392,20 +14094,6 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) ContentSpace(opts *bi
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) ContentSpace() (common.Address, error) {
-	return _BaseContentFactoryExt.Contract.ContentSpace(&_BaseContentFactoryExt.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseContentFactoryExt.Contract.ContentSpace(&_BaseContentFactoryExt.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -17421,20 +14109,6 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) Creator(opts *bind.Ca
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) Creator() (common.Address, error) {
-	return _BaseContentFactoryExt.Contract.Creator(&_BaseContentFactoryExt.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtCallerSession) Creator() (common.Address, error) {
-	return _BaseContentFactoryExt.Contract.Creator(&_BaseContentFactoryExt.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -17454,20 +14128,6 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) Owner(opts *bind.Call
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) Owner() (common.Address, error) {
-	return _BaseContentFactoryExt.Contract.Owner(&_BaseContentFactoryExt.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtCallerSession) Owner() (common.Address, error) {
-	return _BaseContentFactoryExt.Contract.Owner(&_BaseContentFactoryExt.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -17485,39 +14145,11 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) Version(opts *bind.Ca
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) Version() ([32]byte, error) {
-	return _BaseContentFactoryExt.Contract.Version(&_BaseContentFactoryExt.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentFactoryExt *BaseContentFactoryExtCallerSession) Version() ([32]byte, error) {
-	return _BaseContentFactoryExt.Contract.Version(&_BaseContentFactoryExt.CallOpts)
-}
-
 // CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
 //
 // Solidity: function createContent(address lib, address content_type) returns(address)
 func (_BaseContentFactoryExt *BaseContentFactoryExtTransactor) CreateContent(opts *bind.TransactOpts, lib common.Address, content_type common.Address) (*types.Transaction, error) {
 	return _BaseContentFactoryExt.contract.Transact(opts, "createContent", lib, content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
-//
-// Solidity: function createContent(address lib, address content_type) returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) CreateContent(lib common.Address, content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.CreateContent(&_BaseContentFactoryExt.TransactOpts, lib, content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
-//
-// Solidity: function createContent(address lib, address content_type) returns(address)
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorSession) CreateContent(lib common.Address, content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.CreateContent(&_BaseContentFactoryExt.TransactOpts, lib, content_type)
 }
 
 // ExecuteAccessBatch is a paid mutator transaction binding the contract method 0x78cd9119.
@@ -17527,39 +14159,11 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtTransactor) ExecuteAccessBatc
 	return _BaseContentFactoryExt.contract.Transact(opts, "executeAccessBatch", _opCodes, _contentAddrs, _userAddrs, _ctxHashes, _ts, _amt)
 }
 
-// ExecuteAccessBatch is a paid mutator transaction binding the contract method 0x78cd9119.
-//
-// Solidity: function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) ExecuteAccessBatch(_opCodes []uint32, _contentAddrs []common.Address, _userAddrs []common.Address, _ctxHashes [][32]byte, _ts []*big.Int, _amt []*big.Int) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.ExecuteAccessBatch(&_BaseContentFactoryExt.TransactOpts, _opCodes, _contentAddrs, _userAddrs, _ctxHashes, _ts, _amt)
-}
-
-// ExecuteAccessBatch is a paid mutator transaction binding the contract method 0x78cd9119.
-//
-// Solidity: function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorSession) ExecuteAccessBatch(_opCodes []uint32, _contentAddrs []common.Address, _userAddrs []common.Address, _ctxHashes [][32]byte, _ts []*big.Int, _amt []*big.Int) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.ExecuteAccessBatch(&_BaseContentFactoryExt.TransactOpts, _opCodes, _contentAddrs, _userAddrs, _ctxHashes, _ts, _amt)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_BaseContentFactoryExt *BaseContentFactoryExtTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentFactoryExt.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) Kill() (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.Kill(&_BaseContentFactoryExt.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.Kill(&_BaseContentFactoryExt.TransactOpts)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -17569,20 +14173,6 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtTransactor) TransferCreatorsh
 	return _BaseContentFactoryExt.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.TransferCreatorship(&_BaseContentFactoryExt.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.TransferCreatorship(&_BaseContentFactoryExt.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -17590,39 +14180,11 @@ func (_BaseContentFactoryExt *BaseContentFactoryExtTransactor) TransferOwnership
 	return _BaseContentFactoryExt.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.TransferOwnership(&_BaseContentFactoryExt.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.TransferOwnership(&_BaseContentFactoryExt.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseContentFactoryExt *BaseContentFactoryExtTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseContentFactoryExt.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.Fallback(&_BaseContentFactoryExt.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentFactoryExt *BaseContentFactoryExtTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentFactoryExt.Contract.Fallback(&_BaseContentFactoryExt.TransactOpts, calldata)
 }
 
 // BaseContentFactoryExtAccessCompleteIterator is returned from FilterAccessComplete and is used to iterate over the raw logs and unpacked data for AccessComplete events raised by the BaseContentFactoryExt contract.
@@ -18004,7 +14566,7 @@ var BaseContentSpaceBin = BaseContentSpaceMetaData.Bin
 
 // DeployBaseContentSpace deploys a new Ethereum contract, binding an instance of BaseContentSpace to it.
 func DeployBaseContentSpace(auth *bind.TransactOpts, backend bind.ContractBackend, content_space_name string) (common.Address, *types.Transaction, *BaseContentSpace, error) {
-	parsed, err := BaseContentSpaceMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseContentSpace)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -18039,43 +14601,6 @@ type BaseContentSpaceTransactor struct {
 // BaseContentSpaceFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseContentSpaceFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseContentSpaceSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseContentSpaceSession struct {
-	Contract     *BaseContentSpace // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// BaseContentSpaceCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseContentSpaceCallerSession struct {
-	Contract *BaseContentSpaceCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts           // Call options to use throughout this session
-}
-
-// BaseContentSpaceTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseContentSpaceTransactorSession struct {
-	Contract     *BaseContentSpaceTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
-}
-
-// BaseContentSpaceRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseContentSpaceRaw struct {
-	Contract *BaseContentSpace // Generic contract binding to access the raw methods on
-}
-
-// BaseContentSpaceCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseContentSpaceCallerRaw struct {
-	Contract *BaseContentSpaceCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseContentSpaceTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseContentSpaceTransactorRaw struct {
-	Contract *BaseContentSpaceTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseContentSpace creates a new instance of BaseContentSpace, bound to a specific deployed contract.
@@ -18116,49 +14641,11 @@ func NewBaseContentSpaceFilterer(address common.Address, filterer bind.ContractF
 
 // bindBaseContentSpace binds a generic wrapper to an already deployed contract.
 func bindBaseContentSpace(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseContentSpaceABI))
+	parsed, err := ParsedABI(K_BaseContentSpace)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentSpace *BaseContentSpaceRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentSpace.Contract.BaseContentSpaceCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentSpace *BaseContentSpaceRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.BaseContentSpaceTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentSpace *BaseContentSpaceRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.BaseContentSpaceTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentSpace *BaseContentSpaceCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentSpace.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentSpace *BaseContentSpaceTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentSpace *BaseContentSpaceTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ActiveNodeAddresses is a free data retrieval call binding the contract method 0x52f82dd8.
@@ -18178,20 +14665,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ActiveNodeAddresses(opts *bind.
 
 }
 
-// ActiveNodeAddresses is a free data retrieval call binding the contract method 0x52f82dd8.
-//
-// Solidity: function activeNodeAddresses(uint256 ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) ActiveNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _BaseContentSpace.Contract.ActiveNodeAddresses(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// ActiveNodeAddresses is a free data retrieval call binding the contract method 0x52f82dd8.
-//
-// Solidity: function activeNodeAddresses(uint256 ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ActiveNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _BaseContentSpace.Contract.ActiveNodeAddresses(&_BaseContentSpace.CallOpts, arg0)
-}
-
 // ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
 //
 // Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
@@ -18207,20 +14680,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ActiveNodeLocators(opts *bind.C
 
 	return out0, err
 
-}
-
-// ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
-//
-// Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
-func (_BaseContentSpace *BaseContentSpaceSession) ActiveNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _BaseContentSpace.Contract.ActiveNodeLocators(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
-//
-// Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ActiveNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _BaseContentSpace.Contract.ActiveNodeLocators(&_BaseContentSpace.CallOpts, arg0)
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
@@ -18240,20 +14699,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) AddressKMS(opts *bind.CallOpts)
 
 }
 
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) AddressKMS() (common.Address, error) {
-	return _BaseContentSpace.Contract.AddressKMS(&_BaseContentSpace.CallOpts)
-}
-
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) AddressKMS() (common.Address, error) {
-	return _BaseContentSpace.Contract.AddressKMS(&_BaseContentSpace.CallOpts)
-}
-
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
@@ -18269,20 +14714,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CanCommit(opts *bind.CallOpts) 
 
 	return out0, err
 
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) CanCommit() (bool, error) {
-	return _BaseContentSpace.Contract.CanCommit(&_BaseContentSpace.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CanCommit() (bool, error) {
-	return _BaseContentSpace.Contract.CanCommit(&_BaseContentSpace.CallOpts)
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
@@ -18302,20 +14733,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CanConfirm(opts *bind.CallOpts)
 
 }
 
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) CanConfirm() (bool, error) {
-	return _BaseContentSpace.Contract.CanConfirm(&_BaseContentSpace.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CanConfirm() (bool, error) {
-	return _BaseContentSpace.Contract.CanConfirm(&_BaseContentSpace.CallOpts)
-}
-
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
@@ -18331,20 +14748,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CanContribute(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) CanContribute(_candidate common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanContribute(&_BaseContentSpace.CallOpts, _candidate)
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CanContribute(_candidate common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanContribute(&_BaseContentSpace.CallOpts, _candidate)
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
@@ -18364,20 +14767,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CanNodePublish(opts *bind.CallO
 
 }
 
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanNodePublish(&_BaseContentSpace.CallOpts, candidate)
-}
-
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanNodePublish(&_BaseContentSpace.CallOpts, candidate)
-}
-
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
@@ -18393,20 +14782,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CanPublish(opts *bind.CallOpts,
 
 	return out0, err
 
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) CanPublish(_candidate common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanPublish(&_BaseContentSpace.CallOpts, _candidate)
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CanPublish(_candidate common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanPublish(&_BaseContentSpace.CallOpts, _candidate)
 }
 
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
@@ -18426,20 +14801,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CanReview(opts *bind.CallOpts, 
 
 }
 
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address ) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) CanReview(arg0 common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanReview(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address ) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CanReview(arg0 common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.CanReview(&_BaseContentSpace.CallOpts, arg0)
-}
-
 // CheckKMS is a free data retrieval call binding the contract method 0x8d2a23db.
 //
 // Solidity: function checkKMS(string _kmsIdStr) view returns(uint256)
@@ -18455,20 +14816,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CheckKMS(opts *bind.CallOpts, _
 
 	return out0, err
 
-}
-
-// CheckKMS is a free data retrieval call binding the contract method 0x8d2a23db.
-//
-// Solidity: function checkKMS(string _kmsIdStr) view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceSession) CheckKMS(_kmsIdStr string) (*big.Int, error) {
-	return _BaseContentSpace.Contract.CheckKMS(&_BaseContentSpace.CallOpts, _kmsIdStr)
-}
-
-// CheckKMS is a free data retrieval call binding the contract method 0x8d2a23db.
-//
-// Solidity: function checkKMS(string _kmsIdStr) view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CheckKMS(_kmsIdStr string) (*big.Int, error) {
-	return _BaseContentSpace.Contract.CheckKMS(&_BaseContentSpace.CallOpts, _kmsIdStr)
 }
 
 // CheckKMSAddr is a free data retrieval call binding the contract method 0xd6be0f49.
@@ -18488,20 +14835,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CheckKMSAddr(opts *bind.CallOpt
 
 }
 
-// CheckKMSAddr is a free data retrieval call binding the contract method 0xd6be0f49.
-//
-// Solidity: function checkKMSAddr(address _kmsAddr) view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceSession) CheckKMSAddr(_kmsAddr common.Address) (*big.Int, error) {
-	return _BaseContentSpace.Contract.CheckKMSAddr(&_BaseContentSpace.CallOpts, _kmsAddr)
-}
-
-// CheckKMSAddr is a free data retrieval call binding the contract method 0xd6be0f49.
-//
-// Solidity: function checkKMSAddr(address _kmsAddr) view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CheckKMSAddr(_kmsAddr common.Address) (*big.Int, error) {
-	return _BaseContentSpace.Contract.CheckKMSAddr(&_BaseContentSpace.CallOpts, _kmsAddr)
-}
-
 // ContentFactory is a free data retrieval call binding the contract method 0x904696a8.
 //
 // Solidity: function contentFactory() view returns(address)
@@ -18517,20 +14850,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ContentFactory(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// ContentFactory is a free data retrieval call binding the contract method 0x904696a8.
-//
-// Solidity: function contentFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) ContentFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentFactory(&_BaseContentSpace.CallOpts)
-}
-
-// ContentFactory is a free data retrieval call binding the contract method 0x904696a8.
-//
-// Solidity: function contentFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ContentFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentFactory(&_BaseContentSpace.CallOpts)
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -18550,20 +14869,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ContentSpace(opts *bind.CallOpt
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) ContentSpace() (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentSpace(&_BaseContentSpace.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentSpace(&_BaseContentSpace.CallOpts)
-}
-
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
 //
 // Solidity: function contentTypeContracts(address ) view returns(address)
@@ -18579,20 +14884,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ContentTypeContracts(opts *bind
 
 	return out0, err
 
-}
-
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentTypeContracts(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentTypeContracts(&_BaseContentSpace.CallOpts, arg0)
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
@@ -18612,20 +14903,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ContentTypes(opts *bind.CallOpt
 
 }
 
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentTypes(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _BaseContentSpace.Contract.ContentTypes(&_BaseContentSpace.CallOpts, arg0)
-}
-
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
 //
 // Solidity: function contentTypesLength() view returns(uint256)
@@ -18641,20 +14918,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ContentTypesLength(opts *bind.C
 
 	return out0, err
 
-}
-
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceSession) ContentTypesLength() (*big.Int, error) {
-	return _BaseContentSpace.Contract.ContentTypesLength(&_BaseContentSpace.CallOpts)
-}
-
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ContentTypesLength() (*big.Int, error) {
-	return _BaseContentSpace.Contract.ContentTypesLength(&_BaseContentSpace.CallOpts)
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
@@ -18674,20 +14937,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) CountVersionHashes(opts *bind.C
 
 }
 
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseContentSpace.Contract.CountVersionHashes(&_BaseContentSpace.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseContentSpace.Contract.CountVersionHashes(&_BaseContentSpace.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -18703,20 +14952,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) Creator(opts *bind.CallOpts) (c
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) Creator() (common.Address, error) {
-	return _BaseContentSpace.Contract.Creator(&_BaseContentSpace.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) Creator() (common.Address, error) {
-	return _BaseContentSpace.Contract.Creator(&_BaseContentSpace.CallOpts)
 }
 
 // Description is a free data retrieval call binding the contract method 0x7284e416.
@@ -18736,20 +14971,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) Description(opts *bind.CallOpts
 
 }
 
-// Description is a free data retrieval call binding the contract method 0x7284e416.
-//
-// Solidity: function description() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceSession) Description() (string, error) {
-	return _BaseContentSpace.Contract.Description(&_BaseContentSpace.CallOpts)
-}
-
-// Description is a free data retrieval call binding the contract method 0x7284e416.
-//
-// Solidity: function description() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) Description() (string, error) {
-	return _BaseContentSpace.Contract.Description(&_BaseContentSpace.CallOpts)
-}
-
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
 // Solidity: function factory() view returns(address)
@@ -18765,20 +14986,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) Factory(opts *bind.CallOpts) (c
 
 	return out0, err
 
-}
-
-// Factory is a free data retrieval call binding the contract method 0xc45a0155.
-//
-// Solidity: function factory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) Factory() (common.Address, error) {
-	return _BaseContentSpace.Contract.Factory(&_BaseContentSpace.CallOpts)
-}
-
-// Factory is a free data retrieval call binding the contract method 0xc45a0155.
-//
-// Solidity: function factory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) Factory() (common.Address, error) {
-	return _BaseContentSpace.Contract.Factory(&_BaseContentSpace.CallOpts)
 }
 
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
@@ -18798,20 +15005,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) FindTypeByHash(opts *bind.CallO
 
 }
 
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _BaseContentSpace.Contract.FindTypeByHash(&_BaseContentSpace.CallOpts, typeHash)
-}
-
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _BaseContentSpace.Contract.FindTypeByHash(&_BaseContentSpace.CallOpts, typeHash)
-}
-
 // GetKMSID is a free data retrieval call binding the contract method 0x589aafc1.
 //
 // Solidity: function getKMSID(address _kmsAddr) view returns(string)
@@ -18827,20 +15020,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) GetKMSID(opts *bind.CallOpts, _
 
 	return out0, err
 
-}
-
-// GetKMSID is a free data retrieval call binding the contract method 0x589aafc1.
-//
-// Solidity: function getKMSID(address _kmsAddr) view returns(string)
-func (_BaseContentSpace *BaseContentSpaceSession) GetKMSID(_kmsAddr common.Address) (string, error) {
-	return _BaseContentSpace.Contract.GetKMSID(&_BaseContentSpace.CallOpts, _kmsAddr)
-}
-
-// GetKMSID is a free data retrieval call binding the contract method 0x589aafc1.
-//
-// Solidity: function getKMSID(address _kmsAddr) view returns(string)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) GetKMSID(_kmsAddr common.Address) (string, error) {
-	return _BaseContentSpace.Contract.GetKMSID(&_BaseContentSpace.CallOpts, _kmsAddr)
 }
 
 // GetKMSInfo is a free data retrieval call binding the contract method 0x268bfac4.
@@ -18861,20 +15040,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) GetKMSInfo(opts *bind.CallOpts,
 
 }
 
-// GetKMSInfo is a free data retrieval call binding the contract method 0x268bfac4.
-//
-// Solidity: function getKMSInfo(string _kmsID, bytes prefix) view returns(string, string)
-func (_BaseContentSpace *BaseContentSpaceSession) GetKMSInfo(_kmsID string, prefix []byte) (string, string, error) {
-	return _BaseContentSpace.Contract.GetKMSInfo(&_BaseContentSpace.CallOpts, _kmsID, prefix)
-}
-
-// GetKMSInfo is a free data retrieval call binding the contract method 0x268bfac4.
-//
-// Solidity: function getKMSInfo(string _kmsID, bytes prefix) view returns(string, string)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) GetKMSInfo(_kmsID string, prefix []byte) (string, string, error) {
-	return _BaseContentSpace.Contract.GetKMSInfo(&_BaseContentSpace.CallOpts, _kmsID, prefix)
-}
-
 // GetMeta is a free data retrieval call binding the contract method 0xac55c906.
 //
 // Solidity: function getMeta(bytes key) view returns(bytes)
@@ -18890,20 +15055,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) GetMeta(opts *bind.CallOpts, ke
 
 	return out0, err
 
-}
-
-// GetMeta is a free data retrieval call binding the contract method 0xac55c906.
-//
-// Solidity: function getMeta(bytes key) view returns(bytes)
-func (_BaseContentSpace *BaseContentSpaceSession) GetMeta(key []byte) ([]byte, error) {
-	return _BaseContentSpace.Contract.GetMeta(&_BaseContentSpace.CallOpts, key)
-}
-
-// GetMeta is a free data retrieval call binding the contract method 0xac55c906.
-//
-// Solidity: function getMeta(bytes key) view returns(bytes)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) GetMeta(key []byte) ([]byte, error) {
-	return _BaseContentSpace.Contract.GetMeta(&_BaseContentSpace.CallOpts, key)
 }
 
 // GroupFactory is a free data retrieval call binding the contract method 0xb04b6caa.
@@ -18923,20 +15074,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) GroupFactory(opts *bind.CallOpt
 
 }
 
-// GroupFactory is a free data retrieval call binding the contract method 0xb04b6caa.
-//
-// Solidity: function groupFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) GroupFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.GroupFactory(&_BaseContentSpace.CallOpts)
-}
-
-// GroupFactory is a free data retrieval call binding the contract method 0xb04b6caa.
-//
-// Solidity: function groupFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) GroupFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.GroupFactory(&_BaseContentSpace.CallOpts)
-}
-
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address ) view returns(bool)
@@ -18952,20 +15089,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) HasAccess(opts *bind.CallOpts, 
 
 	return out0, err
 
-}
-
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address ) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) HasAccess(arg0 common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.HasAccess(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address ) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) HasAccess(arg0 common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.HasAccess(&_BaseContentSpace.CallOpts, arg0)
 }
 
 // LibraryFactory is a free data retrieval call binding the contract method 0x441c5aa3.
@@ -18985,20 +15108,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) LibraryFactory(opts *bind.CallO
 
 }
 
-// LibraryFactory is a free data retrieval call binding the contract method 0x441c5aa3.
-//
-// Solidity: function libraryFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) LibraryFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.LibraryFactory(&_BaseContentSpace.CallOpts)
-}
-
-// LibraryFactory is a free data retrieval call binding the contract method 0x441c5aa3.
-//
-// Solidity: function libraryFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) LibraryFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.LibraryFactory(&_BaseContentSpace.CallOpts)
-}
-
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
@@ -19014,20 +15123,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) Name(opts *bind.CallOpts) (stri
 
 	return out0, err
 
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceSession) Name() (string, error) {
-	return _BaseContentSpace.Contract.Name(&_BaseContentSpace.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) Name() (string, error) {
-	return _BaseContentSpace.Contract.Name(&_BaseContentSpace.CallOpts)
 }
 
 // NodeMapping is a free data retrieval call binding the contract method 0xfbd1b4ce.
@@ -19047,20 +15142,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) NodeMapping(opts *bind.CallOpts
 
 }
 
-// NodeMapping is a free data retrieval call binding the contract method 0xfbd1b4ce.
-//
-// Solidity: function nodeMapping(address ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) NodeMapping(arg0 common.Address) (common.Address, error) {
-	return _BaseContentSpace.Contract.NodeMapping(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// NodeMapping is a free data retrieval call binding the contract method 0xfbd1b4ce.
-//
-// Solidity: function nodeMapping(address ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) NodeMapping(arg0 common.Address) (common.Address, error) {
-	return _BaseContentSpace.Contract.NodeMapping(&_BaseContentSpace.CallOpts, arg0)
-}
-
 // NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
 //
 // Solidity: function numActiveNodes() view returns(uint256)
@@ -19076,20 +15157,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) NumActiveNodes(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
-//
-// Solidity: function numActiveNodes() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceSession) NumActiveNodes() (*big.Int, error) {
-	return _BaseContentSpace.Contract.NumActiveNodes(&_BaseContentSpace.CallOpts)
-}
-
-// NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
-//
-// Solidity: function numActiveNodes() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) NumActiveNodes() (*big.Int, error) {
-	return _BaseContentSpace.Contract.NumActiveNodes(&_BaseContentSpace.CallOpts)
 }
 
 // NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
@@ -19109,20 +15176,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) NumPendingNodes(opts *bind.Call
 
 }
 
-// NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
-//
-// Solidity: function numPendingNodes() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceSession) NumPendingNodes() (*big.Int, error) {
-	return _BaseContentSpace.Contract.NumPendingNodes(&_BaseContentSpace.CallOpts)
-}
-
-// NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
-//
-// Solidity: function numPendingNodes() view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) NumPendingNodes() (*big.Int, error) {
-	return _BaseContentSpace.Contract.NumPendingNodes(&_BaseContentSpace.CallOpts)
-}
-
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
@@ -19138,20 +15191,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ObjectHash(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceSession) ObjectHash() (string, error) {
-	return _BaseContentSpace.Contract.ObjectHash(&_BaseContentSpace.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ObjectHash() (string, error) {
-	return _BaseContentSpace.Contract.ObjectHash(&_BaseContentSpace.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -19171,20 +15210,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) Owner(opts *bind.CallOpts) (com
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) Owner() (common.Address, error) {
-	return _BaseContentSpace.Contract.Owner(&_BaseContentSpace.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) Owner() (common.Address, error) {
-	return _BaseContentSpace.Contract.Owner(&_BaseContentSpace.CallOpts)
-}
-
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
@@ -19200,20 +15225,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ParentAddress(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) ParentAddress() (common.Address, error) {
-	return _BaseContentSpace.Contract.ParentAddress(&_BaseContentSpace.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ParentAddress() (common.Address, error) {
-	return _BaseContentSpace.Contract.ParentAddress(&_BaseContentSpace.CallOpts)
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
@@ -19233,20 +15244,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) PendingHash(opts *bind.CallOpts
 
 }
 
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceSession) PendingHash() (string, error) {
-	return _BaseContentSpace.Contract.PendingHash(&_BaseContentSpace.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) PendingHash() (string, error) {
-	return _BaseContentSpace.Contract.PendingHash(&_BaseContentSpace.CallOpts)
-}
-
 // PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
 //
 // Solidity: function pendingNodeAddresses(uint256 ) view returns(address)
@@ -19262,20 +15259,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) PendingNodeAddresses(opts *bind
 
 	return out0, err
 
-}
-
-// PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
-//
-// Solidity: function pendingNodeAddresses(uint256 ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) PendingNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _BaseContentSpace.Contract.PendingNodeAddresses(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
-//
-// Solidity: function pendingNodeAddresses(uint256 ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) PendingNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _BaseContentSpace.Contract.PendingNodeAddresses(&_BaseContentSpace.CallOpts, arg0)
 }
 
 // PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
@@ -19295,20 +15278,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) PendingNodeLocators(opts *bind.
 
 }
 
-// PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
-//
-// Solidity: function pendingNodeLocators(uint256 ) view returns(bytes)
-func (_BaseContentSpace *BaseContentSpaceSession) PendingNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _BaseContentSpace.Contract.PendingNodeLocators(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
-//
-// Solidity: function pendingNodeLocators(uint256 ) view returns(bytes)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) PendingNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _BaseContentSpace.Contract.PendingNodeLocators(&_BaseContentSpace.CallOpts, arg0)
-}
-
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
 //
 // Solidity: function requiresReview() view returns(bool)
@@ -19324,20 +15293,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) RequiresReview(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) RequiresReview() (bool, error) {
-	return _BaseContentSpace.Contract.RequiresReview(&_BaseContentSpace.CallOpts)
-}
-
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) RequiresReview() (bool, error) {
-	return _BaseContentSpace.Contract.RequiresReview(&_BaseContentSpace.CallOpts)
 }
 
 // UserWallets is a free data retrieval call binding the contract method 0x63e6ffdd.
@@ -19357,20 +15312,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) UserWallets(opts *bind.CallOpts
 
 }
 
-// UserWallets is a free data retrieval call binding the contract method 0x63e6ffdd.
-//
-// Solidity: function userWallets(address ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) UserWallets(arg0 common.Address) (common.Address, error) {
-	return _BaseContentSpace.Contract.UserWallets(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// UserWallets is a free data retrieval call binding the contract method 0x63e6ffdd.
-//
-// Solidity: function userWallets(address ) view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) UserWallets(arg0 common.Address) (common.Address, error) {
-	return _BaseContentSpace.Contract.UserWallets(&_BaseContentSpace.CallOpts, arg0)
-}
-
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
 //
 // Solidity: function validType(address content_type) view returns(bool)
@@ -19386,20 +15327,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) ValidType(opts *bind.CallOpts, 
 
 	return out0, err
 
-}
-
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) ValidType(content_type common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.ValidType(&_BaseContentSpace.CallOpts, content_type)
-}
-
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) ValidType(content_type common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.ValidType(&_BaseContentSpace.CallOpts, content_type)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -19419,20 +15346,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) Version(opts *bind.CallOpts) ([
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentSpace *BaseContentSpaceSession) Version() ([32]byte, error) {
-	return _BaseContentSpace.Contract.Version(&_BaseContentSpace.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) Version() ([32]byte, error) {
-	return _BaseContentSpace.Contract.Version(&_BaseContentSpace.CallOpts)
-}
-
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
@@ -19448,20 +15361,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) VersionHashes(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseContentSpace *BaseContentSpaceSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseContentSpace.Contract.VersionHashes(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseContentSpace.Contract.VersionHashes(&_BaseContentSpace.CallOpts, arg0)
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
@@ -19481,20 +15380,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) VersionTimestamp(opts *bind.Cal
 
 }
 
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseContentSpace.Contract.VersionTimestamp(&_BaseContentSpace.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseContentSpace.Contract.VersionTimestamp(&_BaseContentSpace.CallOpts, arg0)
-}
-
 // WalletFactory is a free data retrieval call binding the contract method 0xc5c03699.
 //
 // Solidity: function walletFactory() view returns(address)
@@ -19510,20 +15395,6 @@ func (_BaseContentSpace *BaseContentSpaceCaller) WalletFactory(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// WalletFactory is a free data retrieval call binding the contract method 0xc5c03699.
-//
-// Solidity: function walletFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) WalletFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.WalletFactory(&_BaseContentSpace.CallOpts)
-}
-
-// WalletFactory is a free data retrieval call binding the contract method 0xc5c03699.
-//
-// Solidity: function walletFactory() view returns(address)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) WalletFactory() (common.Address, error) {
-	return _BaseContentSpace.Contract.WalletFactory(&_BaseContentSpace.CallOpts)
 }
 
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
@@ -19543,39 +15414,11 @@ func (_BaseContentSpace *BaseContentSpaceCaller) WhitelistedType(opts *bind.Call
 
 }
 
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.WhitelistedType(&_BaseContentSpace.CallOpts, content_type)
-}
-
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_BaseContentSpace *BaseContentSpaceCallerSession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _BaseContentSpace.Contract.WhitelistedType(&_BaseContentSpace.CallOpts, content_type)
-}
-
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
 //
 // Solidity: function accessRequest() returns(bool)
 func (_BaseContentSpace *BaseContentSpaceTransactor) AccessRequest(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "accessRequest")
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) AccessRequest() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AccessRequest(&_BaseContentSpace.TransactOpts)
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) AccessRequest() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AccessRequest(&_BaseContentSpace.TransactOpts)
 }
 
 // AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
@@ -19585,39 +15428,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) AddContentType(opts *bind.T
 	return _BaseContentSpace.contract.Transact(opts, "addContentType", content_type, content_contract)
 }
 
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AddContentType(&_BaseContentSpace.TransactOpts, content_type, content_contract)
-}
-
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AddContentType(&_BaseContentSpace.TransactOpts, content_type, content_contract)
-}
-
 // AddKMSLocator is a paid mutator transaction binding the contract method 0x653a92f6.
 //
 // Solidity: function addKMSLocator(string _kmsID, bytes _locator) returns(bool)
 func (_BaseContentSpace *BaseContentSpaceTransactor) AddKMSLocator(opts *bind.TransactOpts, _kmsID string, _locator []byte) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "addKMSLocator", _kmsID, _locator)
-}
-
-// AddKMSLocator is a paid mutator transaction binding the contract method 0x653a92f6.
-//
-// Solidity: function addKMSLocator(string _kmsID, bytes _locator) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) AddKMSLocator(_kmsID string, _locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AddKMSLocator(&_BaseContentSpace.TransactOpts, _kmsID, _locator)
-}
-
-// AddKMSLocator is a paid mutator transaction binding the contract method 0x653a92f6.
-//
-// Solidity: function addKMSLocator(string _kmsID, bytes _locator) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) AddKMSLocator(_kmsID string, _locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AddKMSLocator(&_BaseContentSpace.TransactOpts, _kmsID, _locator)
 }
 
 // AddNode is a paid mutator transaction binding the contract method 0x64f0f050.
@@ -19627,39 +15442,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) AddNode(opts *bind.Transact
 	return _BaseContentSpace.contract.Transact(opts, "addNode", _nodeAddr, _locator)
 }
 
-// AddNode is a paid mutator transaction binding the contract method 0x64f0f050.
-//
-// Solidity: function addNode(address _nodeAddr, bytes _locator) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) AddNode(_nodeAddr common.Address, _locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AddNode(&_BaseContentSpace.TransactOpts, _nodeAddr, _locator)
-}
-
-// AddNode is a paid mutator transaction binding the contract method 0x64f0f050.
-//
-// Solidity: function addNode(address _nodeAddr, bytes _locator) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) AddNode(_nodeAddr common.Address, _locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.AddNode(&_BaseContentSpace.TransactOpts, _nodeAddr, _locator)
-}
-
 // ApproveNode is a paid mutator transaction binding the contract method 0xdd4c97a0.
 //
 // Solidity: function approveNode(address _nodeAddr) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) ApproveNode(opts *bind.TransactOpts, _nodeAddr common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "approveNode", _nodeAddr)
-}
-
-// ApproveNode is a paid mutator transaction binding the contract method 0xdd4c97a0.
-//
-// Solidity: function approveNode(address _nodeAddr) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) ApproveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.ApproveNode(&_BaseContentSpace.TransactOpts, _nodeAddr)
-}
-
-// ApproveNode is a paid mutator transaction binding the contract method 0xdd4c97a0.
-//
-// Solidity: function approveNode(address _nodeAddr) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) ApproveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.ApproveNode(&_BaseContentSpace.TransactOpts, _nodeAddr)
 }
 
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
@@ -19669,39 +15456,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) Commit(opts *bind.TransactO
 	return _BaseContentSpace.contract.Transact(opts, "commit", _objectHash)
 }
 
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Commit(&_BaseContentSpace.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Commit(&_BaseContentSpace.TransactOpts, _objectHash)
-}
-
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
 //
 // Solidity: function confirmCommit() payable returns(bool)
 func (_BaseContentSpace *BaseContentSpaceTransactor) ConfirmCommit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "confirmCommit")
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.ConfirmCommit(&_BaseContentSpace.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.ConfirmCommit(&_BaseContentSpace.TransactOpts)
 }
 
 // CreateAccessWallet is a paid mutator transaction binding the contract method 0x7708bc41.
@@ -19711,39 +15470,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) CreateAccessWallet(opts *bi
 	return _BaseContentSpace.contract.Transact(opts, "createAccessWallet")
 }
 
-// CreateAccessWallet is a paid mutator transaction binding the contract method 0x7708bc41.
-//
-// Solidity: function createAccessWallet() returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) CreateAccessWallet() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateAccessWallet(&_BaseContentSpace.TransactOpts)
-}
-
-// CreateAccessWallet is a paid mutator transaction binding the contract method 0x7708bc41.
-//
-// Solidity: function createAccessWallet() returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) CreateAccessWallet() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateAccessWallet(&_BaseContentSpace.TransactOpts)
-}
-
 // CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
 //
 // Solidity: function createContent(address lib, address content_type) returns(address)
 func (_BaseContentSpace *BaseContentSpaceTransactor) CreateContent(opts *bind.TransactOpts, lib common.Address, content_type common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "createContent", lib, content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
-//
-// Solidity: function createContent(address lib, address content_type) returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) CreateContent(lib common.Address, content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateContent(&_BaseContentSpace.TransactOpts, lib, content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
-//
-// Solidity: function createContent(address lib, address content_type) returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) CreateContent(lib common.Address, content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateContent(&_BaseContentSpace.TransactOpts, lib, content_type)
 }
 
 // CreateContentType is a paid mutator transaction binding the contract method 0xb8cfaf05.
@@ -19753,39 +15484,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) CreateContentType(opts *bin
 	return _BaseContentSpace.contract.Transact(opts, "createContentType")
 }
 
-// CreateContentType is a paid mutator transaction binding the contract method 0xb8cfaf05.
-//
-// Solidity: function createContentType() returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) CreateContentType() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateContentType(&_BaseContentSpace.TransactOpts)
-}
-
-// CreateContentType is a paid mutator transaction binding the contract method 0xb8cfaf05.
-//
-// Solidity: function createContentType() returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) CreateContentType() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateContentType(&_BaseContentSpace.TransactOpts)
-}
-
 // CreateGroup is a paid mutator transaction binding the contract method 0x575185ed.
 //
 // Solidity: function createGroup() returns(address)
 func (_BaseContentSpace *BaseContentSpaceTransactor) CreateGroup(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "createGroup")
-}
-
-// CreateGroup is a paid mutator transaction binding the contract method 0x575185ed.
-//
-// Solidity: function createGroup() returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) CreateGroup() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateGroup(&_BaseContentSpace.TransactOpts)
-}
-
-// CreateGroup is a paid mutator transaction binding the contract method 0x575185ed.
-//
-// Solidity: function createGroup() returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) CreateGroup() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateGroup(&_BaseContentSpace.TransactOpts)
 }
 
 // CreateLibrary is a paid mutator transaction binding the contract method 0x40b89f06.
@@ -19795,39 +15498,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) CreateLibrary(opts *bind.Tr
 	return _BaseContentSpace.contract.Transact(opts, "createLibrary", address_KMS)
 }
 
-// CreateLibrary is a paid mutator transaction binding the contract method 0x40b89f06.
-//
-// Solidity: function createLibrary(address address_KMS) returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) CreateLibrary(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateLibrary(&_BaseContentSpace.TransactOpts, address_KMS)
-}
-
-// CreateLibrary is a paid mutator transaction binding the contract method 0x40b89f06.
-//
-// Solidity: function createLibrary(address address_KMS) returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) CreateLibrary(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.CreateLibrary(&_BaseContentSpace.TransactOpts, address_KMS)
-}
-
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
 //
 // Solidity: function deleteVersion(string _versionHash) returns(int256)
 func (_BaseContentSpace *BaseContentSpaceTransactor) DeleteVersion(opts *bind.TransactOpts, _versionHash string) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "deleteVersion", _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseContentSpace *BaseContentSpaceSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.DeleteVersion(&_BaseContentSpace.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.DeleteVersion(&_BaseContentSpace.TransactOpts, _versionHash)
 }
 
 // EngageAccountLibrary is a paid mutator transaction binding the contract method 0xc82710c1.
@@ -19837,39 +15512,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) EngageAccountLibrary(opts *
 	return _BaseContentSpace.contract.Transact(opts, "engageAccountLibrary")
 }
 
-// EngageAccountLibrary is a paid mutator transaction binding the contract method 0xc82710c1.
-//
-// Solidity: function engageAccountLibrary() returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) EngageAccountLibrary() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.EngageAccountLibrary(&_BaseContentSpace.TransactOpts)
-}
-
-// EngageAccountLibrary is a paid mutator transaction binding the contract method 0xc82710c1.
-//
-// Solidity: function engageAccountLibrary() returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) EngageAccountLibrary() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.EngageAccountLibrary(&_BaseContentSpace.TransactOpts)
-}
-
 // ExecuteBatch is a paid mutator transaction binding the contract method 0xe9861ab1.
 //
 // Solidity: function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) ExecuteBatch(opts *bind.TransactOpts, _v []uint8, _r [][32]byte, _s [][32]byte, _from []common.Address, _dest []common.Address, _value []*big.Int, _ts []*big.Int) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "executeBatch", _v, _r, _s, _from, _dest, _value, _ts)
-}
-
-// ExecuteBatch is a paid mutator transaction binding the contract method 0xe9861ab1.
-//
-// Solidity: function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) ExecuteBatch(_v []uint8, _r [][32]byte, _s [][32]byte, _from []common.Address, _dest []common.Address, _value []*big.Int, _ts []*big.Int) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.ExecuteBatch(&_BaseContentSpace.TransactOpts, _v, _r, _s, _from, _dest, _value, _ts)
-}
-
-// ExecuteBatch is a paid mutator transaction binding the contract method 0xe9861ab1.
-//
-// Solidity: function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) ExecuteBatch(_v []uint8, _r [][32]byte, _s [][32]byte, _from []common.Address, _dest []common.Address, _value []*big.Int, _ts []*big.Int) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.ExecuteBatch(&_BaseContentSpace.TransactOpts, _v, _r, _s, _from, _dest, _value, _ts)
 }
 
 // GetAccessWallet is a paid mutator transaction binding the contract method 0xa2d67fcf.
@@ -19879,39 +15526,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) GetAccessWallet(opts *bind.
 	return _BaseContentSpace.contract.Transact(opts, "getAccessWallet")
 }
 
-// GetAccessWallet is a paid mutator transaction binding the contract method 0xa2d67fcf.
-//
-// Solidity: function getAccessWallet() returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) GetAccessWallet() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.GetAccessWallet(&_BaseContentSpace.TransactOpts)
-}
-
-// GetAccessWallet is a paid mutator transaction binding the contract method 0xa2d67fcf.
-//
-// Solidity: function getAccessWallet() returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) GetAccessWallet() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.GetAccessWallet(&_BaseContentSpace.TransactOpts)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentSpace *BaseContentSpaceSession) Kill() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Kill(&_BaseContentSpace.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Kill(&_BaseContentSpace.TransactOpts)
 }
 
 // Publish is a paid mutator transaction binding the contract method 0x2cf99422.
@@ -19921,39 +15540,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) Publish(opts *bind.Transact
 	return _BaseContentSpace.contract.Transact(opts, "publish", contentObj)
 }
 
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Publish(&_BaseContentSpace.TransactOpts, contentObj)
-}
-
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Publish(&_BaseContentSpace.TransactOpts, contentObj)
-}
-
 // PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
 //
 // Solidity: function putMeta(bytes key, bytes value) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) PutMeta(opts *bind.TransactOpts, key []byte, value []byte) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "putMeta", key, value)
-}
-
-// PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
-//
-// Solidity: function putMeta(bytes key, bytes value) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) PutMeta(key []byte, value []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.PutMeta(&_BaseContentSpace.TransactOpts, key, value)
-}
-
-// PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
-//
-// Solidity: function putMeta(bytes key, bytes value) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) PutMeta(key []byte, value []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.PutMeta(&_BaseContentSpace.TransactOpts, key, value)
 }
 
 // RegisterSpaceNode is a paid mutator transaction binding the contract method 0x2f7a781a.
@@ -19963,39 +15554,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) RegisterSpaceNode(opts *bin
 	return _BaseContentSpace.contract.Transact(opts, "registerSpaceNode")
 }
 
-// RegisterSpaceNode is a paid mutator transaction binding the contract method 0x2f7a781a.
-//
-// Solidity: function registerSpaceNode() returns(address)
-func (_BaseContentSpace *BaseContentSpaceSession) RegisterSpaceNode() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RegisterSpaceNode(&_BaseContentSpace.TransactOpts)
-}
-
-// RegisterSpaceNode is a paid mutator transaction binding the contract method 0x2f7a781a.
-//
-// Solidity: function registerSpaceNode() returns(address)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) RegisterSpaceNode() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RegisterSpaceNode(&_BaseContentSpace.TransactOpts)
-}
-
 // RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
 //
 // Solidity: function removeContentType(address content_type) returns(bool)
 func (_BaseContentSpace *BaseContentSpaceTransactor) RemoveContentType(opts *bind.TransactOpts, content_type common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "removeContentType", content_type)
-}
-
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RemoveContentType(&_BaseContentSpace.TransactOpts, content_type)
-}
-
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RemoveContentType(&_BaseContentSpace.TransactOpts, content_type)
 }
 
 // RemoveKMSLocator is a paid mutator transaction binding the contract method 0xfe7ac19f.
@@ -20005,39 +15568,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) RemoveKMSLocator(opts *bind
 	return _BaseContentSpace.contract.Transact(opts, "removeKMSLocator", _kmsID, _locator)
 }
 
-// RemoveKMSLocator is a paid mutator transaction binding the contract method 0xfe7ac19f.
-//
-// Solidity: function removeKMSLocator(string _kmsID, bytes _locator) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) RemoveKMSLocator(_kmsID string, _locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RemoveKMSLocator(&_BaseContentSpace.TransactOpts, _kmsID, _locator)
-}
-
-// RemoveKMSLocator is a paid mutator transaction binding the contract method 0xfe7ac19f.
-//
-// Solidity: function removeKMSLocator(string _kmsID, bytes _locator) returns(bool)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) RemoveKMSLocator(_kmsID string, _locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RemoveKMSLocator(&_BaseContentSpace.TransactOpts, _kmsID, _locator)
-}
-
 // RemoveNode is a paid mutator transaction binding the contract method 0xb2b99ec9.
 //
 // Solidity: function removeNode(address _nodeAddr) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) RemoveNode(opts *bind.TransactOpts, _nodeAddr common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "removeNode", _nodeAddr)
-}
-
-// RemoveNode is a paid mutator transaction binding the contract method 0xb2b99ec9.
-//
-// Solidity: function removeNode(address _nodeAddr) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) RemoveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RemoveNode(&_BaseContentSpace.TransactOpts, _nodeAddr)
-}
-
-// RemoveNode is a paid mutator transaction binding the contract method 0xb2b99ec9.
-//
-// Solidity: function removeNode(address _nodeAddr) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) RemoveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.RemoveNode(&_BaseContentSpace.TransactOpts, _nodeAddr)
 }
 
 // SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
@@ -20047,39 +15582,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) SetAddressKMS(opts *bind.Tr
 	return _BaseContentSpace.contract.Transact(opts, "setAddressKMS", address_KMS)
 }
 
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetAddressKMS(&_BaseContentSpace.TransactOpts, address_KMS)
-}
-
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetAddressKMS(&_BaseContentSpace.TransactOpts, address_KMS)
-}
-
 // SetContentFactory is a paid mutator transaction binding the contract method 0x85ce1df1.
 //
 // Solidity: function setContentFactory(address new_factory) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) SetContentFactory(opts *bind.TransactOpts, new_factory common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "setContentFactory", new_factory)
-}
-
-// SetContentFactory is a paid mutator transaction binding the contract method 0x85ce1df1.
-//
-// Solidity: function setContentFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetContentFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetContentFactory(&_BaseContentSpace.TransactOpts, new_factory)
-}
-
-// SetContentFactory is a paid mutator transaction binding the contract method 0x85ce1df1.
-//
-// Solidity: function setContentFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetContentFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetContentFactory(&_BaseContentSpace.TransactOpts, new_factory)
 }
 
 // SetDescription is a paid mutator transaction binding the contract method 0x90c3f38f.
@@ -20089,39 +15596,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) SetDescription(opts *bind.T
 	return _BaseContentSpace.contract.Transact(opts, "setDescription", content_space_description)
 }
 
-// SetDescription is a paid mutator transaction binding the contract method 0x90c3f38f.
-//
-// Solidity: function setDescription(string content_space_description) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetDescription(content_space_description string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetDescription(&_BaseContentSpace.TransactOpts, content_space_description)
-}
-
-// SetDescription is a paid mutator transaction binding the contract method 0x90c3f38f.
-//
-// Solidity: function setDescription(string content_space_description) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetDescription(content_space_description string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetDescription(&_BaseContentSpace.TransactOpts, content_space_description)
-}
-
 // SetFactory is a paid mutator transaction binding the contract method 0x5bb47808.
 //
 // Solidity: function setFactory(address new_factory) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) SetFactory(opts *bind.TransactOpts, new_factory common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "setFactory", new_factory)
-}
-
-// SetFactory is a paid mutator transaction binding the contract method 0x5bb47808.
-//
-// Solidity: function setFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetFactory(&_BaseContentSpace.TransactOpts, new_factory)
-}
-
-// SetFactory is a paid mutator transaction binding the contract method 0x5bb47808.
-//
-// Solidity: function setFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetFactory(&_BaseContentSpace.TransactOpts, new_factory)
 }
 
 // SetGroupFactory is a paid mutator transaction binding the contract method 0x837b3b93.
@@ -20131,39 +15610,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) SetGroupFactory(opts *bind.
 	return _BaseContentSpace.contract.Transact(opts, "setGroupFactory", new_factory)
 }
 
-// SetGroupFactory is a paid mutator transaction binding the contract method 0x837b3b93.
-//
-// Solidity: function setGroupFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetGroupFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetGroupFactory(&_BaseContentSpace.TransactOpts, new_factory)
-}
-
-// SetGroupFactory is a paid mutator transaction binding the contract method 0x837b3b93.
-//
-// Solidity: function setGroupFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetGroupFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetGroupFactory(&_BaseContentSpace.TransactOpts, new_factory)
-}
-
 // SetKMSPublicKey is a paid mutator transaction binding the contract method 0xa69cb734.
 //
 // Solidity: function setKMSPublicKey(string _kmsID, string _pubKey) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) SetKMSPublicKey(opts *bind.TransactOpts, _kmsID string, _pubKey string) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "setKMSPublicKey", _kmsID, _pubKey)
-}
-
-// SetKMSPublicKey is a paid mutator transaction binding the contract method 0xa69cb734.
-//
-// Solidity: function setKMSPublicKey(string _kmsID, string _pubKey) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetKMSPublicKey(_kmsID string, _pubKey string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetKMSPublicKey(&_BaseContentSpace.TransactOpts, _kmsID, _pubKey)
-}
-
-// SetKMSPublicKey is a paid mutator transaction binding the contract method 0xa69cb734.
-//
-// Solidity: function setKMSPublicKey(string _kmsID, string _pubKey) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetKMSPublicKey(_kmsID string, _pubKey string) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetKMSPublicKey(&_BaseContentSpace.TransactOpts, _kmsID, _pubKey)
 }
 
 // SetLibraryFactory is a paid mutator transaction binding the contract method 0x9d05d18d.
@@ -20173,39 +15624,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) SetLibraryFactory(opts *bin
 	return _BaseContentSpace.contract.Transact(opts, "setLibraryFactory", new_factory)
 }
 
-// SetLibraryFactory is a paid mutator transaction binding the contract method 0x9d05d18d.
-//
-// Solidity: function setLibraryFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetLibraryFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetLibraryFactory(&_BaseContentSpace.TransactOpts, new_factory)
-}
-
-// SetLibraryFactory is a paid mutator transaction binding the contract method 0x9d05d18d.
-//
-// Solidity: function setLibraryFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetLibraryFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetLibraryFactory(&_BaseContentSpace.TransactOpts, new_factory)
-}
-
 // SetWalletFactory is a paid mutator transaction binding the contract method 0x7ebf879c.
 //
 // Solidity: function setWalletFactory(address new_factory) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) SetWalletFactory(opts *bind.TransactOpts, new_factory common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "setWalletFactory", new_factory)
-}
-
-// SetWalletFactory is a paid mutator transaction binding the contract method 0x7ebf879c.
-//
-// Solidity: function setWalletFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SetWalletFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetWalletFactory(&_BaseContentSpace.TransactOpts, new_factory)
-}
-
-// SetWalletFactory is a paid mutator transaction binding the contract method 0x7ebf879c.
-//
-// Solidity: function setWalletFactory(address new_factory) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SetWalletFactory(new_factory common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SetWalletFactory(&_BaseContentSpace.TransactOpts, new_factory)
 }
 
 // SubmitNode is a paid mutator transaction binding the contract method 0x160eee74.
@@ -20215,39 +15638,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) SubmitNode(opts *bind.Trans
 	return _BaseContentSpace.contract.Transact(opts, "submitNode", _locator)
 }
 
-// SubmitNode is a paid mutator transaction binding the contract method 0x160eee74.
-//
-// Solidity: function submitNode(bytes _locator) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) SubmitNode(_locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SubmitNode(&_BaseContentSpace.TransactOpts, _locator)
-}
-
-// SubmitNode is a paid mutator transaction binding the contract method 0x160eee74.
-//
-// Solidity: function submitNode(bytes _locator) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) SubmitNode(_locator []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.SubmitNode(&_BaseContentSpace.TransactOpts, _locator)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.TransferCreatorship(&_BaseContentSpace.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.TransferCreatorship(&_BaseContentSpace.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -20257,39 +15652,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) TransferOwnership(opts *bin
 	return _BaseContentSpace.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentSpace *BaseContentSpaceSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.TransferOwnership(&_BaseContentSpace.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.TransferOwnership(&_BaseContentSpace.TransactOpts, newOwner)
-}
-
 // UnregisterSpaceNode is a paid mutator transaction binding the contract method 0xabe596b1.
 //
 // Solidity: function unregisterSpaceNode() returns(bool)
 func (_BaseContentSpace *BaseContentSpaceTransactor) UnregisterSpaceNode(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.Transact(opts, "unregisterSpaceNode")
-}
-
-// UnregisterSpaceNode is a paid mutator transaction binding the contract method 0xabe596b1.
-//
-// Solidity: function unregisterSpaceNode() returns(bool)
-func (_BaseContentSpace *BaseContentSpaceSession) UnregisterSpaceNode() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.UnregisterSpaceNode(&_BaseContentSpace.TransactOpts)
-}
-
-// UnregisterSpaceNode is a paid mutator transaction binding the contract method 0xabe596b1.
-//
-// Solidity: function unregisterSpaceNode() returns(bool)
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) UnregisterSpaceNode() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.UnregisterSpaceNode(&_BaseContentSpace.TransactOpts)
 }
 
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
@@ -20299,39 +15666,11 @@ func (_BaseContentSpace *BaseContentSpaceTransactor) UpdateRequest(opts *bind.Tr
 	return _BaseContentSpace.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseContentSpace *BaseContentSpaceSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.UpdateRequest(&_BaseContentSpace.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.UpdateRequest(&_BaseContentSpace.TransactOpts)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseContentSpace *BaseContentSpaceTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseContentSpace.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentSpace *BaseContentSpaceSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Fallback(&_BaseContentSpace.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentSpace *BaseContentSpaceTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentSpace.Contract.Fallback(&_BaseContentSpace.TransactOpts, calldata)
 }
 
 // BaseContentSpaceAccessRequestIterator is returned from FilterAccessRequest and is used to iterate over the raw logs and unpacked data for AccessRequest events raised by the BaseContentSpace contract.
@@ -23606,7 +18945,7 @@ var BaseContentTypeBin = BaseContentTypeMetaData.Bin
 
 // DeployBaseContentType deploys a new Ethereum contract, binding an instance of BaseContentType to it.
 func DeployBaseContentType(auth *bind.TransactOpts, backend bind.ContractBackend, content_space common.Address) (common.Address, *types.Transaction, *BaseContentType, error) {
-	parsed, err := BaseContentTypeMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseContentType)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -23641,43 +18980,6 @@ type BaseContentTypeTransactor struct {
 // BaseContentTypeFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseContentTypeFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseContentTypeSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseContentTypeSession struct {
-	Contract     *BaseContentType  // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// BaseContentTypeCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseContentTypeCallerSession struct {
-	Contract *BaseContentTypeCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts          // Call options to use throughout this session
-}
-
-// BaseContentTypeTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseContentTypeTransactorSession struct {
-	Contract     *BaseContentTypeTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts          // Transaction auth options to use throughout this session
-}
-
-// BaseContentTypeRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseContentTypeRaw struct {
-	Contract *BaseContentType // Generic contract binding to access the raw methods on
-}
-
-// BaseContentTypeCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseContentTypeCallerRaw struct {
-	Contract *BaseContentTypeCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseContentTypeTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseContentTypeTransactorRaw struct {
-	Contract *BaseContentTypeTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseContentType creates a new instance of BaseContentType, bound to a specific deployed contract.
@@ -23718,49 +19020,11 @@ func NewBaseContentTypeFilterer(address common.Address, filterer bind.ContractFi
 
 // bindBaseContentType binds a generic wrapper to an already deployed contract.
 func bindBaseContentType(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseContentTypeABI))
+	parsed, err := ParsedABI(K_BaseContentType)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentType *BaseContentTypeRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentType.Contract.BaseContentTypeCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentType *BaseContentTypeRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentType.Contract.BaseContentTypeTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentType *BaseContentTypeRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentType.Contract.BaseContentTypeTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseContentType *BaseContentTypeCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseContentType.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseContentType *BaseContentTypeTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseContentType.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseContentType *BaseContentTypeTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseContentType.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
@@ -23780,20 +19044,6 @@ func (_BaseContentType *BaseContentTypeCaller) CanCommit(opts *bind.CallOpts) (b
 
 }
 
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseContentType *BaseContentTypeSession) CanCommit() (bool, error) {
-	return _BaseContentType.Contract.CanCommit(&_BaseContentType.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseContentType *BaseContentTypeCallerSession) CanCommit() (bool, error) {
-	return _BaseContentType.Contract.CanCommit(&_BaseContentType.CallOpts)
-}
-
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
@@ -23809,20 +19059,6 @@ func (_BaseContentType *BaseContentTypeCaller) CanConfirm(opts *bind.CallOpts) (
 
 	return out0, err
 
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseContentType *BaseContentTypeSession) CanConfirm() (bool, error) {
-	return _BaseContentType.Contract.CanConfirm(&_BaseContentType.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseContentType *BaseContentTypeCallerSession) CanConfirm() (bool, error) {
-	return _BaseContentType.Contract.CanConfirm(&_BaseContentType.CallOpts)
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -23842,20 +19078,6 @@ func (_BaseContentType *BaseContentTypeCaller) ContentSpace(opts *bind.CallOpts)
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentType *BaseContentTypeSession) ContentSpace() (common.Address, error) {
-	return _BaseContentType.Contract.ContentSpace(&_BaseContentType.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseContentType *BaseContentTypeCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseContentType.Contract.ContentSpace(&_BaseContentType.CallOpts)
-}
-
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
@@ -23871,20 +19093,6 @@ func (_BaseContentType *BaseContentTypeCaller) CountVersionHashes(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseContentType *BaseContentTypeSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseContentType.Contract.CountVersionHashes(&_BaseContentType.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseContentType *BaseContentTypeCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseContentType.Contract.CountVersionHashes(&_BaseContentType.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -23904,20 +19112,6 @@ func (_BaseContentType *BaseContentTypeCaller) Creator(opts *bind.CallOpts) (com
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentType *BaseContentTypeSession) Creator() (common.Address, error) {
-	return _BaseContentType.Contract.Creator(&_BaseContentType.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseContentType *BaseContentTypeCallerSession) Creator() (common.Address, error) {
-	return _BaseContentType.Contract.Creator(&_BaseContentType.CallOpts)
-}
-
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
@@ -23933,20 +19127,6 @@ func (_BaseContentType *BaseContentTypeCaller) ObjectHash(opts *bind.CallOpts) (
 
 	return out0, err
 
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseContentType *BaseContentTypeSession) ObjectHash() (string, error) {
-	return _BaseContentType.Contract.ObjectHash(&_BaseContentType.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseContentType *BaseContentTypeCallerSession) ObjectHash() (string, error) {
-	return _BaseContentType.Contract.ObjectHash(&_BaseContentType.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -23966,20 +19146,6 @@ func (_BaseContentType *BaseContentTypeCaller) Owner(opts *bind.CallOpts) (commo
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentType *BaseContentTypeSession) Owner() (common.Address, error) {
-	return _BaseContentType.Contract.Owner(&_BaseContentType.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseContentType *BaseContentTypeCallerSession) Owner() (common.Address, error) {
-	return _BaseContentType.Contract.Owner(&_BaseContentType.CallOpts)
-}
-
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
@@ -23995,20 +19161,6 @@ func (_BaseContentType *BaseContentTypeCaller) ParentAddress(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseContentType *BaseContentTypeSession) ParentAddress() (common.Address, error) {
-	return _BaseContentType.Contract.ParentAddress(&_BaseContentType.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseContentType *BaseContentTypeCallerSession) ParentAddress() (common.Address, error) {
-	return _BaseContentType.Contract.ParentAddress(&_BaseContentType.CallOpts)
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
@@ -24028,20 +19180,6 @@ func (_BaseContentType *BaseContentTypeCaller) PendingHash(opts *bind.CallOpts) 
 
 }
 
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseContentType *BaseContentTypeSession) PendingHash() (string, error) {
-	return _BaseContentType.Contract.PendingHash(&_BaseContentType.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseContentType *BaseContentTypeCallerSession) PendingHash() (string, error) {
-	return _BaseContentType.Contract.PendingHash(&_BaseContentType.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -24057,20 +19195,6 @@ func (_BaseContentType *BaseContentTypeCaller) Version(opts *bind.CallOpts) ([32
 
 	return out0, err
 
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentType *BaseContentTypeSession) Version() ([32]byte, error) {
-	return _BaseContentType.Contract.Version(&_BaseContentType.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseContentType *BaseContentTypeCallerSession) Version() ([32]byte, error) {
-	return _BaseContentType.Contract.Version(&_BaseContentType.CallOpts)
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
@@ -24090,20 +19214,6 @@ func (_BaseContentType *BaseContentTypeCaller) VersionHashes(opts *bind.CallOpts
 
 }
 
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseContentType *BaseContentTypeSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseContentType.Contract.VersionHashes(&_BaseContentType.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseContentType *BaseContentTypeCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseContentType.Contract.VersionHashes(&_BaseContentType.CallOpts, arg0)
-}
-
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
@@ -24121,39 +19231,11 @@ func (_BaseContentType *BaseContentTypeCaller) VersionTimestamp(opts *bind.CallO
 
 }
 
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseContentType *BaseContentTypeSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseContentType.Contract.VersionTimestamp(&_BaseContentType.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseContentType *BaseContentTypeCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseContentType.Contract.VersionTimestamp(&_BaseContentType.CallOpts, arg0)
-}
-
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
 //
 // Solidity: function accessRequest() returns(bool)
 func (_BaseContentType *BaseContentTypeTransactor) AccessRequest(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentType.contract.Transact(opts, "accessRequest")
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseContentType *BaseContentTypeSession) AccessRequest() (*types.Transaction, error) {
-	return _BaseContentType.Contract.AccessRequest(&_BaseContentType.TransactOpts)
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseContentType *BaseContentTypeTransactorSession) AccessRequest() (*types.Transaction, error) {
-	return _BaseContentType.Contract.AccessRequest(&_BaseContentType.TransactOpts)
 }
 
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
@@ -24163,39 +19245,11 @@ func (_BaseContentType *BaseContentTypeTransactor) Commit(opts *bind.TransactOpt
 	return _BaseContentType.contract.Transact(opts, "commit", _objectHash)
 }
 
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseContentType *BaseContentTypeSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseContentType.Contract.Commit(&_BaseContentType.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseContentType.Contract.Commit(&_BaseContentType.TransactOpts, _objectHash)
-}
-
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
 //
 // Solidity: function confirmCommit() payable returns(bool)
 func (_BaseContentType *BaseContentTypeTransactor) ConfirmCommit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentType.contract.Transact(opts, "confirmCommit")
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseContentType *BaseContentTypeSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseContentType.Contract.ConfirmCommit(&_BaseContentType.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseContentType *BaseContentTypeTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseContentType.Contract.ConfirmCommit(&_BaseContentType.TransactOpts)
 }
 
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
@@ -24205,39 +19259,11 @@ func (_BaseContentType *BaseContentTypeTransactor) DeleteVersion(opts *bind.Tran
 	return _BaseContentType.contract.Transact(opts, "deleteVersion", _versionHash)
 }
 
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseContentType *BaseContentTypeSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseContentType.Contract.DeleteVersion(&_BaseContentType.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseContentType *BaseContentTypeTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseContentType.Contract.DeleteVersion(&_BaseContentType.TransactOpts, _versionHash)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_BaseContentType *BaseContentTypeTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseContentType.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentType *BaseContentTypeSession) Kill() (*types.Transaction, error) {
-	return _BaseContentType.Contract.Kill(&_BaseContentType.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseContentType.Contract.Kill(&_BaseContentType.TransactOpts)
 }
 
 // SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
@@ -24247,39 +19273,11 @@ func (_BaseContentType *BaseContentTypeTransactor) SetGroupRights(opts *bind.Tra
 	return _BaseContentType.contract.Transact(opts, "setGroupRights", group, access_type, access)
 }
 
-// SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
-//
-// Solidity: function setGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseContentType *BaseContentTypeSession) SetGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContentType.Contract.SetGroupRights(&_BaseContentType.TransactOpts, group, access_type, access)
-}
-
-// SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
-//
-// Solidity: function setGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) SetGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContentType.Contract.SetGroupRights(&_BaseContentType.TransactOpts, group, access_type, access)
-}
-
 // SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
 //
 // Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
 func (_BaseContentType *BaseContentTypeTransactor) SetRights(opts *bind.TransactOpts, stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _BaseContentType.contract.Transact(opts, "setRights", stakeholder, access_type, access)
-}
-
-// SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
-//
-// Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
-func (_BaseContentType *BaseContentTypeSession) SetRights(stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContentType.Contract.SetRights(&_BaseContentType.TransactOpts, stakeholder, access_type, access)
-}
-
-// SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
-//
-// Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) SetRights(stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseContentType.Contract.SetRights(&_BaseContentType.TransactOpts, stakeholder, access_type, access)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -24289,39 +19287,11 @@ func (_BaseContentType *BaseContentTypeTransactor) TransferCreatorship(opts *bin
 	return _BaseContentType.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentType *BaseContentTypeSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentType.Contract.TransferCreatorship(&_BaseContentType.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseContentType.Contract.TransferCreatorship(&_BaseContentType.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_BaseContentType *BaseContentTypeTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
 	return _BaseContentType.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentType *BaseContentTypeSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentType.Contract.TransferOwnership(&_BaseContentType.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseContentType.Contract.TransferOwnership(&_BaseContentType.TransactOpts, newOwner)
 }
 
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
@@ -24331,39 +19301,11 @@ func (_BaseContentType *BaseContentTypeTransactor) UpdateRequest(opts *bind.Tran
 	return _BaseContentType.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseContentType *BaseContentTypeSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseContentType.Contract.UpdateRequest(&_BaseContentType.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseContentType.Contract.UpdateRequest(&_BaseContentType.TransactOpts)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseContentType *BaseContentTypeTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseContentType.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentType *BaseContentTypeSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentType.Contract.Fallback(&_BaseContentType.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseContentType *BaseContentTypeTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseContentType.Contract.Fallback(&_BaseContentType.TransactOpts, calldata)
 }
 
 // BaseContentTypeAccessRequestIterator is returned from FilterAccessRequest and is used to iterate over the raw logs and unpacked data for AccessRequest events raised by the BaseContentType contract.
@@ -25071,7 +20013,7 @@ var BaseFactoryBin = BaseFactoryMetaData.Bin
 
 // DeployBaseFactory deploys a new Ethereum contract, binding an instance of BaseFactory to it.
 func DeployBaseFactory(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BaseFactory, error) {
-	parsed, err := BaseFactoryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseFactory)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -25106,43 +20048,6 @@ type BaseFactoryTransactor struct {
 // BaseFactoryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseFactoryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseFactorySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseFactorySession struct {
-	Contract     *BaseFactory      // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// BaseFactoryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseFactoryCallerSession struct {
-	Contract *BaseFactoryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts      // Call options to use throughout this session
-}
-
-// BaseFactoryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseFactoryTransactorSession struct {
-	Contract     *BaseFactoryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// BaseFactoryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseFactoryRaw struct {
-	Contract *BaseFactory // Generic contract binding to access the raw methods on
-}
-
-// BaseFactoryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseFactoryCallerRaw struct {
-	Contract *BaseFactoryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseFactoryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseFactoryTransactorRaw struct {
-	Contract *BaseFactoryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseFactory creates a new instance of BaseFactory, bound to a specific deployed contract.
@@ -25183,49 +20088,11 @@ func NewBaseFactoryFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindBaseFactory binds a generic wrapper to an already deployed contract.
 func bindBaseFactory(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseFactoryABI))
+	parsed, err := ParsedABI(K_BaseFactory)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseFactory *BaseFactoryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseFactory.Contract.BaseFactoryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseFactory *BaseFactoryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseFactory.Contract.BaseFactoryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseFactory *BaseFactoryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseFactory.Contract.BaseFactoryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseFactory *BaseFactoryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseFactory.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseFactory *BaseFactoryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseFactory.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseFactory *BaseFactoryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseFactory.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -25245,20 +20112,6 @@ func (_BaseFactory *BaseFactoryCaller) ContentSpace(opts *bind.CallOpts) (common
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseFactory *BaseFactorySession) ContentSpace() (common.Address, error) {
-	return _BaseFactory.Contract.ContentSpace(&_BaseFactory.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseFactory *BaseFactoryCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseFactory.Contract.ContentSpace(&_BaseFactory.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -25274,20 +20127,6 @@ func (_BaseFactory *BaseFactoryCaller) Creator(opts *bind.CallOpts) (common.Addr
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseFactory *BaseFactorySession) Creator() (common.Address, error) {
-	return _BaseFactory.Contract.Creator(&_BaseFactory.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseFactory *BaseFactoryCallerSession) Creator() (common.Address, error) {
-	return _BaseFactory.Contract.Creator(&_BaseFactory.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -25307,20 +20146,6 @@ func (_BaseFactory *BaseFactoryCaller) Owner(opts *bind.CallOpts) (common.Addres
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseFactory *BaseFactorySession) Owner() (common.Address, error) {
-	return _BaseFactory.Contract.Owner(&_BaseFactory.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseFactory *BaseFactoryCallerSession) Owner() (common.Address, error) {
-	return _BaseFactory.Contract.Owner(&_BaseFactory.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -25338,39 +20163,11 @@ func (_BaseFactory *BaseFactoryCaller) Version(opts *bind.CallOpts) ([32]byte, e
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseFactory *BaseFactorySession) Version() ([32]byte, error) {
-	return _BaseFactory.Contract.Version(&_BaseFactory.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseFactory *BaseFactoryCallerSession) Version() ([32]byte, error) {
-	return _BaseFactory.Contract.Version(&_BaseFactory.CallOpts)
-}
-
 // CreateContentType is a paid mutator transaction binding the contract method 0xb8cfaf05.
 //
 // Solidity: function createContentType() returns(address)
 func (_BaseFactory *BaseFactoryTransactor) CreateContentType(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseFactory.contract.Transact(opts, "createContentType")
-}
-
-// CreateContentType is a paid mutator transaction binding the contract method 0xb8cfaf05.
-//
-// Solidity: function createContentType() returns(address)
-func (_BaseFactory *BaseFactorySession) CreateContentType() (*types.Transaction, error) {
-	return _BaseFactory.Contract.CreateContentType(&_BaseFactory.TransactOpts)
-}
-
-// CreateContentType is a paid mutator transaction binding the contract method 0xb8cfaf05.
-//
-// Solidity: function createContentType() returns(address)
-func (_BaseFactory *BaseFactoryTransactorSession) CreateContentType() (*types.Transaction, error) {
-	return _BaseFactory.Contract.CreateContentType(&_BaseFactory.TransactOpts)
 }
 
 // CreateNode is a paid mutator transaction binding the contract method 0x5c6dc219.
@@ -25380,39 +20177,11 @@ func (_BaseFactory *BaseFactoryTransactor) CreateNode(opts *bind.TransactOpts, _
 	return _BaseFactory.contract.Transact(opts, "createNode", _owner)
 }
 
-// CreateNode is a paid mutator transaction binding the contract method 0x5c6dc219.
-//
-// Solidity: function createNode(address _owner) returns(address)
-func (_BaseFactory *BaseFactorySession) CreateNode(_owner common.Address) (*types.Transaction, error) {
-	return _BaseFactory.Contract.CreateNode(&_BaseFactory.TransactOpts, _owner)
-}
-
-// CreateNode is a paid mutator transaction binding the contract method 0x5c6dc219.
-//
-// Solidity: function createNode(address _owner) returns(address)
-func (_BaseFactory *BaseFactoryTransactorSession) CreateNode(_owner common.Address) (*types.Transaction, error) {
-	return _BaseFactory.Contract.CreateNode(&_BaseFactory.TransactOpts, _owner)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_BaseFactory *BaseFactoryTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseFactory.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseFactory *BaseFactorySession) Kill() (*types.Transaction, error) {
-	return _BaseFactory.Contract.Kill(&_BaseFactory.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseFactory *BaseFactoryTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseFactory.Contract.Kill(&_BaseFactory.TransactOpts)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -25422,20 +20191,6 @@ func (_BaseFactory *BaseFactoryTransactor) TransferCreatorship(opts *bind.Transa
 	return _BaseFactory.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseFactory *BaseFactorySession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseFactory.Contract.TransferCreatorship(&_BaseFactory.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseFactory *BaseFactoryTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseFactory.Contract.TransferCreatorship(&_BaseFactory.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -25443,39 +20198,11 @@ func (_BaseFactory *BaseFactoryTransactor) TransferOwnership(opts *bind.Transact
 	return _BaseFactory.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseFactory *BaseFactorySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseFactory.Contract.TransferOwnership(&_BaseFactory.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseFactory *BaseFactoryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseFactory.Contract.TransferOwnership(&_BaseFactory.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseFactory *BaseFactoryTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseFactory.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseFactory *BaseFactorySession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseFactory.Contract.Fallback(&_BaseFactory.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseFactory *BaseFactoryTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseFactory.Contract.Fallback(&_BaseFactory.TransactOpts, calldata)
 }
 
 // BaseGroupFactoryMetaData contains all meta data concerning the BaseGroupFactory contract.
@@ -25508,7 +20235,7 @@ var BaseGroupFactoryBin = BaseGroupFactoryMetaData.Bin
 
 // DeployBaseGroupFactory deploys a new Ethereum contract, binding an instance of BaseGroupFactory to it.
 func DeployBaseGroupFactory(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BaseGroupFactory, error) {
-	parsed, err := BaseGroupFactoryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseGroupFactory)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -25543,43 +20270,6 @@ type BaseGroupFactoryTransactor struct {
 // BaseGroupFactoryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseGroupFactoryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseGroupFactorySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseGroupFactorySession struct {
-	Contract     *BaseGroupFactory // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// BaseGroupFactoryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseGroupFactoryCallerSession struct {
-	Contract *BaseGroupFactoryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts           // Call options to use throughout this session
-}
-
-// BaseGroupFactoryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseGroupFactoryTransactorSession struct {
-	Contract     *BaseGroupFactoryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
-}
-
-// BaseGroupFactoryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseGroupFactoryRaw struct {
-	Contract *BaseGroupFactory // Generic contract binding to access the raw methods on
-}
-
-// BaseGroupFactoryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseGroupFactoryCallerRaw struct {
-	Contract *BaseGroupFactoryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseGroupFactoryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseGroupFactoryTransactorRaw struct {
-	Contract *BaseGroupFactoryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseGroupFactory creates a new instance of BaseGroupFactory, bound to a specific deployed contract.
@@ -25620,49 +20310,11 @@ func NewBaseGroupFactoryFilterer(address common.Address, filterer bind.ContractF
 
 // bindBaseGroupFactory binds a generic wrapper to an already deployed contract.
 func bindBaseGroupFactory(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseGroupFactoryABI))
+	parsed, err := ParsedABI(K_BaseGroupFactory)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseGroupFactory *BaseGroupFactoryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseGroupFactory.Contract.BaseGroupFactoryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseGroupFactory *BaseGroupFactoryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.BaseGroupFactoryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseGroupFactory *BaseGroupFactoryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.BaseGroupFactoryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseGroupFactory *BaseGroupFactoryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseGroupFactory.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseGroupFactory *BaseGroupFactoryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseGroupFactory *BaseGroupFactoryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -25682,20 +20334,6 @@ func (_BaseGroupFactory *BaseGroupFactoryCaller) ContentSpace(opts *bind.CallOpt
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseGroupFactory *BaseGroupFactorySession) ContentSpace() (common.Address, error) {
-	return _BaseGroupFactory.Contract.ContentSpace(&_BaseGroupFactory.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseGroupFactory *BaseGroupFactoryCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseGroupFactory.Contract.ContentSpace(&_BaseGroupFactory.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -25711,20 +20349,6 @@ func (_BaseGroupFactory *BaseGroupFactoryCaller) Creator(opts *bind.CallOpts) (c
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseGroupFactory *BaseGroupFactorySession) Creator() (common.Address, error) {
-	return _BaseGroupFactory.Contract.Creator(&_BaseGroupFactory.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseGroupFactory *BaseGroupFactoryCallerSession) Creator() (common.Address, error) {
-	return _BaseGroupFactory.Contract.Creator(&_BaseGroupFactory.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -25744,20 +20368,6 @@ func (_BaseGroupFactory *BaseGroupFactoryCaller) Owner(opts *bind.CallOpts) (com
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseGroupFactory *BaseGroupFactorySession) Owner() (common.Address, error) {
-	return _BaseGroupFactory.Contract.Owner(&_BaseGroupFactory.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseGroupFactory *BaseGroupFactoryCallerSession) Owner() (common.Address, error) {
-	return _BaseGroupFactory.Contract.Owner(&_BaseGroupFactory.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -25775,39 +20385,11 @@ func (_BaseGroupFactory *BaseGroupFactoryCaller) Version(opts *bind.CallOpts) ([
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseGroupFactory *BaseGroupFactorySession) Version() ([32]byte, error) {
-	return _BaseGroupFactory.Contract.Version(&_BaseGroupFactory.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseGroupFactory *BaseGroupFactoryCallerSession) Version() ([32]byte, error) {
-	return _BaseGroupFactory.Contract.Version(&_BaseGroupFactory.CallOpts)
-}
-
 // CreateGroup is a paid mutator transaction binding the contract method 0x575185ed.
 //
 // Solidity: function createGroup() returns(address)
 func (_BaseGroupFactory *BaseGroupFactoryTransactor) CreateGroup(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseGroupFactory.contract.Transact(opts, "createGroup")
-}
-
-// CreateGroup is a paid mutator transaction binding the contract method 0x575185ed.
-//
-// Solidity: function createGroup() returns(address)
-func (_BaseGroupFactory *BaseGroupFactorySession) CreateGroup() (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.CreateGroup(&_BaseGroupFactory.TransactOpts)
-}
-
-// CreateGroup is a paid mutator transaction binding the contract method 0x575185ed.
-//
-// Solidity: function createGroup() returns(address)
-func (_BaseGroupFactory *BaseGroupFactoryTransactorSession) CreateGroup() (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.CreateGroup(&_BaseGroupFactory.TransactOpts)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -25817,39 +20399,11 @@ func (_BaseGroupFactory *BaseGroupFactoryTransactor) Kill(opts *bind.TransactOpt
 	return _BaseGroupFactory.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseGroupFactory *BaseGroupFactorySession) Kill() (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.Kill(&_BaseGroupFactory.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseGroupFactory *BaseGroupFactoryTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.Kill(&_BaseGroupFactory.TransactOpts)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseGroupFactory *BaseGroupFactoryTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseGroupFactory.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseGroupFactory *BaseGroupFactorySession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.TransferCreatorship(&_BaseGroupFactory.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseGroupFactory *BaseGroupFactoryTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.TransferCreatorship(&_BaseGroupFactory.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -25859,39 +20413,11 @@ func (_BaseGroupFactory *BaseGroupFactoryTransactor) TransferOwnership(opts *bin
 	return _BaseGroupFactory.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseGroupFactory *BaseGroupFactorySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.TransferOwnership(&_BaseGroupFactory.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseGroupFactory *BaseGroupFactoryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.TransferOwnership(&_BaseGroupFactory.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseGroupFactory *BaseGroupFactoryTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseGroupFactory.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseGroupFactory *BaseGroupFactorySession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.Fallback(&_BaseGroupFactory.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseGroupFactory *BaseGroupFactoryTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseGroupFactory.Contract.Fallback(&_BaseGroupFactory.TransactOpts, calldata)
 }
 
 // BaseLibraryMetaData contains all meta data concerning the BaseLibrary contract.
@@ -25978,7 +20504,7 @@ var BaseLibraryBin = BaseLibraryMetaData.Bin
 
 // DeployBaseLibrary deploys a new Ethereum contract, binding an instance of BaseLibrary to it.
 func DeployBaseLibrary(auth *bind.TransactOpts, backend bind.ContractBackend, address_KMS common.Address, content_space common.Address) (common.Address, *types.Transaction, *BaseLibrary, error) {
-	parsed, err := BaseLibraryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseLibrary)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -26013,43 +20539,6 @@ type BaseLibraryTransactor struct {
 // BaseLibraryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseLibraryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseLibrarySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseLibrarySession struct {
-	Contract     *BaseLibrary      // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// BaseLibraryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseLibraryCallerSession struct {
-	Contract *BaseLibraryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts      // Call options to use throughout this session
-}
-
-// BaseLibraryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseLibraryTransactorSession struct {
-	Contract     *BaseLibraryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// BaseLibraryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseLibraryRaw struct {
-	Contract *BaseLibrary // Generic contract binding to access the raw methods on
-}
-
-// BaseLibraryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseLibraryCallerRaw struct {
-	Contract *BaseLibraryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseLibraryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseLibraryTransactorRaw struct {
-	Contract *BaseLibraryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseLibrary creates a new instance of BaseLibrary, bound to a specific deployed contract.
@@ -26090,49 +20579,11 @@ func NewBaseLibraryFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindBaseLibrary binds a generic wrapper to an already deployed contract.
 func bindBaseLibrary(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseLibraryABI))
+	parsed, err := ParsedABI(K_BaseLibrary)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseLibrary *BaseLibraryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseLibrary.Contract.BaseLibraryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseLibrary *BaseLibraryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.BaseLibraryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseLibrary *BaseLibraryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.BaseLibraryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseLibrary *BaseLibraryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseLibrary.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseLibrary *BaseLibraryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseLibrary *BaseLibraryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // AccessorGroups is a free data retrieval call binding the contract method 0x2c11f392.
@@ -26152,20 +20603,6 @@ func (_BaseLibrary *BaseLibraryCaller) AccessorGroups(opts *bind.CallOpts, arg0 
 
 }
 
-// AccessorGroups is a free data retrieval call binding the contract method 0x2c11f392.
-//
-// Solidity: function accessorGroups(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) AccessorGroups(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.AccessorGroups(&_BaseLibrary.CallOpts, arg0)
-}
-
-// AccessorGroups is a free data retrieval call binding the contract method 0x2c11f392.
-//
-// Solidity: function accessorGroups(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) AccessorGroups(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.AccessorGroups(&_BaseLibrary.CallOpts, arg0)
-}
-
 // AccessorGroupsLength is a free data retrieval call binding the contract method 0xe5538fd2.
 //
 // Solidity: function accessorGroupsLength() view returns(uint256)
@@ -26181,20 +20618,6 @@ func (_BaseLibrary *BaseLibraryCaller) AccessorGroupsLength(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// AccessorGroupsLength is a free data retrieval call binding the contract method 0xe5538fd2.
-//
-// Solidity: function accessorGroupsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibrarySession) AccessorGroupsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.AccessorGroupsLength(&_BaseLibrary.CallOpts)
-}
-
-// AccessorGroupsLength is a free data retrieval call binding the contract method 0xe5538fd2.
-//
-// Solidity: function accessorGroupsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibraryCallerSession) AccessorGroupsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.AccessorGroupsLength(&_BaseLibrary.CallOpts)
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
@@ -26214,20 +20637,6 @@ func (_BaseLibrary *BaseLibraryCaller) AddressKMS(opts *bind.CallOpts) (common.A
 
 }
 
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseLibrary *BaseLibrarySession) AddressKMS() (common.Address, error) {
-	return _BaseLibrary.Contract.AddressKMS(&_BaseLibrary.CallOpts)
-}
-
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) AddressKMS() (common.Address, error) {
-	return _BaseLibrary.Contract.AddressKMS(&_BaseLibrary.CallOpts)
-}
-
 // ApprovalRequests is a free data retrieval call binding the contract method 0x8cb13c2e.
 //
 // Solidity: function approvalRequests(uint256 ) view returns(address)
@@ -26243,20 +20652,6 @@ func (_BaseLibrary *BaseLibraryCaller) ApprovalRequests(opts *bind.CallOpts, arg
 
 	return out0, err
 
-}
-
-// ApprovalRequests is a free data retrieval call binding the contract method 0x8cb13c2e.
-//
-// Solidity: function approvalRequests(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) ApprovalRequests(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ApprovalRequests(&_BaseLibrary.CallOpts, arg0)
-}
-
-// ApprovalRequests is a free data retrieval call binding the contract method 0x8cb13c2e.
-//
-// Solidity: function approvalRequests(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) ApprovalRequests(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ApprovalRequests(&_BaseLibrary.CallOpts, arg0)
 }
 
 // ApprovalRequestsLength is a free data retrieval call binding the contract method 0x16308394.
@@ -26276,20 +20671,6 @@ func (_BaseLibrary *BaseLibraryCaller) ApprovalRequestsLength(opts *bind.CallOpt
 
 }
 
-// ApprovalRequestsLength is a free data retrieval call binding the contract method 0x16308394.
-//
-// Solidity: function approvalRequestsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibrarySession) ApprovalRequestsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ApprovalRequestsLength(&_BaseLibrary.CallOpts)
-}
-
-// ApprovalRequestsLength is a free data retrieval call binding the contract method 0x16308394.
-//
-// Solidity: function approvalRequestsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibraryCallerSession) ApprovalRequestsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ApprovalRequestsLength(&_BaseLibrary.CallOpts)
-}
-
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
@@ -26305,20 +20686,6 @@ func (_BaseLibrary *BaseLibraryCaller) CanCommit(opts *bind.CallOpts) (bool, err
 
 	return out0, err
 
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) CanCommit() (bool, error) {
-	return _BaseLibrary.Contract.CanCommit(&_BaseLibrary.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) CanCommit() (bool, error) {
-	return _BaseLibrary.Contract.CanCommit(&_BaseLibrary.CallOpts)
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
@@ -26338,20 +20705,6 @@ func (_BaseLibrary *BaseLibraryCaller) CanConfirm(opts *bind.CallOpts) (bool, er
 
 }
 
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) CanConfirm() (bool, error) {
-	return _BaseLibrary.Contract.CanConfirm(&_BaseLibrary.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) CanConfirm() (bool, error) {
-	return _BaseLibrary.Contract.CanConfirm(&_BaseLibrary.CallOpts)
-}
-
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
@@ -26367,20 +20720,6 @@ func (_BaseLibrary *BaseLibraryCaller) CanContribute(opts *bind.CallOpts, _candi
 
 	return out0, err
 
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) CanContribute(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanContribute(&_BaseLibrary.CallOpts, _candidate)
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) CanContribute(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanContribute(&_BaseLibrary.CallOpts, _candidate)
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
@@ -26400,20 +20739,6 @@ func (_BaseLibrary *BaseLibraryCaller) CanNodePublish(opts *bind.CallOpts, candi
 
 }
 
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanNodePublish(&_BaseLibrary.CallOpts, candidate)
-}
-
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanNodePublish(&_BaseLibrary.CallOpts, candidate)
-}
-
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
@@ -26429,20 +20754,6 @@ func (_BaseLibrary *BaseLibraryCaller) CanPublish(opts *bind.CallOpts, _candidat
 
 	return out0, err
 
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) CanPublish(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanPublish(&_BaseLibrary.CallOpts, _candidate)
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) CanPublish(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanPublish(&_BaseLibrary.CallOpts, _candidate)
 }
 
 // CanPublish0 is a free data retrieval call binding the contract method 0xcbcd4461.
@@ -26462,20 +20773,6 @@ func (_BaseLibrary *BaseLibraryCaller) CanPublish0(opts *bind.CallOpts) (bool, e
 
 }
 
-// CanPublish0 is a free data retrieval call binding the contract method 0xcbcd4461.
-//
-// Solidity: function canPublish() view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) CanPublish0() (bool, error) {
-	return _BaseLibrary.Contract.CanPublish0(&_BaseLibrary.CallOpts)
-}
-
-// CanPublish0 is a free data retrieval call binding the contract method 0xcbcd4461.
-//
-// Solidity: function canPublish() view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) CanPublish0() (bool, error) {
-	return _BaseLibrary.Contract.CanPublish0(&_BaseLibrary.CallOpts)
-}
-
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
 //
 // Solidity: function canReview(address _candidate) view returns(bool)
@@ -26491,20 +20788,6 @@ func (_BaseLibrary *BaseLibraryCaller) CanReview(opts *bind.CallOpts, _candidate
 
 	return out0, err
 
-}
-
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) CanReview(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanReview(&_BaseLibrary.CallOpts, _candidate)
-}
-
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) CanReview(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.CanReview(&_BaseLibrary.CallOpts, _candidate)
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -26524,20 +20807,6 @@ func (_BaseLibrary *BaseLibraryCaller) ContentSpace(opts *bind.CallOpts) (common
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseLibrary *BaseLibrarySession) ContentSpace() (common.Address, error) {
-	return _BaseLibrary.Contract.ContentSpace(&_BaseLibrary.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseLibrary.Contract.ContentSpace(&_BaseLibrary.CallOpts)
-}
-
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
 //
 // Solidity: function contentTypeContracts(address ) view returns(address)
@@ -26553,20 +20822,6 @@ func (_BaseLibrary *BaseLibraryCaller) ContentTypeContracts(opts *bind.CallOpts,
 
 	return out0, err
 
-}
-
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _BaseLibrary.Contract.ContentTypeContracts(&_BaseLibrary.CallOpts, arg0)
-}
-
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _BaseLibrary.Contract.ContentTypeContracts(&_BaseLibrary.CallOpts, arg0)
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
@@ -26586,20 +20841,6 @@ func (_BaseLibrary *BaseLibraryCaller) ContentTypes(opts *bind.CallOpts, arg0 *b
 
 }
 
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ContentTypes(&_BaseLibrary.CallOpts, arg0)
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ContentTypes(&_BaseLibrary.CallOpts, arg0)
-}
-
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
 //
 // Solidity: function contentTypesLength() view returns(uint256)
@@ -26615,20 +20856,6 @@ func (_BaseLibrary *BaseLibraryCaller) ContentTypesLength(opts *bind.CallOpts) (
 
 	return out0, err
 
-}
-
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_BaseLibrary *BaseLibrarySession) ContentTypesLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ContentTypesLength(&_BaseLibrary.CallOpts)
-}
-
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_BaseLibrary *BaseLibraryCallerSession) ContentTypesLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ContentTypesLength(&_BaseLibrary.CallOpts)
 }
 
 // ContributorGroups is a free data retrieval call binding the contract method 0x2393553b.
@@ -26648,20 +20875,6 @@ func (_BaseLibrary *BaseLibraryCaller) ContributorGroups(opts *bind.CallOpts, ar
 
 }
 
-// ContributorGroups is a free data retrieval call binding the contract method 0x2393553b.
-//
-// Solidity: function contributorGroups(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) ContributorGroups(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ContributorGroups(&_BaseLibrary.CallOpts, arg0)
-}
-
-// ContributorGroups is a free data retrieval call binding the contract method 0x2393553b.
-//
-// Solidity: function contributorGroups(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) ContributorGroups(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ContributorGroups(&_BaseLibrary.CallOpts, arg0)
-}
-
 // ContributorGroupsLength is a free data retrieval call binding the contract method 0x470750bb.
 //
 // Solidity: function contributorGroupsLength() view returns(uint256)
@@ -26677,20 +20890,6 @@ func (_BaseLibrary *BaseLibraryCaller) ContributorGroupsLength(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// ContributorGroupsLength is a free data retrieval call binding the contract method 0x470750bb.
-//
-// Solidity: function contributorGroupsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibrarySession) ContributorGroupsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ContributorGroupsLength(&_BaseLibrary.CallOpts)
-}
-
-// ContributorGroupsLength is a free data retrieval call binding the contract method 0x470750bb.
-//
-// Solidity: function contributorGroupsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibraryCallerSession) ContributorGroupsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ContributorGroupsLength(&_BaseLibrary.CallOpts)
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
@@ -26710,20 +20909,6 @@ func (_BaseLibrary *BaseLibraryCaller) CountVersionHashes(opts *bind.CallOpts) (
 
 }
 
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseLibrary *BaseLibrarySession) CountVersionHashes() (*big.Int, error) {
-	return _BaseLibrary.Contract.CountVersionHashes(&_BaseLibrary.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_BaseLibrary *BaseLibraryCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _BaseLibrary.Contract.CountVersionHashes(&_BaseLibrary.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -26739,20 +20924,6 @@ func (_BaseLibrary *BaseLibraryCaller) Creator(opts *bind.CallOpts) (common.Addr
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseLibrary *BaseLibrarySession) Creator() (common.Address, error) {
-	return _BaseLibrary.Contract.Creator(&_BaseLibrary.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) Creator() (common.Address, error) {
-	return _BaseLibrary.Contract.Creator(&_BaseLibrary.CallOpts)
 }
 
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
@@ -26772,20 +20943,6 @@ func (_BaseLibrary *BaseLibraryCaller) FindTypeByHash(opts *bind.CallOpts, typeH
 
 }
 
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _BaseLibrary.Contract.FindTypeByHash(&_BaseLibrary.CallOpts, typeHash)
-}
-
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _BaseLibrary.Contract.FindTypeByHash(&_BaseLibrary.CallOpts, typeHash)
-}
-
 // GetMeta is a free data retrieval call binding the contract method 0xac55c906.
 //
 // Solidity: function getMeta(bytes key) view returns(bytes)
@@ -26801,20 +20958,6 @@ func (_BaseLibrary *BaseLibraryCaller) GetMeta(opts *bind.CallOpts, key []byte) 
 
 	return out0, err
 
-}
-
-// GetMeta is a free data retrieval call binding the contract method 0xac55c906.
-//
-// Solidity: function getMeta(bytes key) view returns(bytes)
-func (_BaseLibrary *BaseLibrarySession) GetMeta(key []byte) ([]byte, error) {
-	return _BaseLibrary.Contract.GetMeta(&_BaseLibrary.CallOpts, key)
-}
-
-// GetMeta is a free data retrieval call binding the contract method 0xac55c906.
-//
-// Solidity: function getMeta(bytes key) view returns(bytes)
-func (_BaseLibrary *BaseLibraryCallerSession) GetMeta(key []byte) ([]byte, error) {
-	return _BaseLibrary.Contract.GetMeta(&_BaseLibrary.CallOpts, key)
 }
 
 // GetPendingApprovalRequest is a free data retrieval call binding the contract method 0x63dab9d4.
@@ -26834,20 +20977,6 @@ func (_BaseLibrary *BaseLibraryCaller) GetPendingApprovalRequest(opts *bind.Call
 
 }
 
-// GetPendingApprovalRequest is a free data retrieval call binding the contract method 0x63dab9d4.
-//
-// Solidity: function getPendingApprovalRequest(uint256 index) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) GetPendingApprovalRequest(index *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.GetPendingApprovalRequest(&_BaseLibrary.CallOpts, index)
-}
-
-// GetPendingApprovalRequest is a free data retrieval call binding the contract method 0x63dab9d4.
-//
-// Solidity: function getPendingApprovalRequest(uint256 index) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) GetPendingApprovalRequest(index *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.GetPendingApprovalRequest(&_BaseLibrary.CallOpts, index)
-}
-
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address _candidate) view returns(bool)
@@ -26863,20 +20992,6 @@ func (_BaseLibrary *BaseLibraryCaller) HasAccess(opts *bind.CallOpts, _candidate
 
 	return out0, err
 
-}
-
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) HasAccess(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.HasAccess(&_BaseLibrary.CallOpts, _candidate)
-}
-
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address _candidate) view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) HasAccess(_candidate common.Address) (bool, error) {
-	return _BaseLibrary.Contract.HasAccess(&_BaseLibrary.CallOpts, _candidate)
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
@@ -26896,20 +21011,6 @@ func (_BaseLibrary *BaseLibraryCaller) ObjectHash(opts *bind.CallOpts) (string, 
 
 }
 
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseLibrary *BaseLibrarySession) ObjectHash() (string, error) {
-	return _BaseLibrary.Contract.ObjectHash(&_BaseLibrary.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_BaseLibrary *BaseLibraryCallerSession) ObjectHash() (string, error) {
-	return _BaseLibrary.Contract.ObjectHash(&_BaseLibrary.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -26925,20 +21026,6 @@ func (_BaseLibrary *BaseLibraryCaller) Owner(opts *bind.CallOpts) (common.Addres
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseLibrary *BaseLibrarySession) Owner() (common.Address, error) {
-	return _BaseLibrary.Contract.Owner(&_BaseLibrary.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) Owner() (common.Address, error) {
-	return _BaseLibrary.Contract.Owner(&_BaseLibrary.CallOpts)
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
@@ -26958,20 +21045,6 @@ func (_BaseLibrary *BaseLibraryCaller) ParentAddress(opts *bind.CallOpts) (commo
 
 }
 
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseLibrary *BaseLibrarySession) ParentAddress() (common.Address, error) {
-	return _BaseLibrary.Contract.ParentAddress(&_BaseLibrary.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) ParentAddress() (common.Address, error) {
-	return _BaseLibrary.Contract.ParentAddress(&_BaseLibrary.CallOpts)
-}
-
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
@@ -26987,20 +21060,6 @@ func (_BaseLibrary *BaseLibraryCaller) PendingHash(opts *bind.CallOpts) (string,
 
 	return out0, err
 
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseLibrary *BaseLibrarySession) PendingHash() (string, error) {
-	return _BaseLibrary.Contract.PendingHash(&_BaseLibrary.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_BaseLibrary *BaseLibraryCallerSession) PendingHash() (string, error) {
-	return _BaseLibrary.Contract.PendingHash(&_BaseLibrary.CallOpts)
 }
 
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
@@ -27020,20 +21079,6 @@ func (_BaseLibrary *BaseLibraryCaller) RequiresReview(opts *bind.CallOpts) (bool
 
 }
 
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) RequiresReview() (bool, error) {
-	return _BaseLibrary.Contract.RequiresReview(&_BaseLibrary.CallOpts)
-}
-
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) RequiresReview() (bool, error) {
-	return _BaseLibrary.Contract.RequiresReview(&_BaseLibrary.CallOpts)
-}
-
 // ReviewerGroups is a free data retrieval call binding the contract method 0x952e464b.
 //
 // Solidity: function reviewerGroups(uint256 ) view returns(address)
@@ -27049,20 +21094,6 @@ func (_BaseLibrary *BaseLibraryCaller) ReviewerGroups(opts *bind.CallOpts, arg0 
 
 	return out0, err
 
-}
-
-// ReviewerGroups is a free data retrieval call binding the contract method 0x952e464b.
-//
-// Solidity: function reviewerGroups(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibrarySession) ReviewerGroups(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ReviewerGroups(&_BaseLibrary.CallOpts, arg0)
-}
-
-// ReviewerGroups is a free data retrieval call binding the contract method 0x952e464b.
-//
-// Solidity: function reviewerGroups(uint256 ) view returns(address)
-func (_BaseLibrary *BaseLibraryCallerSession) ReviewerGroups(arg0 *big.Int) (common.Address, error) {
-	return _BaseLibrary.Contract.ReviewerGroups(&_BaseLibrary.CallOpts, arg0)
 }
 
 // ReviewerGroupsLength is a free data retrieval call binding the contract method 0x21770a84.
@@ -27082,20 +21113,6 @@ func (_BaseLibrary *BaseLibraryCaller) ReviewerGroupsLength(opts *bind.CallOpts)
 
 }
 
-// ReviewerGroupsLength is a free data retrieval call binding the contract method 0x21770a84.
-//
-// Solidity: function reviewerGroupsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibrarySession) ReviewerGroupsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ReviewerGroupsLength(&_BaseLibrary.CallOpts)
-}
-
-// ReviewerGroupsLength is a free data retrieval call binding the contract method 0x21770a84.
-//
-// Solidity: function reviewerGroupsLength() view returns(uint256)
-func (_BaseLibrary *BaseLibraryCallerSession) ReviewerGroupsLength() (*big.Int, error) {
-	return _BaseLibrary.Contract.ReviewerGroupsLength(&_BaseLibrary.CallOpts)
-}
-
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
 //
 // Solidity: function validType(address content_type) view returns(bool)
@@ -27111,20 +21128,6 @@ func (_BaseLibrary *BaseLibraryCaller) ValidType(opts *bind.CallOpts, content_ty
 
 	return out0, err
 
-}
-
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) ValidType(content_type common.Address) (bool, error) {
-	return _BaseLibrary.Contract.ValidType(&_BaseLibrary.CallOpts, content_type)
-}
-
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) ValidType(content_type common.Address) (bool, error) {
-	return _BaseLibrary.Contract.ValidType(&_BaseLibrary.CallOpts, content_type)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -27144,20 +21147,6 @@ func (_BaseLibrary *BaseLibraryCaller) Version(opts *bind.CallOpts) ([32]byte, e
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseLibrary *BaseLibrarySession) Version() ([32]byte, error) {
-	return _BaseLibrary.Contract.Version(&_BaseLibrary.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseLibrary *BaseLibraryCallerSession) Version() ([32]byte, error) {
-	return _BaseLibrary.Contract.Version(&_BaseLibrary.CallOpts)
-}
-
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
@@ -27173,20 +21162,6 @@ func (_BaseLibrary *BaseLibraryCaller) VersionHashes(opts *bind.CallOpts, arg0 *
 
 	return out0, err
 
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseLibrary *BaseLibrarySession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseLibrary.Contract.VersionHashes(&_BaseLibrary.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_BaseLibrary *BaseLibraryCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _BaseLibrary.Contract.VersionHashes(&_BaseLibrary.CallOpts, arg0)
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
@@ -27206,20 +21181,6 @@ func (_BaseLibrary *BaseLibraryCaller) VersionTimestamp(opts *bind.CallOpts, arg
 
 }
 
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseLibrary *BaseLibrarySession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseLibrary.Contract.VersionTimestamp(&_BaseLibrary.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_BaseLibrary *BaseLibraryCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _BaseLibrary.Contract.VersionTimestamp(&_BaseLibrary.CallOpts, arg0)
-}
-
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
 //
 // Solidity: function whitelistedType(address content_type) view returns(bool)
@@ -27237,39 +21198,11 @@ func (_BaseLibrary *BaseLibraryCaller) WhitelistedType(opts *bind.CallOpts, cont
 
 }
 
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_BaseLibrary *BaseLibrarySession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _BaseLibrary.Contract.WhitelistedType(&_BaseLibrary.CallOpts, content_type)
-}
-
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_BaseLibrary *BaseLibraryCallerSession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _BaseLibrary.Contract.WhitelistedType(&_BaseLibrary.CallOpts, content_type)
-}
-
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
 //
 // Solidity: function accessRequest() returns(bool)
 func (_BaseLibrary *BaseLibraryTransactor) AccessRequest(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "accessRequest")
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseLibrary *BaseLibrarySession) AccessRequest() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AccessRequest(&_BaseLibrary.TransactOpts)
-}
-
-// AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
-//
-// Solidity: function accessRequest() returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) AccessRequest() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AccessRequest(&_BaseLibrary.TransactOpts)
 }
 
 // AddAccessorGroup is a paid mutator transaction binding the contract method 0x1d0f4351.
@@ -27279,39 +21212,11 @@ func (_BaseLibrary *BaseLibraryTransactor) AddAccessorGroup(opts *bind.TransactO
 	return _BaseLibrary.contract.Transact(opts, "addAccessorGroup", group)
 }
 
-// AddAccessorGroup is a paid mutator transaction binding the contract method 0x1d0f4351.
-//
-// Solidity: function addAccessorGroup(address group) returns()
-func (_BaseLibrary *BaseLibrarySession) AddAccessorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddAccessorGroup(&_BaseLibrary.TransactOpts, group)
-}
-
-// AddAccessorGroup is a paid mutator transaction binding the contract method 0x1d0f4351.
-//
-// Solidity: function addAccessorGroup(address group) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) AddAccessorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddAccessorGroup(&_BaseLibrary.TransactOpts, group)
-}
-
 // AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
 //
 // Solidity: function addContentType(address content_type, address content_contract) returns()
 func (_BaseLibrary *BaseLibraryTransactor) AddContentType(opts *bind.TransactOpts, content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "addContentType", content_type, content_contract)
-}
-
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_BaseLibrary *BaseLibrarySession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddContentType(&_BaseLibrary.TransactOpts, content_type, content_contract)
-}
-
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddContentType(&_BaseLibrary.TransactOpts, content_type, content_contract)
 }
 
 // AddContributorGroup is a paid mutator transaction binding the contract method 0x679a9a3c.
@@ -27321,39 +21226,11 @@ func (_BaseLibrary *BaseLibraryTransactor) AddContributorGroup(opts *bind.Transa
 	return _BaseLibrary.contract.Transact(opts, "addContributorGroup", group)
 }
 
-// AddContributorGroup is a paid mutator transaction binding the contract method 0x679a9a3c.
-//
-// Solidity: function addContributorGroup(address group) returns()
-func (_BaseLibrary *BaseLibrarySession) AddContributorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddContributorGroup(&_BaseLibrary.TransactOpts, group)
-}
-
-// AddContributorGroup is a paid mutator transaction binding the contract method 0x679a9a3c.
-//
-// Solidity: function addContributorGroup(address group) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) AddContributorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddContributorGroup(&_BaseLibrary.TransactOpts, group)
-}
-
 // AddReviewerGroup is a paid mutator transaction binding the contract method 0xdc3c29c0.
 //
 // Solidity: function addReviewerGroup(address group) returns()
 func (_BaseLibrary *BaseLibraryTransactor) AddReviewerGroup(opts *bind.TransactOpts, group common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "addReviewerGroup", group)
-}
-
-// AddReviewerGroup is a paid mutator transaction binding the contract method 0xdc3c29c0.
-//
-// Solidity: function addReviewerGroup(address group) returns()
-func (_BaseLibrary *BaseLibrarySession) AddReviewerGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddReviewerGroup(&_BaseLibrary.TransactOpts, group)
-}
-
-// AddReviewerGroup is a paid mutator transaction binding the contract method 0xdc3c29c0.
-//
-// Solidity: function addReviewerGroup(address group) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) AddReviewerGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.AddReviewerGroup(&_BaseLibrary.TransactOpts, group)
 }
 
 // ApproveContent is a paid mutator transaction binding the contract method 0x87e86b2c.
@@ -27363,39 +21240,11 @@ func (_BaseLibrary *BaseLibraryTransactor) ApproveContent(opts *bind.TransactOpt
 	return _BaseLibrary.contract.Transact(opts, "approveContent", content_contract, approved, note)
 }
 
-// ApproveContent is a paid mutator transaction binding the contract method 0x87e86b2c.
-//
-// Solidity: function approveContent(address content_contract, bool approved, string note) returns(bool)
-func (_BaseLibrary *BaseLibrarySession) ApproveContent(content_contract common.Address, approved bool, note string) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.ApproveContent(&_BaseLibrary.TransactOpts, content_contract, approved, note)
-}
-
-// ApproveContent is a paid mutator transaction binding the contract method 0x87e86b2c.
-//
-// Solidity: function approveContent(address content_contract, bool approved, string note) returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) ApproveContent(content_contract common.Address, approved bool, note string) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.ApproveContent(&_BaseLibrary.TransactOpts, content_contract, approved, note)
-}
-
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
 //
 // Solidity: function commit(string _objectHash) returns()
 func (_BaseLibrary *BaseLibraryTransactor) Commit(opts *bind.TransactOpts, _objectHash string) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "commit", _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseLibrary *BaseLibrarySession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Commit(&_BaseLibrary.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Commit(&_BaseLibrary.TransactOpts, _objectHash)
 }
 
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
@@ -27405,39 +21254,11 @@ func (_BaseLibrary *BaseLibraryTransactor) ConfirmCommit(opts *bind.TransactOpts
 	return _BaseLibrary.contract.Transact(opts, "confirmCommit")
 }
 
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseLibrary *BaseLibrarySession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.ConfirmCommit(&_BaseLibrary.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.ConfirmCommit(&_BaseLibrary.TransactOpts)
-}
-
 // CreateContent is a paid mutator transaction binding the contract method 0x1e35d8fa.
 //
 // Solidity: function createContent(address content_type) returns(address)
 func (_BaseLibrary *BaseLibraryTransactor) CreateContent(opts *bind.TransactOpts, content_type common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "createContent", content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0x1e35d8fa.
-//
-// Solidity: function createContent(address content_type) returns(address)
-func (_BaseLibrary *BaseLibrarySession) CreateContent(content_type common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.CreateContent(&_BaseLibrary.TransactOpts, content_type)
-}
-
-// CreateContent is a paid mutator transaction binding the contract method 0x1e35d8fa.
-//
-// Solidity: function createContent(address content_type) returns(address)
-func (_BaseLibrary *BaseLibraryTransactorSession) CreateContent(content_type common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.CreateContent(&_BaseLibrary.TransactOpts, content_type)
 }
 
 // DeleteContent is a paid mutator transaction binding the contract method 0x87fcd0b8.
@@ -27447,39 +21268,11 @@ func (_BaseLibrary *BaseLibraryTransactor) DeleteContent(opts *bind.TransactOpts
 	return _BaseLibrary.contract.Transact(opts, "deleteContent", _contentAddr)
 }
 
-// DeleteContent is a paid mutator transaction binding the contract method 0x87fcd0b8.
-//
-// Solidity: function deleteContent(address _contentAddr) returns()
-func (_BaseLibrary *BaseLibrarySession) DeleteContent(_contentAddr common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.DeleteContent(&_BaseLibrary.TransactOpts, _contentAddr)
-}
-
-// DeleteContent is a paid mutator transaction binding the contract method 0x87fcd0b8.
-//
-// Solidity: function deleteContent(address _contentAddr) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) DeleteContent(_contentAddr common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.DeleteContent(&_BaseLibrary.TransactOpts, _contentAddr)
-}
-
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
 //
 // Solidity: function deleteVersion(string _versionHash) returns(int256)
 func (_BaseLibrary *BaseLibraryTransactor) DeleteVersion(opts *bind.TransactOpts, _versionHash string) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "deleteVersion", _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseLibrary *BaseLibrarySession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.DeleteVersion(&_BaseLibrary.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_BaseLibrary *BaseLibraryTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.DeleteVersion(&_BaseLibrary.TransactOpts, _versionHash)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -27489,39 +21282,11 @@ func (_BaseLibrary *BaseLibraryTransactor) Kill(opts *bind.TransactOpts) (*types
 	return _BaseLibrary.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseLibrary *BaseLibrarySession) Kill() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Kill(&_BaseLibrary.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Kill(&_BaseLibrary.TransactOpts)
-}
-
 // Publish is a paid mutator transaction binding the contract method 0x2cf99422.
 //
 // Solidity: function publish(address contentObj) returns(bool)
 func (_BaseLibrary *BaseLibraryTransactor) Publish(opts *bind.TransactOpts, contentObj common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "publish", contentObj)
-}
-
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_BaseLibrary *BaseLibrarySession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Publish(&_BaseLibrary.TransactOpts, contentObj)
-}
-
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Publish(&_BaseLibrary.TransactOpts, contentObj)
 }
 
 // PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
@@ -27531,39 +21296,11 @@ func (_BaseLibrary *BaseLibraryTransactor) PutMeta(opts *bind.TransactOpts, key 
 	return _BaseLibrary.contract.Transact(opts, "putMeta", key, value)
 }
 
-// PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
-//
-// Solidity: function putMeta(bytes key, bytes value) returns()
-func (_BaseLibrary *BaseLibrarySession) PutMeta(key []byte, value []byte) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.PutMeta(&_BaseLibrary.TransactOpts, key, value)
-}
-
-// PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
-//
-// Solidity: function putMeta(bytes key, bytes value) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) PutMeta(key []byte, value []byte) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.PutMeta(&_BaseLibrary.TransactOpts, key, value)
-}
-
 // RemoveAccessorGroup is a paid mutator transaction binding the contract method 0xe8de515f.
 //
 // Solidity: function removeAccessorGroup(address group) returns(bool)
 func (_BaseLibrary *BaseLibraryTransactor) RemoveAccessorGroup(opts *bind.TransactOpts, group common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "removeAccessorGroup", group)
-}
-
-// RemoveAccessorGroup is a paid mutator transaction binding the contract method 0xe8de515f.
-//
-// Solidity: function removeAccessorGroup(address group) returns(bool)
-func (_BaseLibrary *BaseLibrarySession) RemoveAccessorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveAccessorGroup(&_BaseLibrary.TransactOpts, group)
-}
-
-// RemoveAccessorGroup is a paid mutator transaction binding the contract method 0xe8de515f.
-//
-// Solidity: function removeAccessorGroup(address group) returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) RemoveAccessorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveAccessorGroup(&_BaseLibrary.TransactOpts, group)
 }
 
 // RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
@@ -27573,39 +21310,11 @@ func (_BaseLibrary *BaseLibraryTransactor) RemoveContentType(opts *bind.Transact
 	return _BaseLibrary.contract.Transact(opts, "removeContentType", content_type)
 }
 
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_BaseLibrary *BaseLibrarySession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveContentType(&_BaseLibrary.TransactOpts, content_type)
-}
-
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveContentType(&_BaseLibrary.TransactOpts, content_type)
-}
-
 // RemoveContributorGroup is a paid mutator transaction binding the contract method 0x386493e0.
 //
 // Solidity: function removeContributorGroup(address group) returns(bool)
 func (_BaseLibrary *BaseLibraryTransactor) RemoveContributorGroup(opts *bind.TransactOpts, group common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "removeContributorGroup", group)
-}
-
-// RemoveContributorGroup is a paid mutator transaction binding the contract method 0x386493e0.
-//
-// Solidity: function removeContributorGroup(address group) returns(bool)
-func (_BaseLibrary *BaseLibrarySession) RemoveContributorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveContributorGroup(&_BaseLibrary.TransactOpts, group)
-}
-
-// RemoveContributorGroup is a paid mutator transaction binding the contract method 0x386493e0.
-//
-// Solidity: function removeContributorGroup(address group) returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) RemoveContributorGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveContributorGroup(&_BaseLibrary.TransactOpts, group)
 }
 
 // RemoveReviewerGroup is a paid mutator transaction binding the contract method 0x1b969895.
@@ -27615,39 +21324,11 @@ func (_BaseLibrary *BaseLibraryTransactor) RemoveReviewerGroup(opts *bind.Transa
 	return _BaseLibrary.contract.Transact(opts, "removeReviewerGroup", group)
 }
 
-// RemoveReviewerGroup is a paid mutator transaction binding the contract method 0x1b969895.
-//
-// Solidity: function removeReviewerGroup(address group) returns(bool)
-func (_BaseLibrary *BaseLibrarySession) RemoveReviewerGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveReviewerGroup(&_BaseLibrary.TransactOpts, group)
-}
-
-// RemoveReviewerGroup is a paid mutator transaction binding the contract method 0x1b969895.
-//
-// Solidity: function removeReviewerGroup(address group) returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) RemoveReviewerGroup(group common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.RemoveReviewerGroup(&_BaseLibrary.TransactOpts, group)
-}
-
 // SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
 //
 // Solidity: function setAddressKMS(address address_KMS) returns()
 func (_BaseLibrary *BaseLibraryTransactor) SetAddressKMS(opts *bind.TransactOpts, address_KMS common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "setAddressKMS", address_KMS)
-}
-
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseLibrary *BaseLibrarySession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SetAddressKMS(&_BaseLibrary.TransactOpts, address_KMS)
-}
-
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SetAddressKMS(&_BaseLibrary.TransactOpts, address_KMS)
 }
 
 // SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
@@ -27657,39 +21338,11 @@ func (_BaseLibrary *BaseLibraryTransactor) SetGroupRights(opts *bind.TransactOpt
 	return _BaseLibrary.contract.Transact(opts, "setGroupRights", group, access_type, access)
 }
 
-// SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
-//
-// Solidity: function setGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseLibrary *BaseLibrarySession) SetGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SetGroupRights(&_BaseLibrary.TransactOpts, group, access_type, access)
-}
-
-// SetGroupRights is a paid mutator transaction binding the contract method 0x22e564eb.
-//
-// Solidity: function setGroupRights(address group, uint8 access_type, uint8 access) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) SetGroupRights(group common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SetGroupRights(&_BaseLibrary.TransactOpts, group, access_type, access)
-}
-
 // SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
 //
 // Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
 func (_BaseLibrary *BaseLibraryTransactor) SetRights(opts *bind.TransactOpts, stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "setRights", stakeholder, access_type, access)
-}
-
-// SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
-//
-// Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
-func (_BaseLibrary *BaseLibrarySession) SetRights(stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SetRights(&_BaseLibrary.TransactOpts, stakeholder, access_type, access)
-}
-
-// SetRights is a paid mutator transaction binding the contract method 0x0fe1b5a2.
-//
-// Solidity: function setRights(address stakeholder, uint8 access_type, uint8 access) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) SetRights(stakeholder common.Address, access_type uint8, access uint8) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SetRights(&_BaseLibrary.TransactOpts, stakeholder, access_type, access)
 }
 
 // SubmitApprovalRequest is a paid mutator transaction binding the contract method 0x49102e61.
@@ -27699,39 +21352,11 @@ func (_BaseLibrary *BaseLibraryTransactor) SubmitApprovalRequest(opts *bind.Tran
 	return _BaseLibrary.contract.Transact(opts, "submitApprovalRequest")
 }
 
-// SubmitApprovalRequest is a paid mutator transaction binding the contract method 0x49102e61.
-//
-// Solidity: function submitApprovalRequest() returns(bool)
-func (_BaseLibrary *BaseLibrarySession) SubmitApprovalRequest() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SubmitApprovalRequest(&_BaseLibrary.TransactOpts)
-}
-
-// SubmitApprovalRequest is a paid mutator transaction binding the contract method 0x49102e61.
-//
-// Solidity: function submitApprovalRequest() returns(bool)
-func (_BaseLibrary *BaseLibraryTransactorSession) SubmitApprovalRequest() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.SubmitApprovalRequest(&_BaseLibrary.TransactOpts)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseLibrary *BaseLibraryTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseLibrary *BaseLibrarySession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.TransferCreatorship(&_BaseLibrary.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.TransferCreatorship(&_BaseLibrary.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -27741,39 +21366,11 @@ func (_BaseLibrary *BaseLibraryTransactor) TransferOwnership(opts *bind.Transact
 	return _BaseLibrary.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseLibrary *BaseLibrarySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.TransferOwnership(&_BaseLibrary.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.TransferOwnership(&_BaseLibrary.TransactOpts, newOwner)
-}
-
 // UpdateAddressKMS is a paid mutator transaction binding the contract method 0x011e01a5.
 //
 // Solidity: function updateAddressKMS(address address_KMS) returns()
 func (_BaseLibrary *BaseLibraryTransactor) UpdateAddressKMS(opts *bind.TransactOpts, address_KMS common.Address) (*types.Transaction, error) {
 	return _BaseLibrary.contract.Transact(opts, "updateAddressKMS", address_KMS)
-}
-
-// UpdateAddressKMS is a paid mutator transaction binding the contract method 0x011e01a5.
-//
-// Solidity: function updateAddressKMS(address address_KMS) returns()
-func (_BaseLibrary *BaseLibrarySession) UpdateAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.UpdateAddressKMS(&_BaseLibrary.TransactOpts, address_KMS)
-}
-
-// UpdateAddressKMS is a paid mutator transaction binding the contract method 0x011e01a5.
-//
-// Solidity: function updateAddressKMS(address address_KMS) returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) UpdateAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.UpdateAddressKMS(&_BaseLibrary.TransactOpts, address_KMS)
 }
 
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
@@ -27783,39 +21380,11 @@ func (_BaseLibrary *BaseLibraryTransactor) UpdateRequest(opts *bind.TransactOpts
 	return _BaseLibrary.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseLibrary *BaseLibrarySession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.UpdateRequest(&_BaseLibrary.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _BaseLibrary.Contract.UpdateRequest(&_BaseLibrary.TransactOpts)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseLibrary *BaseLibraryTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseLibrary.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseLibrary *BaseLibrarySession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Fallback(&_BaseLibrary.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseLibrary *BaseLibraryTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseLibrary.Contract.Fallback(&_BaseLibrary.TransactOpts, calldata)
 }
 
 // BaseLibraryAccessRequestIterator is returned from FilterAccessRequest and is used to iterate over the raw logs and unpacked data for AccessRequest events raised by the BaseLibrary contract.
@@ -30406,7 +23975,7 @@ var BaseLibraryFactoryBin = BaseLibraryFactoryMetaData.Bin
 
 // DeployBaseLibraryFactory deploys a new Ethereum contract, binding an instance of BaseLibraryFactory to it.
 func DeployBaseLibraryFactory(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *BaseLibraryFactory, error) {
-	parsed, err := BaseLibraryFactoryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_BaseLibraryFactory)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -30441,43 +24010,6 @@ type BaseLibraryFactoryTransactor struct {
 // BaseLibraryFactoryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type BaseLibraryFactoryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// BaseLibraryFactorySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type BaseLibraryFactorySession struct {
-	Contract     *BaseLibraryFactory // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts       // Call options to use throughout this session
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// BaseLibraryFactoryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type BaseLibraryFactoryCallerSession struct {
-	Contract *BaseLibraryFactoryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts             // Call options to use throughout this session
-}
-
-// BaseLibraryFactoryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type BaseLibraryFactoryTransactorSession struct {
-	Contract     *BaseLibraryFactoryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts             // Transaction auth options to use throughout this session
-}
-
-// BaseLibraryFactoryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type BaseLibraryFactoryRaw struct {
-	Contract *BaseLibraryFactory // Generic contract binding to access the raw methods on
-}
-
-// BaseLibraryFactoryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type BaseLibraryFactoryCallerRaw struct {
-	Contract *BaseLibraryFactoryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// BaseLibraryFactoryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type BaseLibraryFactoryTransactorRaw struct {
-	Contract *BaseLibraryFactoryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewBaseLibraryFactory creates a new instance of BaseLibraryFactory, bound to a specific deployed contract.
@@ -30518,49 +24050,11 @@ func NewBaseLibraryFactoryFilterer(address common.Address, filterer bind.Contrac
 
 // bindBaseLibraryFactory binds a generic wrapper to an already deployed contract.
 func bindBaseLibraryFactory(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(BaseLibraryFactoryABI))
+	parsed, err := ParsedABI(K_BaseLibraryFactory)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseLibraryFactory *BaseLibraryFactoryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseLibraryFactory.Contract.BaseLibraryFactoryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseLibraryFactory *BaseLibraryFactoryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.BaseLibraryFactoryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseLibraryFactory *BaseLibraryFactoryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.BaseLibraryFactoryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_BaseLibraryFactory *BaseLibraryFactoryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _BaseLibraryFactory.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_BaseLibraryFactory *BaseLibraryFactoryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_BaseLibraryFactory *BaseLibraryFactoryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -30580,20 +24074,6 @@ func (_BaseLibraryFactory *BaseLibraryFactoryCaller) ContentSpace(opts *bind.Cal
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactorySession) ContentSpace() (common.Address, error) {
-	return _BaseLibraryFactory.Contract.ContentSpace(&_BaseLibraryFactory.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactoryCallerSession) ContentSpace() (common.Address, error) {
-	return _BaseLibraryFactory.Contract.ContentSpace(&_BaseLibraryFactory.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -30609,20 +24089,6 @@ func (_BaseLibraryFactory *BaseLibraryFactoryCaller) Creator(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactorySession) Creator() (common.Address, error) {
-	return _BaseLibraryFactory.Contract.Creator(&_BaseLibraryFactory.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactoryCallerSession) Creator() (common.Address, error) {
-	return _BaseLibraryFactory.Contract.Creator(&_BaseLibraryFactory.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -30642,20 +24108,6 @@ func (_BaseLibraryFactory *BaseLibraryFactoryCaller) Owner(opts *bind.CallOpts) 
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactorySession) Owner() (common.Address, error) {
-	return _BaseLibraryFactory.Contract.Owner(&_BaseLibraryFactory.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactoryCallerSession) Owner() (common.Address, error) {
-	return _BaseLibraryFactory.Contract.Owner(&_BaseLibraryFactory.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -30673,39 +24125,11 @@ func (_BaseLibraryFactory *BaseLibraryFactoryCaller) Version(opts *bind.CallOpts
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseLibraryFactory *BaseLibraryFactorySession) Version() ([32]byte, error) {
-	return _BaseLibraryFactory.Contract.Version(&_BaseLibraryFactory.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_BaseLibraryFactory *BaseLibraryFactoryCallerSession) Version() ([32]byte, error) {
-	return _BaseLibraryFactory.Contract.Version(&_BaseLibraryFactory.CallOpts)
-}
-
 // CreateLibrary is a paid mutator transaction binding the contract method 0x40b89f06.
 //
 // Solidity: function createLibrary(address address_KMS) returns(address)
 func (_BaseLibraryFactory *BaseLibraryFactoryTransactor) CreateLibrary(opts *bind.TransactOpts, address_KMS common.Address) (*types.Transaction, error) {
 	return _BaseLibraryFactory.contract.Transact(opts, "createLibrary", address_KMS)
-}
-
-// CreateLibrary is a paid mutator transaction binding the contract method 0x40b89f06.
-//
-// Solidity: function createLibrary(address address_KMS) returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactorySession) CreateLibrary(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.CreateLibrary(&_BaseLibraryFactory.TransactOpts, address_KMS)
-}
-
-// CreateLibrary is a paid mutator transaction binding the contract method 0x40b89f06.
-//
-// Solidity: function createLibrary(address address_KMS) returns(address)
-func (_BaseLibraryFactory *BaseLibraryFactoryTransactorSession) CreateLibrary(address_KMS common.Address) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.CreateLibrary(&_BaseLibraryFactory.TransactOpts, address_KMS)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -30715,39 +24139,11 @@ func (_BaseLibraryFactory *BaseLibraryFactoryTransactor) Kill(opts *bind.Transac
 	return _BaseLibraryFactory.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseLibraryFactory *BaseLibraryFactorySession) Kill() (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.Kill(&_BaseLibraryFactory.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_BaseLibraryFactory *BaseLibraryFactoryTransactorSession) Kill() (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.Kill(&_BaseLibraryFactory.TransactOpts)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_BaseLibraryFactory *BaseLibraryFactoryTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _BaseLibraryFactory.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseLibraryFactory *BaseLibraryFactorySession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.TransferCreatorship(&_BaseLibraryFactory.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_BaseLibraryFactory *BaseLibraryFactoryTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.TransferCreatorship(&_BaseLibraryFactory.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -30757,39 +24153,11 @@ func (_BaseLibraryFactory *BaseLibraryFactoryTransactor) TransferOwnership(opts 
 	return _BaseLibraryFactory.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseLibraryFactory *BaseLibraryFactorySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.TransferOwnership(&_BaseLibraryFactory.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_BaseLibraryFactory *BaseLibraryFactoryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.TransferOwnership(&_BaseLibraryFactory.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_BaseLibraryFactory *BaseLibraryFactoryTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _BaseLibraryFactory.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseLibraryFactory *BaseLibraryFactorySession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.Fallback(&_BaseLibraryFactory.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_BaseLibraryFactory *BaseLibraryFactoryTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _BaseLibraryFactory.Contract.Fallback(&_BaseLibraryFactory.TransactOpts, calldata)
 }
 
 // ContainerMetaData contains all meta data concerning the Container contract.
@@ -30850,7 +24218,7 @@ var ContainerBin = ContainerMetaData.Bin
 
 // DeployContainer deploys a new Ethereum contract, binding an instance of Container to it.
 func DeployContainer(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Container, error) {
-	parsed, err := ContainerMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Container)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -30885,43 +24253,6 @@ type ContainerTransactor struct {
 // ContainerFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ContainerFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ContainerSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ContainerSession struct {
-	Contract     *Container        // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ContainerCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ContainerCallerSession struct {
-	Contract *ContainerCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts    // Call options to use throughout this session
-}
-
-// ContainerTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ContainerTransactorSession struct {
-	Contract     *ContainerTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts    // Transaction auth options to use throughout this session
-}
-
-// ContainerRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ContainerRaw struct {
-	Contract *Container // Generic contract binding to access the raw methods on
-}
-
-// ContainerCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ContainerCallerRaw struct {
-	Contract *ContainerCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ContainerTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ContainerTransactorRaw struct {
-	Contract *ContainerTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewContainer creates a new instance of Container, bound to a specific deployed contract.
@@ -30962,49 +24293,11 @@ func NewContainerFilterer(address common.Address, filterer bind.ContractFilterer
 
 // bindContainer binds a generic wrapper to an already deployed contract.
 func bindContainer(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ContainerABI))
+	parsed, err := ParsedABI(K_Container)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Container *ContainerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Container.Contract.ContainerCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Container *ContainerRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Container.Contract.ContainerTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Container *ContainerRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Container.Contract.ContainerTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Container *ContainerCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Container.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Container *ContainerTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Container.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Container *ContainerTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Container.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
@@ -31024,20 +24317,6 @@ func (_Container *ContainerCaller) AddressKMS(opts *bind.CallOpts) (common.Addre
 
 }
 
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_Container *ContainerSession) AddressKMS() (common.Address, error) {
-	return _Container.Contract.AddressKMS(&_Container.CallOpts)
-}
-
-// AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
-//
-// Solidity: function addressKMS() view returns(address)
-func (_Container *ContainerCallerSession) AddressKMS() (common.Address, error) {
-	return _Container.Contract.AddressKMS(&_Container.CallOpts)
-}
-
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
@@ -31053,20 +24332,6 @@ func (_Container *ContainerCaller) CanCommit(opts *bind.CallOpts) (bool, error) 
 
 	return out0, err
 
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_Container *ContainerSession) CanCommit() (bool, error) {
-	return _Container.Contract.CanCommit(&_Container.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_Container *ContainerCallerSession) CanCommit() (bool, error) {
-	return _Container.Contract.CanCommit(&_Container.CallOpts)
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
@@ -31086,20 +24351,6 @@ func (_Container *ContainerCaller) CanConfirm(opts *bind.CallOpts) (bool, error)
 
 }
 
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_Container *ContainerSession) CanConfirm() (bool, error) {
-	return _Container.Contract.CanConfirm(&_Container.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_Container *ContainerCallerSession) CanConfirm() (bool, error) {
-	return _Container.Contract.CanConfirm(&_Container.CallOpts)
-}
-
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
@@ -31115,20 +24366,6 @@ func (_Container *ContainerCaller) CanContribute(opts *bind.CallOpts, _candidate
 
 	return out0, err
 
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_Container *ContainerSession) CanContribute(_candidate common.Address) (bool, error) {
-	return _Container.Contract.CanContribute(&_Container.CallOpts, _candidate)
-}
-
-// CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
-//
-// Solidity: function canContribute(address _candidate) view returns(bool)
-func (_Container *ContainerCallerSession) CanContribute(_candidate common.Address) (bool, error) {
-	return _Container.Contract.CanContribute(&_Container.CallOpts, _candidate)
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
@@ -31148,20 +24385,6 @@ func (_Container *ContainerCaller) CanNodePublish(opts *bind.CallOpts, candidate
 
 }
 
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_Container *ContainerSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _Container.Contract.CanNodePublish(&_Container.CallOpts, candidate)
-}
-
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_Container *ContainerCallerSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _Container.Contract.CanNodePublish(&_Container.CallOpts, candidate)
-}
-
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
@@ -31177,20 +24400,6 @@ func (_Container *ContainerCaller) CanPublish(opts *bind.CallOpts, _candidate co
 
 	return out0, err
 
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_Container *ContainerSession) CanPublish(_candidate common.Address) (bool, error) {
-	return _Container.Contract.CanPublish(&_Container.CallOpts, _candidate)
-}
-
-// CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
-//
-// Solidity: function canPublish(address _candidate) view returns(bool)
-func (_Container *ContainerCallerSession) CanPublish(_candidate common.Address) (bool, error) {
-	return _Container.Contract.CanPublish(&_Container.CallOpts, _candidate)
 }
 
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
@@ -31210,20 +24419,6 @@ func (_Container *ContainerCaller) CanReview(opts *bind.CallOpts, arg0 common.Ad
 
 }
 
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address ) view returns(bool)
-func (_Container *ContainerSession) CanReview(arg0 common.Address) (bool, error) {
-	return _Container.Contract.CanReview(&_Container.CallOpts, arg0)
-}
-
-// CanReview is a free data retrieval call binding the contract method 0x29d00219.
-//
-// Solidity: function canReview(address ) view returns(bool)
-func (_Container *ContainerCallerSession) CanReview(arg0 common.Address) (bool, error) {
-	return _Container.Contract.CanReview(&_Container.CallOpts, arg0)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -31239,20 +24434,6 @@ func (_Container *ContainerCaller) ContentSpace(opts *bind.CallOpts) (common.Add
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Container *ContainerSession) ContentSpace() (common.Address, error) {
-	return _Container.Contract.ContentSpace(&_Container.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Container *ContainerCallerSession) ContentSpace() (common.Address, error) {
-	return _Container.Contract.ContentSpace(&_Container.CallOpts)
 }
 
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
@@ -31272,20 +24453,6 @@ func (_Container *ContainerCaller) ContentTypeContracts(opts *bind.CallOpts, arg
 
 }
 
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_Container *ContainerSession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _Container.Contract.ContentTypeContracts(&_Container.CallOpts, arg0)
-}
-
-// ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
-//
-// Solidity: function contentTypeContracts(address ) view returns(address)
-func (_Container *ContainerCallerSession) ContentTypeContracts(arg0 common.Address) (common.Address, error) {
-	return _Container.Contract.ContentTypeContracts(&_Container.CallOpts, arg0)
-}
-
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
 //
 // Solidity: function contentTypes(uint256 ) view returns(address)
@@ -31301,20 +24468,6 @@ func (_Container *ContainerCaller) ContentTypes(opts *bind.CallOpts, arg0 *big.I
 
 	return out0, err
 
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_Container *ContainerSession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _Container.Contract.ContentTypes(&_Container.CallOpts, arg0)
-}
-
-// ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
-//
-// Solidity: function contentTypes(uint256 ) view returns(address)
-func (_Container *ContainerCallerSession) ContentTypes(arg0 *big.Int) (common.Address, error) {
-	return _Container.Contract.ContentTypes(&_Container.CallOpts, arg0)
 }
 
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
@@ -31334,20 +24487,6 @@ func (_Container *ContainerCaller) ContentTypesLength(opts *bind.CallOpts) (*big
 
 }
 
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_Container *ContainerSession) ContentTypesLength() (*big.Int, error) {
-	return _Container.Contract.ContentTypesLength(&_Container.CallOpts)
-}
-
-// ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
-//
-// Solidity: function contentTypesLength() view returns(uint256)
-func (_Container *ContainerCallerSession) ContentTypesLength() (*big.Int, error) {
-	return _Container.Contract.ContentTypesLength(&_Container.CallOpts)
-}
-
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
@@ -31363,20 +24502,6 @@ func (_Container *ContainerCaller) CountVersionHashes(opts *bind.CallOpts) (*big
 
 	return out0, err
 
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_Container *ContainerSession) CountVersionHashes() (*big.Int, error) {
-	return _Container.Contract.CountVersionHashes(&_Container.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_Container *ContainerCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _Container.Contract.CountVersionHashes(&_Container.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -31396,20 +24521,6 @@ func (_Container *ContainerCaller) Creator(opts *bind.CallOpts) (common.Address,
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Container *ContainerSession) Creator() (common.Address, error) {
-	return _Container.Contract.Creator(&_Container.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Container *ContainerCallerSession) Creator() (common.Address, error) {
-	return _Container.Contract.Creator(&_Container.CallOpts)
-}
-
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
 //
 // Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
@@ -31425,20 +24536,6 @@ func (_Container *ContainerCaller) FindTypeByHash(opts *bind.CallOpts, typeHash 
 
 	return out0, err
 
-}
-
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_Container *ContainerSession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _Container.Contract.FindTypeByHash(&_Container.CallOpts, typeHash)
-}
-
-// FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
-//
-// Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
-func (_Container *ContainerCallerSession) FindTypeByHash(typeHash [32]byte) (common.Address, error) {
-	return _Container.Contract.FindTypeByHash(&_Container.CallOpts, typeHash)
 }
 
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
@@ -31458,20 +24555,6 @@ func (_Container *ContainerCaller) HasAccess(opts *bind.CallOpts, arg0 common.Ad
 
 }
 
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address ) view returns(bool)
-func (_Container *ContainerSession) HasAccess(arg0 common.Address) (bool, error) {
-	return _Container.Contract.HasAccess(&_Container.CallOpts, arg0)
-}
-
-// HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
-//
-// Solidity: function hasAccess(address ) view returns(bool)
-func (_Container *ContainerCallerSession) HasAccess(arg0 common.Address) (bool, error) {
-	return _Container.Contract.HasAccess(&_Container.CallOpts, arg0)
-}
-
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
@@ -31487,20 +24570,6 @@ func (_Container *ContainerCaller) ObjectHash(opts *bind.CallOpts) (string, erro
 
 	return out0, err
 
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_Container *ContainerSession) ObjectHash() (string, error) {
-	return _Container.Contract.ObjectHash(&_Container.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_Container *ContainerCallerSession) ObjectHash() (string, error) {
-	return _Container.Contract.ObjectHash(&_Container.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -31520,20 +24589,6 @@ func (_Container *ContainerCaller) Owner(opts *bind.CallOpts) (common.Address, e
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Container *ContainerSession) Owner() (common.Address, error) {
-	return _Container.Contract.Owner(&_Container.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Container *ContainerCallerSession) Owner() (common.Address, error) {
-	return _Container.Contract.Owner(&_Container.CallOpts)
-}
-
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
@@ -31549,20 +24604,6 @@ func (_Container *ContainerCaller) ParentAddress(opts *bind.CallOpts) (common.Ad
 
 	return out0, err
 
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_Container *ContainerSession) ParentAddress() (common.Address, error) {
-	return _Container.Contract.ParentAddress(&_Container.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_Container *ContainerCallerSession) ParentAddress() (common.Address, error) {
-	return _Container.Contract.ParentAddress(&_Container.CallOpts)
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
@@ -31582,20 +24623,6 @@ func (_Container *ContainerCaller) PendingHash(opts *bind.CallOpts) (string, err
 
 }
 
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_Container *ContainerSession) PendingHash() (string, error) {
-	return _Container.Contract.PendingHash(&_Container.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_Container *ContainerCallerSession) PendingHash() (string, error) {
-	return _Container.Contract.PendingHash(&_Container.CallOpts)
-}
-
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
 //
 // Solidity: function requiresReview() view returns(bool)
@@ -31611,20 +24638,6 @@ func (_Container *ContainerCaller) RequiresReview(opts *bind.CallOpts) (bool, er
 
 	return out0, err
 
-}
-
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_Container *ContainerSession) RequiresReview() (bool, error) {
-	return _Container.Contract.RequiresReview(&_Container.CallOpts)
-}
-
-// RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
-//
-// Solidity: function requiresReview() view returns(bool)
-func (_Container *ContainerCallerSession) RequiresReview() (bool, error) {
-	return _Container.Contract.RequiresReview(&_Container.CallOpts)
 }
 
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
@@ -31644,20 +24657,6 @@ func (_Container *ContainerCaller) ValidType(opts *bind.CallOpts, content_type c
 
 }
 
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_Container *ContainerSession) ValidType(content_type common.Address) (bool, error) {
-	return _Container.Contract.ValidType(&_Container.CallOpts, content_type)
-}
-
-// ValidType is a free data retrieval call binding the contract method 0x29dedde5.
-//
-// Solidity: function validType(address content_type) view returns(bool)
-func (_Container *ContainerCallerSession) ValidType(content_type common.Address) (bool, error) {
-	return _Container.Contract.ValidType(&_Container.CallOpts, content_type)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -31673,20 +24672,6 @@ func (_Container *ContainerCaller) Version(opts *bind.CallOpts) ([32]byte, error
 
 	return out0, err
 
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Container *ContainerSession) Version() ([32]byte, error) {
-	return _Container.Contract.Version(&_Container.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Container *ContainerCallerSession) Version() ([32]byte, error) {
-	return _Container.Contract.Version(&_Container.CallOpts)
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
@@ -31706,20 +24691,6 @@ func (_Container *ContainerCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.
 
 }
 
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_Container *ContainerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _Container.Contract.VersionHashes(&_Container.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_Container *ContainerCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _Container.Contract.VersionHashes(&_Container.CallOpts, arg0)
-}
-
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
@@ -31735,20 +24706,6 @@ func (_Container *ContainerCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *b
 
 	return out0, err
 
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_Container *ContainerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _Container.Contract.VersionTimestamp(&_Container.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_Container *ContainerCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _Container.Contract.VersionTimestamp(&_Container.CallOpts, arg0)
 }
 
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
@@ -31768,39 +24725,11 @@ func (_Container *ContainerCaller) WhitelistedType(opts *bind.CallOpts, content_
 
 }
 
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_Container *ContainerSession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _Container.Contract.WhitelistedType(&_Container.CallOpts, content_type)
-}
-
-// WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
-//
-// Solidity: function whitelistedType(address content_type) view returns(bool)
-func (_Container *ContainerCallerSession) WhitelistedType(content_type common.Address) (bool, error) {
-	return _Container.Contract.WhitelistedType(&_Container.CallOpts, content_type)
-}
-
 // AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
 //
 // Solidity: function addContentType(address content_type, address content_contract) returns()
 func (_Container *ContainerTransactor) AddContentType(opts *bind.TransactOpts, content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
 	return _Container.contract.Transact(opts, "addContentType", content_type, content_contract)
-}
-
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_Container *ContainerSession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _Container.Contract.AddContentType(&_Container.TransactOpts, content_type, content_contract)
-}
-
-// AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
-//
-// Solidity: function addContentType(address content_type, address content_contract) returns()
-func (_Container *ContainerTransactorSession) AddContentType(content_type common.Address, content_contract common.Address) (*types.Transaction, error) {
-	return _Container.Contract.AddContentType(&_Container.TransactOpts, content_type, content_contract)
 }
 
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
@@ -31810,39 +24739,11 @@ func (_Container *ContainerTransactor) Commit(opts *bind.TransactOpts, _objectHa
 	return _Container.contract.Transact(opts, "commit", _objectHash)
 }
 
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_Container *ContainerSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _Container.Contract.Commit(&_Container.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_Container *ContainerTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _Container.Contract.Commit(&_Container.TransactOpts, _objectHash)
-}
-
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
 //
 // Solidity: function confirmCommit() payable returns(bool)
 func (_Container *ContainerTransactor) ConfirmCommit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Container.contract.Transact(opts, "confirmCommit")
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_Container *ContainerSession) ConfirmCommit() (*types.Transaction, error) {
-	return _Container.Contract.ConfirmCommit(&_Container.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_Container *ContainerTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _Container.Contract.ConfirmCommit(&_Container.TransactOpts)
 }
 
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
@@ -31852,39 +24753,11 @@ func (_Container *ContainerTransactor) DeleteVersion(opts *bind.TransactOpts, _v
 	return _Container.contract.Transact(opts, "deleteVersion", _versionHash)
 }
 
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_Container *ContainerSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _Container.Contract.DeleteVersion(&_Container.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_Container *ContainerTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _Container.Contract.DeleteVersion(&_Container.TransactOpts, _versionHash)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_Container *ContainerTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Container.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Container *ContainerSession) Kill() (*types.Transaction, error) {
-	return _Container.Contract.Kill(&_Container.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Container *ContainerTransactorSession) Kill() (*types.Transaction, error) {
-	return _Container.Contract.Kill(&_Container.TransactOpts)
 }
 
 // Publish is a paid mutator transaction binding the contract method 0x2cf99422.
@@ -31894,39 +24767,11 @@ func (_Container *ContainerTransactor) Publish(opts *bind.TransactOpts, contentO
 	return _Container.contract.Transact(opts, "publish", contentObj)
 }
 
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_Container *ContainerSession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _Container.Contract.Publish(&_Container.TransactOpts, contentObj)
-}
-
-// Publish is a paid mutator transaction binding the contract method 0x2cf99422.
-//
-// Solidity: function publish(address contentObj) returns(bool)
-func (_Container *ContainerTransactorSession) Publish(contentObj common.Address) (*types.Transaction, error) {
-	return _Container.Contract.Publish(&_Container.TransactOpts, contentObj)
-}
-
 // RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
 //
 // Solidity: function removeContentType(address content_type) returns(bool)
 func (_Container *ContainerTransactor) RemoveContentType(opts *bind.TransactOpts, content_type common.Address) (*types.Transaction, error) {
 	return _Container.contract.Transact(opts, "removeContentType", content_type)
-}
-
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_Container *ContainerSession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _Container.Contract.RemoveContentType(&_Container.TransactOpts, content_type)
-}
-
-// RemoveContentType is a paid mutator transaction binding the contract method 0xfd089196.
-//
-// Solidity: function removeContentType(address content_type) returns(bool)
-func (_Container *ContainerTransactorSession) RemoveContentType(content_type common.Address) (*types.Transaction, error) {
-	return _Container.Contract.RemoveContentType(&_Container.TransactOpts, content_type)
 }
 
 // SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
@@ -31936,39 +24781,11 @@ func (_Container *ContainerTransactor) SetAddressKMS(opts *bind.TransactOpts, ad
 	return _Container.contract.Transact(opts, "setAddressKMS", address_KMS)
 }
 
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_Container *ContainerSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _Container.Contract.SetAddressKMS(&_Container.TransactOpts, address_KMS)
-}
-
-// SetAddressKMS is a paid mutator transaction binding the contract method 0xc9e8e72d.
-//
-// Solidity: function setAddressKMS(address address_KMS) returns()
-func (_Container *ContainerTransactorSession) SetAddressKMS(address_KMS common.Address) (*types.Transaction, error) {
-	return _Container.Contract.SetAddressKMS(&_Container.TransactOpts, address_KMS)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_Container *ContainerTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _Container.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Container *ContainerSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Container.Contract.TransferCreatorship(&_Container.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Container *ContainerTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Container.Contract.TransferCreatorship(&_Container.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -31978,20 +24795,6 @@ func (_Container *ContainerTransactor) TransferOwnership(opts *bind.TransactOpts
 	return _Container.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Container *ContainerSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Container.Contract.TransferOwnership(&_Container.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Container *ContainerTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Container.Contract.TransferOwnership(&_Container.TransactOpts, newOwner)
-}
-
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
 //
 // Solidity: function updateRequest() returns()
@@ -31999,39 +24802,11 @@ func (_Container *ContainerTransactor) UpdateRequest(opts *bind.TransactOpts) (*
 	return _Container.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_Container *ContainerSession) UpdateRequest() (*types.Transaction, error) {
-	return _Container.Contract.UpdateRequest(&_Container.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_Container *ContainerTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _Container.Contract.UpdateRequest(&_Container.TransactOpts)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_Container *ContainerTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _Container.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Container *ContainerSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Container.Contract.Fallback(&_Container.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Container *ContainerTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Container.Contract.Fallback(&_Container.TransactOpts, calldata)
 }
 
 // ContainerCommitPendingIterator is returned from FilterCommitPending and is used to iterate over the raw logs and unpacked data for CommitPending events raised by the Container contract.
@@ -32884,7 +25659,7 @@ var ContentBin = ContentMetaData.Bin
 
 // DeployContent deploys a new Ethereum contract, binding an instance of Content to it.
 func DeployContent(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Content, error) {
-	parsed, err := ContentMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Content)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -32919,43 +25694,6 @@ type ContentTransactor struct {
 // ContentFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ContentFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ContentSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ContentSession struct {
-	Contract     *Content          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ContentCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ContentCallerSession struct {
-	Contract *ContentCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// ContentTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ContentTransactorSession struct {
-	Contract     *ContentTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// ContentRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ContentRaw struct {
-	Contract *Content // Generic contract binding to access the raw methods on
-}
-
-// ContentCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ContentCallerRaw struct {
-	Contract *ContentCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ContentTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ContentTransactorRaw struct {
-	Contract *ContentTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewContent creates a new instance of Content, bound to a specific deployed contract.
@@ -32996,49 +25734,11 @@ func NewContentFilterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindContent binds a generic wrapper to an already deployed contract.
 func bindContent(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ContentABI))
+	parsed, err := ParsedABI(K_Content)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Content *ContentRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Content.Contract.ContentCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Content *ContentRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Content.Contract.ContentTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Content *ContentRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Content.Contract.ContentTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Content *ContentCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Content.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Content *ContentTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Content.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Content *ContentTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Content.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
@@ -33058,20 +25758,6 @@ func (_Content *ContentCaller) DEFAULTACCESS(opts *bind.CallOpts) (uint8, error)
 
 }
 
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_Content *ContentSession) DEFAULTACCESS() (uint8, error) {
-	return _Content.Contract.DEFAULTACCESS(&_Content.CallOpts)
-}
-
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_Content *ContentCallerSession) DEFAULTACCESS() (uint8, error) {
-	return _Content.Contract.DEFAULTACCESS(&_Content.CallOpts)
-}
-
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
@@ -33087,20 +25773,6 @@ func (_Content *ContentCaller) DEFAULTCHARGE(opts *bind.CallOpts) (uint8, error)
 
 	return out0, err
 
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_Content *ContentSession) DEFAULTCHARGE() (uint8, error) {
-	return _Content.Contract.DEFAULTCHARGE(&_Content.CallOpts)
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_Content *ContentCallerSession) DEFAULTCHARGE() (uint8, error) {
-	return _Content.Contract.DEFAULTCHARGE(&_Content.CallOpts)
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
@@ -33120,20 +25792,6 @@ func (_Content *ContentCaller) DEFAULTSEE(opts *bind.CallOpts) (uint8, error) {
 
 }
 
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_Content *ContentSession) DEFAULTSEE() (uint8, error) {
-	return _Content.Contract.DEFAULTSEE(&_Content.CallOpts)
-}
-
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_Content *ContentCallerSession) DEFAULTSEE() (uint8, error) {
-	return _Content.Contract.DEFAULTSEE(&_Content.CallOpts)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -33149,20 +25807,6 @@ func (_Content *ContentCaller) ContentSpace(opts *bind.CallOpts) (common.Address
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Content *ContentSession) ContentSpace() (common.Address, error) {
-	return _Content.Contract.ContentSpace(&_Content.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Content *ContentCallerSession) ContentSpace() (common.Address, error) {
-	return _Content.Contract.ContentSpace(&_Content.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -33182,20 +25826,6 @@ func (_Content *ContentCaller) Creator(opts *bind.CallOpts) (common.Address, err
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Content *ContentSession) Creator() (common.Address, error) {
-	return _Content.Contract.Creator(&_Content.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Content *ContentCallerSession) Creator() (common.Address, error) {
-	return _Content.Contract.Creator(&_Content.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -33211,20 +25841,6 @@ func (_Content *ContentCaller) Owner(opts *bind.CallOpts) (common.Address, error
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Content *ContentSession) Owner() (common.Address, error) {
-	return _Content.Contract.Owner(&_Content.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Content *ContentCallerSession) Owner() (common.Address, error) {
-	return _Content.Contract.Owner(&_Content.CallOpts)
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
@@ -33247,20 +25863,6 @@ func (_Content *ContentCaller) RunAccessInfo(opts *bind.CallOpts, arg0 uint8, ar
 
 }
 
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_Content *ContentSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _Content.Contract.RunAccessInfo(&_Content.CallOpts, arg0, arg1, arg2)
-}
-
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_Content *ContentCallerSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _Content.Contract.RunAccessInfo(&_Content.CallOpts, arg0, arg1, arg2)
-}
-
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
@@ -33276,20 +25878,6 @@ func (_Content *ContentCaller) RunDescribeStatus(opts *bind.CallOpts, arg0 *big.
 
 	return out0, err
 
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_Content *ContentSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _Content.Contract.RunDescribeStatus(&_Content.CallOpts, arg0)
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_Content *ContentCallerSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _Content.Contract.RunDescribeStatus(&_Content.CallOpts, arg0)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -33309,39 +25897,11 @@ func (_Content *ContentCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Content *ContentSession) Version() ([32]byte, error) {
-	return _Content.Contract.Version(&_Content.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Content *ContentCallerSession) Version() ([32]byte, error) {
-	return _Content.Contract.Version(&_Content.CallOpts)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_Content *ContentTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Content.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Content *ContentSession) Kill() (*types.Transaction, error) {
-	return _Content.Contract.Kill(&_Content.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Content *ContentTransactorSession) Kill() (*types.Transaction, error) {
-	return _Content.Contract.Kill(&_Content.TransactOpts)
 }
 
 // RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
@@ -33351,39 +25911,11 @@ func (_Content *ContentTransactor) RunAccess(opts *bind.TransactOpts, arg0 *big.
 	return _Content.contract.Transact(opts, "runAccess", arg0, arg1, arg2, arg3)
 }
 
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 , uint8 , bytes32[] , address[] ) payable returns(uint256)
-func (_Content *ContentSession) RunAccess(arg0 *big.Int, arg1 uint8, arg2 [][32]byte, arg3 []common.Address) (*types.Transaction, error) {
-	return _Content.Contract.RunAccess(&_Content.TransactOpts, arg0, arg1, arg2, arg3)
-}
-
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 , uint8 , bytes32[] , address[] ) payable returns(uint256)
-func (_Content *ContentTransactorSession) RunAccess(arg0 *big.Int, arg1 uint8, arg2 [][32]byte, arg3 []common.Address) (*types.Transaction, error) {
-	return _Content.Contract.RunAccess(&_Content.TransactOpts, arg0, arg1, arg2, arg3)
-}
-
 // RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
 //
 // Solidity: function runCreate() payable returns(uint256)
 func (_Content *ContentTransactor) RunCreate(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Content.contract.Transact(opts, "runCreate")
-}
-
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_Content *ContentSession) RunCreate() (*types.Transaction, error) {
-	return _Content.Contract.RunCreate(&_Content.TransactOpts)
-}
-
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_Content *ContentTransactorSession) RunCreate() (*types.Transaction, error) {
-	return _Content.Contract.RunCreate(&_Content.TransactOpts)
 }
 
 // RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
@@ -33393,39 +25925,11 @@ func (_Content *ContentTransactor) RunFinalize(opts *bind.TransactOpts, arg0 *bi
 	return _Content.contract.Transact(opts, "runFinalize", arg0, arg1)
 }
 
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 , uint256 ) payable returns(uint256)
-func (_Content *ContentSession) RunFinalize(arg0 *big.Int, arg1 *big.Int) (*types.Transaction, error) {
-	return _Content.Contract.RunFinalize(&_Content.TransactOpts, arg0, arg1)
-}
-
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 , uint256 ) payable returns(uint256)
-func (_Content *ContentTransactorSession) RunFinalize(arg0 *big.Int, arg1 *big.Int) (*types.Transaction, error) {
-	return _Content.Contract.RunFinalize(&_Content.TransactOpts, arg0, arg1)
-}
-
 // RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
 //
 // Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
 func (_Content *ContentTransactor) RunGrant(opts *bind.TransactOpts, arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
 	return _Content.contract.Transact(opts, "runGrant", arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_Content *ContentSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _Content.Contract.RunGrant(&_Content.TransactOpts, arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_Content *ContentTransactorSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _Content.Contract.RunGrant(&_Content.TransactOpts, arg0, arg1)
 }
 
 // RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
@@ -33435,39 +25939,11 @@ func (_Content *ContentTransactor) RunKill(opts *bind.TransactOpts) (*types.Tran
 	return _Content.contract.Transact(opts, "runKill")
 }
 
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_Content *ContentSession) RunKill() (*types.Transaction, error) {
-	return _Content.Contract.RunKill(&_Content.TransactOpts)
-}
-
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_Content *ContentTransactorSession) RunKill() (*types.Transaction, error) {
-	return _Content.Contract.RunKill(&_Content.TransactOpts)
-}
-
 // RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
 //
 // Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
 func (_Content *ContentTransactor) RunStatusChange(opts *bind.TransactOpts, proposed_status_code *big.Int) (*types.Transaction, error) {
 	return _Content.contract.Transact(opts, "runStatusChange", proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_Content *ContentSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _Content.Contract.RunStatusChange(&_Content.TransactOpts, proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_Content *ContentTransactorSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _Content.Contract.RunStatusChange(&_Content.TransactOpts, proposed_status_code)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -33477,20 +25953,6 @@ func (_Content *ContentTransactor) TransferCreatorship(opts *bind.TransactOpts, 
 	return _Content.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Content *ContentSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Content.Contract.TransferCreatorship(&_Content.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Content *ContentTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Content.Contract.TransferCreatorship(&_Content.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -33498,39 +25960,11 @@ func (_Content *ContentTransactor) TransferOwnership(opts *bind.TransactOpts, ne
 	return _Content.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Content *ContentSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Content.Contract.TransferOwnership(&_Content.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Content *ContentTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Content.Contract.TransferOwnership(&_Content.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_Content *ContentTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _Content.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Content *ContentSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Content.Contract.Fallback(&_Content.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Content *ContentTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Content.Contract.Fallback(&_Content.TransactOpts, calldata)
 }
 
 // ContentLogIterator is returned from FilterLog and is used to iterate over the raw logs and unpacked data for Log events raised by the Content contract.
@@ -35327,7 +27761,7 @@ var EditableBin = EditableMetaData.Bin
 
 // DeployEditable deploys a new Ethereum contract, binding an instance of Editable to it.
 func DeployEditable(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Editable, error) {
-	parsed, err := EditableMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Editable)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -35362,43 +27796,6 @@ type EditableTransactor struct {
 // EditableFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type EditableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// EditableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type EditableSession struct {
-	Contract     *Editable         // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// EditableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type EditableCallerSession struct {
-	Contract *EditableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts   // Call options to use throughout this session
-}
-
-// EditableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type EditableTransactorSession struct {
-	Contract     *EditableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// EditableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type EditableRaw struct {
-	Contract *Editable // Generic contract binding to access the raw methods on
-}
-
-// EditableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type EditableCallerRaw struct {
-	Contract *EditableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// EditableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type EditableTransactorRaw struct {
-	Contract *EditableTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewEditable creates a new instance of Editable, bound to a specific deployed contract.
@@ -35439,49 +27836,11 @@ func NewEditableFilterer(address common.Address, filterer bind.ContractFilterer)
 
 // bindEditable binds a generic wrapper to an already deployed contract.
 func bindEditable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(EditableABI))
+	parsed, err := ParsedABI(K_Editable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Editable *EditableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Editable.Contract.EditableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Editable *EditableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Editable.Contract.EditableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Editable *EditableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Editable.Contract.EditableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Editable *EditableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Editable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Editable *EditableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Editable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Editable *EditableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Editable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
@@ -35501,20 +27860,6 @@ func (_Editable *EditableCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
 
 }
 
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_Editable *EditableSession) CanCommit() (bool, error) {
-	return _Editable.Contract.CanCommit(&_Editable.CallOpts)
-}
-
-// CanCommit is a free data retrieval call binding the contract method 0x6e375427.
-//
-// Solidity: function canCommit() view returns(bool)
-func (_Editable *EditableCallerSession) CanCommit() (bool, error) {
-	return _Editable.Contract.CanCommit(&_Editable.CallOpts)
-}
-
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
@@ -35530,20 +27875,6 @@ func (_Editable *EditableCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
 
 	return out0, err
 
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_Editable *EditableSession) CanConfirm() (bool, error) {
-	return _Editable.Contract.CanConfirm(&_Editable.CallOpts)
-}
-
-// CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
-//
-// Solidity: function canConfirm() view returns(bool)
-func (_Editable *EditableCallerSession) CanConfirm() (bool, error) {
-	return _Editable.Contract.CanConfirm(&_Editable.CallOpts)
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -35563,20 +27894,6 @@ func (_Editable *EditableCaller) ContentSpace(opts *bind.CallOpts) (common.Addre
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Editable *EditableSession) ContentSpace() (common.Address, error) {
-	return _Editable.Contract.ContentSpace(&_Editable.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Editable *EditableCallerSession) ContentSpace() (common.Address, error) {
-	return _Editable.Contract.ContentSpace(&_Editable.CallOpts)
-}
-
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
@@ -35592,20 +27909,6 @@ func (_Editable *EditableCaller) CountVersionHashes(opts *bind.CallOpts) (*big.I
 
 	return out0, err
 
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_Editable *EditableSession) CountVersionHashes() (*big.Int, error) {
-	return _Editable.Contract.CountVersionHashes(&_Editable.CallOpts)
-}
-
-// CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
-//
-// Solidity: function countVersionHashes() view returns(uint256)
-func (_Editable *EditableCallerSession) CountVersionHashes() (*big.Int, error) {
-	return _Editable.Contract.CountVersionHashes(&_Editable.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -35625,20 +27928,6 @@ func (_Editable *EditableCaller) Creator(opts *bind.CallOpts) (common.Address, e
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Editable *EditableSession) Creator() (common.Address, error) {
-	return _Editable.Contract.Creator(&_Editable.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Editable *EditableCallerSession) Creator() (common.Address, error) {
-	return _Editable.Contract.Creator(&_Editable.CallOpts)
-}
-
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
@@ -35654,20 +27943,6 @@ func (_Editable *EditableCaller) ObjectHash(opts *bind.CallOpts) (string, error)
 
 	return out0, err
 
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_Editable *EditableSession) ObjectHash() (string, error) {
-	return _Editable.Contract.ObjectHash(&_Editable.CallOpts)
-}
-
-// ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
-//
-// Solidity: function objectHash() view returns(string)
-func (_Editable *EditableCallerSession) ObjectHash() (string, error) {
-	return _Editable.Contract.ObjectHash(&_Editable.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -35687,20 +27962,6 @@ func (_Editable *EditableCaller) Owner(opts *bind.CallOpts) (common.Address, err
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Editable *EditableSession) Owner() (common.Address, error) {
-	return _Editable.Contract.Owner(&_Editable.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Editable *EditableCallerSession) Owner() (common.Address, error) {
-	return _Editable.Contract.Owner(&_Editable.CallOpts)
-}
-
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
@@ -35716,20 +27977,6 @@ func (_Editable *EditableCaller) ParentAddress(opts *bind.CallOpts) (common.Addr
 
 	return out0, err
 
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_Editable *EditableSession) ParentAddress() (common.Address, error) {
-	return _Editable.Contract.ParentAddress(&_Editable.CallOpts)
-}
-
-// ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
-//
-// Solidity: function parentAddress() view returns(address)
-func (_Editable *EditableCallerSession) ParentAddress() (common.Address, error) {
-	return _Editable.Contract.ParentAddress(&_Editable.CallOpts)
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
@@ -35749,20 +27996,6 @@ func (_Editable *EditableCaller) PendingHash(opts *bind.CallOpts) (string, error
 
 }
 
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_Editable *EditableSession) PendingHash() (string, error) {
-	return _Editable.Contract.PendingHash(&_Editable.CallOpts)
-}
-
-// PendingHash is a free data retrieval call binding the contract method 0x628449fd.
-//
-// Solidity: function pendingHash() view returns(string)
-func (_Editable *EditableCallerSession) PendingHash() (string, error) {
-	return _Editable.Contract.PendingHash(&_Editable.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -35778,20 +28011,6 @@ func (_Editable *EditableCaller) Version(opts *bind.CallOpts) ([32]byte, error) 
 
 	return out0, err
 
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Editable *EditableSession) Version() ([32]byte, error) {
-	return _Editable.Contract.Version(&_Editable.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Editable *EditableCallerSession) Version() ([32]byte, error) {
-	return _Editable.Contract.Version(&_Editable.CallOpts)
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
@@ -35811,20 +28030,6 @@ func (_Editable *EditableCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.In
 
 }
 
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_Editable *EditableSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _Editable.Contract.VersionHashes(&_Editable.CallOpts, arg0)
-}
-
-// VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
-//
-// Solidity: function versionHashes(uint256 ) view returns(string)
-func (_Editable *EditableCallerSession) VersionHashes(arg0 *big.Int) (string, error) {
-	return _Editable.Contract.VersionHashes(&_Editable.CallOpts, arg0)
-}
-
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
@@ -35842,39 +28047,11 @@ func (_Editable *EditableCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big
 
 }
 
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_Editable *EditableSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _Editable.Contract.VersionTimestamp(&_Editable.CallOpts, arg0)
-}
-
-// VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
-//
-// Solidity: function versionTimestamp(uint256 ) view returns(uint256)
-func (_Editable *EditableCallerSession) VersionTimestamp(arg0 *big.Int) (*big.Int, error) {
-	return _Editable.Contract.VersionTimestamp(&_Editable.CallOpts, arg0)
-}
-
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
 //
 // Solidity: function commit(string _objectHash) returns()
 func (_Editable *EditableTransactor) Commit(opts *bind.TransactOpts, _objectHash string) (*types.Transaction, error) {
 	return _Editable.contract.Transact(opts, "commit", _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_Editable *EditableSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _Editable.Contract.Commit(&_Editable.TransactOpts, _objectHash)
-}
-
-// Commit is a paid mutator transaction binding the contract method 0x9867db74.
-//
-// Solidity: function commit(string _objectHash) returns()
-func (_Editable *EditableTransactorSession) Commit(_objectHash string) (*types.Transaction, error) {
-	return _Editable.Contract.Commit(&_Editable.TransactOpts, _objectHash)
 }
 
 // ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
@@ -35884,39 +28061,11 @@ func (_Editable *EditableTransactor) ConfirmCommit(opts *bind.TransactOpts) (*ty
 	return _Editable.contract.Transact(opts, "confirmCommit")
 }
 
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_Editable *EditableSession) ConfirmCommit() (*types.Transaction, error) {
-	return _Editable.Contract.ConfirmCommit(&_Editable.TransactOpts)
-}
-
-// ConfirmCommit is a paid mutator transaction binding the contract method 0x446e8826.
-//
-// Solidity: function confirmCommit() payable returns(bool)
-func (_Editable *EditableTransactorSession) ConfirmCommit() (*types.Transaction, error) {
-	return _Editable.Contract.ConfirmCommit(&_Editable.TransactOpts)
-}
-
 // DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
 //
 // Solidity: function deleteVersion(string _versionHash) returns(int256)
 func (_Editable *EditableTransactor) DeleteVersion(opts *bind.TransactOpts, _versionHash string) (*types.Transaction, error) {
 	return _Editable.contract.Transact(opts, "deleteVersion", _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_Editable *EditableSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _Editable.Contract.DeleteVersion(&_Editable.TransactOpts, _versionHash)
-}
-
-// DeleteVersion is a paid mutator transaction binding the contract method 0xe1a70717.
-//
-// Solidity: function deleteVersion(string _versionHash) returns(int256)
-func (_Editable *EditableTransactorSession) DeleteVersion(_versionHash string) (*types.Transaction, error) {
-	return _Editable.Contract.DeleteVersion(&_Editable.TransactOpts, _versionHash)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -35926,39 +28075,11 @@ func (_Editable *EditableTransactor) Kill(opts *bind.TransactOpts) (*types.Trans
 	return _Editable.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Editable *EditableSession) Kill() (*types.Transaction, error) {
-	return _Editable.Contract.Kill(&_Editable.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Editable *EditableTransactorSession) Kill() (*types.Transaction, error) {
-	return _Editable.Contract.Kill(&_Editable.TransactOpts)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_Editable *EditableTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _Editable.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Editable *EditableSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Editable.Contract.TransferCreatorship(&_Editable.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Editable *EditableTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Editable.Contract.TransferCreatorship(&_Editable.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -35968,20 +28089,6 @@ func (_Editable *EditableTransactor) TransferOwnership(opts *bind.TransactOpts, 
 	return _Editable.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Editable *EditableSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Editable.Contract.TransferOwnership(&_Editable.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Editable *EditableTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Editable.Contract.TransferOwnership(&_Editable.TransactOpts, newOwner)
-}
-
 // UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
 //
 // Solidity: function updateRequest() returns()
@@ -35989,39 +28096,11 @@ func (_Editable *EditableTransactor) UpdateRequest(opts *bind.TransactOpts) (*ty
 	return _Editable.contract.Transact(opts, "updateRequest")
 }
 
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_Editable *EditableSession) UpdateRequest() (*types.Transaction, error) {
-	return _Editable.Contract.UpdateRequest(&_Editable.TransactOpts)
-}
-
-// UpdateRequest is a paid mutator transaction binding the contract method 0xc287e0ed.
-//
-// Solidity: function updateRequest() returns()
-func (_Editable *EditableTransactorSession) UpdateRequest() (*types.Transaction, error) {
-	return _Editable.Contract.UpdateRequest(&_Editable.TransactOpts)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_Editable *EditableTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _Editable.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Editable *EditableSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Editable.Contract.Fallback(&_Editable.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Editable *EditableTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Editable.Contract.Fallback(&_Editable.TransactOpts, calldata)
 }
 
 // EditableCommitPendingIterator is returned from FilterCommitPending and is used to iterate over the raw logs and unpacked data for CommitPending events raised by the Editable contract.
@@ -36631,7 +28710,7 @@ var LvRecordableStreamBin = LvRecordableStreamMetaData.Bin
 
 // DeployLvRecordableStream deploys a new Ethereum contract, binding an instance of LvRecordableStream to it.
 func DeployLvRecordableStream(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *LvRecordableStream, error) {
-	parsed, err := LvRecordableStreamMetaData.GetAbi()
+	parsed, err := ParsedABI(K_LvRecordableStream)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -36666,43 +28745,6 @@ type LvRecordableStreamTransactor struct {
 // LvRecordableStreamFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type LvRecordableStreamFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// LvRecordableStreamSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type LvRecordableStreamSession struct {
-	Contract     *LvRecordableStream // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts       // Call options to use throughout this session
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// LvRecordableStreamCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type LvRecordableStreamCallerSession struct {
-	Contract *LvRecordableStreamCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts             // Call options to use throughout this session
-}
-
-// LvRecordableStreamTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type LvRecordableStreamTransactorSession struct {
-	Contract     *LvRecordableStreamTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts             // Transaction auth options to use throughout this session
-}
-
-// LvRecordableStreamRaw is an auto generated low-level Go binding around an Ethereum contract.
-type LvRecordableStreamRaw struct {
-	Contract *LvRecordableStream // Generic contract binding to access the raw methods on
-}
-
-// LvRecordableStreamCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type LvRecordableStreamCallerRaw struct {
-	Contract *LvRecordableStreamCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// LvRecordableStreamTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type LvRecordableStreamTransactorRaw struct {
-	Contract *LvRecordableStreamTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewLvRecordableStream creates a new instance of LvRecordableStream, bound to a specific deployed contract.
@@ -36743,49 +28785,11 @@ func NewLvRecordableStreamFilterer(address common.Address, filterer bind.Contrac
 
 // bindLvRecordableStream binds a generic wrapper to an already deployed contract.
 func bindLvRecordableStream(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(LvRecordableStreamABI))
+	parsed, err := ParsedABI(K_LvRecordableStream)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_LvRecordableStream *LvRecordableStreamRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _LvRecordableStream.Contract.LvRecordableStreamCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_LvRecordableStream *LvRecordableStreamRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LvRecordableStreamTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_LvRecordableStream *LvRecordableStreamRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LvRecordableStreamTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_LvRecordableStream *LvRecordableStreamCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _LvRecordableStream.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_LvRecordableStream *LvRecordableStreamTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_LvRecordableStream *LvRecordableStreamTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
@@ -36805,20 +28809,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) DEFAULTACCESS(opts *bind.Ca
 
 }
 
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamSession) DEFAULTACCESS() (uint8, error) {
-	return _LvRecordableStream.Contract.DEFAULTACCESS(&_LvRecordableStream.CallOpts)
-}
-
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) DEFAULTACCESS() (uint8, error) {
-	return _LvRecordableStream.Contract.DEFAULTACCESS(&_LvRecordableStream.CallOpts)
-}
-
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
@@ -36834,20 +28824,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) DEFAULTCHARGE(opts *bind.Ca
 
 	return out0, err
 
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamSession) DEFAULTCHARGE() (uint8, error) {
-	return _LvRecordableStream.Contract.DEFAULTCHARGE(&_LvRecordableStream.CallOpts)
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) DEFAULTCHARGE() (uint8, error) {
-	return _LvRecordableStream.Contract.DEFAULTCHARGE(&_LvRecordableStream.CallOpts)
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
@@ -36867,20 +28843,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) DEFAULTSEE(opts *bind.CallO
 
 }
 
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamSession) DEFAULTSEE() (uint8, error) {
-	return _LvRecordableStream.Contract.DEFAULTSEE(&_LvRecordableStream.CallOpts)
-}
-
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) DEFAULTSEE() (uint8, error) {
-	return _LvRecordableStream.Contract.DEFAULTSEE(&_LvRecordableStream.CallOpts)
-}
-
 // CanRecord is a free data retrieval call binding the contract method 0xd52e6679.
 //
 // Solidity: function canRecord() view returns(bool)
@@ -36896,20 +28858,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) CanRecord(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// CanRecord is a free data retrieval call binding the contract method 0xd52e6679.
-//
-// Solidity: function canRecord() view returns(bool)
-func (_LvRecordableStream *LvRecordableStreamSession) CanRecord() (bool, error) {
-	return _LvRecordableStream.Contract.CanRecord(&_LvRecordableStream.CallOpts)
-}
-
-// CanRecord is a free data retrieval call binding the contract method 0xd52e6679.
-//
-// Solidity: function canRecord() view returns(bool)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) CanRecord() (bool, error) {
-	return _LvRecordableStream.Contract.CanRecord(&_LvRecordableStream.CallOpts)
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -36929,20 +28877,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) ContentSpace(opts *bind.Cal
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamSession) ContentSpace() (common.Address, error) {
-	return _LvRecordableStream.Contract.ContentSpace(&_LvRecordableStream.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) ContentSpace() (common.Address, error) {
-	return _LvRecordableStream.Contract.ContentSpace(&_LvRecordableStream.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -36958,20 +28892,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) Creator(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamSession) Creator() (common.Address, error) {
-	return _LvRecordableStream.Contract.Creator(&_LvRecordableStream.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) Creator() (common.Address, error) {
-	return _LvRecordableStream.Contract.Creator(&_LvRecordableStream.CallOpts)
 }
 
 // EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
@@ -36991,20 +28911,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) EndTime(opts *bind.CallOpts
 
 }
 
-// EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
-//
-// Solidity: function endTime() view returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) EndTime() (*big.Int, error) {
-	return _LvRecordableStream.Contract.EndTime(&_LvRecordableStream.CallOpts)
-}
-
-// EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
-//
-// Solidity: function endTime() view returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) EndTime() (*big.Int, error) {
-	return _LvRecordableStream.Contract.EndTime(&_LvRecordableStream.CallOpts)
-}
-
 // Handle is a free data retrieval call binding the contract method 0xfd0da099.
 //
 // Solidity: function handle() view returns(string)
@@ -37020,20 +28926,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) Handle(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// Handle is a free data retrieval call binding the contract method 0xfd0da099.
-//
-// Solidity: function handle() view returns(string)
-func (_LvRecordableStream *LvRecordableStreamSession) Handle() (string, error) {
-	return _LvRecordableStream.Contract.Handle(&_LvRecordableStream.CallOpts)
-}
-
-// Handle is a free data retrieval call binding the contract method 0xfd0da099.
-//
-// Solidity: function handle() view returns(string)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) Handle() (string, error) {
-	return _LvRecordableStream.Contract.Handle(&_LvRecordableStream.CallOpts)
 }
 
 // HasMembership is a free data retrieval call binding the contract method 0xa88db6ad.
@@ -37053,20 +28945,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) HasMembership(opts *bind.Ca
 
 }
 
-// HasMembership is a free data retrieval call binding the contract method 0xa88db6ad.
-//
-// Solidity: function hasMembership(address accessor) view returns(bool)
-func (_LvRecordableStream *LvRecordableStreamSession) HasMembership(accessor common.Address) (bool, error) {
-	return _LvRecordableStream.Contract.HasMembership(&_LvRecordableStream.CallOpts, accessor)
-}
-
-// HasMembership is a free data retrieval call binding the contract method 0xa88db6ad.
-//
-// Solidity: function hasMembership(address accessor) view returns(bool)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) HasMembership(accessor common.Address) (bool, error) {
-	return _LvRecordableStream.Contract.HasMembership(&_LvRecordableStream.CallOpts, accessor)
-}
-
 // MembershipGroups is a free data retrieval call binding the contract method 0x5f7231ab.
 //
 // Solidity: function membershipGroups(uint256 ) view returns(address)
@@ -37082,20 +28960,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) MembershipGroups(opts *bind
 
 	return out0, err
 
-}
-
-// MembershipGroups is a free data retrieval call binding the contract method 0x5f7231ab.
-//
-// Solidity: function membershipGroups(uint256 ) view returns(address)
-func (_LvRecordableStream *LvRecordableStreamSession) MembershipGroups(arg0 *big.Int) (common.Address, error) {
-	return _LvRecordableStream.Contract.MembershipGroups(&_LvRecordableStream.CallOpts, arg0)
-}
-
-// MembershipGroups is a free data retrieval call binding the contract method 0x5f7231ab.
-//
-// Solidity: function membershipGroups(uint256 ) view returns(address)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) MembershipGroups(arg0 *big.Int) (common.Address, error) {
-	return _LvRecordableStream.Contract.MembershipGroups(&_LvRecordableStream.CallOpts, arg0)
 }
 
 // MembershipGroupsLength is a free data retrieval call binding the contract method 0xecedf6d7.
@@ -37115,20 +28979,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) MembershipGroupsLength(opts
 
 }
 
-// MembershipGroupsLength is a free data retrieval call binding the contract method 0xecedf6d7.
-//
-// Solidity: function membershipGroupsLength() view returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) MembershipGroupsLength() (*big.Int, error) {
-	return _LvRecordableStream.Contract.MembershipGroupsLength(&_LvRecordableStream.CallOpts)
-}
-
-// MembershipGroupsLength is a free data retrieval call binding the contract method 0xecedf6d7.
-//
-// Solidity: function membershipGroupsLength() view returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) MembershipGroupsLength() (*big.Int, error) {
-	return _LvRecordableStream.Contract.MembershipGroupsLength(&_LvRecordableStream.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -37144,20 +28994,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) Owner(opts *bind.CallOpts) 
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamSession) Owner() (common.Address, error) {
-	return _LvRecordableStream.Contract.Owner(&_LvRecordableStream.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) Owner() (common.Address, error) {
-	return _LvRecordableStream.Contract.Owner(&_LvRecordableStream.CallOpts)
 }
 
 // RecordingEnabled is a free data retrieval call binding the contract method 0x684e9657.
@@ -37177,20 +29013,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) RecordingEnabled(opts *bind
 
 }
 
-// RecordingEnabled is a free data retrieval call binding the contract method 0x684e9657.
-//
-// Solidity: function recordingEnabled() view returns(bool)
-func (_LvRecordableStream *LvRecordableStreamSession) RecordingEnabled() (bool, error) {
-	return _LvRecordableStream.Contract.RecordingEnabled(&_LvRecordableStream.CallOpts)
-}
-
-// RecordingEnabled is a free data retrieval call binding the contract method 0x684e9657.
-//
-// Solidity: function recordingEnabled() view returns(bool)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) RecordingEnabled() (bool, error) {
-	return _LvRecordableStream.Contract.RecordingEnabled(&_LvRecordableStream.CallOpts)
-}
-
 // RecordingStream is a free data retrieval call binding the contract method 0x21130b6d.
 //
 // Solidity: function recordingStream() view returns(address)
@@ -37208,20 +29030,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) RecordingStream(opts *bind.
 
 }
 
-// RecordingStream is a free data retrieval call binding the contract method 0x21130b6d.
-//
-// Solidity: function recordingStream() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamSession) RecordingStream() (common.Address, error) {
-	return _LvRecordableStream.Contract.RecordingStream(&_LvRecordableStream.CallOpts)
-}
-
-// RecordingStream is a free data retrieval call binding the contract method 0x21130b6d.
-//
-// Solidity: function recordingStream() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) RecordingStream() (common.Address, error) {
-	return _LvRecordableStream.Contract.RecordingStream(&_LvRecordableStream.CallOpts)
-}
-
 // RightsHolder is a free data retrieval call binding the contract method 0x81e20e6e.
 //
 // Solidity: function rightsHolder() view returns(address)
@@ -37237,20 +29045,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) RightsHolder(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// RightsHolder is a free data retrieval call binding the contract method 0x81e20e6e.
-//
-// Solidity: function rightsHolder() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamSession) RightsHolder() (common.Address, error) {
-	return _LvRecordableStream.Contract.RightsHolder(&_LvRecordableStream.CallOpts)
-}
-
-// RightsHolder is a free data retrieval call binding the contract method 0x81e20e6e.
-//
-// Solidity: function rightsHolder() view returns(address)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) RightsHolder() (common.Address, error) {
-	return _LvRecordableStream.Contract.RightsHolder(&_LvRecordableStream.CallOpts)
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
@@ -37273,20 +29067,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) RunAccessInfo(opts *bind.Ca
 
 }
 
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _LvRecordableStream.Contract.RunAccessInfo(&_LvRecordableStream.CallOpts, arg0, arg1, arg2)
-}
-
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _LvRecordableStream.Contract.RunAccessInfo(&_LvRecordableStream.CallOpts, arg0, arg1, arg2)
-}
-
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
@@ -37302,20 +29082,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) RunDescribeStatus(opts *bin
 
 	return out0, err
 
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_LvRecordableStream *LvRecordableStreamSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _LvRecordableStream.Contract.RunDescribeStatus(&_LvRecordableStream.CallOpts, arg0)
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _LvRecordableStream.Contract.RunDescribeStatus(&_LvRecordableStream.CallOpts, arg0)
 }
 
 // StartTime is a free data retrieval call binding the contract method 0x78e97925.
@@ -37335,20 +29101,6 @@ func (_LvRecordableStream *LvRecordableStreamCaller) StartTime(opts *bind.CallOp
 
 }
 
-// StartTime is a free data retrieval call binding the contract method 0x78e97925.
-//
-// Solidity: function startTime() view returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) StartTime() (*big.Int, error) {
-	return _LvRecordableStream.Contract.StartTime(&_LvRecordableStream.CallOpts)
-}
-
-// StartTime is a free data retrieval call binding the contract method 0x78e97925.
-//
-// Solidity: function startTime() view returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) StartTime() (*big.Int, error) {
-	return _LvRecordableStream.Contract.StartTime(&_LvRecordableStream.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -37366,39 +29118,11 @@ func (_LvRecordableStream *LvRecordableStreamCaller) Version(opts *bind.CallOpts
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_LvRecordableStream *LvRecordableStreamSession) Version() ([32]byte, error) {
-	return _LvRecordableStream.Contract.Version(&_LvRecordableStream.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_LvRecordableStream *LvRecordableStreamCallerSession) Version() ([32]byte, error) {
-	return _LvRecordableStream.Contract.Version(&_LvRecordableStream.CallOpts)
-}
-
 // AddMembershipGroup is a paid mutator transaction binding the contract method 0x90657ca0.
 //
 // Solidity: function addMembershipGroup(address group) returns()
 func (_LvRecordableStream *LvRecordableStreamTransactor) AddMembershipGroup(opts *bind.TransactOpts, group common.Address) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "addMembershipGroup", group)
-}
-
-// AddMembershipGroup is a paid mutator transaction binding the contract method 0x90657ca0.
-//
-// Solidity: function addMembershipGroup(address group) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) AddMembershipGroup(group common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.AddMembershipGroup(&_LvRecordableStream.TransactOpts, group)
-}
-
-// AddMembershipGroup is a paid mutator transaction binding the contract method 0x90657ca0.
-//
-// Solidity: function addMembershipGroup(address group) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) AddMembershipGroup(group common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.AddMembershipGroup(&_LvRecordableStream.TransactOpts, group)
 }
 
 // AuthorizeRecording is a paid mutator transaction binding the contract method 0xc992f43a.
@@ -37408,39 +29132,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) AuthorizeRecording(opts
 	return _LvRecordableStream.contract.Transact(opts, "authorizeRecording", accessor)
 }
 
-// AuthorizeRecording is a paid mutator transaction binding the contract method 0xc992f43a.
-//
-// Solidity: function authorizeRecording(address accessor) returns(bool)
-func (_LvRecordableStream *LvRecordableStreamSession) AuthorizeRecording(accessor common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.AuthorizeRecording(&_LvRecordableStream.TransactOpts, accessor)
-}
-
-// AuthorizeRecording is a paid mutator transaction binding the contract method 0xc992f43a.
-//
-// Solidity: function authorizeRecording(address accessor) returns(bool)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) AuthorizeRecording(accessor common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.AuthorizeRecording(&_LvRecordableStream.TransactOpts, accessor)
-}
-
 // DisableRecording is a paid mutator transaction binding the contract method 0xc949eb64.
 //
 // Solidity: function disableRecording() returns()
 func (_LvRecordableStream *LvRecordableStreamTransactor) DisableRecording(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "disableRecording")
-}
-
-// DisableRecording is a paid mutator transaction binding the contract method 0xc949eb64.
-//
-// Solidity: function disableRecording() returns()
-func (_LvRecordableStream *LvRecordableStreamSession) DisableRecording() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.DisableRecording(&_LvRecordableStream.TransactOpts)
-}
-
-// DisableRecording is a paid mutator transaction binding the contract method 0xc949eb64.
-//
-// Solidity: function disableRecording() returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) DisableRecording() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.DisableRecording(&_LvRecordableStream.TransactOpts)
 }
 
 // EnableRecording is a paid mutator transaction binding the contract method 0x793a648c.
@@ -37450,39 +29146,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) EnableRecording(opts *b
 	return _LvRecordableStream.contract.Transact(opts, "enableRecording")
 }
 
-// EnableRecording is a paid mutator transaction binding the contract method 0x793a648c.
-//
-// Solidity: function enableRecording() returns()
-func (_LvRecordableStream *LvRecordableStreamSession) EnableRecording() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.EnableRecording(&_LvRecordableStream.TransactOpts)
-}
-
-// EnableRecording is a paid mutator transaction binding the contract method 0x793a648c.
-//
-// Solidity: function enableRecording() returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) EnableRecording() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.EnableRecording(&_LvRecordableStream.TransactOpts)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_LvRecordableStream *LvRecordableStreamTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_LvRecordableStream *LvRecordableStreamSession) Kill() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.Kill(&_LvRecordableStream.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) Kill() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.Kill(&_LvRecordableStream.TransactOpts)
 }
 
 // LogRecordedProgramId is a paid mutator transaction binding the contract method 0xc9ad9ad8.
@@ -37492,39 +29160,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) LogRecordedProgramId(op
 	return _LvRecordableStream.contract.Transact(opts, "logRecordedProgramId", programId)
 }
 
-// LogRecordedProgramId is a paid mutator transaction binding the contract method 0xc9ad9ad8.
-//
-// Solidity: function logRecordedProgramId(string programId) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) LogRecordedProgramId(programId string) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordedProgramId(&_LvRecordableStream.TransactOpts, programId)
-}
-
-// LogRecordedProgramId is a paid mutator transaction binding the contract method 0xc9ad9ad8.
-//
-// Solidity: function logRecordedProgramId(string programId) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) LogRecordedProgramId(programId string) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordedProgramId(&_LvRecordableStream.TransactOpts, programId)
-}
-
 // LogRecordingAuthorization is a paid mutator transaction binding the contract method 0x9156d1fd.
 //
 // Solidity: function logRecordingAuthorization(address accessor, bool rightsHolderDecision) returns(bool, bool)
 func (_LvRecordableStream *LvRecordableStreamTransactor) LogRecordingAuthorization(opts *bind.TransactOpts, accessor common.Address, rightsHolderDecision bool) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "logRecordingAuthorization", accessor, rightsHolderDecision)
-}
-
-// LogRecordingAuthorization is a paid mutator transaction binding the contract method 0x9156d1fd.
-//
-// Solidity: function logRecordingAuthorization(address accessor, bool rightsHolderDecision) returns(bool, bool)
-func (_LvRecordableStream *LvRecordableStreamSession) LogRecordingAuthorization(accessor common.Address, rightsHolderDecision bool) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingAuthorization(&_LvRecordableStream.TransactOpts, accessor, rightsHolderDecision)
-}
-
-// LogRecordingAuthorization is a paid mutator transaction binding the contract method 0x9156d1fd.
-//
-// Solidity: function logRecordingAuthorization(address accessor, bool rightsHolderDecision) returns(bool, bool)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) LogRecordingAuthorization(accessor common.Address, rightsHolderDecision bool) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingAuthorization(&_LvRecordableStream.TransactOpts, accessor, rightsHolderDecision)
 }
 
 // LogRecordingDeletion is a paid mutator transaction binding the contract method 0xc96444f0.
@@ -37534,39 +29174,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) LogRecordingDeletion(op
 	return _LvRecordableStream.contract.Transact(opts, "logRecordingDeletion")
 }
 
-// LogRecordingDeletion is a paid mutator transaction binding the contract method 0xc96444f0.
-//
-// Solidity: function logRecordingDeletion() returns()
-func (_LvRecordableStream *LvRecordableStreamSession) LogRecordingDeletion() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingDeletion(&_LvRecordableStream.TransactOpts)
-}
-
-// LogRecordingDeletion is a paid mutator transaction binding the contract method 0xc96444f0.
-//
-// Solidity: function logRecordingDeletion() returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) LogRecordingDeletion() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingDeletion(&_LvRecordableStream.TransactOpts)
-}
-
 // LogRecordingPlaybackCompleted is a paid mutator transaction binding the contract method 0x6b5d6a41.
 //
 // Solidity: function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed) returns()
 func (_LvRecordableStream *LvRecordableStreamTransactor) LogRecordingPlaybackCompleted(opts *bind.TransactOpts, requestID *big.Int, percentPlayed uint8) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "logRecordingPlaybackCompleted", requestID, percentPlayed)
-}
-
-// LogRecordingPlaybackCompleted is a paid mutator transaction binding the contract method 0x6b5d6a41.
-//
-// Solidity: function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) LogRecordingPlaybackCompleted(requestID *big.Int, percentPlayed uint8) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingPlaybackCompleted(&_LvRecordableStream.TransactOpts, requestID, percentPlayed)
-}
-
-// LogRecordingPlaybackCompleted is a paid mutator transaction binding the contract method 0x6b5d6a41.
-//
-// Solidity: function logRecordingPlaybackCompleted(uint256 requestID, uint8 percentPlayed) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) LogRecordingPlaybackCompleted(requestID *big.Int, percentPlayed uint8) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingPlaybackCompleted(&_LvRecordableStream.TransactOpts, requestID, percentPlayed)
 }
 
 // LogRecordingPlaybackStarted is a paid mutator transaction binding the contract method 0x563dd371.
@@ -37576,39 +29188,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) LogRecordingPlaybackSta
 	return _LvRecordableStream.contract.Transact(opts, "logRecordingPlaybackStarted", requestID)
 }
 
-// LogRecordingPlaybackStarted is a paid mutator transaction binding the contract method 0x563dd371.
-//
-// Solidity: function logRecordingPlaybackStarted(uint256 requestID) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) LogRecordingPlaybackStarted(requestID *big.Int) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingPlaybackStarted(&_LvRecordableStream.TransactOpts, requestID)
-}
-
-// LogRecordingPlaybackStarted is a paid mutator transaction binding the contract method 0x563dd371.
-//
-// Solidity: function logRecordingPlaybackStarted(uint256 requestID) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) LogRecordingPlaybackStarted(requestID *big.Int) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingPlaybackStarted(&_LvRecordableStream.TransactOpts, requestID)
-}
-
 // LogRecordingStatus is a paid mutator transaction binding the contract method 0x2b45298e.
 //
 // Solidity: function logRecordingStatus() returns(uint8)
 func (_LvRecordableStream *LvRecordableStreamTransactor) LogRecordingStatus(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "logRecordingStatus")
-}
-
-// LogRecordingStatus is a paid mutator transaction binding the contract method 0x2b45298e.
-//
-// Solidity: function logRecordingStatus() returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamSession) LogRecordingStatus() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingStatus(&_LvRecordableStream.TransactOpts)
-}
-
-// LogRecordingStatus is a paid mutator transaction binding the contract method 0x2b45298e.
-//
-// Solidity: function logRecordingStatus() returns(uint8)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) LogRecordingStatus() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingStatus(&_LvRecordableStream.TransactOpts)
 }
 
 // LogRecordingTimes is a paid mutator transaction binding the contract method 0xc2ccedad.
@@ -37618,39 +29202,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) LogRecordingTimes(opts 
 	return _LvRecordableStream.contract.Transact(opts, "logRecordingTimes")
 }
 
-// LogRecordingTimes is a paid mutator transaction binding the contract method 0xc2ccedad.
-//
-// Solidity: function logRecordingTimes() returns()
-func (_LvRecordableStream *LvRecordableStreamSession) LogRecordingTimes() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingTimes(&_LvRecordableStream.TransactOpts)
-}
-
-// LogRecordingTimes is a paid mutator transaction binding the contract method 0xc2ccedad.
-//
-// Solidity: function logRecordingTimes() returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) LogRecordingTimes() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.LogRecordingTimes(&_LvRecordableStream.TransactOpts)
-}
-
 // RemoveMembershipGroup is a paid mutator transaction binding the contract method 0xe1db5840.
 //
 // Solidity: function removeMembershipGroup(address group) returns(bool)
 func (_LvRecordableStream *LvRecordableStreamTransactor) RemoveMembershipGroup(opts *bind.TransactOpts, group common.Address) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "removeMembershipGroup", group)
-}
-
-// RemoveMembershipGroup is a paid mutator transaction binding the contract method 0xe1db5840.
-//
-// Solidity: function removeMembershipGroup(address group) returns(bool)
-func (_LvRecordableStream *LvRecordableStreamSession) RemoveMembershipGroup(group common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RemoveMembershipGroup(&_LvRecordableStream.TransactOpts, group)
-}
-
-// RemoveMembershipGroup is a paid mutator transaction binding the contract method 0xe1db5840.
-//
-// Solidity: function removeMembershipGroup(address group) returns(bool)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) RemoveMembershipGroup(group common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RemoveMembershipGroup(&_LvRecordableStream.TransactOpts, group)
 }
 
 // RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
@@ -37660,39 +29216,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) RunAccess(opts *bind.Tr
 	return _LvRecordableStream.contract.Transact(opts, "runAccess", arg0, arg1, arg2, arg3)
 }
 
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 , uint8 , bytes32[] , address[] ) payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) RunAccess(arg0 *big.Int, arg1 uint8, arg2 [][32]byte, arg3 []common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunAccess(&_LvRecordableStream.TransactOpts, arg0, arg1, arg2, arg3)
-}
-
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 , uint8 , bytes32[] , address[] ) payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) RunAccess(arg0 *big.Int, arg1 uint8, arg2 [][32]byte, arg3 []common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunAccess(&_LvRecordableStream.TransactOpts, arg0, arg1, arg2, arg3)
-}
-
 // RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
 //
 // Solidity: function runCreate() payable returns(uint256)
 func (_LvRecordableStream *LvRecordableStreamTransactor) RunCreate(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "runCreate")
-}
-
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) RunCreate() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunCreate(&_LvRecordableStream.TransactOpts)
-}
-
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) RunCreate() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunCreate(&_LvRecordableStream.TransactOpts)
 }
 
 // RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
@@ -37702,39 +29230,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) RunFinalize(opts *bind.
 	return _LvRecordableStream.contract.Transact(opts, "runFinalize", arg0, arg1)
 }
 
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 , uint256 ) payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) RunFinalize(arg0 *big.Int, arg1 *big.Int) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunFinalize(&_LvRecordableStream.TransactOpts, arg0, arg1)
-}
-
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 , uint256 ) payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) RunFinalize(arg0 *big.Int, arg1 *big.Int) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunFinalize(&_LvRecordableStream.TransactOpts, arg0, arg1)
-}
-
 // RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
 //
 // Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
 func (_LvRecordableStream *LvRecordableStreamTransactor) RunGrant(opts *bind.TransactOpts, arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "runGrant", arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunGrant(&_LvRecordableStream.TransactOpts, arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunGrant(&_LvRecordableStream.TransactOpts, arg0, arg1)
 }
 
 // RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
@@ -37744,39 +29244,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) RunKill(opts *bind.Tran
 	return _LvRecordableStream.contract.Transact(opts, "runKill")
 }
 
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamSession) RunKill() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunKill(&_LvRecordableStream.TransactOpts)
-}
-
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) RunKill() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunKill(&_LvRecordableStream.TransactOpts)
-}
-
 // RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
 //
 // Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
 func (_LvRecordableStream *LvRecordableStreamTransactor) RunStatusChange(opts *bind.TransactOpts, proposed_status_code *big.Int) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "runStatusChange", proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_LvRecordableStream *LvRecordableStreamSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunStatusChange(&_LvRecordableStream.TransactOpts, proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.RunStatusChange(&_LvRecordableStream.TransactOpts, proposed_status_code)
 }
 
 // SetRecordingStream is a paid mutator transaction binding the contract method 0x6856ff59.
@@ -37786,39 +29258,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) SetRecordingStream(opts
 	return _LvRecordableStream.contract.Transact(opts, "setRecordingStream", stream)
 }
 
-// SetRecordingStream is a paid mutator transaction binding the contract method 0x6856ff59.
-//
-// Solidity: function setRecordingStream(address stream) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) SetRecordingStream(stream common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.SetRecordingStream(&_LvRecordableStream.TransactOpts, stream)
-}
-
-// SetRecordingStream is a paid mutator transaction binding the contract method 0x6856ff59.
-//
-// Solidity: function setRecordingStream(address stream) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) SetRecordingStream(stream common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.SetRecordingStream(&_LvRecordableStream.TransactOpts, stream)
-}
-
 // SetRightsHolder is a paid mutator transaction binding the contract method 0xa1cd0b53.
 //
 // Solidity: function setRightsHolder(address _rightsHolder) returns()
 func (_LvRecordableStream *LvRecordableStreamTransactor) SetRightsHolder(opts *bind.TransactOpts, _rightsHolder common.Address) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "setRightsHolder", _rightsHolder)
-}
-
-// SetRightsHolder is a paid mutator transaction binding the contract method 0xa1cd0b53.
-//
-// Solidity: function setRightsHolder(address _rightsHolder) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) SetRightsHolder(_rightsHolder common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.SetRightsHolder(&_LvRecordableStream.TransactOpts, _rightsHolder)
-}
-
-// SetRightsHolder is a paid mutator transaction binding the contract method 0xa1cd0b53.
-//
-// Solidity: function setRightsHolder(address _rightsHolder) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) SetRightsHolder(_rightsHolder common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.SetRightsHolder(&_LvRecordableStream.TransactOpts, _rightsHolder)
 }
 
 // StartStream is a paid mutator transaction binding the contract method 0x5d39c071.
@@ -37828,39 +29272,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) StartStream(opts *bind.
 	return _LvRecordableStream.contract.Transact(opts, "startStream", _handle)
 }
 
-// StartStream is a paid mutator transaction binding the contract method 0x5d39c071.
-//
-// Solidity: function startStream(string _handle) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) StartStream(_handle string) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.StartStream(&_LvRecordableStream.TransactOpts, _handle)
-}
-
-// StartStream is a paid mutator transaction binding the contract method 0x5d39c071.
-//
-// Solidity: function startStream(string _handle) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) StartStream(_handle string) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.StartStream(&_LvRecordableStream.TransactOpts, _handle)
-}
-
 // StopStream is a paid mutator transaction binding the contract method 0xc01d76d5.
 //
 // Solidity: function stopStream() returns()
 func (_LvRecordableStream *LvRecordableStreamTransactor) StopStream(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.Transact(opts, "stopStream")
-}
-
-// StopStream is a paid mutator transaction binding the contract method 0xc01d76d5.
-//
-// Solidity: function stopStream() returns()
-func (_LvRecordableStream *LvRecordableStreamSession) StopStream() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.StopStream(&_LvRecordableStream.TransactOpts)
-}
-
-// StopStream is a paid mutator transaction binding the contract method 0xc01d76d5.
-//
-// Solidity: function stopStream() returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) StopStream() (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.StopStream(&_LvRecordableStream.TransactOpts)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -37870,20 +29286,6 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) TransferCreatorship(opt
 	return _LvRecordableStream.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.TransferCreatorship(&_LvRecordableStream.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.TransferCreatorship(&_LvRecordableStream.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -37891,39 +29293,11 @@ func (_LvRecordableStream *LvRecordableStreamTransactor) TransferOwnership(opts 
 	return _LvRecordableStream.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_LvRecordableStream *LvRecordableStreamSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.TransferOwnership(&_LvRecordableStream.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.TransferOwnership(&_LvRecordableStream.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_LvRecordableStream *LvRecordableStreamTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _LvRecordableStream.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_LvRecordableStream *LvRecordableStreamSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.Fallback(&_LvRecordableStream.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_LvRecordableStream *LvRecordableStreamTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _LvRecordableStream.Contract.Fallback(&_LvRecordableStream.TransactOpts, calldata)
 }
 
 // LvRecordableStreamAuthorizeRecordingIterator is returned from FilterAuthorizeRecording and is used to iterate over the raw logs and unpacked data for AuthorizeRecording events raised by the LvRecordableStream contract.
@@ -41636,7 +33010,7 @@ var LvRecordingBin = LvRecordingMetaData.Bin
 
 // DeployLvRecording deploys a new Ethereum contract, binding an instance of LvRecording to it.
 func DeployLvRecording(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *LvRecording, error) {
-	parsed, err := LvRecordingMetaData.GetAbi()
+	parsed, err := ParsedABI(K_LvRecording)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -41671,43 +33045,6 @@ type LvRecordingTransactor struct {
 // LvRecordingFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type LvRecordingFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// LvRecordingSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type LvRecordingSession struct {
-	Contract     *LvRecording      // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// LvRecordingCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type LvRecordingCallerSession struct {
-	Contract *LvRecordingCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts      // Call options to use throughout this session
-}
-
-// LvRecordingTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type LvRecordingTransactorSession struct {
-	Contract     *LvRecordingTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// LvRecordingRaw is an auto generated low-level Go binding around an Ethereum contract.
-type LvRecordingRaw struct {
-	Contract *LvRecording // Generic contract binding to access the raw methods on
-}
-
-// LvRecordingCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type LvRecordingCallerRaw struct {
-	Contract *LvRecordingCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// LvRecordingTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type LvRecordingTransactorRaw struct {
-	Contract *LvRecordingTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewLvRecording creates a new instance of LvRecording, bound to a specific deployed contract.
@@ -41748,49 +33085,11 @@ func NewLvRecordingFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindLvRecording binds a generic wrapper to an already deployed contract.
 func bindLvRecording(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(LvRecordingABI))
+	parsed, err := ParsedABI(K_LvRecording)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_LvRecording *LvRecordingRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _LvRecording.Contract.LvRecordingCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_LvRecording *LvRecordingRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _LvRecording.Contract.LvRecordingTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_LvRecording *LvRecordingRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _LvRecording.Contract.LvRecordingTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_LvRecording *LvRecordingCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _LvRecording.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_LvRecording *LvRecordingTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _LvRecording.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_LvRecording *LvRecordingTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _LvRecording.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
@@ -41810,20 +33109,6 @@ func (_LvRecording *LvRecordingCaller) DEFAULTACCESS(opts *bind.CallOpts) (uint8
 
 }
 
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_LvRecording *LvRecordingSession) DEFAULTACCESS() (uint8, error) {
-	return _LvRecording.Contract.DEFAULTACCESS(&_LvRecording.CallOpts)
-}
-
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_LvRecording *LvRecordingCallerSession) DEFAULTACCESS() (uint8, error) {
-	return _LvRecording.Contract.DEFAULTACCESS(&_LvRecording.CallOpts)
-}
-
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
@@ -41839,20 +33124,6 @@ func (_LvRecording *LvRecordingCaller) DEFAULTCHARGE(opts *bind.CallOpts) (uint8
 
 	return out0, err
 
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_LvRecording *LvRecordingSession) DEFAULTCHARGE() (uint8, error) {
-	return _LvRecording.Contract.DEFAULTCHARGE(&_LvRecording.CallOpts)
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_LvRecording *LvRecordingCallerSession) DEFAULTCHARGE() (uint8, error) {
-	return _LvRecording.Contract.DEFAULTCHARGE(&_LvRecording.CallOpts)
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
@@ -41872,20 +33143,6 @@ func (_LvRecording *LvRecordingCaller) DEFAULTSEE(opts *bind.CallOpts) (uint8, e
 
 }
 
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_LvRecording *LvRecordingSession) DEFAULTSEE() (uint8, error) {
-	return _LvRecording.Contract.DEFAULTSEE(&_LvRecording.CallOpts)
-}
-
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_LvRecording *LvRecordingCallerSession) DEFAULTSEE() (uint8, error) {
-	return _LvRecording.Contract.DEFAULTSEE(&_LvRecording.CallOpts)
-}
-
 // ContentAddress is a free data retrieval call binding the contract method 0x129b9775.
 //
 // Solidity: function contentAddress() view returns(address)
@@ -41901,20 +33158,6 @@ func (_LvRecording *LvRecordingCaller) ContentAddress(opts *bind.CallOpts) (comm
 
 	return out0, err
 
-}
-
-// ContentAddress is a free data retrieval call binding the contract method 0x129b9775.
-//
-// Solidity: function contentAddress() view returns(address)
-func (_LvRecording *LvRecordingSession) ContentAddress() (common.Address, error) {
-	return _LvRecording.Contract.ContentAddress(&_LvRecording.CallOpts)
-}
-
-// ContentAddress is a free data retrieval call binding the contract method 0x129b9775.
-//
-// Solidity: function contentAddress() view returns(address)
-func (_LvRecording *LvRecordingCallerSession) ContentAddress() (common.Address, error) {
-	return _LvRecording.Contract.ContentAddress(&_LvRecording.CallOpts)
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -41934,20 +33177,6 @@ func (_LvRecording *LvRecordingCaller) ContentSpace(opts *bind.CallOpts) (common
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_LvRecording *LvRecordingSession) ContentSpace() (common.Address, error) {
-	return _LvRecording.Contract.ContentSpace(&_LvRecording.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_LvRecording *LvRecordingCallerSession) ContentSpace() (common.Address, error) {
-	return _LvRecording.Contract.ContentSpace(&_LvRecording.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -41963,20 +33192,6 @@ func (_LvRecording *LvRecordingCaller) Creator(opts *bind.CallOpts) (common.Addr
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_LvRecording *LvRecordingSession) Creator() (common.Address, error) {
-	return _LvRecording.Contract.Creator(&_LvRecording.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_LvRecording *LvRecordingCallerSession) Creator() (common.Address, error) {
-	return _LvRecording.Contract.Creator(&_LvRecording.CallOpts)
 }
 
 // EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
@@ -41996,20 +33211,6 @@ func (_LvRecording *LvRecordingCaller) EndTime(opts *bind.CallOpts) (*big.Int, e
 
 }
 
-// EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
-//
-// Solidity: function endTime() view returns(uint256)
-func (_LvRecording *LvRecordingSession) EndTime() (*big.Int, error) {
-	return _LvRecording.Contract.EndTime(&_LvRecording.CallOpts)
-}
-
-// EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
-//
-// Solidity: function endTime() view returns(uint256)
-func (_LvRecording *LvRecordingCallerSession) EndTime() (*big.Int, error) {
-	return _LvRecording.Contract.EndTime(&_LvRecording.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -42025,20 +33226,6 @@ func (_LvRecording *LvRecordingCaller) Owner(opts *bind.CallOpts) (common.Addres
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_LvRecording *LvRecordingSession) Owner() (common.Address, error) {
-	return _LvRecording.Contract.Owner(&_LvRecording.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_LvRecording *LvRecordingCallerSession) Owner() (common.Address, error) {
-	return _LvRecording.Contract.Owner(&_LvRecording.CallOpts)
 }
 
 // RecordingStatus is a free data retrieval call binding the contract method 0x922386c5.
@@ -42058,20 +33245,6 @@ func (_LvRecording *LvRecordingCaller) RecordingStatus(opts *bind.CallOpts) (uin
 
 }
 
-// RecordingStatus is a free data retrieval call binding the contract method 0x922386c5.
-//
-// Solidity: function recordingStatus() view returns(uint8)
-func (_LvRecording *LvRecordingSession) RecordingStatus() (uint8, error) {
-	return _LvRecording.Contract.RecordingStatus(&_LvRecording.CallOpts)
-}
-
-// RecordingStatus is a free data retrieval call binding the contract method 0x922386c5.
-//
-// Solidity: function recordingStatus() view returns(uint8)
-func (_LvRecording *LvRecordingCallerSession) RecordingStatus() (uint8, error) {
-	return _LvRecording.Contract.RecordingStatus(&_LvRecording.CallOpts)
-}
-
 // RecordingStreamContract is a free data retrieval call binding the contract method 0x5ebfe071.
 //
 // Solidity: function recordingStreamContract() view returns(address)
@@ -42087,20 +33260,6 @@ func (_LvRecording *LvRecordingCaller) RecordingStreamContract(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// RecordingStreamContract is a free data retrieval call binding the contract method 0x5ebfe071.
-//
-// Solidity: function recordingStreamContract() view returns(address)
-func (_LvRecording *LvRecordingSession) RecordingStreamContract() (common.Address, error) {
-	return _LvRecording.Contract.RecordingStreamContract(&_LvRecording.CallOpts)
-}
-
-// RecordingStreamContract is a free data retrieval call binding the contract method 0x5ebfe071.
-//
-// Solidity: function recordingStreamContract() view returns(address)
-func (_LvRecording *LvRecordingCallerSession) RecordingStreamContract() (common.Address, error) {
-	return _LvRecording.Contract.RecordingStreamContract(&_LvRecording.CallOpts)
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
@@ -42123,20 +33282,6 @@ func (_LvRecording *LvRecordingCaller) RunAccessInfo(opts *bind.CallOpts, arg0 u
 
 }
 
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_LvRecording *LvRecordingSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _LvRecording.Contract.RunAccessInfo(&_LvRecording.CallOpts, arg0, arg1, arg2)
-}
-
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_LvRecording *LvRecordingCallerSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _LvRecording.Contract.RunAccessInfo(&_LvRecording.CallOpts, arg0, arg1, arg2)
-}
-
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
@@ -42152,20 +33297,6 @@ func (_LvRecording *LvRecordingCaller) RunDescribeStatus(opts *bind.CallOpts, ar
 
 	return out0, err
 
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_LvRecording *LvRecordingSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _LvRecording.Contract.RunDescribeStatus(&_LvRecording.CallOpts, arg0)
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_LvRecording *LvRecordingCallerSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _LvRecording.Contract.RunDescribeStatus(&_LvRecording.CallOpts, arg0)
 }
 
 // StartTime is a free data retrieval call binding the contract method 0x78e97925.
@@ -42185,20 +33316,6 @@ func (_LvRecording *LvRecordingCaller) StartTime(opts *bind.CallOpts) (*big.Int,
 
 }
 
-// StartTime is a free data retrieval call binding the contract method 0x78e97925.
-//
-// Solidity: function startTime() view returns(uint256)
-func (_LvRecording *LvRecordingSession) StartTime() (*big.Int, error) {
-	return _LvRecording.Contract.StartTime(&_LvRecording.CallOpts)
-}
-
-// StartTime is a free data retrieval call binding the contract method 0x78e97925.
-//
-// Solidity: function startTime() view returns(uint256)
-func (_LvRecording *LvRecordingCallerSession) StartTime() (*big.Int, error) {
-	return _LvRecording.Contract.StartTime(&_LvRecording.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -42216,39 +33333,11 @@ func (_LvRecording *LvRecordingCaller) Version(opts *bind.CallOpts) ([32]byte, e
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_LvRecording *LvRecordingSession) Version() ([32]byte, error) {
-	return _LvRecording.Contract.Version(&_LvRecording.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_LvRecording *LvRecordingCallerSession) Version() ([32]byte, error) {
-	return _LvRecording.Contract.Version(&_LvRecording.CallOpts)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_LvRecording *LvRecordingTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_LvRecording *LvRecordingSession) Kill() (*types.Transaction, error) {
-	return _LvRecording.Contract.Kill(&_LvRecording.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_LvRecording *LvRecordingTransactorSession) Kill() (*types.Transaction, error) {
-	return _LvRecording.Contract.Kill(&_LvRecording.TransactOpts)
 }
 
 // LogProgramId is a paid mutator transaction binding the contract method 0x1972c58e.
@@ -42258,39 +33347,11 @@ func (_LvRecording *LvRecordingTransactor) LogProgramId(opts *bind.TransactOpts,
 	return _LvRecording.contract.Transact(opts, "logProgramId", programId, signature)
 }
 
-// LogProgramId is a paid mutator transaction binding the contract method 0x1972c58e.
-//
-// Solidity: function logProgramId(string programId, bytes1[] signature) returns()
-func (_LvRecording *LvRecordingSession) LogProgramId(programId string, signature [][1]byte) (*types.Transaction, error) {
-	return _LvRecording.Contract.LogProgramId(&_LvRecording.TransactOpts, programId, signature)
-}
-
-// LogProgramId is a paid mutator transaction binding the contract method 0x1972c58e.
-//
-// Solidity: function logProgramId(string programId, bytes1[] signature) returns()
-func (_LvRecording *LvRecordingTransactorSession) LogProgramId(programId string, signature [][1]byte) (*types.Transaction, error) {
-	return _LvRecording.Contract.LogProgramId(&_LvRecording.TransactOpts, programId, signature)
-}
-
 // RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
 //
 // Solidity: function runAccess(uint256 requestID, uint8 level, bytes32[] custom_values, address[] stakeholders) payable returns(uint256)
 func (_LvRecording *LvRecordingTransactor) RunAccess(opts *bind.TransactOpts, requestID *big.Int, level uint8, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "runAccess", requestID, level, custom_values, stakeholders)
-}
-
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 requestID, uint8 level, bytes32[] custom_values, address[] stakeholders) payable returns(uint256)
-func (_LvRecording *LvRecordingSession) RunAccess(requestID *big.Int, level uint8, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunAccess(&_LvRecording.TransactOpts, requestID, level, custom_values, stakeholders)
-}
-
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 requestID, uint8 level, bytes32[] custom_values, address[] stakeholders) payable returns(uint256)
-func (_LvRecording *LvRecordingTransactorSession) RunAccess(requestID *big.Int, level uint8, custom_values [][32]byte, stakeholders []common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunAccess(&_LvRecording.TransactOpts, requestID, level, custom_values, stakeholders)
 }
 
 // RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
@@ -42300,39 +33361,11 @@ func (_LvRecording *LvRecordingTransactor) RunCreate(opts *bind.TransactOpts) (*
 	return _LvRecording.contract.Transact(opts, "runCreate")
 }
 
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_LvRecording *LvRecordingSession) RunCreate() (*types.Transaction, error) {
-	return _LvRecording.Contract.RunCreate(&_LvRecording.TransactOpts)
-}
-
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_LvRecording *LvRecordingTransactorSession) RunCreate() (*types.Transaction, error) {
-	return _LvRecording.Contract.RunCreate(&_LvRecording.TransactOpts)
-}
-
 // RunEdit is a paid mutator transaction binding the contract method 0xc9f3d94c.
 //
 // Solidity: function runEdit() returns(uint256)
 func (_LvRecording *LvRecordingTransactor) RunEdit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "runEdit")
-}
-
-// RunEdit is a paid mutator transaction binding the contract method 0xc9f3d94c.
-//
-// Solidity: function runEdit() returns(uint256)
-func (_LvRecording *LvRecordingSession) RunEdit() (*types.Transaction, error) {
-	return _LvRecording.Contract.RunEdit(&_LvRecording.TransactOpts)
-}
-
-// RunEdit is a paid mutator transaction binding the contract method 0xc9f3d94c.
-//
-// Solidity: function runEdit() returns(uint256)
-func (_LvRecording *LvRecordingTransactorSession) RunEdit() (*types.Transaction, error) {
-	return _LvRecording.Contract.RunEdit(&_LvRecording.TransactOpts)
 }
 
 // RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
@@ -42342,39 +33375,11 @@ func (_LvRecording *LvRecordingTransactor) RunFinalize(opts *bind.TransactOpts, 
 	return _LvRecording.contract.Transact(opts, "runFinalize", requestID, score_pct)
 }
 
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 requestID, uint256 score_pct) payable returns(uint256)
-func (_LvRecording *LvRecordingSession) RunFinalize(requestID *big.Int, score_pct *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunFinalize(&_LvRecording.TransactOpts, requestID, score_pct)
-}
-
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 requestID, uint256 score_pct) payable returns(uint256)
-func (_LvRecording *LvRecordingTransactorSession) RunFinalize(requestID *big.Int, score_pct *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunFinalize(&_LvRecording.TransactOpts, requestID, score_pct)
-}
-
 // RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
 //
 // Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
 func (_LvRecording *LvRecordingTransactor) RunGrant(opts *bind.TransactOpts, arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "runGrant", arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_LvRecording *LvRecordingSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunGrant(&_LvRecording.TransactOpts, arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_LvRecording *LvRecordingTransactorSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunGrant(&_LvRecording.TransactOpts, arg0, arg1)
 }
 
 // RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
@@ -42384,39 +33389,11 @@ func (_LvRecording *LvRecordingTransactor) RunKill(opts *bind.TransactOpts) (*ty
 	return _LvRecording.contract.Transact(opts, "runKill")
 }
 
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_LvRecording *LvRecordingSession) RunKill() (*types.Transaction, error) {
-	return _LvRecording.Contract.RunKill(&_LvRecording.TransactOpts)
-}
-
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_LvRecording *LvRecordingTransactorSession) RunKill() (*types.Transaction, error) {
-	return _LvRecording.Contract.RunKill(&_LvRecording.TransactOpts)
-}
-
 // RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
 //
 // Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
 func (_LvRecording *LvRecordingTransactor) RunStatusChange(opts *bind.TransactOpts, proposed_status_code *big.Int) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "runStatusChange", proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_LvRecording *LvRecordingSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunStatusChange(&_LvRecording.TransactOpts, proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_LvRecording *LvRecordingTransactorSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.RunStatusChange(&_LvRecording.TransactOpts, proposed_status_code)
 }
 
 // SetContentAddress is a paid mutator transaction binding the contract method 0xa4a22c59.
@@ -42426,39 +33403,11 @@ func (_LvRecording *LvRecordingTransactor) SetContentAddress(opts *bind.Transact
 	return _LvRecording.contract.Transact(opts, "setContentAddress", _contentAddress)
 }
 
-// SetContentAddress is a paid mutator transaction binding the contract method 0xa4a22c59.
-//
-// Solidity: function setContentAddress(address _contentAddress) returns()
-func (_LvRecording *LvRecordingSession) SetContentAddress(_contentAddress common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetContentAddress(&_LvRecording.TransactOpts, _contentAddress)
-}
-
-// SetContentAddress is a paid mutator transaction binding the contract method 0xa4a22c59.
-//
-// Solidity: function setContentAddress(address _contentAddress) returns()
-func (_LvRecording *LvRecordingTransactorSession) SetContentAddress(_contentAddress common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetContentAddress(&_LvRecording.TransactOpts, _contentAddress)
-}
-
 // SetEndTime is a paid mutator transaction binding the contract method 0xccb98ffc.
 //
 // Solidity: function setEndTime(uint256 _endTime) returns()
 func (_LvRecording *LvRecordingTransactor) SetEndTime(opts *bind.TransactOpts, _endTime *big.Int) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "setEndTime", _endTime)
-}
-
-// SetEndTime is a paid mutator transaction binding the contract method 0xccb98ffc.
-//
-// Solidity: function setEndTime(uint256 _endTime) returns()
-func (_LvRecording *LvRecordingSession) SetEndTime(_endTime *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetEndTime(&_LvRecording.TransactOpts, _endTime)
-}
-
-// SetEndTime is a paid mutator transaction binding the contract method 0xccb98ffc.
-//
-// Solidity: function setEndTime(uint256 _endTime) returns()
-func (_LvRecording *LvRecordingTransactorSession) SetEndTime(_endTime *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetEndTime(&_LvRecording.TransactOpts, _endTime)
 }
 
 // SetStartTime is a paid mutator transaction binding the contract method 0x3e0a322d.
@@ -42468,39 +33417,11 @@ func (_LvRecording *LvRecordingTransactor) SetStartTime(opts *bind.TransactOpts,
 	return _LvRecording.contract.Transact(opts, "setStartTime", _startTime)
 }
 
-// SetStartTime is a paid mutator transaction binding the contract method 0x3e0a322d.
-//
-// Solidity: function setStartTime(uint256 _startTime) returns()
-func (_LvRecording *LvRecordingSession) SetStartTime(_startTime *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetStartTime(&_LvRecording.TransactOpts, _startTime)
-}
-
-// SetStartTime is a paid mutator transaction binding the contract method 0x3e0a322d.
-//
-// Solidity: function setStartTime(uint256 _startTime) returns()
-func (_LvRecording *LvRecordingTransactorSession) SetStartTime(_startTime *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetStartTime(&_LvRecording.TransactOpts, _startTime)
-}
-
 // SetTimes is a paid mutator transaction binding the contract method 0x22434836.
 //
 // Solidity: function setTimes(uint256 _startTime, uint256 _endTime) returns()
 func (_LvRecording *LvRecordingTransactor) SetTimes(opts *bind.TransactOpts, _startTime *big.Int, _endTime *big.Int) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "setTimes", _startTime, _endTime)
-}
-
-// SetTimes is a paid mutator transaction binding the contract method 0x22434836.
-//
-// Solidity: function setTimes(uint256 _startTime, uint256 _endTime) returns()
-func (_LvRecording *LvRecordingSession) SetTimes(_startTime *big.Int, _endTime *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetTimes(&_LvRecording.TransactOpts, _startTime, _endTime)
-}
-
-// SetTimes is a paid mutator transaction binding the contract method 0x22434836.
-//
-// Solidity: function setTimes(uint256 _startTime, uint256 _endTime) returns()
-func (_LvRecording *LvRecordingTransactorSession) SetTimes(_startTime *big.Int, _endTime *big.Int) (*types.Transaction, error) {
-	return _LvRecording.Contract.SetTimes(&_LvRecording.TransactOpts, _startTime, _endTime)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -42510,39 +33431,11 @@ func (_LvRecording *LvRecordingTransactor) TransferCreatorship(opts *bind.Transa
 	return _LvRecording.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_LvRecording *LvRecordingSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.TransferCreatorship(&_LvRecording.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_LvRecording *LvRecordingTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.TransferCreatorship(&_LvRecording.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_LvRecording *LvRecordingTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
 	return _LvRecording.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_LvRecording *LvRecordingSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.TransferOwnership(&_LvRecording.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_LvRecording *LvRecordingTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _LvRecording.Contract.TransferOwnership(&_LvRecording.TransactOpts, newOwner)
 }
 
 // UpdateRecordingStatus is a paid mutator transaction binding the contract method 0xa3b2d3d5.
@@ -42552,39 +33445,11 @@ func (_LvRecording *LvRecordingTransactor) UpdateRecordingStatus(opts *bind.Tran
 	return _LvRecording.contract.Transact(opts, "updateRecordingStatus", _recordingStatus)
 }
 
-// UpdateRecordingStatus is a paid mutator transaction binding the contract method 0xa3b2d3d5.
-//
-// Solidity: function updateRecordingStatus(uint8 _recordingStatus) returns()
-func (_LvRecording *LvRecordingSession) UpdateRecordingStatus(_recordingStatus uint8) (*types.Transaction, error) {
-	return _LvRecording.Contract.UpdateRecordingStatus(&_LvRecording.TransactOpts, _recordingStatus)
-}
-
-// UpdateRecordingStatus is a paid mutator transaction binding the contract method 0xa3b2d3d5.
-//
-// Solidity: function updateRecordingStatus(uint8 _recordingStatus) returns()
-func (_LvRecording *LvRecordingTransactorSession) UpdateRecordingStatus(_recordingStatus uint8) (*types.Transaction, error) {
-	return _LvRecording.Contract.UpdateRecordingStatus(&_LvRecording.TransactOpts, _recordingStatus)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_LvRecording *LvRecordingTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _LvRecording.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_LvRecording *LvRecordingSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _LvRecording.Contract.Fallback(&_LvRecording.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_LvRecording *LvRecordingTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _LvRecording.Contract.Fallback(&_LvRecording.TransactOpts, calldata)
 }
 
 // LvRecordingLogIterator is returned from FilterLog and is used to iterate over the raw logs and unpacked data for Log events raised by the LvRecording contract.
@@ -44791,7 +35656,7 @@ var LvStreamRightsHolderBin = LvStreamRightsHolderMetaData.Bin
 
 // DeployLvStreamRightsHolder deploys a new Ethereum contract, binding an instance of LvStreamRightsHolder to it.
 func DeployLvStreamRightsHolder(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *LvStreamRightsHolder, error) {
-	parsed, err := LvStreamRightsHolderMetaData.GetAbi()
+	parsed, err := ParsedABI(K_LvStreamRightsHolder)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -44826,43 +35691,6 @@ type LvStreamRightsHolderTransactor struct {
 // LvStreamRightsHolderFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type LvStreamRightsHolderFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// LvStreamRightsHolderSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type LvStreamRightsHolderSession struct {
-	Contract     *LvStreamRightsHolder // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts         // Call options to use throughout this session
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
-}
-
-// LvStreamRightsHolderCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type LvStreamRightsHolderCallerSession struct {
-	Contract *LvStreamRightsHolderCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts               // Call options to use throughout this session
-}
-
-// LvStreamRightsHolderTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type LvStreamRightsHolderTransactorSession struct {
-	Contract     *LvStreamRightsHolderTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts               // Transaction auth options to use throughout this session
-}
-
-// LvStreamRightsHolderRaw is an auto generated low-level Go binding around an Ethereum contract.
-type LvStreamRightsHolderRaw struct {
-	Contract *LvStreamRightsHolder // Generic contract binding to access the raw methods on
-}
-
-// LvStreamRightsHolderCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type LvStreamRightsHolderCallerRaw struct {
-	Contract *LvStreamRightsHolderCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// LvStreamRightsHolderTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type LvStreamRightsHolderTransactorRaw struct {
-	Contract *LvStreamRightsHolderTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewLvStreamRightsHolder creates a new instance of LvStreamRightsHolder, bound to a specific deployed contract.
@@ -44903,49 +35731,11 @@ func NewLvStreamRightsHolderFilterer(address common.Address, filterer bind.Contr
 
 // bindLvStreamRightsHolder binds a generic wrapper to an already deployed contract.
 func bindLvStreamRightsHolder(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(LvStreamRightsHolderABI))
+	parsed, err := ParsedABI(K_LvStreamRightsHolder)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_LvStreamRightsHolder *LvStreamRightsHolderRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _LvStreamRightsHolder.Contract.LvStreamRightsHolderCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_LvStreamRightsHolder *LvStreamRightsHolderRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.LvStreamRightsHolderTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_LvStreamRightsHolder *LvStreamRightsHolderRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.LvStreamRightsHolderTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _LvStreamRightsHolder.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
@@ -44965,20 +35755,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) DEFAULTACCESS(opts *bin
 
 }
 
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) DEFAULTACCESS() (uint8, error) {
-	return _LvStreamRightsHolder.Contract.DEFAULTACCESS(&_LvStreamRightsHolder.CallOpts)
-}
-
-// DEFAULTACCESS is a free data retrieval call binding the contract method 0x6af27417.
-//
-// Solidity: function DEFAULT_ACCESS() view returns(uint8)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) DEFAULTACCESS() (uint8, error) {
-	return _LvStreamRightsHolder.Contract.DEFAULTACCESS(&_LvStreamRightsHolder.CallOpts)
-}
-
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
@@ -44994,20 +35770,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) DEFAULTCHARGE(opts *bin
 
 	return out0, err
 
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) DEFAULTCHARGE() (uint8, error) {
-	return _LvStreamRightsHolder.Contract.DEFAULTCHARGE(&_LvStreamRightsHolder.CallOpts)
-}
-
-// DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
-//
-// Solidity: function DEFAULT_CHARGE() view returns(uint8)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) DEFAULTCHARGE() (uint8, error) {
-	return _LvStreamRightsHolder.Contract.DEFAULTCHARGE(&_LvStreamRightsHolder.CallOpts)
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
@@ -45027,20 +35789,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) DEFAULTSEE(opts *bind.C
 
 }
 
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) DEFAULTSEE() (uint8, error) {
-	return _LvStreamRightsHolder.Contract.DEFAULTSEE(&_LvStreamRightsHolder.CallOpts)
-}
-
-// DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
-//
-// Solidity: function DEFAULT_SEE() view returns(uint8)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) DEFAULTSEE() (uint8, error) {
-	return _LvStreamRightsHolder.Contract.DEFAULTSEE(&_LvStreamRightsHolder.CallOpts)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -45056,20 +35804,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) ContentSpace(opts *bind
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) ContentSpace() (common.Address, error) {
-	return _LvStreamRightsHolder.Contract.ContentSpace(&_LvStreamRightsHolder.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) ContentSpace() (common.Address, error) {
-	return _LvStreamRightsHolder.Contract.ContentSpace(&_LvStreamRightsHolder.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -45089,20 +35823,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) Creator(opts *bind.Call
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) Creator() (common.Address, error) {
-	return _LvStreamRightsHolder.Contract.Creator(&_LvStreamRightsHolder.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) Creator() (common.Address, error) {
-	return _LvStreamRightsHolder.Contract.Creator(&_LvStreamRightsHolder.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -45120,20 +35840,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) Owner(opts *bind.CallOp
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) Owner() (common.Address, error) {
-	return _LvStreamRightsHolder.Contract.Owner(&_LvStreamRightsHolder.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) Owner() (common.Address, error) {
-	return _LvStreamRightsHolder.Contract.Owner(&_LvStreamRightsHolder.CallOpts)
-}
-
 // RecordingStreams is a free data retrieval call binding the contract method 0x250fc29a.
 //
 // Solidity: function recordingStreams(address ) view returns(bool)
@@ -45149,20 +35855,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) RecordingStreams(opts *
 
 	return out0, err
 
-}
-
-// RecordingStreams is a free data retrieval call binding the contract method 0x250fc29a.
-//
-// Solidity: function recordingStreams(address ) view returns(bool)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RecordingStreams(arg0 common.Address) (bool, error) {
-	return _LvStreamRightsHolder.Contract.RecordingStreams(&_LvStreamRightsHolder.CallOpts, arg0)
-}
-
-// RecordingStreams is a free data retrieval call binding the contract method 0x250fc29a.
-//
-// Solidity: function recordingStreams(address ) view returns(bool)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) RecordingStreams(arg0 common.Address) (bool, error) {
-	return _LvStreamRightsHolder.Contract.RecordingStreams(&_LvStreamRightsHolder.CallOpts, arg0)
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
@@ -45185,20 +35877,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) RunAccessInfo(opts *bin
 
 }
 
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _LvStreamRightsHolder.Contract.RunAccessInfo(&_LvStreamRightsHolder.CallOpts, arg0, arg1, arg2)
-}
-
-// RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
-//
-// Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) RunAccessInfo(arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	return _LvStreamRightsHolder.Contract.RunAccessInfo(&_LvStreamRightsHolder.CallOpts, arg0, arg1, arg2)
-}
-
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
@@ -45214,20 +35892,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) RunDescribeStatus(opts 
 
 	return out0, err
 
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _LvStreamRightsHolder.Contract.RunDescribeStatus(&_LvStreamRightsHolder.CallOpts, arg0)
-}
-
-// RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
-//
-// Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) RunDescribeStatus(arg0 *big.Int) ([32]byte, error) {
-	return _LvStreamRightsHolder.Contract.RunDescribeStatus(&_LvStreamRightsHolder.CallOpts, arg0)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -45247,39 +35911,11 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) Version(opts *bind.Call
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) Version() ([32]byte, error) {
-	return _LvStreamRightsHolder.Contract.Version(&_LvStreamRightsHolder.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_LvStreamRightsHolder *LvStreamRightsHolderCallerSession) Version() ([32]byte, error) {
-	return _LvStreamRightsHolder.Contract.Version(&_LvStreamRightsHolder.CallOpts)
-}
-
 // AuthorizeRecording is a paid mutator transaction binding the contract method 0x6135c504.
 //
 // Solidity: function authorizeRecording(address stream, address accessor) returns(bool)
 func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) AuthorizeRecording(opts *bind.TransactOpts, stream common.Address, accessor common.Address) (*types.Transaction, error) {
 	return _LvStreamRightsHolder.contract.Transact(opts, "authorizeRecording", stream, accessor)
-}
-
-// AuthorizeRecording is a paid mutator transaction binding the contract method 0x6135c504.
-//
-// Solidity: function authorizeRecording(address stream, address accessor) returns(bool)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) AuthorizeRecording(stream common.Address, accessor common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.AuthorizeRecording(&_LvStreamRightsHolder.TransactOpts, stream, accessor)
-}
-
-// AuthorizeRecording is a paid mutator transaction binding the contract method 0x6135c504.
-//
-// Solidity: function authorizeRecording(address stream, address accessor) returns(bool)
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) AuthorizeRecording(stream common.Address, accessor common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.AuthorizeRecording(&_LvStreamRightsHolder.TransactOpts, stream, accessor)
 }
 
 // DisableRecording is a paid mutator transaction binding the contract method 0x20abe3ae.
@@ -45289,39 +35925,11 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) DisableRecording(op
 	return _LvStreamRightsHolder.contract.Transact(opts, "disableRecording", stream)
 }
 
-// DisableRecording is a paid mutator transaction binding the contract method 0x20abe3ae.
-//
-// Solidity: function disableRecording(address stream) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) DisableRecording(stream common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.DisableRecording(&_LvStreamRightsHolder.TransactOpts, stream)
-}
-
-// DisableRecording is a paid mutator transaction binding the contract method 0x20abe3ae.
-//
-// Solidity: function disableRecording(address stream) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) DisableRecording(stream common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.DisableRecording(&_LvStreamRightsHolder.TransactOpts, stream)
-}
-
 // EnableRecording is a paid mutator transaction binding the contract method 0x514eecff.
 //
 // Solidity: function enableRecording(address stream) returns()
 func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) EnableRecording(opts *bind.TransactOpts, stream common.Address) (*types.Transaction, error) {
 	return _LvStreamRightsHolder.contract.Transact(opts, "enableRecording", stream)
-}
-
-// EnableRecording is a paid mutator transaction binding the contract method 0x514eecff.
-//
-// Solidity: function enableRecording(address stream) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) EnableRecording(stream common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.EnableRecording(&_LvStreamRightsHolder.TransactOpts, stream)
-}
-
-// EnableRecording is a paid mutator transaction binding the contract method 0x514eecff.
-//
-// Solidity: function enableRecording(address stream) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) EnableRecording(stream common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.EnableRecording(&_LvStreamRightsHolder.TransactOpts, stream)
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -45331,39 +35939,11 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) Kill(opts *bind.Tra
 	return _LvStreamRightsHolder.contract.Transact(opts, "kill")
 }
 
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) Kill() (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.Kill(&_LvStreamRightsHolder.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) Kill() (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.Kill(&_LvStreamRightsHolder.TransactOpts)
-}
-
 // RegisterStream is a paid mutator transaction binding the contract method 0xad284b12.
 //
 // Solidity: function registerStream(address stream) returns()
 func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) RegisterStream(opts *bind.TransactOpts, stream common.Address) (*types.Transaction, error) {
 	return _LvStreamRightsHolder.contract.Transact(opts, "registerStream", stream)
-}
-
-// RegisterStream is a paid mutator transaction binding the contract method 0xad284b12.
-//
-// Solidity: function registerStream(address stream) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RegisterStream(stream common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RegisterStream(&_LvStreamRightsHolder.TransactOpts, stream)
-}
-
-// RegisterStream is a paid mutator transaction binding the contract method 0xad284b12.
-//
-// Solidity: function registerStream(address stream) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) RegisterStream(stream common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RegisterStream(&_LvStreamRightsHolder.TransactOpts, stream)
 }
 
 // RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
@@ -45373,39 +35953,11 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) RunAccess(opts *bin
 	return _LvStreamRightsHolder.contract.Transact(opts, "runAccess", arg0, arg1, arg2, arg3)
 }
 
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 , uint8 , bytes32[] , address[] ) payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunAccess(arg0 *big.Int, arg1 uint8, arg2 [][32]byte, arg3 []common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunAccess(&_LvStreamRightsHolder.TransactOpts, arg0, arg1, arg2, arg3)
-}
-
-// RunAccess is a paid mutator transaction binding the contract method 0x123e0e80.
-//
-// Solidity: function runAccess(uint256 , uint8 , bytes32[] , address[] ) payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) RunAccess(arg0 *big.Int, arg1 uint8, arg2 [][32]byte, arg3 []common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunAccess(&_LvStreamRightsHolder.TransactOpts, arg0, arg1, arg2, arg3)
-}
-
 // RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
 //
 // Solidity: function runCreate() payable returns(uint256)
 func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) RunCreate(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _LvStreamRightsHolder.contract.Transact(opts, "runCreate")
-}
-
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunCreate() (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunCreate(&_LvStreamRightsHolder.TransactOpts)
-}
-
-// RunCreate is a paid mutator transaction binding the contract method 0x7b1cdb3e.
-//
-// Solidity: function runCreate() payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) RunCreate() (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunCreate(&_LvStreamRightsHolder.TransactOpts)
 }
 
 // RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
@@ -45415,39 +35967,11 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) RunFinalize(opts *b
 	return _LvStreamRightsHolder.contract.Transact(opts, "runFinalize", arg0, arg1)
 }
 
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 , uint256 ) payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunFinalize(arg0 *big.Int, arg1 *big.Int) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunFinalize(&_LvStreamRightsHolder.TransactOpts, arg0, arg1)
-}
-
-// RunFinalize is a paid mutator transaction binding the contract method 0x17685953.
-//
-// Solidity: function runFinalize(uint256 , uint256 ) payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) RunFinalize(arg0 *big.Int, arg1 *big.Int) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunFinalize(&_LvStreamRightsHolder.TransactOpts, arg0, arg1)
-}
-
 // RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
 //
 // Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
 func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) RunGrant(opts *bind.TransactOpts, arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
 	return _LvStreamRightsHolder.contract.Transact(opts, "runGrant", arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunGrant(&_LvStreamRightsHolder.TransactOpts, arg0, arg1)
-}
-
-// RunGrant is a paid mutator transaction binding the contract method 0xe870ed91.
-//
-// Solidity: function runGrant(uint256 , bool ) payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) RunGrant(arg0 *big.Int, arg1 bool) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunGrant(&_LvStreamRightsHolder.TransactOpts, arg0, arg1)
 }
 
 // RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
@@ -45457,39 +35981,11 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) RunKill(opts *bind.
 	return _LvStreamRightsHolder.contract.Transact(opts, "runKill")
 }
 
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunKill() (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunKill(&_LvStreamRightsHolder.TransactOpts)
-}
-
-// RunKill is a paid mutator transaction binding the contract method 0x9e99bbea.
-//
-// Solidity: function runKill() payable returns(uint256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) RunKill() (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunKill(&_LvStreamRightsHolder.TransactOpts)
-}
-
 // RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
 //
 // Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
 func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) RunStatusChange(opts *bind.TransactOpts, proposed_status_code *big.Int) (*types.Transaction, error) {
 	return _LvStreamRightsHolder.contract.Transact(opts, "runStatusChange", proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunStatusChange(&_LvStreamRightsHolder.TransactOpts, proposed_status_code)
-}
-
-// RunStatusChange is a paid mutator transaction binding the contract method 0x3513a805.
-//
-// Solidity: function runStatusChange(int256 proposed_status_code) payable returns(int256)
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) RunStatusChange(proposed_status_code *big.Int) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.RunStatusChange(&_LvStreamRightsHolder.TransactOpts, proposed_status_code)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -45499,20 +35995,6 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) TransferCreatorship
 	return _LvStreamRightsHolder.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.TransferCreatorship(&_LvStreamRightsHolder.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.TransferCreatorship(&_LvStreamRightsHolder.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -45520,39 +36002,11 @@ func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) TransferOwnership(o
 	return _LvStreamRightsHolder.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.TransferOwnership(&_LvStreamRightsHolder.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.TransferOwnership(&_LvStreamRightsHolder.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_LvStreamRightsHolder *LvStreamRightsHolderTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _LvStreamRightsHolder.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.Fallback(&_LvStreamRightsHolder.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_LvStreamRightsHolder *LvStreamRightsHolderTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _LvStreamRightsHolder.Contract.Fallback(&_LvStreamRightsHolder.TransactOpts, calldata)
 }
 
 // LvStreamRightsHolderAuthorizeRecordingIterator is returned from FilterAuthorizeRecording and is used to iterate over the raw logs and unpacked data for AuthorizeRecording events raised by the LvStreamRightsHolder contract.
@@ -47748,7 +38202,7 @@ var MetaObjectBin = MetaObjectMetaData.Bin
 
 // DeployMetaObject deploys a new Ethereum contract, binding an instance of MetaObject to it.
 func DeployMetaObject(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *MetaObject, error) {
-	parsed, err := MetaObjectMetaData.GetAbi()
+	parsed, err := ParsedABI(K_MetaObject)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -47783,43 +38237,6 @@ type MetaObjectTransactor struct {
 // MetaObjectFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type MetaObjectFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// MetaObjectSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type MetaObjectSession struct {
-	Contract     *MetaObject       // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// MetaObjectCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type MetaObjectCallerSession struct {
-	Contract *MetaObjectCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts     // Call options to use throughout this session
-}
-
-// MetaObjectTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type MetaObjectTransactorSession struct {
-	Contract     *MetaObjectTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
-}
-
-// MetaObjectRaw is an auto generated low-level Go binding around an Ethereum contract.
-type MetaObjectRaw struct {
-	Contract *MetaObject // Generic contract binding to access the raw methods on
-}
-
-// MetaObjectCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type MetaObjectCallerRaw struct {
-	Contract *MetaObjectCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// MetaObjectTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type MetaObjectTransactorRaw struct {
-	Contract *MetaObjectTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewMetaObject creates a new instance of MetaObject, bound to a specific deployed contract.
@@ -47860,49 +38277,11 @@ func NewMetaObjectFilterer(address common.Address, filterer bind.ContractFiltere
 
 // bindMetaObject binds a generic wrapper to an already deployed contract.
 func bindMetaObject(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(MetaObjectABI))
+	parsed, err := ParsedABI(K_MetaObject)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_MetaObject *MetaObjectRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _MetaObject.Contract.MetaObjectCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_MetaObject *MetaObjectRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _MetaObject.Contract.MetaObjectTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_MetaObject *MetaObjectRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _MetaObject.Contract.MetaObjectTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_MetaObject *MetaObjectCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _MetaObject.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_MetaObject *MetaObjectTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _MetaObject.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_MetaObject *MetaObjectTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _MetaObject.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -47922,20 +38301,6 @@ func (_MetaObject *MetaObjectCaller) ContentSpace(opts *bind.CallOpts) (common.A
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_MetaObject *MetaObjectSession) ContentSpace() (common.Address, error) {
-	return _MetaObject.Contract.ContentSpace(&_MetaObject.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_MetaObject *MetaObjectCallerSession) ContentSpace() (common.Address, error) {
-	return _MetaObject.Contract.ContentSpace(&_MetaObject.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -47951,20 +38316,6 @@ func (_MetaObject *MetaObjectCaller) Creator(opts *bind.CallOpts) (common.Addres
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_MetaObject *MetaObjectSession) Creator() (common.Address, error) {
-	return _MetaObject.Contract.Creator(&_MetaObject.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_MetaObject *MetaObjectCallerSession) Creator() (common.Address, error) {
-	return _MetaObject.Contract.Creator(&_MetaObject.CallOpts)
 }
 
 // GetMeta is a free data retrieval call binding the contract method 0xac55c906.
@@ -47984,20 +38335,6 @@ func (_MetaObject *MetaObjectCaller) GetMeta(opts *bind.CallOpts, key []byte) ([
 
 }
 
-// GetMeta is a free data retrieval call binding the contract method 0xac55c906.
-//
-// Solidity: function getMeta(bytes key) view returns(bytes)
-func (_MetaObject *MetaObjectSession) GetMeta(key []byte) ([]byte, error) {
-	return _MetaObject.Contract.GetMeta(&_MetaObject.CallOpts, key)
-}
-
-// GetMeta is a free data retrieval call binding the contract method 0xac55c906.
-//
-// Solidity: function getMeta(bytes key) view returns(bytes)
-func (_MetaObject *MetaObjectCallerSession) GetMeta(key []byte) ([]byte, error) {
-	return _MetaObject.Contract.GetMeta(&_MetaObject.CallOpts, key)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -48013,20 +38350,6 @@ func (_MetaObject *MetaObjectCaller) Owner(opts *bind.CallOpts) (common.Address,
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_MetaObject *MetaObjectSession) Owner() (common.Address, error) {
-	return _MetaObject.Contract.Owner(&_MetaObject.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_MetaObject *MetaObjectCallerSession) Owner() (common.Address, error) {
-	return _MetaObject.Contract.Owner(&_MetaObject.CallOpts)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -48046,39 +38369,11 @@ func (_MetaObject *MetaObjectCaller) Version(opts *bind.CallOpts) ([32]byte, err
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_MetaObject *MetaObjectSession) Version() ([32]byte, error) {
-	return _MetaObject.Contract.Version(&_MetaObject.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_MetaObject *MetaObjectCallerSession) Version() ([32]byte, error) {
-	return _MetaObject.Contract.Version(&_MetaObject.CallOpts)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_MetaObject *MetaObjectTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _MetaObject.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_MetaObject *MetaObjectSession) Kill() (*types.Transaction, error) {
-	return _MetaObject.Contract.Kill(&_MetaObject.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_MetaObject *MetaObjectTransactorSession) Kill() (*types.Transaction, error) {
-	return _MetaObject.Contract.Kill(&_MetaObject.TransactOpts)
 }
 
 // PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
@@ -48088,39 +38383,11 @@ func (_MetaObject *MetaObjectTransactor) PutMeta(opts *bind.TransactOpts, key []
 	return _MetaObject.contract.Transact(opts, "putMeta", key, value)
 }
 
-// PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
-//
-// Solidity: function putMeta(bytes key, bytes value) returns()
-func (_MetaObject *MetaObjectSession) PutMeta(key []byte, value []byte) (*types.Transaction, error) {
-	return _MetaObject.Contract.PutMeta(&_MetaObject.TransactOpts, key, value)
-}
-
-// PutMeta is a paid mutator transaction binding the contract method 0xe542b7cb.
-//
-// Solidity: function putMeta(bytes key, bytes value) returns()
-func (_MetaObject *MetaObjectTransactorSession) PutMeta(key []byte, value []byte) (*types.Transaction, error) {
-	return _MetaObject.Contract.PutMeta(&_MetaObject.TransactOpts, key, value)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_MetaObject *MetaObjectTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _MetaObject.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_MetaObject *MetaObjectSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _MetaObject.Contract.TransferCreatorship(&_MetaObject.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_MetaObject *MetaObjectTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _MetaObject.Contract.TransferCreatorship(&_MetaObject.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -48130,39 +38397,11 @@ func (_MetaObject *MetaObjectTransactor) TransferOwnership(opts *bind.TransactOp
 	return _MetaObject.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_MetaObject *MetaObjectSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _MetaObject.Contract.TransferOwnership(&_MetaObject.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_MetaObject *MetaObjectTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _MetaObject.Contract.TransferOwnership(&_MetaObject.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_MetaObject *MetaObjectTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _MetaObject.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_MetaObject *MetaObjectSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _MetaObject.Contract.Fallback(&_MetaObject.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_MetaObject *MetaObjectTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _MetaObject.Contract.Fallback(&_MetaObject.TransactOpts, calldata)
 }
 
 // NodeMetaData contains all meta data concerning the Node contract.
@@ -48195,7 +38434,7 @@ var NodeBin = NodeMetaData.Bin
 
 // DeployNode deploys a new Ethereum contract, binding an instance of Node to it.
 func DeployNode(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Node, error) {
-	parsed, err := NodeMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Node)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -48230,43 +38469,6 @@ type NodeTransactor struct {
 // NodeFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type NodeFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// NodeSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type NodeSession struct {
-	Contract     *Node             // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// NodeCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type NodeCallerSession struct {
-	Contract *NodeCaller   // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// NodeTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type NodeTransactorSession struct {
-	Contract     *NodeTransactor   // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// NodeRaw is an auto generated low-level Go binding around an Ethereum contract.
-type NodeRaw struct {
-	Contract *Node // Generic contract binding to access the raw methods on
-}
-
-// NodeCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type NodeCallerRaw struct {
-	Contract *NodeCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// NodeTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type NodeTransactorRaw struct {
-	Contract *NodeTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewNode creates a new instance of Node, bound to a specific deployed contract.
@@ -48307,49 +38509,11 @@ func NewNodeFilterer(address common.Address, filterer bind.ContractFilterer) (*N
 
 // bindNode binds a generic wrapper to an already deployed contract.
 func bindNode(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(NodeABI))
+	parsed, err := ParsedABI(K_Node)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Node *NodeRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Node.Contract.NodeCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Node *NodeRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Node.Contract.NodeTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Node *NodeRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Node.Contract.NodeTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Node *NodeCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Node.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Node *NodeTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Node.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Node *NodeTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Node.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -48369,20 +38533,6 @@ func (_Node *NodeCaller) ContentSpace(opts *bind.CallOpts) (common.Address, erro
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Node *NodeSession) ContentSpace() (common.Address, error) {
-	return _Node.Contract.ContentSpace(&_Node.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Node *NodeCallerSession) ContentSpace() (common.Address, error) {
-	return _Node.Contract.ContentSpace(&_Node.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -48398,20 +38548,6 @@ func (_Node *NodeCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Node *NodeSession) Creator() (common.Address, error) {
-	return _Node.Contract.Creator(&_Node.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Node *NodeCallerSession) Creator() (common.Address, error) {
-	return _Node.Contract.Creator(&_Node.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -48431,20 +38567,6 @@ func (_Node *NodeCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Node *NodeSession) Owner() (common.Address, error) {
-	return _Node.Contract.Owner(&_Node.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Node *NodeCallerSession) Owner() (common.Address, error) {
-	return _Node.Contract.Owner(&_Node.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -48462,39 +38584,11 @@ func (_Node *NodeCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Node *NodeSession) Version() ([32]byte, error) {
-	return _Node.Contract.Version(&_Node.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Node *NodeCallerSession) Version() ([32]byte, error) {
-	return _Node.Contract.Version(&_Node.CallOpts)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_Node *NodeTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Node.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Node *NodeSession) Kill() (*types.Transaction, error) {
-	return _Node.Contract.Kill(&_Node.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Node *NodeTransactorSession) Kill() (*types.Transaction, error) {
-	return _Node.Contract.Kill(&_Node.TransactOpts)
 }
 
 // Log is a paid mutator transaction binding the contract method 0x41304fac.
@@ -48504,39 +38598,11 @@ func (_Node *NodeTransactor) Log(opts *bind.TransactOpts, label string) (*types.
 	return _Node.contract.Transact(opts, "log", label)
 }
 
-// Log is a paid mutator transaction binding the contract method 0x41304fac.
-//
-// Solidity: function log(string label) returns()
-func (_Node *NodeSession) Log(label string) (*types.Transaction, error) {
-	return _Node.Contract.Log(&_Node.TransactOpts, label)
-}
-
-// Log is a paid mutator transaction binding the contract method 0x41304fac.
-//
-// Solidity: function log(string label) returns()
-func (_Node *NodeTransactorSession) Log(label string) (*types.Transaction, error) {
-	return _Node.Contract.Log(&_Node.TransactOpts, label)
-}
-
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
 //
 // Solidity: function transferCreatorship(address newCreator) returns()
 func (_Node *NodeTransactor) TransferCreatorship(opts *bind.TransactOpts, newCreator common.Address) (*types.Transaction, error) {
 	return _Node.contract.Transact(opts, "transferCreatorship", newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Node *NodeSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Node.Contract.TransferCreatorship(&_Node.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Node *NodeTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Node.Contract.TransferCreatorship(&_Node.TransactOpts, newCreator)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -48546,39 +38612,11 @@ func (_Node *NodeTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner
 	return _Node.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Node *NodeSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Node.Contract.TransferOwnership(&_Node.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Node *NodeTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Node.Contract.TransferOwnership(&_Node.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_Node *NodeTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _Node.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Node *NodeSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Node.Contract.Fallback(&_Node.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Node *NodeTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Node.Contract.Fallback(&_Node.TransactOpts, calldata)
 }
 
 // NodeLogIterator is returned from FilterLog and is used to iterate over the raw logs and unpacked data for Log events raised by the Node contract.
@@ -49430,7 +39468,7 @@ var NodeSpaceBin = NodeSpaceMetaData.Bin
 
 // DeployNodeSpace deploys a new Ethereum contract, binding an instance of NodeSpace to it.
 func DeployNodeSpace(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *NodeSpace, error) {
-	parsed, err := NodeSpaceMetaData.GetAbi()
+	parsed, err := ParsedABI(K_NodeSpace)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -49465,43 +39503,6 @@ type NodeSpaceTransactor struct {
 // NodeSpaceFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type NodeSpaceFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// NodeSpaceSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type NodeSpaceSession struct {
-	Contract     *NodeSpace        // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// NodeSpaceCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type NodeSpaceCallerSession struct {
-	Contract *NodeSpaceCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts    // Call options to use throughout this session
-}
-
-// NodeSpaceTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type NodeSpaceTransactorSession struct {
-	Contract     *NodeSpaceTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts    // Transaction auth options to use throughout this session
-}
-
-// NodeSpaceRaw is an auto generated low-level Go binding around an Ethereum contract.
-type NodeSpaceRaw struct {
-	Contract *NodeSpace // Generic contract binding to access the raw methods on
-}
-
-// NodeSpaceCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type NodeSpaceCallerRaw struct {
-	Contract *NodeSpaceCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// NodeSpaceTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type NodeSpaceTransactorRaw struct {
-	Contract *NodeSpaceTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewNodeSpace creates a new instance of NodeSpace, bound to a specific deployed contract.
@@ -49542,49 +39543,11 @@ func NewNodeSpaceFilterer(address common.Address, filterer bind.ContractFilterer
 
 // bindNodeSpace binds a generic wrapper to an already deployed contract.
 func bindNodeSpace(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(NodeSpaceABI))
+	parsed, err := ParsedABI(K_NodeSpace)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_NodeSpace *NodeSpaceRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _NodeSpace.Contract.NodeSpaceCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_NodeSpace *NodeSpaceRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _NodeSpace.Contract.NodeSpaceTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_NodeSpace *NodeSpaceRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _NodeSpace.Contract.NodeSpaceTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_NodeSpace *NodeSpaceCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _NodeSpace.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_NodeSpace *NodeSpaceTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _NodeSpace.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_NodeSpace *NodeSpaceTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _NodeSpace.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ActiveNodeAddresses is a free data retrieval call binding the contract method 0x52f82dd8.
@@ -49604,20 +39567,6 @@ func (_NodeSpace *NodeSpaceCaller) ActiveNodeAddresses(opts *bind.CallOpts, arg0
 
 }
 
-// ActiveNodeAddresses is a free data retrieval call binding the contract method 0x52f82dd8.
-//
-// Solidity: function activeNodeAddresses(uint256 ) view returns(address)
-func (_NodeSpace *NodeSpaceSession) ActiveNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _NodeSpace.Contract.ActiveNodeAddresses(&_NodeSpace.CallOpts, arg0)
-}
-
-// ActiveNodeAddresses is a free data retrieval call binding the contract method 0x52f82dd8.
-//
-// Solidity: function activeNodeAddresses(uint256 ) view returns(address)
-func (_NodeSpace *NodeSpaceCallerSession) ActiveNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _NodeSpace.Contract.ActiveNodeAddresses(&_NodeSpace.CallOpts, arg0)
-}
-
 // ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
 //
 // Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
@@ -49633,20 +39582,6 @@ func (_NodeSpace *NodeSpaceCaller) ActiveNodeLocators(opts *bind.CallOpts, arg0 
 
 	return out0, err
 
-}
-
-// ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
-//
-// Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
-func (_NodeSpace *NodeSpaceSession) ActiveNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _NodeSpace.Contract.ActiveNodeLocators(&_NodeSpace.CallOpts, arg0)
-}
-
-// ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
-//
-// Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
-func (_NodeSpace *NodeSpaceCallerSession) ActiveNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _NodeSpace.Contract.ActiveNodeLocators(&_NodeSpace.CallOpts, arg0)
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
@@ -49666,20 +39601,6 @@ func (_NodeSpace *NodeSpaceCaller) CanNodePublish(opts *bind.CallOpts, candidate
 
 }
 
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_NodeSpace *NodeSpaceSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _NodeSpace.Contract.CanNodePublish(&_NodeSpace.CallOpts, candidate)
-}
-
-// CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
-//
-// Solidity: function canNodePublish(address candidate) view returns(bool)
-func (_NodeSpace *NodeSpaceCallerSession) CanNodePublish(candidate common.Address) (bool, error) {
-	return _NodeSpace.Contract.CanNodePublish(&_NodeSpace.CallOpts, candidate)
-}
-
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
@@ -49695,20 +39616,6 @@ func (_NodeSpace *NodeSpaceCaller) ContentSpace(opts *bind.CallOpts) (common.Add
 
 	return out0, err
 
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_NodeSpace *NodeSpaceSession) ContentSpace() (common.Address, error) {
-	return _NodeSpace.Contract.ContentSpace(&_NodeSpace.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_NodeSpace *NodeSpaceCallerSession) ContentSpace() (common.Address, error) {
-	return _NodeSpace.Contract.ContentSpace(&_NodeSpace.CallOpts)
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
@@ -49728,20 +39635,6 @@ func (_NodeSpace *NodeSpaceCaller) Creator(opts *bind.CallOpts) (common.Address,
 
 }
 
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_NodeSpace *NodeSpaceSession) Creator() (common.Address, error) {
-	return _NodeSpace.Contract.Creator(&_NodeSpace.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_NodeSpace *NodeSpaceCallerSession) Creator() (common.Address, error) {
-	return _NodeSpace.Contract.Creator(&_NodeSpace.CallOpts)
-}
-
 // NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
 //
 // Solidity: function numActiveNodes() view returns(uint256)
@@ -49757,20 +39650,6 @@ func (_NodeSpace *NodeSpaceCaller) NumActiveNodes(opts *bind.CallOpts) (*big.Int
 
 	return out0, err
 
-}
-
-// NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
-//
-// Solidity: function numActiveNodes() view returns(uint256)
-func (_NodeSpace *NodeSpaceSession) NumActiveNodes() (*big.Int, error) {
-	return _NodeSpace.Contract.NumActiveNodes(&_NodeSpace.CallOpts)
-}
-
-// NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
-//
-// Solidity: function numActiveNodes() view returns(uint256)
-func (_NodeSpace *NodeSpaceCallerSession) NumActiveNodes() (*big.Int, error) {
-	return _NodeSpace.Contract.NumActiveNodes(&_NodeSpace.CallOpts)
 }
 
 // NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
@@ -49790,20 +39669,6 @@ func (_NodeSpace *NodeSpaceCaller) NumPendingNodes(opts *bind.CallOpts) (*big.In
 
 }
 
-// NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
-//
-// Solidity: function numPendingNodes() view returns(uint256)
-func (_NodeSpace *NodeSpaceSession) NumPendingNodes() (*big.Int, error) {
-	return _NodeSpace.Contract.NumPendingNodes(&_NodeSpace.CallOpts)
-}
-
-// NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
-//
-// Solidity: function numPendingNodes() view returns(uint256)
-func (_NodeSpace *NodeSpaceCallerSession) NumPendingNodes() (*big.Int, error) {
-	return _NodeSpace.Contract.NumPendingNodes(&_NodeSpace.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -49819,20 +39684,6 @@ func (_NodeSpace *NodeSpaceCaller) Owner(opts *bind.CallOpts) (common.Address, e
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_NodeSpace *NodeSpaceSession) Owner() (common.Address, error) {
-	return _NodeSpace.Contract.Owner(&_NodeSpace.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_NodeSpace *NodeSpaceCallerSession) Owner() (common.Address, error) {
-	return _NodeSpace.Contract.Owner(&_NodeSpace.CallOpts)
 }
 
 // PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
@@ -49852,20 +39703,6 @@ func (_NodeSpace *NodeSpaceCaller) PendingNodeAddresses(opts *bind.CallOpts, arg
 
 }
 
-// PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
-//
-// Solidity: function pendingNodeAddresses(uint256 ) view returns(address)
-func (_NodeSpace *NodeSpaceSession) PendingNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _NodeSpace.Contract.PendingNodeAddresses(&_NodeSpace.CallOpts, arg0)
-}
-
-// PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
-//
-// Solidity: function pendingNodeAddresses(uint256 ) view returns(address)
-func (_NodeSpace *NodeSpaceCallerSession) PendingNodeAddresses(arg0 *big.Int) (common.Address, error) {
-	return _NodeSpace.Contract.PendingNodeAddresses(&_NodeSpace.CallOpts, arg0)
-}
-
 // PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
 //
 // Solidity: function pendingNodeLocators(uint256 ) view returns(bytes)
@@ -49881,20 +39718,6 @@ func (_NodeSpace *NodeSpaceCaller) PendingNodeLocators(opts *bind.CallOpts, arg0
 
 	return out0, err
 
-}
-
-// PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
-//
-// Solidity: function pendingNodeLocators(uint256 ) view returns(bytes)
-func (_NodeSpace *NodeSpaceSession) PendingNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _NodeSpace.Contract.PendingNodeLocators(&_NodeSpace.CallOpts, arg0)
-}
-
-// PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
-//
-// Solidity: function pendingNodeLocators(uint256 ) view returns(bytes)
-func (_NodeSpace *NodeSpaceCallerSession) PendingNodeLocators(arg0 *big.Int) ([]byte, error) {
-	return _NodeSpace.Contract.PendingNodeLocators(&_NodeSpace.CallOpts, arg0)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -49914,39 +39737,11 @@ func (_NodeSpace *NodeSpaceCaller) Version(opts *bind.CallOpts) ([32]byte, error
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_NodeSpace *NodeSpaceSession) Version() ([32]byte, error) {
-	return _NodeSpace.Contract.Version(&_NodeSpace.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_NodeSpace *NodeSpaceCallerSession) Version() ([32]byte, error) {
-	return _NodeSpace.Contract.Version(&_NodeSpace.CallOpts)
-}
-
 // AddNode is a paid mutator transaction binding the contract method 0x64f0f050.
 //
 // Solidity: function addNode(address _nodeAddr, bytes _locator) returns()
 func (_NodeSpace *NodeSpaceTransactor) AddNode(opts *bind.TransactOpts, _nodeAddr common.Address, _locator []byte) (*types.Transaction, error) {
 	return _NodeSpace.contract.Transact(opts, "addNode", _nodeAddr, _locator)
-}
-
-// AddNode is a paid mutator transaction binding the contract method 0x64f0f050.
-//
-// Solidity: function addNode(address _nodeAddr, bytes _locator) returns()
-func (_NodeSpace *NodeSpaceSession) AddNode(_nodeAddr common.Address, _locator []byte) (*types.Transaction, error) {
-	return _NodeSpace.Contract.AddNode(&_NodeSpace.TransactOpts, _nodeAddr, _locator)
-}
-
-// AddNode is a paid mutator transaction binding the contract method 0x64f0f050.
-//
-// Solidity: function addNode(address _nodeAddr, bytes _locator) returns()
-func (_NodeSpace *NodeSpaceTransactorSession) AddNode(_nodeAddr common.Address, _locator []byte) (*types.Transaction, error) {
-	return _NodeSpace.Contract.AddNode(&_NodeSpace.TransactOpts, _nodeAddr, _locator)
 }
 
 // ApproveNode is a paid mutator transaction binding the contract method 0xdd4c97a0.
@@ -49956,39 +39751,11 @@ func (_NodeSpace *NodeSpaceTransactor) ApproveNode(opts *bind.TransactOpts, _nod
 	return _NodeSpace.contract.Transact(opts, "approveNode", _nodeAddr)
 }
 
-// ApproveNode is a paid mutator transaction binding the contract method 0xdd4c97a0.
-//
-// Solidity: function approveNode(address _nodeAddr) returns()
-func (_NodeSpace *NodeSpaceSession) ApproveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.ApproveNode(&_NodeSpace.TransactOpts, _nodeAddr)
-}
-
-// ApproveNode is a paid mutator transaction binding the contract method 0xdd4c97a0.
-//
-// Solidity: function approveNode(address _nodeAddr) returns()
-func (_NodeSpace *NodeSpaceTransactorSession) ApproveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.ApproveNode(&_NodeSpace.TransactOpts, _nodeAddr)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_NodeSpace *NodeSpaceTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _NodeSpace.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_NodeSpace *NodeSpaceSession) Kill() (*types.Transaction, error) {
-	return _NodeSpace.Contract.Kill(&_NodeSpace.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_NodeSpace *NodeSpaceTransactorSession) Kill() (*types.Transaction, error) {
-	return _NodeSpace.Contract.Kill(&_NodeSpace.TransactOpts)
 }
 
 // RemoveNode is a paid mutator transaction binding the contract method 0xb2b99ec9.
@@ -49998,39 +39765,11 @@ func (_NodeSpace *NodeSpaceTransactor) RemoveNode(opts *bind.TransactOpts, _node
 	return _NodeSpace.contract.Transact(opts, "removeNode", _nodeAddr)
 }
 
-// RemoveNode is a paid mutator transaction binding the contract method 0xb2b99ec9.
-//
-// Solidity: function removeNode(address _nodeAddr) returns()
-func (_NodeSpace *NodeSpaceSession) RemoveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.RemoveNode(&_NodeSpace.TransactOpts, _nodeAddr)
-}
-
-// RemoveNode is a paid mutator transaction binding the contract method 0xb2b99ec9.
-//
-// Solidity: function removeNode(address _nodeAddr) returns()
-func (_NodeSpace *NodeSpaceTransactorSession) RemoveNode(_nodeAddr common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.RemoveNode(&_NodeSpace.TransactOpts, _nodeAddr)
-}
-
 // SubmitNode is a paid mutator transaction binding the contract method 0x160eee74.
 //
 // Solidity: function submitNode(bytes _locator) returns()
 func (_NodeSpace *NodeSpaceTransactor) SubmitNode(opts *bind.TransactOpts, _locator []byte) (*types.Transaction, error) {
 	return _NodeSpace.contract.Transact(opts, "submitNode", _locator)
-}
-
-// SubmitNode is a paid mutator transaction binding the contract method 0x160eee74.
-//
-// Solidity: function submitNode(bytes _locator) returns()
-func (_NodeSpace *NodeSpaceSession) SubmitNode(_locator []byte) (*types.Transaction, error) {
-	return _NodeSpace.Contract.SubmitNode(&_NodeSpace.TransactOpts, _locator)
-}
-
-// SubmitNode is a paid mutator transaction binding the contract method 0x160eee74.
-//
-// Solidity: function submitNode(bytes _locator) returns()
-func (_NodeSpace *NodeSpaceTransactorSession) SubmitNode(_locator []byte) (*types.Transaction, error) {
-	return _NodeSpace.Contract.SubmitNode(&_NodeSpace.TransactOpts, _locator)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -50040,20 +39779,6 @@ func (_NodeSpace *NodeSpaceTransactor) TransferCreatorship(opts *bind.TransactOp
 	return _NodeSpace.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_NodeSpace *NodeSpaceSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.TransferCreatorship(&_NodeSpace.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_NodeSpace *NodeSpaceTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.TransferCreatorship(&_NodeSpace.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -50061,39 +39786,11 @@ func (_NodeSpace *NodeSpaceTransactor) TransferOwnership(opts *bind.TransactOpts
 	return _NodeSpace.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_NodeSpace *NodeSpaceSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.TransferOwnership(&_NodeSpace.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_NodeSpace *NodeSpaceTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _NodeSpace.Contract.TransferOwnership(&_NodeSpace.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_NodeSpace *NodeSpaceTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _NodeSpace.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_NodeSpace *NodeSpaceSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _NodeSpace.Contract.Fallback(&_NodeSpace.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_NodeSpace *NodeSpaceTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _NodeSpace.Contract.Fallback(&_NodeSpace.TransactOpts, calldata)
 }
 
 // NodeSpaceAddNodeIterator is returned from FilterAddNode and is used to iterate over the raw logs and unpacked data for AddNode events raised by the NodeSpace contract.
@@ -50665,7 +40362,7 @@ var OwnableBin = OwnableMetaData.Bin
 
 // DeployOwnable deploys a new Ethereum contract, binding an instance of Ownable to it.
 func DeployOwnable(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Ownable, error) {
-	parsed, err := OwnableMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Ownable)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -50700,43 +40397,6 @@ type OwnableTransactor struct {
 // OwnableFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type OwnableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// OwnableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type OwnableSession struct {
-	Contract     *Ownable          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// OwnableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type OwnableCallerSession struct {
-	Contract *OwnableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// OwnableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type OwnableTransactorSession struct {
-	Contract     *OwnableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// OwnableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type OwnableRaw struct {
-	Contract *Ownable // Generic contract binding to access the raw methods on
-}
-
-// OwnableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type OwnableCallerRaw struct {
-	Contract *OwnableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// OwnableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type OwnableTransactorRaw struct {
-	Contract *OwnableTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewOwnable creates a new instance of Ownable, bound to a specific deployed contract.
@@ -50777,49 +40437,11 @@ func NewOwnableFilterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindOwnable binds a generic wrapper to an already deployed contract.
 func bindOwnable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(OwnableABI))
+	parsed, err := ParsedABI(K_Ownable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Ownable *OwnableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Ownable.Contract.OwnableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Ownable *OwnableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Ownable.Contract.OwnableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Ownable *OwnableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Ownable.Contract.OwnableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Ownable *OwnableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Ownable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Ownable *OwnableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Ownable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Ownable *OwnableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Ownable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
@@ -50839,20 +40461,6 @@ func (_Ownable *OwnableCaller) ContentSpace(opts *bind.CallOpts) (common.Address
 
 }
 
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Ownable *OwnableSession) ContentSpace() (common.Address, error) {
-	return _Ownable.Contract.ContentSpace(&_Ownable.CallOpts)
-}
-
-// ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
-//
-// Solidity: function contentSpace() view returns(address)
-func (_Ownable *OwnableCallerSession) ContentSpace() (common.Address, error) {
-	return _Ownable.Contract.ContentSpace(&_Ownable.CallOpts)
-}
-
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
@@ -50868,20 +40476,6 @@ func (_Ownable *OwnableCaller) Creator(opts *bind.CallOpts) (common.Address, err
 
 	return out0, err
 
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Ownable *OwnableSession) Creator() (common.Address, error) {
-	return _Ownable.Contract.Creator(&_Ownable.CallOpts)
-}
-
-// Creator is a free data retrieval call binding the contract method 0x02d05d3f.
-//
-// Solidity: function creator() view returns(address)
-func (_Ownable *OwnableCallerSession) Creator() (common.Address, error) {
-	return _Ownable.Contract.Creator(&_Ownable.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -50901,20 +40495,6 @@ func (_Ownable *OwnableCaller) Owner(opts *bind.CallOpts) (common.Address, error
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Ownable *OwnableSession) Owner() (common.Address, error) {
-	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Ownable *OwnableCallerSession) Owner() (common.Address, error) {
-	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -50932,39 +40512,11 @@ func (_Ownable *OwnableCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
 
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Ownable *OwnableSession) Version() ([32]byte, error) {
-	return _Ownable.Contract.Version(&_Ownable.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_Ownable *OwnableCallerSession) Version() ([32]byte, error) {
-	return _Ownable.Contract.Version(&_Ownable.CallOpts)
-}
-
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
 //
 // Solidity: function kill() returns()
 func (_Ownable *OwnableTransactor) Kill(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Ownable.contract.Transact(opts, "kill")
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Ownable *OwnableSession) Kill() (*types.Transaction, error) {
-	return _Ownable.Contract.Kill(&_Ownable.TransactOpts)
-}
-
-// Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
-//
-// Solidity: function kill() returns()
-func (_Ownable *OwnableTransactorSession) Kill() (*types.Transaction, error) {
-	return _Ownable.Contract.Kill(&_Ownable.TransactOpts)
 }
 
 // TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
@@ -50974,20 +40526,6 @@ func (_Ownable *OwnableTransactor) TransferCreatorship(opts *bind.TransactOpts, 
 	return _Ownable.contract.Transact(opts, "transferCreatorship", newCreator)
 }
 
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Ownable *OwnableSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Ownable.Contract.TransferCreatorship(&_Ownable.TransactOpts, newCreator)
-}
-
-// TransferCreatorship is a paid mutator transaction binding the contract method 0x6d2e4b1b.
-//
-// Solidity: function transferCreatorship(address newCreator) returns()
-func (_Ownable *OwnableTransactorSession) TransferCreatorship(newCreator common.Address) (*types.Transaction, error) {
-	return _Ownable.Contract.TransferCreatorship(&_Ownable.TransactOpts, newCreator)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -50995,39 +40533,11 @@ func (_Ownable *OwnableTransactor) TransferOwnership(opts *bind.TransactOpts, ne
 	return _Ownable.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Ownable *OwnableSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Ownable.Contract.TransferOwnership(&_Ownable.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Ownable *OwnableTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Ownable.Contract.TransferOwnership(&_Ownable.TransactOpts, newOwner)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_Ownable *OwnableTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _Ownable.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Ownable *OwnableSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Ownable.Contract.Fallback(&_Ownable.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Ownable *OwnableTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Ownable.Contract.Fallback(&_Ownable.TransactOpts, calldata)
 }
 
 // PrecompileMetaData contains all meta data concerning the Precompile contract.
@@ -51053,7 +40563,7 @@ var PrecompileBin = PrecompileMetaData.Bin
 
 // DeployPrecompile deploys a new Ethereum contract, binding an instance of Precompile to it.
 func DeployPrecompile(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Precompile, error) {
-	parsed, err := PrecompileMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Precompile)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -51088,43 +40598,6 @@ type PrecompileTransactor struct {
 // PrecompileFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type PrecompileFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// PrecompileSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type PrecompileSession struct {
-	Contract     *Precompile       // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// PrecompileCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type PrecompileCallerSession struct {
-	Contract *PrecompileCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts     // Call options to use throughout this session
-}
-
-// PrecompileTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type PrecompileTransactorSession struct {
-	Contract     *PrecompileTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
-}
-
-// PrecompileRaw is an auto generated low-level Go binding around an Ethereum contract.
-type PrecompileRaw struct {
-	Contract *Precompile // Generic contract binding to access the raw methods on
-}
-
-// PrecompileCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type PrecompileCallerRaw struct {
-	Contract *PrecompileCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// PrecompileTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type PrecompileTransactorRaw struct {
-	Contract *PrecompileTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewPrecompile creates a new instance of Precompile, bound to a specific deployed contract.
@@ -51165,49 +40638,11 @@ func NewPrecompileFilterer(address common.Address, filterer bind.ContractFiltere
 
 // bindPrecompile binds a generic wrapper to an already deployed contract.
 func bindPrecompile(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(PrecompileABI))
+	parsed, err := ParsedABI(K_Precompile)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Precompile *PrecompileRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Precompile.Contract.PrecompileCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Precompile *PrecompileRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Precompile.Contract.PrecompileTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Precompile *PrecompileRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Precompile.Contract.PrecompileTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Precompile *PrecompileCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Precompile.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Precompile *PrecompileTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Precompile.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Precompile *PrecompileTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Precompile.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // KMS is a free data retrieval call binding the contract method 0xa6ca541e.
@@ -51225,20 +40660,6 @@ func (_Precompile *PrecompileCaller) KMS(opts *bind.CallOpts) (*big.Int, error) 
 
 	return out0, err
 
-}
-
-// KMS is a free data retrieval call binding the contract method 0xa6ca541e.
-//
-// Solidity: function KMS() view returns(int256)
-func (_Precompile *PrecompileSession) KMS() (*big.Int, error) {
-	return _Precompile.Contract.KMS(&_Precompile.CallOpts)
-}
-
-// KMS is a free data retrieval call binding the contract method 0xa6ca541e.
-//
-// Solidity: function KMS() view returns(int256)
-func (_Precompile *PrecompileCallerSession) KMS() (*big.Int, error) {
-	return _Precompile.Contract.KMS(&_Precompile.CallOpts)
 }
 
 // TransactableMetaData contains all meta data concerning the Transactable contract.
@@ -51281,43 +40702,6 @@ type TransactableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// TransactableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type TransactableSession struct {
-	Contract     *Transactable     // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// TransactableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type TransactableCallerSession struct {
-	Contract *TransactableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts       // Call options to use throughout this session
-}
-
-// TransactableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type TransactableTransactorSession struct {
-	Contract     *TransactableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts       // Transaction auth options to use throughout this session
-}
-
-// TransactableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type TransactableRaw struct {
-	Contract *Transactable // Generic contract binding to access the raw methods on
-}
-
-// TransactableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type TransactableCallerRaw struct {
-	Contract *TransactableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// TransactableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type TransactableTransactorRaw struct {
-	Contract *TransactableTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewTransactable creates a new instance of Transactable, bound to a specific deployed contract.
 func NewTransactable(address common.Address, backend bind.ContractBackend) (*Transactable, error) {
 	contract, err := bindTransactable(address, backend, backend, backend)
@@ -51356,49 +40740,11 @@ func NewTransactableFilterer(address common.Address, filterer bind.ContractFilte
 
 // bindTransactable binds a generic wrapper to an already deployed contract.
 func bindTransactable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(TransactableABI))
+	parsed, err := ParsedABI(K_Transactable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Transactable *TransactableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Transactable.Contract.TransactableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Transactable *TransactableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Transactable.Contract.TransactableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Transactable *TransactableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Transactable.Contract.TransactableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Transactable *TransactableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Transactable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Transactable *TransactableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Transactable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Transactable *TransactableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Transactable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
@@ -51419,20 +40765,6 @@ func (_Transactable *TransactableCaller) ValidateTimestamp(opts *bind.CallOpts, 
 
 }
 
-// ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
-//
-// Solidity: function validateTimestamp(uint256 _ts) view returns(bool, uint256)
-func (_Transactable *TransactableSession) ValidateTimestamp(_ts *big.Int) (bool, *big.Int, error) {
-	return _Transactable.Contract.ValidateTimestamp(&_Transactable.CallOpts, _ts)
-}
-
-// ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
-//
-// Solidity: function validateTimestamp(uint256 _ts) view returns(bool, uint256)
-func (_Transactable *TransactableCallerSession) ValidateTimestamp(_ts *big.Int) (bool, *big.Int, error) {
-	return _Transactable.Contract.ValidateTimestamp(&_Transactable.CallOpts, _ts)
-}
-
 // ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
 //
 // Solidity: function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) view returns(bool)
@@ -51450,39 +40782,11 @@ func (_Transactable *TransactableCaller) ValidateTransaction(opts *bind.CallOpts
 
 }
 
-// ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
-//
-// Solidity: function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) view returns(bool)
-func (_Transactable *TransactableSession) ValidateTransaction(_v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (bool, error) {
-	return _Transactable.Contract.ValidateTransaction(&_Transactable.CallOpts, _v, _r, _s, _dest, _value, _ts)
-}
-
-// ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
-//
-// Solidity: function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) view returns(bool)
-func (_Transactable *TransactableCallerSession) ValidateTransaction(_v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (bool, error) {
-	return _Transactable.Contract.ValidateTransaction(&_Transactable.CallOpts, _v, _r, _s, _dest, _value, _ts)
-}
-
 // Execute is a paid mutator transaction binding the contract method 0x508ad278.
 //
 // Solidity: function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) returns(bool)
 func (_Transactable *TransactableTransactor) Execute(opts *bind.TransactOpts, _guarantor common.Address, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (*types.Transaction, error) {
 	return _Transactable.contract.Transact(opts, "execute", _guarantor, _v, _r, _s, _dest, _value, _ts)
-}
-
-// Execute is a paid mutator transaction binding the contract method 0x508ad278.
-//
-// Solidity: function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) returns(bool)
-func (_Transactable *TransactableSession) Execute(_guarantor common.Address, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (*types.Transaction, error) {
-	return _Transactable.Contract.Execute(&_Transactable.TransactOpts, _guarantor, _v, _r, _s, _dest, _value, _ts)
-}
-
-// Execute is a paid mutator transaction binding the contract method 0x508ad278.
-//
-// Solidity: function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) returns(bool)
-func (_Transactable *TransactableTransactorSession) Execute(_guarantor common.Address, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (*types.Transaction, error) {
-	return _Transactable.Contract.Execute(&_Transactable.TransactOpts, _guarantor, _v, _r, _s, _dest, _value, _ts)
 }
 
 // UserSpaceMetaData contains all meta data concerning the UserSpace contract.
@@ -51509,7 +40813,7 @@ var UserSpaceBin = UserSpaceMetaData.Bin
 
 // DeployUserSpace deploys a new Ethereum contract, binding an instance of UserSpace to it.
 func DeployUserSpace(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *UserSpace, error) {
-	parsed, err := UserSpaceMetaData.GetAbi()
+	parsed, err := ParsedABI(K_UserSpace)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -51544,43 +40848,6 @@ type UserSpaceTransactor struct {
 // UserSpaceFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type UserSpaceFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// UserSpaceSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type UserSpaceSession struct {
-	Contract     *UserSpace        // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// UserSpaceCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type UserSpaceCallerSession struct {
-	Contract *UserSpaceCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts    // Call options to use throughout this session
-}
-
-// UserSpaceTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type UserSpaceTransactorSession struct {
-	Contract     *UserSpaceTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts    // Transaction auth options to use throughout this session
-}
-
-// UserSpaceRaw is an auto generated low-level Go binding around an Ethereum contract.
-type UserSpaceRaw struct {
-	Contract *UserSpace // Generic contract binding to access the raw methods on
-}
-
-// UserSpaceCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type UserSpaceCallerRaw struct {
-	Contract *UserSpaceCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// UserSpaceTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type UserSpaceTransactorRaw struct {
-	Contract *UserSpaceTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewUserSpace creates a new instance of UserSpace, bound to a specific deployed contract.
@@ -51621,49 +40888,11 @@ func NewUserSpaceFilterer(address common.Address, filterer bind.ContractFilterer
 
 // bindUserSpace binds a generic wrapper to an already deployed contract.
 func bindUserSpace(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(UserSpaceABI))
+	parsed, err := ParsedABI(K_UserSpace)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_UserSpace *UserSpaceRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _UserSpace.Contract.UserSpaceCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_UserSpace *UserSpaceRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _UserSpace.Contract.UserSpaceTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_UserSpace *UserSpaceRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _UserSpace.Contract.UserSpaceTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_UserSpace *UserSpaceCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _UserSpace.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_UserSpace *UserSpaceTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _UserSpace.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_UserSpace *UserSpaceTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _UserSpace.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // UserWallets is a free data retrieval call binding the contract method 0x63e6ffdd.
@@ -51683,20 +40912,6 @@ func (_UserSpace *UserSpaceCaller) UserWallets(opts *bind.CallOpts, arg0 common.
 
 }
 
-// UserWallets is a free data retrieval call binding the contract method 0x63e6ffdd.
-//
-// Solidity: function userWallets(address ) view returns(address)
-func (_UserSpace *UserSpaceSession) UserWallets(arg0 common.Address) (common.Address, error) {
-	return _UserSpace.Contract.UserWallets(&_UserSpace.CallOpts, arg0)
-}
-
-// UserWallets is a free data retrieval call binding the contract method 0x63e6ffdd.
-//
-// Solidity: function userWallets(address ) view returns(address)
-func (_UserSpace *UserSpaceCallerSession) UserWallets(arg0 common.Address) (common.Address, error) {
-	return _UserSpace.Contract.UserWallets(&_UserSpace.CallOpts, arg0)
-}
-
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
@@ -51712,20 +40927,6 @@ func (_UserSpace *UserSpaceCaller) Version(opts *bind.CallOpts) ([32]byte, error
 
 	return out0, err
 
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_UserSpace *UserSpaceSession) Version() ([32]byte, error) {
-	return _UserSpace.Contract.Version(&_UserSpace.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(bytes32)
-func (_UserSpace *UserSpaceCallerSession) Version() ([32]byte, error) {
-	return _UserSpace.Contract.Version(&_UserSpace.CallOpts)
 }
 
 // StringsMetaData contains all meta data concerning the Strings contract.
@@ -51744,7 +40945,7 @@ var StringsBin = StringsMetaData.Bin
 
 // DeployStrings deploys a new Ethereum contract, binding an instance of Strings to it.
 func DeployStrings(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Strings, error) {
-	parsed, err := StringsMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Strings)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -51779,43 +40980,6 @@ type StringsTransactor struct {
 // StringsFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type StringsFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// StringsSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type StringsSession struct {
-	Contract     *Strings          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// StringsCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type StringsCallerSession struct {
-	Contract *StringsCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// StringsTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type StringsTransactorSession struct {
-	Contract     *StringsTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// StringsRaw is an auto generated low-level Go binding around an Ethereum contract.
-type StringsRaw struct {
-	Contract *Strings // Generic contract binding to access the raw methods on
-}
-
-// StringsCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type StringsCallerRaw struct {
-	Contract *StringsCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// StringsTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type StringsTransactorRaw struct {
-	Contract *StringsTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewStrings creates a new instance of Strings, bound to a specific deployed contract.
@@ -51856,47 +41020,9 @@ func NewStringsFilterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindStrings binds a generic wrapper to an already deployed contract.
 func bindStrings(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(StringsABI))
+	parsed, err := ParsedABI(K_Strings)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Strings *StringsRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Strings.Contract.StringsCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Strings *StringsRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Strings.Contract.StringsTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Strings *StringsRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Strings.Contract.StringsTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Strings *StringsCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Strings.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Strings *StringsTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Strings.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Strings *StringsTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Strings.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }

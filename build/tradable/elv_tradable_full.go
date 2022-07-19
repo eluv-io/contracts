@@ -4,9 +4,15 @@
 package tradable
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"math/big"
+	"reflect"
 	"strings"
+
+	c "github.com/eluv-io/contracts/contracts-go/events"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -28,6 +34,500 @@ var (
 	_ = event.NewSubscription
 )
 
+// Map of ABI names to *abi.ABI
+// ABI names are constants starting with K_
+var ParsedABIS = map[string]*abi.ABI{}
+
+// Map of ABI names to *bind.BoundContract for log parsing only
+// ABI names are constants starting with K_
+var BoundContracts = map[string]*bind.BoundContract{}
+
+// Map of Unique events names to *EventInfo.
+// Unique events names are constants starting with E_
+var UniqueEvents = map[string]*EventInfo{}
+
+// Map of Unique events types to *EventInfo
+var EventsByType = map[reflect.Type]*EventInfo{}
+
+// Map of Unique events IDs to *EventInfo
+var EventsByID = map[common.Hash]*EventInfo{}
+
+// JSON returns a parsed ABI interface and error if it failed.
+func JSON(reader io.Reader) (*abi.ABI, error) {
+	dec := json.NewDecoder(reader)
+
+	var anAbi abi.ABI
+	if err := dec.Decode(&anAbi); err != nil {
+		return nil, err
+	}
+
+	return &anAbi, nil
+}
+
+func parseABI(name string) (*abi.ABI, error) {
+	sabi := ABIS[name]
+	if sabi == "" {
+		return nil, fmt.Errorf("no such ABI %s", name)
+	}
+	return JSON(strings.NewReader(sabi))
+}
+
+func ParsedABI(name string) (*abi.ABI, error) {
+	pabi, ok := ParsedABIS[name]
+	if ok {
+		return pabi, nil
+	}
+	return parseABI(name)
+}
+
+func BoundContract(name string) *bind.BoundContract {
+	bc, ok := BoundContracts[name]
+	if !ok {
+		anABI, err := ParsedABI(name)
+		if err != nil {
+			panic(err)
+		}
+		bc = bind.NewBoundContract(common.Address{}, *anABI, nil, nil, nil)
+		BoundContracts[name] = bc
+	}
+	return bc
+}
+
+// Type names of contract binding
+const (
+	K_Address               = "Address"
+	K_ERC165                = "ERC165"
+	K_ERC20                 = "ERC20"
+	K_ERC20Capped           = "ERC20Capped"
+	K_ERC20Detailed         = "ERC20Detailed"
+	K_ERC20Mintable         = "ERC20Mintable"
+	K_ERC20Pausable         = "ERC20Pausable"
+	K_ERC721                = "ERC721"
+	K_ERC721Enumerable      = "ERC721Enumerable"
+	K_ERC721Metadata        = "ERC721Metadata"
+	K_ElvToken              = "ElvToken"
+	K_ElvTokenHelper        = "ElvTokenHelper"
+	K_ElvTradable           = "ElvTradable"
+	K_ElvTradableLocal      = "ElvTradableLocal"
+	K_IERC165               = "IERC165"
+	K_IERC20                = "IERC20"
+	K_IERC721               = "IERC721"
+	K_IERC721Enumerable     = "IERC721Enumerable"
+	K_IERC721Metadata       = "IERC721Metadata"
+	K_IERC721Receiver       = "IERC721Receiver"
+	K_ISettableTokenURI     = "ISettableTokenURI"
+	K_MinterRole            = "MinterRole"
+	K_Ownable               = "Ownable"
+	K_OwnableDelegateProxy  = "OwnableDelegateProxy"
+	K_OwnerProxyRegistry    = "OwnerProxyRegistry"
+	K_Pausable              = "Pausable"
+	K_PauserRole            = "PauserRole"
+	K_ProxyRegistry         = "ProxyRegistry"
+	K_Roles                 = "Roles"
+	K_SafeMath              = "SafeMath"
+	K_Strings               = "Strings"
+	K_TransferFeeProxy      = "TransferFeeProxy"
+	K_TransferProxyRegistry = "TransferProxyRegistry"
+	K_WELV9                 = "WELV9"
+)
+
+var ABIS = map[string]string{
+
+	K_Address:               AddressABI,
+	K_ERC165:                ERC165ABI,
+	K_ERC20:                 ERC20ABI,
+	K_ERC20Capped:           ERC20CappedABI,
+	K_ERC20Detailed:         ERC20DetailedABI,
+	K_ERC20Mintable:         ERC20MintableABI,
+	K_ERC20Pausable:         ERC20PausableABI,
+	K_ERC721:                ERC721ABI,
+	K_ERC721Enumerable:      ERC721EnumerableABI,
+	K_ERC721Metadata:        ERC721MetadataABI,
+	K_ElvToken:              ElvTokenABI,
+	K_ElvTokenHelper:        ElvTokenHelperABI,
+	K_ElvTradable:           ElvTradableABI,
+	K_ElvTradableLocal:      ElvTradableLocalABI,
+	K_IERC165:               IERC165ABI,
+	K_IERC20:                IERC20ABI,
+	K_IERC721:               IERC721ABI,
+	K_IERC721Enumerable:     IERC721EnumerableABI,
+	K_IERC721Metadata:       IERC721MetadataABI,
+	K_IERC721Receiver:       IERC721ReceiverABI,
+	K_ISettableTokenURI:     ISettableTokenURIABI,
+	K_MinterRole:            MinterRoleABI,
+	K_Ownable:               OwnableABI,
+	K_OwnableDelegateProxy:  OwnableDelegateProxyABI,
+	K_OwnerProxyRegistry:    OwnerProxyRegistryABI,
+	K_Pausable:              PausableABI,
+	K_PauserRole:            PauserRoleABI,
+	K_ProxyRegistry:         ProxyRegistryABI,
+	K_Roles:                 RolesABI,
+	K_SafeMath:              SafeMathABI,
+	K_Strings:               StringsABI,
+	K_TransferFeeProxy:      TransferFeeProxyABI,
+	K_TransferProxyRegistry: TransferProxyRegistryABI,
+	K_WELV9:                 WELV9ABI,
+}
+
+// Unique events names.
+// Unique events are events whose ID and name are unique across contracts.
+const (
+	E_Approval             = "Approval"
+	E_ApprovalForAll       = "ApprovalForAll"
+	E_BaseTransferFeeSet   = "BaseTransferFeeSet"
+	E_Deposit              = "Deposit"
+	E_MinterAdded          = "MinterAdded"
+	E_MinterRemoved        = "MinterRemoved"
+	E_OwnershipTransferred = "OwnershipTransferred"
+	E_Paused               = "Paused"
+	E_PauserAdded          = "PauserAdded"
+	E_PauserRemoved        = "PauserRemoved"
+	E_SetProxyAddress      = "SetProxyAddress"
+	E_SetTokenURI          = "SetTokenURI"
+	E_Transfer             = "Transfer"
+	E_Unpaused             = "Unpaused"
+	E_Withdrawal           = "Withdrawal"
+)
+
+type EventInfo = c.EventInfo
+type EventType = c.EventType
+
+func init() {
+	for name, _ := range ABIS {
+		a, err := parseABI(name)
+		if err == nil {
+			ParsedABIS[name] = a
+		}
+	}
+	var ev *EventInfo
+
+	ev = &EventInfo{
+		Name: "Approval",
+		ID:   common.HexToHash("0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApprovalERC20)(nil)),
+				BoundContract: BoundContract(K_ERC20),
+			}, {
+				Type:          reflect.TypeOf((*ApprovalERC721)(nil)),
+				BoundContract: BoundContract(K_ERC721),
+			},
+		},
+	}
+	UniqueEvents[E_Approval] = ev
+	EventsByType[ev.Types[0].Type] = ev
+	EventsByType[ev.Types[1].Type] = ev
+
+	ev = &EventInfo{
+		Name: "ApprovalForAll",
+		ID:   common.HexToHash("0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*ApprovalForAll)(nil)),
+				BoundContract: BoundContract(K_ERC721),
+			},
+		},
+	}
+	UniqueEvents[E_ApprovalForAll] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "BaseTransferFeeSet",
+		ID:   common.HexToHash("0x0457965f5769a09114fd0629b0a97d67e8469821987a454045bbc1a4eed6a881"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*BaseTransferFeeSet)(nil)),
+				BoundContract: BoundContract(K_ElvTradable),
+			},
+		},
+	}
+	UniqueEvents[E_BaseTransferFeeSet] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "Deposit",
+		ID:   common.HexToHash("0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Deposit)(nil)),
+				BoundContract: BoundContract(K_WELV9),
+			},
+		},
+	}
+	UniqueEvents[E_Deposit] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "MinterAdded",
+		ID:   common.HexToHash("0x6ae172837ea30b801fbfcdd4108aa1d5bf8ff775444fd70256b44e6bf3dfc3f6"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MinterAdded)(nil)),
+				BoundContract: BoundContract(K_ERC20Capped),
+			},
+		},
+	}
+	UniqueEvents[E_MinterAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "MinterRemoved",
+		ID:   common.HexToHash("0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*MinterRemoved)(nil)),
+				BoundContract: BoundContract(K_ERC20Capped),
+			},
+		},
+	}
+	UniqueEvents[E_MinterRemoved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "OwnershipTransferred",
+		ID:   common.HexToHash("0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*OwnershipTransferred)(nil)),
+				BoundContract: BoundContract(K_ElvTokenHelper),
+			},
+		},
+	}
+	UniqueEvents[E_OwnershipTransferred] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "Paused",
+		ID:   common.HexToHash("0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Paused)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
+		},
+	}
+	UniqueEvents[E_Paused] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "PauserAdded",
+		ID:   common.HexToHash("0x6719d08c1888103bea251a4ed56406bd0c3e69723c8a1686e017e7bbe159b6f8"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*PauserAdded)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
+		},
+	}
+	UniqueEvents[E_PauserAdded] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "PauserRemoved",
+		ID:   common.HexToHash("0xcd265ebaf09df2871cc7bd4133404a235ba12eff2041bb89d9c714a2621c7c7e"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*PauserRemoved)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
+		},
+	}
+	UniqueEvents[E_PauserRemoved] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetProxyAddress",
+		ID:   common.HexToHash("0xee3e7531713ec20c8271432382d3162f5225f9bdac8f1f351cf2ceb699fb754c"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetProxyAddress)(nil)),
+				BoundContract: BoundContract(K_ElvTradable),
+			},
+		},
+	}
+	UniqueEvents[E_SetProxyAddress] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "SetTokenURI",
+		ID:   common.HexToHash("0xaa425fdd80303549e5f891d43e81f503f03bc88d66e218ac44f385682ce6fe0b"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*SetTokenURI)(nil)),
+				BoundContract: BoundContract(K_ElvTradable),
+			},
+		},
+	}
+	UniqueEvents[E_SetTokenURI] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "Transfer",
+		ID:   common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*TransferERC20)(nil)),
+				BoundContract: BoundContract(K_ERC20),
+			}, {
+				Type:          reflect.TypeOf((*TransferERC721)(nil)),
+				BoundContract: BoundContract(K_ERC721),
+			},
+		},
+	}
+	UniqueEvents[E_Transfer] = ev
+	EventsByType[ev.Types[0].Type] = ev
+	EventsByType[ev.Types[1].Type] = ev
+
+	ev = &EventInfo{
+		Name: "Unpaused",
+		ID:   common.HexToHash("0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Unpaused)(nil)),
+				BoundContract: BoundContract(K_ERC20Pausable),
+			},
+		},
+	}
+	UniqueEvents[E_Unpaused] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+	ev = &EventInfo{
+		Name: "Withdrawal",
+		ID:   common.HexToHash("0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65"),
+		Types: []EventType{
+			{
+				Type:          reflect.TypeOf((*Withdrawal)(nil)),
+				BoundContract: BoundContract(K_WELV9),
+			},
+		},
+	}
+	UniqueEvents[E_Withdrawal] = ev
+	EventsByType[ev.Types[0].Type] = ev
+
+}
+
+// Unique events structs
+
+// ApprovalERC20 event with ID 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925
+type ApprovalERC20 struct {
+	Owner   common.Address
+	Spender common.Address
+	Value   *big.Int
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// ApprovalERC721 event with ID 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925
+type ApprovalERC721 struct {
+	Owner    common.Address
+	Approved common.Address
+	TokenId  *big.Int
+	Raw      types.Log // Blockchain specific contextual infos
+}
+
+// ApprovalForAll event with ID 0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31
+type ApprovalForAll struct {
+	Owner    common.Address
+	Operator common.Address
+	Approved bool
+	Raw      types.Log // Blockchain specific contextual infos
+}
+
+// BaseTransferFeeSet event with ID 0x0457965f5769a09114fd0629b0a97d67e8469821987a454045bbc1a4eed6a881
+type BaseTransferFeeSet struct {
+	PrevFee *big.Int
+	NewFee  *big.Int
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// Deposit event with ID 0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c
+type Deposit struct {
+	Dst common.Address
+	Wad *big.Int
+	Raw types.Log // Blockchain specific contextual infos
+}
+
+// MinterAdded event with ID 0x6ae172837ea30b801fbfcdd4108aa1d5bf8ff775444fd70256b44e6bf3dfc3f6
+type MinterAdded struct {
+	Account common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// MinterRemoved event with ID 0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692
+type MinterRemoved struct {
+	Account common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// OwnershipTransferred event with ID 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0
+type OwnershipTransferred struct {
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// Paused event with ID 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258
+type Paused struct {
+	Account common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// PauserAdded event with ID 0x6719d08c1888103bea251a4ed56406bd0c3e69723c8a1686e017e7bbe159b6f8
+type PauserAdded struct {
+	Account common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// PauserRemoved event with ID 0xcd265ebaf09df2871cc7bd4133404a235ba12eff2041bb89d9c714a2621c7c7e
+type PauserRemoved struct {
+	Account common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// SetProxyAddress event with ID 0xee3e7531713ec20c8271432382d3162f5225f9bdac8f1f351cf2ceb699fb754c
+type SetProxyAddress struct {
+	ProxyType *big.Int
+	PrevAddr  common.Address
+	NewAddr   common.Address
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// SetTokenURI event with ID 0xaa425fdd80303549e5f891d43e81f503f03bc88d66e218ac44f385682ce6fe0b
+type SetTokenURI struct {
+	TokenId *big.Int
+	PrevURI string
+	NewURI  string
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// TransferERC20 event with ID 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+type TransferERC20 struct {
+	From  common.Address
+	To    common.Address
+	Value *big.Int
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// TransferERC721 event with ID 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+type TransferERC721 struct {
+	From    common.Address
+	To      common.Address
+	TokenId *big.Int
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// Unpaused event with ID 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa
+type Unpaused struct {
+	Account common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// Withdrawal event with ID 0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65
+type Withdrawal struct {
+	Src common.Address
+	Wad *big.Int
+	Raw types.Log // Blockchain specific contextual infos
+}
+
 // AddressMetaData contains all meta data concerning the Address contract.
 var AddressMetaData = &bind.MetaData{
 	ABI: "[]",
@@ -44,7 +544,7 @@ var AddressBin = AddressMetaData.Bin
 
 // DeployAddress deploys a new Ethereum contract, binding an instance of Address to it.
 func DeployAddress(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Address, error) {
-	parsed, err := AddressMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Address)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -79,43 +579,6 @@ type AddressTransactor struct {
 // AddressFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type AddressFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// AddressSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type AddressSession struct {
-	Contract     *Address          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// AddressCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type AddressCallerSession struct {
-	Contract *AddressCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// AddressTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type AddressTransactorSession struct {
-	Contract     *AddressTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// AddressRaw is an auto generated low-level Go binding around an Ethereum contract.
-type AddressRaw struct {
-	Contract *Address // Generic contract binding to access the raw methods on
-}
-
-// AddressCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type AddressCallerRaw struct {
-	Contract *AddressCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// AddressTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type AddressTransactorRaw struct {
-	Contract *AddressTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewAddress creates a new instance of Address, bound to a specific deployed contract.
@@ -156,49 +619,11 @@ func NewAddressFilterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindAddress binds a generic wrapper to an already deployed contract.
 func bindAddress(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(AddressABI))
+	parsed, err := ParsedABI(K_Address)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Address *AddressRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Address.Contract.AddressCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Address *AddressRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Address.Contract.AddressTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Address *AddressRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Address.Contract.AddressTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Address *AddressCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Address.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Address *AddressTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Address.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Address *AddressTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Address.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // ERC165MetaData contains all meta data concerning the ERC165 contract.
@@ -239,43 +664,6 @@ type ERC165Filterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// ERC165Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC165Session struct {
-	Contract     *ERC165           // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC165CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC165CallerSession struct {
-	Contract *ERC165Caller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// ERC165TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC165TransactorSession struct {
-	Contract     *ERC165Transactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC165Raw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC165Raw struct {
-	Contract *ERC165 // Generic contract binding to access the raw methods on
-}
-
-// ERC165CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC165CallerRaw struct {
-	Contract *ERC165Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC165TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC165TransactorRaw struct {
-	Contract *ERC165Transactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewERC165 creates a new instance of ERC165, bound to a specific deployed contract.
 func NewERC165(address common.Address, backend bind.ContractBackend) (*ERC165, error) {
 	contract, err := bindERC165(address, backend, backend, backend)
@@ -314,49 +702,11 @@ func NewERC165Filterer(address common.Address, filterer bind.ContractFilterer) (
 
 // bindERC165 binds a generic wrapper to an already deployed contract.
 func bindERC165(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC165ABI))
+	parsed, err := ParsedABI(K_ERC165)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC165 *ERC165Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC165.Contract.ERC165Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC165 *ERC165Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC165.Contract.ERC165Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC165 *ERC165Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC165.Contract.ERC165Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC165 *ERC165CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC165.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC165 *ERC165TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC165.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC165 *ERC165TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC165.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -374,20 +724,6 @@ func (_ERC165 *ERC165Caller) SupportsInterface(opts *bind.CallOpts, interfaceId 
 
 	return out0, err
 
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC165 *ERC165Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC165.Contract.SupportsInterface(&_ERC165.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC165 *ERC165CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC165.Contract.SupportsInterface(&_ERC165.CallOpts, interfaceId)
 }
 
 // ERC20MetaData contains all meta data concerning the ERC20 contract.
@@ -420,7 +756,7 @@ var ERC20Bin = ERC20MetaData.Bin
 
 // DeployERC20 deploys a new Ethereum contract, binding an instance of ERC20 to it.
 func DeployERC20(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ERC20, error) {
-	parsed, err := ERC20MetaData.GetAbi()
+	parsed, err := ParsedABI(K_ERC20)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -455,43 +791,6 @@ type ERC20Transactor struct {
 // ERC20Filterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ERC20Filterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ERC20Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC20Session struct {
-	Contract     *ERC20            // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC20CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC20CallerSession struct {
-	Contract *ERC20Caller  // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// ERC20TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC20TransactorSession struct {
-	Contract     *ERC20Transactor  // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC20Raw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC20Raw struct {
-	Contract *ERC20 // Generic contract binding to access the raw methods on
-}
-
-// ERC20CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC20CallerRaw struct {
-	Contract *ERC20Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC20TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC20TransactorRaw struct {
-	Contract *ERC20Transactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewERC20 creates a new instance of ERC20, bound to a specific deployed contract.
@@ -532,49 +831,11 @@ func NewERC20Filterer(address common.Address, filterer bind.ContractFilterer) (*
 
 // bindERC20 binds a generic wrapper to an already deployed contract.
 func bindERC20(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC20ABI))
+	parsed, err := ParsedABI(K_ERC20)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20 *ERC20Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20.Contract.ERC20Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20 *ERC20Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20.Contract.ERC20Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20 *ERC20Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20.Contract.ERC20Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20 *ERC20CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20 *ERC20TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20 *ERC20TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -594,20 +855,6 @@ func (_ERC20 *ERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, 
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20 *ERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20.Contract.Allowance(&_ERC20.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20 *ERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20.Contract.Allowance(&_ERC20.CallOpts, owner, spender)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address owner) view returns(uint256)
@@ -623,20 +870,6 @@ func (_ERC20 *ERC20Caller) BalanceOf(opts *bind.CallOpts, owner common.Address) 
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20 *ERC20Session) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20.Contract.BalanceOf(&_ERC20.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20 *ERC20CallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20.Contract.BalanceOf(&_ERC20.CallOpts, owner)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
@@ -656,39 +889,11 @@ func (_ERC20 *ERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20 *ERC20Session) TotalSupply() (*big.Int, error) {
-	return _ERC20.Contract.TotalSupply(&_ERC20.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20 *ERC20CallerSession) TotalSupply() (*big.Int, error) {
-	return _ERC20.Contract.TotalSupply(&_ERC20.CallOpts)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address spender, uint256 value) returns(bool)
 func (_ERC20 *ERC20Transactor) Approve(opts *bind.TransactOpts, spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "approve", spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20 *ERC20Session) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.Approve(&_ERC20.TransactOpts, spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20 *ERC20TransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.Approve(&_ERC20.TransactOpts, spender, value)
 }
 
 // DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
@@ -698,39 +903,11 @@ func (_ERC20 *ERC20Transactor) DecreaseAllowance(opts *bind.TransactOpts, spende
 	return _ERC20.contract.Transact(opts, "decreaseAllowance", spender, subtractedValue)
 }
 
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
-func (_ERC20 *ERC20Session) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.DecreaseAllowance(&_ERC20.TransactOpts, spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
-func (_ERC20 *ERC20TransactorSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.DecreaseAllowance(&_ERC20.TransactOpts, spender, subtractedValue)
-}
-
 // IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
 //
 // Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool)
 func (_ERC20 *ERC20Transactor) IncreaseAllowance(opts *bind.TransactOpts, spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "increaseAllowance", spender, addedValue)
-}
-
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool)
-func (_ERC20 *ERC20Session) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.IncreaseAllowance(&_ERC20.TransactOpts, spender, addedValue)
-}
-
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool)
-func (_ERC20 *ERC20TransactorSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.IncreaseAllowance(&_ERC20.TransactOpts, spender, addedValue)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
@@ -740,39 +917,11 @@ func (_ERC20 *ERC20Transactor) Transfer(opts *bind.TransactOpts, to common.Addre
 	return _ERC20.contract.Transact(opts, "transfer", to, value)
 }
 
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20 *ERC20Session) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.Transfer(&_ERC20.TransactOpts, to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20 *ERC20TransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.Transfer(&_ERC20.TransactOpts, to, value)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_ERC20 *ERC20Transactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "transferFrom", from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20 *ERC20Session) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.TransferFrom(&_ERC20.TransactOpts, from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20 *ERC20TransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20.Contract.TransferFrom(&_ERC20.TransactOpts, from, to, value)
 }
 
 // ERC20ApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC20 contract.
@@ -1118,7 +1267,7 @@ var ERC20CappedBin = ERC20CappedMetaData.Bin
 
 // DeployERC20Capped deploys a new Ethereum contract, binding an instance of ERC20Capped to it.
 func DeployERC20Capped(auth *bind.TransactOpts, backend bind.ContractBackend, cap *big.Int) (common.Address, *types.Transaction, *ERC20Capped, error) {
-	parsed, err := ERC20CappedMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ERC20Capped)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -1153,43 +1302,6 @@ type ERC20CappedTransactor struct {
 // ERC20CappedFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ERC20CappedFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ERC20CappedSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC20CappedSession struct {
-	Contract     *ERC20Capped      // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC20CappedCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC20CappedCallerSession struct {
-	Contract *ERC20CappedCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts      // Call options to use throughout this session
-}
-
-// ERC20CappedTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC20CappedTransactorSession struct {
-	Contract     *ERC20CappedTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// ERC20CappedRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC20CappedRaw struct {
-	Contract *ERC20Capped // Generic contract binding to access the raw methods on
-}
-
-// ERC20CappedCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC20CappedCallerRaw struct {
-	Contract *ERC20CappedCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC20CappedTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC20CappedTransactorRaw struct {
-	Contract *ERC20CappedTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewERC20Capped creates a new instance of ERC20Capped, bound to a specific deployed contract.
@@ -1230,49 +1342,11 @@ func NewERC20CappedFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindERC20Capped binds a generic wrapper to an already deployed contract.
 func bindERC20Capped(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC20CappedABI))
+	parsed, err := ParsedABI(K_ERC20Capped)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Capped *ERC20CappedRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Capped.Contract.ERC20CappedCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Capped *ERC20CappedRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.ERC20CappedTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Capped *ERC20CappedRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.ERC20CappedTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Capped *ERC20CappedCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Capped.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Capped *ERC20CappedTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Capped *ERC20CappedTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -1292,20 +1366,6 @@ func (_ERC20Capped *ERC20CappedCaller) Allowance(opts *bind.CallOpts, owner comm
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Capped *ERC20CappedSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Capped.Contract.Allowance(&_ERC20Capped.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Capped *ERC20CappedCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Capped.Contract.Allowance(&_ERC20Capped.CallOpts, owner, spender)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address owner) view returns(uint256)
@@ -1321,20 +1381,6 @@ func (_ERC20Capped *ERC20CappedCaller) BalanceOf(opts *bind.CallOpts, owner comm
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20Capped *ERC20CappedSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20Capped.Contract.BalanceOf(&_ERC20Capped.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20Capped *ERC20CappedCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20Capped.Contract.BalanceOf(&_ERC20Capped.CallOpts, owner)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
@@ -1354,20 +1400,6 @@ func (_ERC20Capped *ERC20CappedCaller) Cap(opts *bind.CallOpts) (*big.Int, error
 
 }
 
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ERC20Capped *ERC20CappedSession) Cap() (*big.Int, error) {
-	return _ERC20Capped.Contract.Cap(&_ERC20Capped.CallOpts)
-}
-
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ERC20Capped *ERC20CappedCallerSession) Cap() (*big.Int, error) {
-	return _ERC20Capped.Contract.Cap(&_ERC20Capped.CallOpts)
-}
-
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
 // Solidity: function isMinter(address account) view returns(bool)
@@ -1383,20 +1415,6 @@ func (_ERC20Capped *ERC20CappedCaller) IsMinter(opts *bind.CallOpts, account com
 
 	return out0, err
 
-}
-
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ERC20Capped *ERC20CappedSession) IsMinter(account common.Address) (bool, error) {
-	return _ERC20Capped.Contract.IsMinter(&_ERC20Capped.CallOpts, account)
-}
-
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ERC20Capped *ERC20CappedCallerSession) IsMinter(account common.Address) (bool, error) {
-	return _ERC20Capped.Contract.IsMinter(&_ERC20Capped.CallOpts, account)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
@@ -1416,39 +1434,11 @@ func (_ERC20Capped *ERC20CappedCaller) TotalSupply(opts *bind.CallOpts) (*big.In
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Capped *ERC20CappedSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Capped.Contract.TotalSupply(&_ERC20Capped.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Capped *ERC20CappedCallerSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Capped.Contract.TotalSupply(&_ERC20Capped.CallOpts)
-}
-
 // AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
 //
 // Solidity: function addMinter(address account) returns()
 func (_ERC20Capped *ERC20CappedTransactor) AddMinter(opts *bind.TransactOpts, account common.Address) (*types.Transaction, error) {
 	return _ERC20Capped.contract.Transact(opts, "addMinter", account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ERC20Capped *ERC20CappedSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.AddMinter(&_ERC20Capped.TransactOpts, account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ERC20Capped *ERC20CappedTransactorSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.AddMinter(&_ERC20Capped.TransactOpts, account)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
@@ -1458,39 +1448,11 @@ func (_ERC20Capped *ERC20CappedTransactor) Approve(opts *bind.TransactOpts, spen
 	return _ERC20Capped.contract.Transact(opts, "approve", spender, value)
 }
 
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.Approve(&_ERC20Capped.TransactOpts, spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedTransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.Approve(&_ERC20Capped.TransactOpts, spender, value)
-}
-
 // DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
 //
 // Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
 func (_ERC20Capped *ERC20CappedTransactor) DecreaseAllowance(opts *bind.TransactOpts, spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
 	return _ERC20Capped.contract.Transact(opts, "decreaseAllowance", spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
-func (_ERC20Capped *ERC20CappedSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.DecreaseAllowance(&_ERC20Capped.TransactOpts, spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
-func (_ERC20Capped *ERC20CappedTransactorSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.DecreaseAllowance(&_ERC20Capped.TransactOpts, spender, subtractedValue)
 }
 
 // IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
@@ -1500,39 +1462,11 @@ func (_ERC20Capped *ERC20CappedTransactor) IncreaseAllowance(opts *bind.Transact
 	return _ERC20Capped.contract.Transact(opts, "increaseAllowance", spender, addedValue)
 }
 
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool)
-func (_ERC20Capped *ERC20CappedSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.IncreaseAllowance(&_ERC20Capped.TransactOpts, spender, addedValue)
-}
-
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool)
-func (_ERC20Capped *ERC20CappedTransactorSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.IncreaseAllowance(&_ERC20Capped.TransactOpts, spender, addedValue)
-}
-
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
 // Solidity: function mint(address to, uint256 value) returns(bool)
 func (_ERC20Capped *ERC20CappedTransactor) Mint(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20Capped.contract.Transact(opts, "mint", to, value)
-}
-
-// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-//
-// Solidity: function mint(address to, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedSession) Mint(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.Mint(&_ERC20Capped.TransactOpts, to, value)
-}
-
-// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-//
-// Solidity: function mint(address to, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedTransactorSession) Mint(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.Mint(&_ERC20Capped.TransactOpts, to, value)
 }
 
 // RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
@@ -1542,20 +1476,6 @@ func (_ERC20Capped *ERC20CappedTransactor) RenounceMinter(opts *bind.TransactOpt
 	return _ERC20Capped.contract.Transact(opts, "renounceMinter")
 }
 
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ERC20Capped *ERC20CappedSession) RenounceMinter() (*types.Transaction, error) {
-	return _ERC20Capped.Contract.RenounceMinter(&_ERC20Capped.TransactOpts)
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ERC20Capped *ERC20CappedTransactorSession) RenounceMinter() (*types.Transaction, error) {
-	return _ERC20Capped.Contract.RenounceMinter(&_ERC20Capped.TransactOpts)
-}
-
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address to, uint256 value) returns(bool)
@@ -1563,39 +1483,11 @@ func (_ERC20Capped *ERC20CappedTransactor) Transfer(opts *bind.TransactOpts, to 
 	return _ERC20Capped.contract.Transact(opts, "transfer", to, value)
 }
 
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.Transfer(&_ERC20Capped.TransactOpts, to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedTransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.Transfer(&_ERC20Capped.TransactOpts, to, value)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_ERC20Capped *ERC20CappedTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20Capped.contract.Transact(opts, "transferFrom", from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.TransferFrom(&_ERC20Capped.TransactOpts, from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Capped *ERC20CappedTransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Capped.Contract.TransferFrom(&_ERC20Capped.TransactOpts, from, to, value)
 }
 
 // ERC20CappedApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC20Capped contract.
@@ -2240,43 +2132,6 @@ type ERC20DetailedFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// ERC20DetailedSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC20DetailedSession struct {
-	Contract     *ERC20Detailed    // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC20DetailedCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC20DetailedCallerSession struct {
-	Contract *ERC20DetailedCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts        // Call options to use throughout this session
-}
-
-// ERC20DetailedTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC20DetailedTransactorSession struct {
-	Contract     *ERC20DetailedTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts        // Transaction auth options to use throughout this session
-}
-
-// ERC20DetailedRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC20DetailedRaw struct {
-	Contract *ERC20Detailed // Generic contract binding to access the raw methods on
-}
-
-// ERC20DetailedCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC20DetailedCallerRaw struct {
-	Contract *ERC20DetailedCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC20DetailedTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC20DetailedTransactorRaw struct {
-	Contract *ERC20DetailedTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewERC20Detailed creates a new instance of ERC20Detailed, bound to a specific deployed contract.
 func NewERC20Detailed(address common.Address, backend bind.ContractBackend) (*ERC20Detailed, error) {
 	contract, err := bindERC20Detailed(address, backend, backend, backend)
@@ -2315,49 +2170,11 @@ func NewERC20DetailedFilterer(address common.Address, filterer bind.ContractFilt
 
 // bindERC20Detailed binds a generic wrapper to an already deployed contract.
 func bindERC20Detailed(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC20DetailedABI))
+	parsed, err := ParsedABI(K_ERC20Detailed)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Detailed *ERC20DetailedRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Detailed.Contract.ERC20DetailedCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Detailed *ERC20DetailedRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.ERC20DetailedTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Detailed *ERC20DetailedRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.ERC20DetailedTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Detailed *ERC20DetailedCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Detailed.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Detailed *ERC20DetailedTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Detailed *ERC20DetailedTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -2377,20 +2194,6 @@ func (_ERC20Detailed *ERC20DetailedCaller) Allowance(opts *bind.CallOpts, owner 
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Detailed *ERC20DetailedSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Detailed.Contract.Allowance(&_ERC20Detailed.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Detailed *ERC20DetailedCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Detailed.Contract.Allowance(&_ERC20Detailed.CallOpts, owner, spender)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address who) view returns(uint256)
@@ -2406,20 +2209,6 @@ func (_ERC20Detailed *ERC20DetailedCaller) BalanceOf(opts *bind.CallOpts, who co
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address who) view returns(uint256)
-func (_ERC20Detailed *ERC20DetailedSession) BalanceOf(who common.Address) (*big.Int, error) {
-	return _ERC20Detailed.Contract.BalanceOf(&_ERC20Detailed.CallOpts, who)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address who) view returns(uint256)
-func (_ERC20Detailed *ERC20DetailedCallerSession) BalanceOf(who common.Address) (*big.Int, error) {
-	return _ERC20Detailed.Contract.BalanceOf(&_ERC20Detailed.CallOpts, who)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
@@ -2439,20 +2228,6 @@ func (_ERC20Detailed *ERC20DetailedCaller) Decimals(opts *bind.CallOpts) (uint8,
 
 }
 
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint8)
-func (_ERC20Detailed *ERC20DetailedSession) Decimals() (uint8, error) {
-	return _ERC20Detailed.Contract.Decimals(&_ERC20Detailed.CallOpts)
-}
-
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint8)
-func (_ERC20Detailed *ERC20DetailedCallerSession) Decimals() (uint8, error) {
-	return _ERC20Detailed.Contract.Decimals(&_ERC20Detailed.CallOpts)
-}
-
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
@@ -2468,20 +2243,6 @@ func (_ERC20Detailed *ERC20DetailedCaller) Name(opts *bind.CallOpts) (string, er
 
 	return out0, err
 
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ERC20Detailed *ERC20DetailedSession) Name() (string, error) {
-	return _ERC20Detailed.Contract.Name(&_ERC20Detailed.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ERC20Detailed *ERC20DetailedCallerSession) Name() (string, error) {
-	return _ERC20Detailed.Contract.Name(&_ERC20Detailed.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
@@ -2501,20 +2262,6 @@ func (_ERC20Detailed *ERC20DetailedCaller) Symbol(opts *bind.CallOpts) (string, 
 
 }
 
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ERC20Detailed *ERC20DetailedSession) Symbol() (string, error) {
-	return _ERC20Detailed.Contract.Symbol(&_ERC20Detailed.CallOpts)
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ERC20Detailed *ERC20DetailedCallerSession) Symbol() (string, error) {
-	return _ERC20Detailed.Contract.Symbol(&_ERC20Detailed.CallOpts)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -2532,39 +2279,11 @@ func (_ERC20Detailed *ERC20DetailedCaller) TotalSupply(opts *bind.CallOpts) (*bi
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Detailed *ERC20DetailedSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Detailed.Contract.TotalSupply(&_ERC20Detailed.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Detailed *ERC20DetailedCallerSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Detailed.Contract.TotalSupply(&_ERC20Detailed.CallOpts)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address spender, uint256 value) returns(bool)
 func (_ERC20Detailed *ERC20DetailedTransactor) Approve(opts *bind.TransactOpts, spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20Detailed.contract.Transact(opts, "approve", spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Detailed *ERC20DetailedSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.Approve(&_ERC20Detailed.TransactOpts, spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Detailed *ERC20DetailedTransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.Approve(&_ERC20Detailed.TransactOpts, spender, value)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
@@ -2574,39 +2293,11 @@ func (_ERC20Detailed *ERC20DetailedTransactor) Transfer(opts *bind.TransactOpts,
 	return _ERC20Detailed.contract.Transact(opts, "transfer", to, value)
 }
 
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Detailed *ERC20DetailedSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.Transfer(&_ERC20Detailed.TransactOpts, to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Detailed *ERC20DetailedTransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.Transfer(&_ERC20Detailed.TransactOpts, to, value)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_ERC20Detailed *ERC20DetailedTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20Detailed.contract.Transact(opts, "transferFrom", from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Detailed *ERC20DetailedSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.TransferFrom(&_ERC20Detailed.TransactOpts, from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Detailed *ERC20DetailedTransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Detailed.Contract.TransferFrom(&_ERC20Detailed.TransactOpts, from, to, value)
 }
 
 // ERC20DetailedApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC20Detailed contract.
@@ -2951,7 +2642,7 @@ var ERC20MintableBin = ERC20MintableMetaData.Bin
 
 // DeployERC20Mintable deploys a new Ethereum contract, binding an instance of ERC20Mintable to it.
 func DeployERC20Mintable(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ERC20Mintable, error) {
-	parsed, err := ERC20MintableMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ERC20Mintable)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -2986,43 +2677,6 @@ type ERC20MintableTransactor struct {
 // ERC20MintableFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ERC20MintableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ERC20MintableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC20MintableSession struct {
-	Contract     *ERC20Mintable    // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC20MintableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC20MintableCallerSession struct {
-	Contract *ERC20MintableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts        // Call options to use throughout this session
-}
-
-// ERC20MintableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC20MintableTransactorSession struct {
-	Contract     *ERC20MintableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts        // Transaction auth options to use throughout this session
-}
-
-// ERC20MintableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC20MintableRaw struct {
-	Contract *ERC20Mintable // Generic contract binding to access the raw methods on
-}
-
-// ERC20MintableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC20MintableCallerRaw struct {
-	Contract *ERC20MintableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC20MintableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC20MintableTransactorRaw struct {
-	Contract *ERC20MintableTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewERC20Mintable creates a new instance of ERC20Mintable, bound to a specific deployed contract.
@@ -3063,49 +2717,11 @@ func NewERC20MintableFilterer(address common.Address, filterer bind.ContractFilt
 
 // bindERC20Mintable binds a generic wrapper to an already deployed contract.
 func bindERC20Mintable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC20MintableABI))
+	parsed, err := ParsedABI(K_ERC20Mintable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Mintable *ERC20MintableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Mintable.Contract.ERC20MintableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Mintable *ERC20MintableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.ERC20MintableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Mintable *ERC20MintableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.ERC20MintableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Mintable *ERC20MintableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Mintable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Mintable *ERC20MintableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Mintable *ERC20MintableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -3125,20 +2741,6 @@ func (_ERC20Mintable *ERC20MintableCaller) Allowance(opts *bind.CallOpts, owner 
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Mintable *ERC20MintableSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Mintable.Contract.Allowance(&_ERC20Mintable.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Mintable *ERC20MintableCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Mintable.Contract.Allowance(&_ERC20Mintable.CallOpts, owner, spender)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address owner) view returns(uint256)
@@ -3154,20 +2756,6 @@ func (_ERC20Mintable *ERC20MintableCaller) BalanceOf(opts *bind.CallOpts, owner 
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20Mintable *ERC20MintableSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20Mintable.Contract.BalanceOf(&_ERC20Mintable.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20Mintable *ERC20MintableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20Mintable.Contract.BalanceOf(&_ERC20Mintable.CallOpts, owner)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
@@ -3187,20 +2775,6 @@ func (_ERC20Mintable *ERC20MintableCaller) IsMinter(opts *bind.CallOpts, account
 
 }
 
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ERC20Mintable *ERC20MintableSession) IsMinter(account common.Address) (bool, error) {
-	return _ERC20Mintable.Contract.IsMinter(&_ERC20Mintable.CallOpts, account)
-}
-
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ERC20Mintable *ERC20MintableCallerSession) IsMinter(account common.Address) (bool, error) {
-	return _ERC20Mintable.Contract.IsMinter(&_ERC20Mintable.CallOpts, account)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -3218,39 +2792,11 @@ func (_ERC20Mintable *ERC20MintableCaller) TotalSupply(opts *bind.CallOpts) (*bi
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Mintable *ERC20MintableSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Mintable.Contract.TotalSupply(&_ERC20Mintable.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Mintable *ERC20MintableCallerSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Mintable.Contract.TotalSupply(&_ERC20Mintable.CallOpts)
-}
-
 // AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
 //
 // Solidity: function addMinter(address account) returns()
 func (_ERC20Mintable *ERC20MintableTransactor) AddMinter(opts *bind.TransactOpts, account common.Address) (*types.Transaction, error) {
 	return _ERC20Mintable.contract.Transact(opts, "addMinter", account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ERC20Mintable *ERC20MintableSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.AddMinter(&_ERC20Mintable.TransactOpts, account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ERC20Mintable *ERC20MintableTransactorSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.AddMinter(&_ERC20Mintable.TransactOpts, account)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
@@ -3260,39 +2806,11 @@ func (_ERC20Mintable *ERC20MintableTransactor) Approve(opts *bind.TransactOpts, 
 	return _ERC20Mintable.contract.Transact(opts, "approve", spender, value)
 }
 
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.Approve(&_ERC20Mintable.TransactOpts, spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableTransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.Approve(&_ERC20Mintable.TransactOpts, spender, value)
-}
-
 // DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
 //
 // Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
 func (_ERC20Mintable *ERC20MintableTransactor) DecreaseAllowance(opts *bind.TransactOpts, spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
 	return _ERC20Mintable.contract.Transact(opts, "decreaseAllowance", spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
-func (_ERC20Mintable *ERC20MintableSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.DecreaseAllowance(&_ERC20Mintable.TransactOpts, spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool)
-func (_ERC20Mintable *ERC20MintableTransactorSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.DecreaseAllowance(&_ERC20Mintable.TransactOpts, spender, subtractedValue)
 }
 
 // IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
@@ -3302,39 +2820,11 @@ func (_ERC20Mintable *ERC20MintableTransactor) IncreaseAllowance(opts *bind.Tran
 	return _ERC20Mintable.contract.Transact(opts, "increaseAllowance", spender, addedValue)
 }
 
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool)
-func (_ERC20Mintable *ERC20MintableSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.IncreaseAllowance(&_ERC20Mintable.TransactOpts, spender, addedValue)
-}
-
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool)
-func (_ERC20Mintable *ERC20MintableTransactorSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.IncreaseAllowance(&_ERC20Mintable.TransactOpts, spender, addedValue)
-}
-
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
 // Solidity: function mint(address to, uint256 value) returns(bool)
 func (_ERC20Mintable *ERC20MintableTransactor) Mint(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20Mintable.contract.Transact(opts, "mint", to, value)
-}
-
-// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-//
-// Solidity: function mint(address to, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableSession) Mint(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.Mint(&_ERC20Mintable.TransactOpts, to, value)
-}
-
-// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-//
-// Solidity: function mint(address to, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableTransactorSession) Mint(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.Mint(&_ERC20Mintable.TransactOpts, to, value)
 }
 
 // RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
@@ -3344,20 +2834,6 @@ func (_ERC20Mintable *ERC20MintableTransactor) RenounceMinter(opts *bind.Transac
 	return _ERC20Mintable.contract.Transact(opts, "renounceMinter")
 }
 
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ERC20Mintable *ERC20MintableSession) RenounceMinter() (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.RenounceMinter(&_ERC20Mintable.TransactOpts)
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ERC20Mintable *ERC20MintableTransactorSession) RenounceMinter() (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.RenounceMinter(&_ERC20Mintable.TransactOpts)
-}
-
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address to, uint256 value) returns(bool)
@@ -3365,39 +2841,11 @@ func (_ERC20Mintable *ERC20MintableTransactor) Transfer(opts *bind.TransactOpts,
 	return _ERC20Mintable.contract.Transact(opts, "transfer", to, value)
 }
 
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.Transfer(&_ERC20Mintable.TransactOpts, to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableTransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.Transfer(&_ERC20Mintable.TransactOpts, to, value)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_ERC20Mintable *ERC20MintableTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20Mintable.contract.Transact(opts, "transferFrom", from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.TransferFrom(&_ERC20Mintable.TransactOpts, from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Mintable *ERC20MintableTransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Mintable.Contract.TransferFrom(&_ERC20Mintable.TransactOpts, from, to, value)
 }
 
 // ERC20MintableApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC20Mintable contract.
@@ -4032,7 +3480,7 @@ var ERC20PausableBin = ERC20PausableMetaData.Bin
 
 // DeployERC20Pausable deploys a new Ethereum contract, binding an instance of ERC20Pausable to it.
 func DeployERC20Pausable(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ERC20Pausable, error) {
-	parsed, err := ERC20PausableMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ERC20Pausable)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -4067,43 +3515,6 @@ type ERC20PausableTransactor struct {
 // ERC20PausableFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ERC20PausableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ERC20PausableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC20PausableSession struct {
-	Contract     *ERC20Pausable    // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC20PausableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC20PausableCallerSession struct {
-	Contract *ERC20PausableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts        // Call options to use throughout this session
-}
-
-// ERC20PausableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC20PausableTransactorSession struct {
-	Contract     *ERC20PausableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts        // Transaction auth options to use throughout this session
-}
-
-// ERC20PausableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC20PausableRaw struct {
-	Contract *ERC20Pausable // Generic contract binding to access the raw methods on
-}
-
-// ERC20PausableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC20PausableCallerRaw struct {
-	Contract *ERC20PausableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC20PausableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC20PausableTransactorRaw struct {
-	Contract *ERC20PausableTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewERC20Pausable creates a new instance of ERC20Pausable, bound to a specific deployed contract.
@@ -4144,49 +3555,11 @@ func NewERC20PausableFilterer(address common.Address, filterer bind.ContractFilt
 
 // bindERC20Pausable binds a generic wrapper to an already deployed contract.
 func bindERC20Pausable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC20PausableABI))
+	parsed, err := ParsedABI(K_ERC20Pausable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Pausable *ERC20PausableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Pausable.Contract.ERC20PausableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Pausable *ERC20PausableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.ERC20PausableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Pausable *ERC20PausableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.ERC20PausableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC20Pausable *ERC20PausableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC20Pausable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC20Pausable *ERC20PausableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC20Pausable *ERC20PausableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -4206,20 +3579,6 @@ func (_ERC20Pausable *ERC20PausableCaller) Allowance(opts *bind.CallOpts, owner 
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Pausable *ERC20PausableSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Pausable.Contract.Allowance(&_ERC20Pausable.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ERC20Pausable *ERC20PausableCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ERC20Pausable.Contract.Allowance(&_ERC20Pausable.CallOpts, owner, spender)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address owner) view returns(uint256)
@@ -4235,20 +3594,6 @@ func (_ERC20Pausable *ERC20PausableCaller) BalanceOf(opts *bind.CallOpts, owner 
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20Pausable *ERC20PausableSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20Pausable.Contract.BalanceOf(&_ERC20Pausable.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC20Pausable *ERC20PausableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC20Pausable.Contract.BalanceOf(&_ERC20Pausable.CallOpts, owner)
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
@@ -4268,20 +3613,6 @@ func (_ERC20Pausable *ERC20PausableCaller) IsPauser(opts *bind.CallOpts, account
 
 }
 
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_ERC20Pausable *ERC20PausableSession) IsPauser(account common.Address) (bool, error) {
-	return _ERC20Pausable.Contract.IsPauser(&_ERC20Pausable.CallOpts, account)
-}
-
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_ERC20Pausable *ERC20PausableCallerSession) IsPauser(account common.Address) (bool, error) {
-	return _ERC20Pausable.Contract.IsPauser(&_ERC20Pausable.CallOpts, account)
-}
-
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
 // Solidity: function paused() view returns(bool)
@@ -4297,20 +3628,6 @@ func (_ERC20Pausable *ERC20PausableCaller) Paused(opts *bind.CallOpts) (bool, er
 
 	return out0, err
 
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_ERC20Pausable *ERC20PausableSession) Paused() (bool, error) {
-	return _ERC20Pausable.Contract.Paused(&_ERC20Pausable.CallOpts)
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_ERC20Pausable *ERC20PausableCallerSession) Paused() (bool, error) {
-	return _ERC20Pausable.Contract.Paused(&_ERC20Pausable.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
@@ -4330,39 +3647,11 @@ func (_ERC20Pausable *ERC20PausableCaller) TotalSupply(opts *bind.CallOpts) (*bi
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Pausable *ERC20PausableSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Pausable.Contract.TotalSupply(&_ERC20Pausable.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC20Pausable *ERC20PausableCallerSession) TotalSupply() (*big.Int, error) {
-	return _ERC20Pausable.Contract.TotalSupply(&_ERC20Pausable.CallOpts)
-}
-
 // AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
 //
 // Solidity: function addPauser(address account) returns()
 func (_ERC20Pausable *ERC20PausableTransactor) AddPauser(opts *bind.TransactOpts, account common.Address) (*types.Transaction, error) {
 	return _ERC20Pausable.contract.Transact(opts, "addPauser", account)
-}
-
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_ERC20Pausable *ERC20PausableSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.AddPauser(&_ERC20Pausable.TransactOpts, account)
-}
-
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_ERC20Pausable *ERC20PausableTransactorSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.AddPauser(&_ERC20Pausable.TransactOpts, account)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
@@ -4372,39 +3661,11 @@ func (_ERC20Pausable *ERC20PausableTransactor) Approve(opts *bind.TransactOpts, 
 	return _ERC20Pausable.contract.Transact(opts, "approve", spender, value)
 }
 
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Pausable *ERC20PausableSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Approve(&_ERC20Pausable.TransactOpts, spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ERC20Pausable *ERC20PausableTransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Approve(&_ERC20Pausable.TransactOpts, spender, value)
-}
-
 // DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
 //
 // Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool success)
 func (_ERC20Pausable *ERC20PausableTransactor) DecreaseAllowance(opts *bind.TransactOpts, spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
 	return _ERC20Pausable.contract.Transact(opts, "decreaseAllowance", spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool success)
-func (_ERC20Pausable *ERC20PausableSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.DecreaseAllowance(&_ERC20Pausable.TransactOpts, spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool success)
-func (_ERC20Pausable *ERC20PausableTransactorSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.DecreaseAllowance(&_ERC20Pausable.TransactOpts, spender, subtractedValue)
 }
 
 // IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
@@ -4414,39 +3675,11 @@ func (_ERC20Pausable *ERC20PausableTransactor) IncreaseAllowance(opts *bind.Tran
 	return _ERC20Pausable.contract.Transact(opts, "increaseAllowance", spender, addedValue)
 }
 
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool success)
-func (_ERC20Pausable *ERC20PausableSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.IncreaseAllowance(&_ERC20Pausable.TransactOpts, spender, addedValue)
-}
-
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool success)
-func (_ERC20Pausable *ERC20PausableTransactorSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.IncreaseAllowance(&_ERC20Pausable.TransactOpts, spender, addedValue)
-}
-
 // Pause is a paid mutator transaction binding the contract method 0x8456cb59.
 //
 // Solidity: function pause() returns()
 func (_ERC20Pausable *ERC20PausableTransactor) Pause(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ERC20Pausable.contract.Transact(opts, "pause")
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_ERC20Pausable *ERC20PausableSession) Pause() (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Pause(&_ERC20Pausable.TransactOpts)
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_ERC20Pausable *ERC20PausableTransactorSession) Pause() (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Pause(&_ERC20Pausable.TransactOpts)
 }
 
 // RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
@@ -4456,39 +3689,11 @@ func (_ERC20Pausable *ERC20PausableTransactor) RenouncePauser(opts *bind.Transac
 	return _ERC20Pausable.contract.Transact(opts, "renouncePauser")
 }
 
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_ERC20Pausable *ERC20PausableSession) RenouncePauser() (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.RenouncePauser(&_ERC20Pausable.TransactOpts)
-}
-
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_ERC20Pausable *ERC20PausableTransactorSession) RenouncePauser() (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.RenouncePauser(&_ERC20Pausable.TransactOpts)
-}
-
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address to, uint256 value) returns(bool)
 func (_ERC20Pausable *ERC20PausableTransactor) Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ERC20Pausable.contract.Transact(opts, "transfer", to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Pausable *ERC20PausableSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Transfer(&_ERC20Pausable.TransactOpts, to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ERC20Pausable *ERC20PausableTransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Transfer(&_ERC20Pausable.TransactOpts, to, value)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
@@ -4498,39 +3703,11 @@ func (_ERC20Pausable *ERC20PausableTransactor) TransferFrom(opts *bind.TransactO
 	return _ERC20Pausable.contract.Transact(opts, "transferFrom", from, to, value)
 }
 
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Pausable *ERC20PausableSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.TransferFrom(&_ERC20Pausable.TransactOpts, from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ERC20Pausable *ERC20PausableTransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.TransferFrom(&_ERC20Pausable.TransactOpts, from, to, value)
-}
-
 // Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
 //
 // Solidity: function unpause() returns()
 func (_ERC20Pausable *ERC20PausableTransactor) Unpause(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ERC20Pausable.contract.Transact(opts, "unpause")
-}
-
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
-//
-// Solidity: function unpause() returns()
-func (_ERC20Pausable *ERC20PausableSession) Unpause() (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Unpause(&_ERC20Pausable.TransactOpts)
-}
-
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
-//
-// Solidity: function unpause() returns()
-func (_ERC20Pausable *ERC20PausableTransactorSession) Unpause() (*types.Transaction, error) {
-	return _ERC20Pausable.Contract.Unpause(&_ERC20Pausable.TransactOpts)
 }
 
 // ERC20PausableApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC20Pausable contract.
@@ -5429,7 +4606,7 @@ var ERC721Bin = ERC721MetaData.Bin
 
 // DeployERC721 deploys a new Ethereum contract, binding an instance of ERC721 to it.
 func DeployERC721(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ERC721, error) {
-	parsed, err := ERC721MetaData.GetAbi()
+	parsed, err := ParsedABI(K_ERC721)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -5464,43 +4641,6 @@ type ERC721Transactor struct {
 // ERC721Filterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ERC721Filterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ERC721Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC721Session struct {
-	Contract     *ERC721           // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC721CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC721CallerSession struct {
-	Contract *ERC721Caller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// ERC721TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC721TransactorSession struct {
-	Contract     *ERC721Transactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC721Raw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC721Raw struct {
-	Contract *ERC721 // Generic contract binding to access the raw methods on
-}
-
-// ERC721CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC721CallerRaw struct {
-	Contract *ERC721Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC721TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC721TransactorRaw struct {
-	Contract *ERC721Transactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewERC721 creates a new instance of ERC721, bound to a specific deployed contract.
@@ -5541,49 +4681,11 @@ func NewERC721Filterer(address common.Address, filterer bind.ContractFilterer) (
 
 // bindERC721 binds a generic wrapper to an already deployed contract.
 func bindERC721(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC721ABI))
+	parsed, err := ParsedABI(K_ERC721)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC721 *ERC721Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC721.Contract.ERC721Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC721 *ERC721Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC721.Contract.ERC721Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC721 *ERC721Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC721.Contract.ERC721Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC721 *ERC721CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC721.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC721 *ERC721TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC721.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC721 *ERC721TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC721.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -5603,20 +4705,6 @@ func (_ERC721 *ERC721Caller) BalanceOf(opts *bind.CallOpts, owner common.Address
 
 }
 
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC721 *ERC721Session) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC721.Contract.BalanceOf(&_ERC721.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC721 *ERC721CallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC721.Contract.BalanceOf(&_ERC721.CallOpts, owner)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address)
@@ -5632,20 +4720,6 @@ func (_ERC721 *ERC721Caller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) 
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ERC721 *ERC721Session) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ERC721.Contract.GetApproved(&_ERC721.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ERC721 *ERC721CallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ERC721.Contract.GetApproved(&_ERC721.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
@@ -5665,20 +4739,6 @@ func (_ERC721 *ERC721Caller) IsApprovedForAll(opts *bind.CallOpts, owner common.
 
 }
 
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ERC721 *ERC721Session) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ERC721.Contract.IsApprovedForAll(&_ERC721.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ERC721 *ERC721CallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ERC721.Contract.IsApprovedForAll(&_ERC721.CallOpts, owner, operator)
-}
-
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
 // Solidity: function ownerOf(uint256 tokenId) view returns(address)
@@ -5694,20 +4754,6 @@ func (_ERC721 *ERC721Caller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (com
 
 	return out0, err
 
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ERC721 *ERC721Session) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ERC721.Contract.OwnerOf(&_ERC721.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ERC721 *ERC721CallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ERC721.Contract.OwnerOf(&_ERC721.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -5727,39 +4773,11 @@ func (_ERC721 *ERC721Caller) SupportsInterface(opts *bind.CallOpts, interfaceId 
 
 }
 
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC721 *ERC721Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC721.Contract.SupportsInterface(&_ERC721.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC721 *ERC721CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC721.Contract.SupportsInterface(&_ERC721.CallOpts, interfaceId)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address to, uint256 tokenId) returns()
 func (_ERC721 *ERC721Transactor) Approve(opts *bind.TransactOpts, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.contract.Transact(opts, "approve", to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ERC721 *ERC721Session) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721.Contract.Approve(&_ERC721.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ERC721 *ERC721TransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721.Contract.Approve(&_ERC721.TransactOpts, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
@@ -5769,39 +4787,11 @@ func (_ERC721 *ERC721Transactor) SafeTransferFrom(opts *bind.TransactOpts, from 
 	return _ERC721.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721 *ERC721Session) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721.Contract.SafeTransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721 *ERC721TransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721.Contract.SafeTransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
-}
-
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721 *ERC721Transactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ERC721 *ERC721Session) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ERC721.Contract.SafeTransferFrom0(&_ERC721.TransactOpts, from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ERC721 *ERC721TransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ERC721.Contract.SafeTransferFrom0(&_ERC721.TransactOpts, from, to, tokenId, _data)
 }
 
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
@@ -5811,39 +4801,11 @@ func (_ERC721 *ERC721Transactor) SetApprovalForAll(opts *bind.TransactOpts, to c
 	return _ERC721.contract.Transact(opts, "setApprovalForAll", to, approved)
 }
 
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ERC721 *ERC721Session) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ERC721.Contract.SetApprovalForAll(&_ERC721.TransactOpts, to, approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ERC721 *ERC721TransactorSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ERC721.Contract.SetApprovalForAll(&_ERC721.TransactOpts, to, approved)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721 *ERC721Transactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.contract.Transact(opts, "transferFrom", from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721 *ERC721Session) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721.Contract.TransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721 *ERC721TransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721.Contract.TransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
 }
 
 // ERC721ApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC721 contract.
@@ -6359,7 +5321,7 @@ var ERC721EnumerableBin = ERC721EnumerableMetaData.Bin
 
 // DeployERC721Enumerable deploys a new Ethereum contract, binding an instance of ERC721Enumerable to it.
 func DeployERC721Enumerable(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ERC721Enumerable, error) {
-	parsed, err := ERC721EnumerableMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ERC721Enumerable)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -6394,43 +5356,6 @@ type ERC721EnumerableTransactor struct {
 // ERC721EnumerableFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ERC721EnumerableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ERC721EnumerableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC721EnumerableSession struct {
-	Contract     *ERC721Enumerable // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC721EnumerableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC721EnumerableCallerSession struct {
-	Contract *ERC721EnumerableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts           // Call options to use throughout this session
-}
-
-// ERC721EnumerableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC721EnumerableTransactorSession struct {
-	Contract     *ERC721EnumerableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
-}
-
-// ERC721EnumerableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC721EnumerableRaw struct {
-	Contract *ERC721Enumerable // Generic contract binding to access the raw methods on
-}
-
-// ERC721EnumerableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC721EnumerableCallerRaw struct {
-	Contract *ERC721EnumerableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC721EnumerableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC721EnumerableTransactorRaw struct {
-	Contract *ERC721EnumerableTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewERC721Enumerable creates a new instance of ERC721Enumerable, bound to a specific deployed contract.
@@ -6471,49 +5396,11 @@ func NewERC721EnumerableFilterer(address common.Address, filterer bind.ContractF
 
 // bindERC721Enumerable binds a generic wrapper to an already deployed contract.
 func bindERC721Enumerable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC721EnumerableABI))
+	parsed, err := ParsedABI(K_ERC721Enumerable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC721Enumerable *ERC721EnumerableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC721Enumerable.Contract.ERC721EnumerableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC721Enumerable *ERC721EnumerableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.ERC721EnumerableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC721Enumerable *ERC721EnumerableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.ERC721EnumerableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC721Enumerable *ERC721EnumerableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC721Enumerable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC721Enumerable *ERC721EnumerableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC721Enumerable *ERC721EnumerableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -6533,20 +5420,6 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) BalanceOf(opts *bind.CallOpts, 
 
 }
 
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC721Enumerable.Contract.BalanceOf(&_ERC721Enumerable.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC721Enumerable.Contract.BalanceOf(&_ERC721Enumerable.CallOpts, owner)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address)
@@ -6562,20 +5435,6 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) GetApproved(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ERC721Enumerable *ERC721EnumerableSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Enumerable.Contract.GetApproved(&_ERC721Enumerable.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Enumerable.Contract.GetApproved(&_ERC721Enumerable.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
@@ -6595,20 +5454,6 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) IsApprovedForAll(opts *bind.Cal
 
 }
 
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ERC721Enumerable *ERC721EnumerableSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ERC721Enumerable.Contract.IsApprovedForAll(&_ERC721Enumerable.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ERC721Enumerable.Contract.IsApprovedForAll(&_ERC721Enumerable.CallOpts, owner, operator)
-}
-
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
 // Solidity: function ownerOf(uint256 tokenId) view returns(address)
@@ -6624,20 +5469,6 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) OwnerOf(opts *bind.CallOpts, to
 
 	return out0, err
 
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ERC721Enumerable *ERC721EnumerableSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Enumerable.Contract.OwnerOf(&_ERC721Enumerable.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Enumerable.Contract.OwnerOf(&_ERC721Enumerable.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -6657,20 +5488,6 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) SupportsInterface(opts *bind.Ca
 
 }
 
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC721Enumerable *ERC721EnumerableSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC721Enumerable.Contract.SupportsInterface(&_ERC721Enumerable.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC721Enumerable.Contract.SupportsInterface(&_ERC721Enumerable.CallOpts, interfaceId)
-}
-
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
 // Solidity: function tokenByIndex(uint256 index) view returns(uint256)
@@ -6686,20 +5503,6 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) TokenByIndex(opts *bind.CallOpt
 
 	return out0, err
 
-}
-
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _ERC721Enumerable.Contract.TokenByIndex(&_ERC721Enumerable.CallOpts, index)
-}
-
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _ERC721Enumerable.Contract.TokenByIndex(&_ERC721Enumerable.CallOpts, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
@@ -6719,20 +5522,6 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) TokenOfOwnerByIndex(opts *bind.
 
 }
 
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _ERC721Enumerable.Contract.TokenOfOwnerByIndex(&_ERC721Enumerable.CallOpts, owner, index)
-}
-
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _ERC721Enumerable.Contract.TokenOfOwnerByIndex(&_ERC721Enumerable.CallOpts, owner, index)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -6750,39 +5539,11 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) TotalSupply(opts *bind.CallOpts
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableSession) TotalSupply() (*big.Int, error) {
-	return _ERC721Enumerable.Contract.TotalSupply(&_ERC721Enumerable.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ERC721Enumerable *ERC721EnumerableCallerSession) TotalSupply() (*big.Int, error) {
-	return _ERC721Enumerable.Contract.TotalSupply(&_ERC721Enumerable.CallOpts)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address to, uint256 tokenId) returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactor) Approve(opts *bind.TransactOpts, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.contract.Transact(opts, "approve", to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ERC721Enumerable *ERC721EnumerableSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.Approve(&_ERC721Enumerable.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ERC721Enumerable *ERC721EnumerableTransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.Approve(&_ERC721Enumerable.TransactOpts, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
@@ -6792,39 +5553,11 @@ func (_ERC721Enumerable *ERC721EnumerableTransactor) SafeTransferFrom(opts *bind
 	return _ERC721Enumerable.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Enumerable *ERC721EnumerableSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.SafeTransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Enumerable *ERC721EnumerableTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.SafeTransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
-}
-
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Enumerable.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ERC721Enumerable *ERC721EnumerableSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.SafeTransferFrom0(&_ERC721Enumerable.TransactOpts, from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ERC721Enumerable *ERC721EnumerableTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.SafeTransferFrom0(&_ERC721Enumerable.TransactOpts, from, to, tokenId, _data)
 }
 
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
@@ -6834,39 +5567,11 @@ func (_ERC721Enumerable *ERC721EnumerableTransactor) SetApprovalForAll(opts *bin
 	return _ERC721Enumerable.contract.Transact(opts, "setApprovalForAll", to, approved)
 }
 
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ERC721Enumerable *ERC721EnumerableSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.SetApprovalForAll(&_ERC721Enumerable.TransactOpts, to, approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ERC721Enumerable *ERC721EnumerableTransactorSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.SetApprovalForAll(&_ERC721Enumerable.TransactOpts, to, approved)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.contract.Transact(opts, "transferFrom", from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Enumerable *ERC721EnumerableSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.TransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Enumerable *ERC721EnumerableTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Enumerable.Contract.TransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // ERC721EnumerableApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC721Enumerable contract.
@@ -7382,7 +6087,7 @@ var ERC721MetadataBin = ERC721MetadataMetaData.Bin
 
 // DeployERC721Metadata deploys a new Ethereum contract, binding an instance of ERC721Metadata to it.
 func DeployERC721Metadata(auth *bind.TransactOpts, backend bind.ContractBackend, name string, symbol string) (common.Address, *types.Transaction, *ERC721Metadata, error) {
-	parsed, err := ERC721MetadataMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ERC721Metadata)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -7417,43 +6122,6 @@ type ERC721MetadataTransactor struct {
 // ERC721MetadataFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ERC721MetadataFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ERC721MetadataSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ERC721MetadataSession struct {
-	Contract     *ERC721Metadata   // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ERC721MetadataCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ERC721MetadataCallerSession struct {
-	Contract *ERC721MetadataCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts         // Call options to use throughout this session
-}
-
-// ERC721MetadataTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ERC721MetadataTransactorSession struct {
-	Contract     *ERC721MetadataTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts         // Transaction auth options to use throughout this session
-}
-
-// ERC721MetadataRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ERC721MetadataRaw struct {
-	Contract *ERC721Metadata // Generic contract binding to access the raw methods on
-}
-
-// ERC721MetadataCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ERC721MetadataCallerRaw struct {
-	Contract *ERC721MetadataCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ERC721MetadataTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ERC721MetadataTransactorRaw struct {
-	Contract *ERC721MetadataTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewERC721Metadata creates a new instance of ERC721Metadata, bound to a specific deployed contract.
@@ -7494,49 +6162,11 @@ func NewERC721MetadataFilterer(address common.Address, filterer bind.ContractFil
 
 // bindERC721Metadata binds a generic wrapper to an already deployed contract.
 func bindERC721Metadata(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ERC721MetadataABI))
+	parsed, err := ParsedABI(K_ERC721Metadata)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC721Metadata *ERC721MetadataRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC721Metadata.Contract.ERC721MetadataCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC721Metadata *ERC721MetadataRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.ERC721MetadataTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC721Metadata *ERC721MetadataRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.ERC721MetadataTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ERC721Metadata *ERC721MetadataCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ERC721Metadata.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ERC721Metadata *ERC721MetadataTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ERC721Metadata *ERC721MetadataTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -7556,20 +6186,6 @@ func (_ERC721Metadata *ERC721MetadataCaller) BalanceOf(opts *bind.CallOpts, owne
 
 }
 
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC721Metadata *ERC721MetadataSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC721Metadata.Contract.BalanceOf(&_ERC721Metadata.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ERC721Metadata *ERC721MetadataCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ERC721Metadata.Contract.BalanceOf(&_ERC721Metadata.CallOpts, owner)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address)
@@ -7585,20 +6201,6 @@ func (_ERC721Metadata *ERC721MetadataCaller) GetApproved(opts *bind.CallOpts, to
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ERC721Metadata *ERC721MetadataSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Metadata.Contract.GetApproved(&_ERC721Metadata.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ERC721Metadata *ERC721MetadataCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Metadata.Contract.GetApproved(&_ERC721Metadata.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
@@ -7618,20 +6220,6 @@ func (_ERC721Metadata *ERC721MetadataCaller) IsApprovedForAll(opts *bind.CallOpt
 
 }
 
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ERC721Metadata *ERC721MetadataSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ERC721Metadata.Contract.IsApprovedForAll(&_ERC721Metadata.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ERC721Metadata *ERC721MetadataCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ERC721Metadata.Contract.IsApprovedForAll(&_ERC721Metadata.CallOpts, owner, operator)
-}
-
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
@@ -7647,20 +6235,6 @@ func (_ERC721Metadata *ERC721MetadataCaller) Name(opts *bind.CallOpts) (string, 
 
 	return out0, err
 
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ERC721Metadata *ERC721MetadataSession) Name() (string, error) {
-	return _ERC721Metadata.Contract.Name(&_ERC721Metadata.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ERC721Metadata *ERC721MetadataCallerSession) Name() (string, error) {
-	return _ERC721Metadata.Contract.Name(&_ERC721Metadata.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
@@ -7680,20 +6254,6 @@ func (_ERC721Metadata *ERC721MetadataCaller) OwnerOf(opts *bind.CallOpts, tokenI
 
 }
 
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ERC721Metadata *ERC721MetadataSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Metadata.Contract.OwnerOf(&_ERC721Metadata.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ERC721Metadata *ERC721MetadataCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ERC721Metadata.Contract.OwnerOf(&_ERC721Metadata.CallOpts, tokenId)
-}
-
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
 // Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
@@ -7709,20 +6269,6 @@ func (_ERC721Metadata *ERC721MetadataCaller) SupportsInterface(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC721Metadata *ERC721MetadataSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC721Metadata.Contract.SupportsInterface(&_ERC721Metadata.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ERC721Metadata *ERC721MetadataCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ERC721Metadata.Contract.SupportsInterface(&_ERC721Metadata.CallOpts, interfaceId)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
@@ -7742,20 +6288,6 @@ func (_ERC721Metadata *ERC721MetadataCaller) Symbol(opts *bind.CallOpts) (string
 
 }
 
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ERC721Metadata *ERC721MetadataSession) Symbol() (string, error) {
-	return _ERC721Metadata.Contract.Symbol(&_ERC721Metadata.CallOpts)
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ERC721Metadata *ERC721MetadataCallerSession) Symbol() (string, error) {
-	return _ERC721Metadata.Contract.Symbol(&_ERC721Metadata.CallOpts)
-}
-
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
 // Solidity: function tokenURI(uint256 tokenId) view returns(string)
@@ -7773,39 +6305,11 @@ func (_ERC721Metadata *ERC721MetadataCaller) TokenURI(opts *bind.CallOpts, token
 
 }
 
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_ERC721Metadata *ERC721MetadataSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _ERC721Metadata.Contract.TokenURI(&_ERC721Metadata.CallOpts, tokenId)
-}
-
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_ERC721Metadata *ERC721MetadataCallerSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _ERC721Metadata.Contract.TokenURI(&_ERC721Metadata.CallOpts, tokenId)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address to, uint256 tokenId) returns()
 func (_ERC721Metadata *ERC721MetadataTransactor) Approve(opts *bind.TransactOpts, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.contract.Transact(opts, "approve", to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ERC721Metadata *ERC721MetadataSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.Approve(&_ERC721Metadata.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ERC721Metadata *ERC721MetadataTransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.Approve(&_ERC721Metadata.TransactOpts, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
@@ -7815,39 +6319,11 @@ func (_ERC721Metadata *ERC721MetadataTransactor) SafeTransferFrom(opts *bind.Tra
 	return _ERC721Metadata.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Metadata *ERC721MetadataSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.SafeTransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Metadata *ERC721MetadataTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.SafeTransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
-}
-
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Metadata.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ERC721Metadata *ERC721MetadataSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.SafeTransferFrom0(&_ERC721Metadata.TransactOpts, from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ERC721Metadata *ERC721MetadataTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.SafeTransferFrom0(&_ERC721Metadata.TransactOpts, from, to, tokenId, _data)
 }
 
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
@@ -7857,39 +6333,11 @@ func (_ERC721Metadata *ERC721MetadataTransactor) SetApprovalForAll(opts *bind.Tr
 	return _ERC721Metadata.contract.Transact(opts, "setApprovalForAll", to, approved)
 }
 
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ERC721Metadata *ERC721MetadataSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.SetApprovalForAll(&_ERC721Metadata.TransactOpts, to, approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ERC721Metadata *ERC721MetadataTransactorSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.SetApprovalForAll(&_ERC721Metadata.TransactOpts, to, approved)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.contract.Transact(opts, "transferFrom", from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Metadata *ERC721MetadataSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.TransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ERC721Metadata *ERC721MetadataTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ERC721Metadata.Contract.TransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // ERC721MetadataApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ERC721Metadata contract.
@@ -8414,7 +6862,7 @@ var ElvTokenBin = ElvTokenMetaData.Bin
 
 // DeployElvToken deploys a new Ethereum contract, binding an instance of ElvToken to it.
 func DeployElvToken(auth *bind.TransactOpts, backend bind.ContractBackend, cap *big.Int, name string, symbol string, decimals uint8) (common.Address, *types.Transaction, *ElvToken, error) {
-	parsed, err := ElvTokenMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ElvToken)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -8449,43 +6897,6 @@ type ElvTokenTransactor struct {
 // ElvTokenFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ElvTokenFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ElvTokenSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ElvTokenSession struct {
-	Contract     *ElvToken         // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ElvTokenCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ElvTokenCallerSession struct {
-	Contract *ElvTokenCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts   // Call options to use throughout this session
-}
-
-// ElvTokenTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ElvTokenTransactorSession struct {
-	Contract     *ElvTokenTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// ElvTokenRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ElvTokenRaw struct {
-	Contract *ElvToken // Generic contract binding to access the raw methods on
-}
-
-// ElvTokenCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ElvTokenCallerRaw struct {
-	Contract *ElvTokenCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ElvTokenTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ElvTokenTransactorRaw struct {
-	Contract *ElvTokenTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewElvToken creates a new instance of ElvToken, bound to a specific deployed contract.
@@ -8526,49 +6937,11 @@ func NewElvTokenFilterer(address common.Address, filterer bind.ContractFilterer)
 
 // bindElvToken binds a generic wrapper to an already deployed contract.
 func bindElvToken(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ElvTokenABI))
+	parsed, err := ParsedABI(K_ElvToken)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvToken *ElvTokenRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvToken.Contract.ElvTokenCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvToken *ElvTokenRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvToken.Contract.ElvTokenTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvToken *ElvTokenRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvToken.Contract.ElvTokenTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvToken *ElvTokenCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvToken.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvToken *ElvTokenTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvToken.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvToken *ElvTokenTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvToken.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -8588,20 +6961,6 @@ func (_ElvToken *ElvTokenCaller) Allowance(opts *bind.CallOpts, owner common.Add
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ElvToken *ElvTokenSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ElvToken.Contract.Allowance(&_ElvToken.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_ElvToken *ElvTokenCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _ElvToken.Contract.Allowance(&_ElvToken.CallOpts, owner, spender)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address owner) view returns(uint256)
@@ -8617,20 +6976,6 @@ func (_ElvToken *ElvTokenCaller) BalanceOf(opts *bind.CallOpts, owner common.Add
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ElvToken *ElvTokenSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ElvToken.Contract.BalanceOf(&_ElvToken.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ElvToken *ElvTokenCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ElvToken.Contract.BalanceOf(&_ElvToken.CallOpts, owner)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
@@ -8650,20 +6995,6 @@ func (_ElvToken *ElvTokenCaller) Cap(opts *bind.CallOpts) (*big.Int, error) {
 
 }
 
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ElvToken *ElvTokenSession) Cap() (*big.Int, error) {
-	return _ElvToken.Contract.Cap(&_ElvToken.CallOpts)
-}
-
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ElvToken *ElvTokenCallerSession) Cap() (*big.Int, error) {
-	return _ElvToken.Contract.Cap(&_ElvToken.CallOpts)
-}
-
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
 // Solidity: function decimals() view returns(uint8)
@@ -8679,20 +7010,6 @@ func (_ElvToken *ElvTokenCaller) Decimals(opts *bind.CallOpts) (uint8, error) {
 
 	return out0, err
 
-}
-
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint8)
-func (_ElvToken *ElvTokenSession) Decimals() (uint8, error) {
-	return _ElvToken.Contract.Decimals(&_ElvToken.CallOpts)
-}
-
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint8)
-func (_ElvToken *ElvTokenCallerSession) Decimals() (uint8, error) {
-	return _ElvToken.Contract.Decimals(&_ElvToken.CallOpts)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
@@ -8712,20 +7029,6 @@ func (_ElvToken *ElvTokenCaller) IsMinter(opts *bind.CallOpts, account common.Ad
 
 }
 
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ElvToken *ElvTokenSession) IsMinter(account common.Address) (bool, error) {
-	return _ElvToken.Contract.IsMinter(&_ElvToken.CallOpts, account)
-}
-
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ElvToken *ElvTokenCallerSession) IsMinter(account common.Address) (bool, error) {
-	return _ElvToken.Contract.IsMinter(&_ElvToken.CallOpts, account)
-}
-
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
 // Solidity: function isPauser(address account) view returns(bool)
@@ -8741,20 +7044,6 @@ func (_ElvToken *ElvTokenCaller) IsPauser(opts *bind.CallOpts, account common.Ad
 
 	return out0, err
 
-}
-
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_ElvToken *ElvTokenSession) IsPauser(account common.Address) (bool, error) {
-	return _ElvToken.Contract.IsPauser(&_ElvToken.CallOpts, account)
-}
-
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_ElvToken *ElvTokenCallerSession) IsPauser(account common.Address) (bool, error) {
-	return _ElvToken.Contract.IsPauser(&_ElvToken.CallOpts, account)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
@@ -8774,20 +7063,6 @@ func (_ElvToken *ElvTokenCaller) Name(opts *bind.CallOpts) (string, error) {
 
 }
 
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ElvToken *ElvTokenSession) Name() (string, error) {
-	return _ElvToken.Contract.Name(&_ElvToken.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ElvToken *ElvTokenCallerSession) Name() (string, error) {
-	return _ElvToken.Contract.Name(&_ElvToken.CallOpts)
-}
-
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
 // Solidity: function paused() view returns(bool)
@@ -8803,20 +7078,6 @@ func (_ElvToken *ElvTokenCaller) Paused(opts *bind.CallOpts) (bool, error) {
 
 	return out0, err
 
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_ElvToken *ElvTokenSession) Paused() (bool, error) {
-	return _ElvToken.Contract.Paused(&_ElvToken.CallOpts)
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_ElvToken *ElvTokenCallerSession) Paused() (bool, error) {
-	return _ElvToken.Contract.Paused(&_ElvToken.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
@@ -8836,20 +7097,6 @@ func (_ElvToken *ElvTokenCaller) Symbol(opts *bind.CallOpts) (string, error) {
 
 }
 
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ElvToken *ElvTokenSession) Symbol() (string, error) {
-	return _ElvToken.Contract.Symbol(&_ElvToken.CallOpts)
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ElvToken *ElvTokenCallerSession) Symbol() (string, error) {
-	return _ElvToken.Contract.Symbol(&_ElvToken.CallOpts)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -8867,39 +7114,11 @@ func (_ElvToken *ElvTokenCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, err
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ElvToken *ElvTokenSession) TotalSupply() (*big.Int, error) {
-	return _ElvToken.Contract.TotalSupply(&_ElvToken.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ElvToken *ElvTokenCallerSession) TotalSupply() (*big.Int, error) {
-	return _ElvToken.Contract.TotalSupply(&_ElvToken.CallOpts)
-}
-
 // AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
 //
 // Solidity: function addMinter(address account) returns()
 func (_ElvToken *ElvTokenTransactor) AddMinter(opts *bind.TransactOpts, account common.Address) (*types.Transaction, error) {
 	return _ElvToken.contract.Transact(opts, "addMinter", account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ElvToken *ElvTokenSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ElvToken.Contract.AddMinter(&_ElvToken.TransactOpts, account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ElvToken *ElvTokenTransactorSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ElvToken.Contract.AddMinter(&_ElvToken.TransactOpts, account)
 }
 
 // AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
@@ -8909,39 +7128,11 @@ func (_ElvToken *ElvTokenTransactor) AddPauser(opts *bind.TransactOpts, account 
 	return _ElvToken.contract.Transact(opts, "addPauser", account)
 }
 
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_ElvToken *ElvTokenSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _ElvToken.Contract.AddPauser(&_ElvToken.TransactOpts, account)
-}
-
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_ElvToken *ElvTokenTransactorSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _ElvToken.Contract.AddPauser(&_ElvToken.TransactOpts, account)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address spender, uint256 value) returns(bool)
 func (_ElvToken *ElvTokenTransactor) Approve(opts *bind.TransactOpts, spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _ElvToken.contract.Transact(opts, "approve", spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.Approve(&_ElvToken.TransactOpts, spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenTransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.Approve(&_ElvToken.TransactOpts, spender, value)
 }
 
 // DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
@@ -8951,39 +7142,11 @@ func (_ElvToken *ElvTokenTransactor) DecreaseAllowance(opts *bind.TransactOpts, 
 	return _ElvToken.contract.Transact(opts, "decreaseAllowance", spender, subtractedValue)
 }
 
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool success)
-func (_ElvToken *ElvTokenSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.DecreaseAllowance(&_ElvToken.TransactOpts, spender, subtractedValue)
-}
-
-// DecreaseAllowance is a paid mutator transaction binding the contract method 0xa457c2d7.
-//
-// Solidity: function decreaseAllowance(address spender, uint256 subtractedValue) returns(bool success)
-func (_ElvToken *ElvTokenTransactorSession) DecreaseAllowance(spender common.Address, subtractedValue *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.DecreaseAllowance(&_ElvToken.TransactOpts, spender, subtractedValue)
-}
-
 // IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
 //
 // Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool success)
 func (_ElvToken *ElvTokenTransactor) IncreaseAllowance(opts *bind.TransactOpts, spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
 	return _ElvToken.contract.Transact(opts, "increaseAllowance", spender, addedValue)
-}
-
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool success)
-func (_ElvToken *ElvTokenSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.IncreaseAllowance(&_ElvToken.TransactOpts, spender, addedValue)
-}
-
-// IncreaseAllowance is a paid mutator transaction binding the contract method 0x39509351.
-//
-// Solidity: function increaseAllowance(address spender, uint256 addedValue) returns(bool success)
-func (_ElvToken *ElvTokenTransactorSession) IncreaseAllowance(spender common.Address, addedValue *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.IncreaseAllowance(&_ElvToken.TransactOpts, spender, addedValue)
 }
 
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
@@ -8993,39 +7156,11 @@ func (_ElvToken *ElvTokenTransactor) Mint(opts *bind.TransactOpts, to common.Add
 	return _ElvToken.contract.Transact(opts, "mint", to, value)
 }
 
-// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-//
-// Solidity: function mint(address to, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenSession) Mint(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.Mint(&_ElvToken.TransactOpts, to, value)
-}
-
-// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-//
-// Solidity: function mint(address to, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenTransactorSession) Mint(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.Mint(&_ElvToken.TransactOpts, to, value)
-}
-
 // Pause is a paid mutator transaction binding the contract method 0x8456cb59.
 //
 // Solidity: function pause() returns()
 func (_ElvToken *ElvTokenTransactor) Pause(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ElvToken.contract.Transact(opts, "pause")
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_ElvToken *ElvTokenSession) Pause() (*types.Transaction, error) {
-	return _ElvToken.Contract.Pause(&_ElvToken.TransactOpts)
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_ElvToken *ElvTokenTransactorSession) Pause() (*types.Transaction, error) {
-	return _ElvToken.Contract.Pause(&_ElvToken.TransactOpts)
 }
 
 // RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
@@ -9035,39 +7170,11 @@ func (_ElvToken *ElvTokenTransactor) RenounceMinter(opts *bind.TransactOpts) (*t
 	return _ElvToken.contract.Transact(opts, "renounceMinter")
 }
 
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ElvToken *ElvTokenSession) RenounceMinter() (*types.Transaction, error) {
-	return _ElvToken.Contract.RenounceMinter(&_ElvToken.TransactOpts)
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ElvToken *ElvTokenTransactorSession) RenounceMinter() (*types.Transaction, error) {
-	return _ElvToken.Contract.RenounceMinter(&_ElvToken.TransactOpts)
-}
-
 // RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
 //
 // Solidity: function renouncePauser() returns()
 func (_ElvToken *ElvTokenTransactor) RenouncePauser(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ElvToken.contract.Transact(opts, "renouncePauser")
-}
-
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_ElvToken *ElvTokenSession) RenouncePauser() (*types.Transaction, error) {
-	return _ElvToken.Contract.RenouncePauser(&_ElvToken.TransactOpts)
-}
-
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_ElvToken *ElvTokenTransactorSession) RenouncePauser() (*types.Transaction, error) {
-	return _ElvToken.Contract.RenouncePauser(&_ElvToken.TransactOpts)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
@@ -9077,20 +7184,6 @@ func (_ElvToken *ElvTokenTransactor) Transfer(opts *bind.TransactOpts, to common
 	return _ElvToken.contract.Transact(opts, "transfer", to, value)
 }
 
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.Transfer(&_ElvToken.TransactOpts, to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenTransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.Transfer(&_ElvToken.TransactOpts, to, value)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
@@ -9098,39 +7191,11 @@ func (_ElvToken *ElvTokenTransactor) TransferFrom(opts *bind.TransactOpts, from 
 	return _ElvToken.contract.Transact(opts, "transferFrom", from, to, value)
 }
 
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.TransferFrom(&_ElvToken.TransactOpts, from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_ElvToken *ElvTokenTransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _ElvToken.Contract.TransferFrom(&_ElvToken.TransactOpts, from, to, value)
-}
-
 // Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
 //
 // Solidity: function unpause() returns()
 func (_ElvToken *ElvTokenTransactor) Unpause(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ElvToken.contract.Transact(opts, "unpause")
-}
-
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
-//
-// Solidity: function unpause() returns()
-func (_ElvToken *ElvTokenSession) Unpause() (*types.Transaction, error) {
-	return _ElvToken.Contract.Unpause(&_ElvToken.TransactOpts)
-}
-
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
-//
-// Solidity: function unpause() returns()
-func (_ElvToken *ElvTokenTransactorSession) Unpause() (*types.Transaction, error) {
-	return _ElvToken.Contract.Unpause(&_ElvToken.TransactOpts)
 }
 
 // ElvTokenApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ElvToken contract.
@@ -10319,7 +8384,7 @@ var ElvTokenHelperBin = ElvTokenHelperMetaData.Bin
 
 // DeployElvTokenHelper deploys a new Ethereum contract, binding an instance of ElvTokenHelper to it.
 func DeployElvTokenHelper(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ElvTokenHelper, error) {
-	parsed, err := ElvTokenHelperMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ElvTokenHelper)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -10354,43 +8419,6 @@ type ElvTokenHelperTransactor struct {
 // ElvTokenHelperFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ElvTokenHelperFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ElvTokenHelperSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ElvTokenHelperSession struct {
-	Contract     *ElvTokenHelper   // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ElvTokenHelperCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ElvTokenHelperCallerSession struct {
-	Contract *ElvTokenHelperCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts         // Call options to use throughout this session
-}
-
-// ElvTokenHelperTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ElvTokenHelperTransactorSession struct {
-	Contract     *ElvTokenHelperTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts         // Transaction auth options to use throughout this session
-}
-
-// ElvTokenHelperRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ElvTokenHelperRaw struct {
-	Contract *ElvTokenHelper // Generic contract binding to access the raw methods on
-}
-
-// ElvTokenHelperCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ElvTokenHelperCallerRaw struct {
-	Contract *ElvTokenHelperCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ElvTokenHelperTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ElvTokenHelperTransactorRaw struct {
-	Contract *ElvTokenHelperTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewElvTokenHelper creates a new instance of ElvTokenHelper, bound to a specific deployed contract.
@@ -10431,49 +8459,11 @@ func NewElvTokenHelperFilterer(address common.Address, filterer bind.ContractFil
 
 // bindElvTokenHelper binds a generic wrapper to an already deployed contract.
 func bindElvTokenHelper(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ElvTokenHelperABI))
+	parsed, err := ParsedABI(K_ElvTokenHelper)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvTokenHelper *ElvTokenHelperRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvTokenHelper.Contract.ElvTokenHelperCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvTokenHelper *ElvTokenHelperRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.ElvTokenHelperTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvTokenHelper *ElvTokenHelperRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.ElvTokenHelperTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvTokenHelper *ElvTokenHelperCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvTokenHelper.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvTokenHelper *ElvTokenHelperTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvTokenHelper *ElvTokenHelperTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
@@ -10493,20 +8483,6 @@ func (_ElvTokenHelper *ElvTokenHelperCaller) IsOwner(opts *bind.CallOpts) (bool,
 
 }
 
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperSession) IsOwner() (bool, error) {
-	return _ElvTokenHelper.Contract.IsOwner(&_ElvTokenHelper.CallOpts)
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperCallerSession) IsOwner() (bool, error) {
-	return _ElvTokenHelper.Contract.IsOwner(&_ElvTokenHelper.CallOpts)
-}
-
 // OverrideHoldSecs is a free data retrieval call binding the contract method 0x6a6cb8b3.
 //
 // Solidity: function overrideHoldSecs() view returns(uint256)
@@ -10522,20 +8498,6 @@ func (_ElvTokenHelper *ElvTokenHelperCaller) OverrideHoldSecs(opts *bind.CallOpt
 
 	return out0, err
 
-}
-
-// OverrideHoldSecs is a free data retrieval call binding the contract method 0x6a6cb8b3.
-//
-// Solidity: function overrideHoldSecs() view returns(uint256)
-func (_ElvTokenHelper *ElvTokenHelperSession) OverrideHoldSecs() (*big.Int, error) {
-	return _ElvTokenHelper.Contract.OverrideHoldSecs(&_ElvTokenHelper.CallOpts)
-}
-
-// OverrideHoldSecs is a free data retrieval call binding the contract method 0x6a6cb8b3.
-//
-// Solidity: function overrideHoldSecs() view returns(uint256)
-func (_ElvTokenHelper *ElvTokenHelperCallerSession) OverrideHoldSecs() (*big.Int, error) {
-	return _ElvTokenHelper.Contract.OverrideHoldSecs(&_ElvTokenHelper.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -10555,39 +8517,11 @@ func (_ElvTokenHelper *ElvTokenHelperCaller) Owner(opts *bind.CallOpts) (common.
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_ElvTokenHelper *ElvTokenHelperSession) Owner() (common.Address, error) {
-	return _ElvTokenHelper.Contract.Owner(&_ElvTokenHelper.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_ElvTokenHelper *ElvTokenHelperCallerSession) Owner() (common.Address, error) {
-	return _ElvTokenHelper.Contract.Owner(&_ElvTokenHelper.CallOpts)
-}
-
 // BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
 //
 // Solidity: function burnSigned(address token, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
 func (_ElvTokenHelper *ElvTokenHelperTransactor) BurnSigned(opts *bind.TransactOpts, token common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
 	return _ElvTokenHelper.contract.Transact(opts, "burnSigned", token, tokenId, v, r, s)
-}
-
-// BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
-//
-// Solidity: function burnSigned(address token, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperSession) BurnSigned(token common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSigned(&_ElvTokenHelper.TransactOpts, token, tokenId, v, r, s)
-}
-
-// BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
-//
-// Solidity: function burnSigned(address token, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) BurnSigned(token common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSigned(&_ElvTokenHelper.TransactOpts, token, tokenId, v, r, s)
 }
 
 // BurnSignedAndMint is a paid mutator transaction binding the contract method 0x10b7b3a9.
@@ -10597,39 +8531,11 @@ func (_ElvTokenHelper *ElvTokenHelperTransactor) BurnSignedAndMint(opts *bind.Tr
 	return _ElvTokenHelper.contract.Transact(opts, "burnSignedAndMint", burnTokens, burnTokenIds, v, r, s, to, mintTokens, mintTokenIds, mintTokenURIs)
 }
 
-// BurnSignedAndMint is a paid mutator transaction binding the contract method 0x10b7b3a9.
-//
-// Solidity: function burnSignedAndMint(address[] burnTokens, uint256[] burnTokenIds, uint8[] v, bytes32[] r, bytes32[] s, address[] to, address[] mintTokens, uint256[] mintTokenIds, string[] mintTokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperSession) BurnSignedAndMint(burnTokens []common.Address, burnTokenIds []*big.Int, v []uint8, r [][32]byte, s [][32]byte, to []common.Address, mintTokens []common.Address, mintTokenIds []*big.Int, mintTokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedAndMint(&_ElvTokenHelper.TransactOpts, burnTokens, burnTokenIds, v, r, s, to, mintTokens, mintTokenIds, mintTokenURIs)
-}
-
-// BurnSignedAndMint is a paid mutator transaction binding the contract method 0x10b7b3a9.
-//
-// Solidity: function burnSignedAndMint(address[] burnTokens, uint256[] burnTokenIds, uint8[] v, bytes32[] r, bytes32[] s, address[] to, address[] mintTokens, uint256[] mintTokenIds, string[] mintTokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) BurnSignedAndMint(burnTokens []common.Address, burnTokenIds []*big.Int, v []uint8, r [][32]byte, s [][32]byte, to []common.Address, mintTokens []common.Address, mintTokenIds []*big.Int, mintTokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedAndMint(&_ElvTokenHelper.TransactOpts, burnTokens, burnTokenIds, v, r, s, to, mintTokens, mintTokenIds, mintTokenURIs)
-}
-
 // BurnSignedAndMintMany is a paid mutator transaction binding the contract method 0xe39e2960.
 //
 // Solidity: function burnSignedAndMintMany(address burnAddr, address from, uint256 burnTokenId, uint8 v, bytes32 r, bytes32 s, address[] tokAddrs, address[] to, uint256[] tokenIds, string[] tokenURIs) returns(bool)
 func (_ElvTokenHelper *ElvTokenHelperTransactor) BurnSignedAndMintMany(opts *bind.TransactOpts, burnAddr common.Address, from common.Address, burnTokenId *big.Int, v uint8, r [32]byte, s [32]byte, tokAddrs []common.Address, to []common.Address, tokenIds []*big.Int, tokenURIs []string) (*types.Transaction, error) {
 	return _ElvTokenHelper.contract.Transact(opts, "burnSignedAndMintMany", burnAddr, from, burnTokenId, v, r, s, tokAddrs, to, tokenIds, tokenURIs)
-}
-
-// BurnSignedAndMintMany is a paid mutator transaction binding the contract method 0xe39e2960.
-//
-// Solidity: function burnSignedAndMintMany(address burnAddr, address from, uint256 burnTokenId, uint8 v, bytes32 r, bytes32 s, address[] tokAddrs, address[] to, uint256[] tokenIds, string[] tokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperSession) BurnSignedAndMintMany(burnAddr common.Address, from common.Address, burnTokenId *big.Int, v uint8, r [32]byte, s [32]byte, tokAddrs []common.Address, to []common.Address, tokenIds []*big.Int, tokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedAndMintMany(&_ElvTokenHelper.TransactOpts, burnAddr, from, burnTokenId, v, r, s, tokAddrs, to, tokenIds, tokenURIs)
-}
-
-// BurnSignedAndMintMany is a paid mutator transaction binding the contract method 0xe39e2960.
-//
-// Solidity: function burnSignedAndMintMany(address burnAddr, address from, uint256 burnTokenId, uint8 v, bytes32 r, bytes32 s, address[] tokAddrs, address[] to, uint256[] tokenIds, string[] tokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) BurnSignedAndMintMany(burnAddr common.Address, from common.Address, burnTokenId *big.Int, v uint8, r [32]byte, s [32]byte, tokAddrs []common.Address, to []common.Address, tokenIds []*big.Int, tokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedAndMintMany(&_ElvTokenHelper.TransactOpts, burnAddr, from, burnTokenId, v, r, s, tokAddrs, to, tokenIds, tokenURIs)
 }
 
 // BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
@@ -10639,39 +8545,11 @@ func (_ElvTokenHelper *ElvTokenHelperTransactor) BurnSignedEIP191(opts *bind.Tra
 	return _ElvTokenHelper.contract.Transact(opts, "burnSignedEIP191", token, tokenId, v, r, s)
 }
 
-// BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
-//
-// Solidity: function burnSignedEIP191(address token, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperSession) BurnSignedEIP191(token common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedEIP191(&_ElvTokenHelper.TransactOpts, token, tokenId, v, r, s)
-}
-
-// BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
-//
-// Solidity: function burnSignedEIP191(address token, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) BurnSignedEIP191(token common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedEIP191(&_ElvTokenHelper.TransactOpts, token, tokenId, v, r, s)
-}
-
 // BurnSignedEIP191AndMint is a paid mutator transaction binding the contract method 0x3e100c07.
 //
 // Solidity: function burnSignedEIP191AndMint(address[] burnTokens, uint256[] burnTokenIds, uint8[] v, bytes32[] r, bytes32[] s, address[] to, address[] mintTokens, uint256[] mintTokenIds, string[] mintTokenURIs) returns(bool)
 func (_ElvTokenHelper *ElvTokenHelperTransactor) BurnSignedEIP191AndMint(opts *bind.TransactOpts, burnTokens []common.Address, burnTokenIds []*big.Int, v []uint8, r [][32]byte, s [][32]byte, to []common.Address, mintTokens []common.Address, mintTokenIds []*big.Int, mintTokenURIs []string) (*types.Transaction, error) {
 	return _ElvTokenHelper.contract.Transact(opts, "burnSignedEIP191AndMint", burnTokens, burnTokenIds, v, r, s, to, mintTokens, mintTokenIds, mintTokenURIs)
-}
-
-// BurnSignedEIP191AndMint is a paid mutator transaction binding the contract method 0x3e100c07.
-//
-// Solidity: function burnSignedEIP191AndMint(address[] burnTokens, uint256[] burnTokenIds, uint8[] v, bytes32[] r, bytes32[] s, address[] to, address[] mintTokens, uint256[] mintTokenIds, string[] mintTokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperSession) BurnSignedEIP191AndMint(burnTokens []common.Address, burnTokenIds []*big.Int, v []uint8, r [][32]byte, s [][32]byte, to []common.Address, mintTokens []common.Address, mintTokenIds []*big.Int, mintTokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedEIP191AndMint(&_ElvTokenHelper.TransactOpts, burnTokens, burnTokenIds, v, r, s, to, mintTokens, mintTokenIds, mintTokenURIs)
-}
-
-// BurnSignedEIP191AndMint is a paid mutator transaction binding the contract method 0x3e100c07.
-//
-// Solidity: function burnSignedEIP191AndMint(address[] burnTokens, uint256[] burnTokenIds, uint8[] v, bytes32[] r, bytes32[] s, address[] to, address[] mintTokens, uint256[] mintTokenIds, string[] mintTokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) BurnSignedEIP191AndMint(burnTokens []common.Address, burnTokenIds []*big.Int, v []uint8, r [][32]byte, s [][32]byte, to []common.Address, mintTokens []common.Address, mintTokenIds []*big.Int, mintTokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.BurnSignedEIP191AndMint(&_ElvTokenHelper.TransactOpts, burnTokens, burnTokenIds, v, r, s, to, mintTokens, mintTokenIds, mintTokenURIs)
 }
 
 // MintWithTokenURIMany is a paid mutator transaction binding the contract method 0x7d58f1de.
@@ -10681,39 +8559,11 @@ func (_ElvTokenHelper *ElvTokenHelperTransactor) MintWithTokenURIMany(opts *bind
 	return _ElvTokenHelper.contract.Transact(opts, "mintWithTokenURIMany", tokAddrs, to, tokenIds, tokenURIs)
 }
 
-// MintWithTokenURIMany is a paid mutator transaction binding the contract method 0x7d58f1de.
-//
-// Solidity: function mintWithTokenURIMany(address[] tokAddrs, address[] to, uint256[] tokenIds, string[] tokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperSession) MintWithTokenURIMany(tokAddrs []common.Address, to []common.Address, tokenIds []*big.Int, tokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.MintWithTokenURIMany(&_ElvTokenHelper.TransactOpts, tokAddrs, to, tokenIds, tokenURIs)
-}
-
-// MintWithTokenURIMany is a paid mutator transaction binding the contract method 0x7d58f1de.
-//
-// Solidity: function mintWithTokenURIMany(address[] tokAddrs, address[] to, uint256[] tokenIds, string[] tokenURIs) returns(bool)
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) MintWithTokenURIMany(tokAddrs []common.Address, to []common.Address, tokenIds []*big.Int, tokenURIs []string) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.MintWithTokenURIMany(&_ElvTokenHelper.TransactOpts, tokAddrs, to, tokenIds, tokenURIs)
-}
-
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
 //
 // Solidity: function renounceOwnership() returns()
 func (_ElvTokenHelper *ElvTokenHelperTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ElvTokenHelper.contract.Transact(opts, "renounceOwnership")
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_ElvTokenHelper *ElvTokenHelperSession) RenounceOwnership() (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.RenounceOwnership(&_ElvTokenHelper.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.RenounceOwnership(&_ElvTokenHelper.TransactOpts)
 }
 
 // SetOverrideHoldSecs is a paid mutator transaction binding the contract method 0xdae98009.
@@ -10723,39 +8573,11 @@ func (_ElvTokenHelper *ElvTokenHelperTransactor) SetOverrideHoldSecs(opts *bind.
 	return _ElvTokenHelper.contract.Transact(opts, "setOverrideHoldSecs", _overrideHoldSecs)
 }
 
-// SetOverrideHoldSecs is a paid mutator transaction binding the contract method 0xdae98009.
-//
-// Solidity: function setOverrideHoldSecs(uint256 _overrideHoldSecs) returns()
-func (_ElvTokenHelper *ElvTokenHelperSession) SetOverrideHoldSecs(_overrideHoldSecs *big.Int) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.SetOverrideHoldSecs(&_ElvTokenHelper.TransactOpts, _overrideHoldSecs)
-}
-
-// SetOverrideHoldSecs is a paid mutator transaction binding the contract method 0xdae98009.
-//
-// Solidity: function setOverrideHoldSecs(uint256 _overrideHoldSecs) returns()
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) SetOverrideHoldSecs(_overrideHoldSecs *big.Int) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.SetOverrideHoldSecs(&_ElvTokenHelper.TransactOpts, _overrideHoldSecs)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_ElvTokenHelper *ElvTokenHelperTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
 	return _ElvTokenHelper.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_ElvTokenHelper *ElvTokenHelperSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.TransferOwnership(&_ElvTokenHelper.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_ElvTokenHelper *ElvTokenHelperTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _ElvTokenHelper.Contract.TransferOwnership(&_ElvTokenHelper.TransactOpts, newOwner)
 }
 
 // ElvTokenHelperOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the ElvTokenHelper contract.
@@ -10982,7 +8804,7 @@ var ElvTradableBin = ElvTradableMetaData.Bin
 
 // DeployElvTradable deploys a new Ethereum contract, binding an instance of ElvTradable to it.
 func DeployElvTradable(auth *bind.TransactOpts, backend bind.ContractBackend, _name string, _symbol string, _contractURI string, _proxyRegistryAddress common.Address, _baseTransferFee *big.Int, _cap *big.Int) (common.Address, *types.Transaction, *ElvTradable, error) {
-	parsed, err := ElvTradableMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ElvTradable)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -11017,43 +8839,6 @@ type ElvTradableTransactor struct {
 // ElvTradableFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ElvTradableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ElvTradableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ElvTradableSession struct {
-	Contract     *ElvTradable      // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ElvTradableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ElvTradableCallerSession struct {
-	Contract *ElvTradableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts      // Call options to use throughout this session
-}
-
-// ElvTradableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ElvTradableTransactorSession struct {
-	Contract     *ElvTradableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// ElvTradableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ElvTradableRaw struct {
-	Contract *ElvTradable // Generic contract binding to access the raw methods on
-}
-
-// ElvTradableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ElvTradableCallerRaw struct {
-	Contract *ElvTradableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ElvTradableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ElvTradableTransactorRaw struct {
-	Contract *ElvTradableTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewElvTradable creates a new instance of ElvTradable, bound to a specific deployed contract.
@@ -11094,49 +8879,11 @@ func NewElvTradableFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindElvTradable binds a generic wrapper to an already deployed contract.
 func bindElvTradable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ElvTradableABI))
+	parsed, err := ParsedABI(K_ElvTradable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvTradable *ElvTradableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvTradable.Contract.ElvTradableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvTradable *ElvTradableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvTradable.Contract.ElvTradableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvTradable *ElvTradableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvTradable.Contract.ElvTradableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvTradable *ElvTradableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvTradable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvTradable *ElvTradableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvTradable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvTradable *ElvTradableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvTradable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
@@ -11156,20 +8903,6 @@ func (_ElvTradable *ElvTradableCaller) PROXYTYPEREGISTRY(opts *bind.CallOpts) (*
 
 }
 
-// PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
-//
-// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
-func (_ElvTradable *ElvTradableSession) PROXYTYPEREGISTRY() (*big.Int, error) {
-	return _ElvTradable.Contract.PROXYTYPEREGISTRY(&_ElvTradable.CallOpts)
-}
-
-// PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
-//
-// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
-func (_ElvTradable *ElvTradableCallerSession) PROXYTYPEREGISTRY() (*big.Int, error) {
-	return _ElvTradable.Contract.PROXYTYPEREGISTRY(&_ElvTradable.CallOpts)
-}
-
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
 // Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
@@ -11185,20 +8918,6 @@ func (_ElvTradable *ElvTradableCaller) PROXYTYPETRANSFERFEE(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
-//
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
-func (_ElvTradable *ElvTradableSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
-	return _ElvTradable.Contract.PROXYTYPETRANSFERFEE(&_ElvTradable.CallOpts)
-}
-
-// PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
-//
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
-func (_ElvTradable *ElvTradableCallerSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
-	return _ElvTradable.Contract.PROXYTYPETRANSFERFEE(&_ElvTradable.CallOpts)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -11218,20 +8937,6 @@ func (_ElvTradable *ElvTradableCaller) BalanceOf(opts *bind.CallOpts, owner comm
 
 }
 
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ElvTradable *ElvTradableSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ElvTradable.Contract.BalanceOf(&_ElvTradable.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ElvTradable.Contract.BalanceOf(&_ElvTradable.CallOpts, owner)
-}
-
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
 //
 // Solidity: function baseTransferFee() view returns(uint256)
@@ -11247,20 +8952,6 @@ func (_ElvTradable *ElvTradableCaller) BaseTransferFee(opts *bind.CallOpts) (*bi
 
 	return out0, err
 
-}
-
-// BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
-//
-// Solidity: function baseTransferFee() view returns(uint256)
-func (_ElvTradable *ElvTradableSession) BaseTransferFee() (*big.Int, error) {
-	return _ElvTradable.Contract.BaseTransferFee(&_ElvTradable.CallOpts)
-}
-
-// BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
-//
-// Solidity: function baseTransferFee() view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) BaseTransferFee() (*big.Int, error) {
-	return _ElvTradable.Contract.BaseTransferFee(&_ElvTradable.CallOpts)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
@@ -11280,20 +8971,6 @@ func (_ElvTradable *ElvTradableCaller) Cap(opts *bind.CallOpts) (*big.Int, error
 
 }
 
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ElvTradable *ElvTradableSession) Cap() (*big.Int, error) {
-	return _ElvTradable.Contract.Cap(&_ElvTradable.CallOpts)
-}
-
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) Cap() (*big.Int, error) {
-	return _ElvTradable.Contract.Cap(&_ElvTradable.CallOpts)
-}
-
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
 //
 // Solidity: function contractURI() view returns(string)
@@ -11309,20 +8986,6 @@ func (_ElvTradable *ElvTradableCaller) ContractURI(opts *bind.CallOpts) (string,
 
 	return out0, err
 
-}
-
-// ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
-//
-// Solidity: function contractURI() view returns(string)
-func (_ElvTradable *ElvTradableSession) ContractURI() (string, error) {
-	return _ElvTradable.Contract.ContractURI(&_ElvTradable.CallOpts)
-}
-
-// ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
-//
-// Solidity: function contractURI() view returns(string)
-func (_ElvTradable *ElvTradableCallerSession) ContractURI() (string, error) {
-	return _ElvTradable.Contract.ContractURI(&_ElvTradable.CallOpts)
 }
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
@@ -11342,20 +9005,6 @@ func (_ElvTradable *ElvTradableCaller) Exists(opts *bind.CallOpts, tokenId *big.
 
 }
 
-// Exists is a free data retrieval call binding the contract method 0x4f558e79.
-//
-// Solidity: function exists(uint256 tokenId) view returns(bool)
-func (_ElvTradable *ElvTradableSession) Exists(tokenId *big.Int) (bool, error) {
-	return _ElvTradable.Contract.Exists(&_ElvTradable.CallOpts, tokenId)
-}
-
-// Exists is a free data retrieval call binding the contract method 0x4f558e79.
-//
-// Solidity: function exists(uint256 tokenId) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) Exists(tokenId *big.Int) (bool, error) {
-	return _ElvTradable.Contract.Exists(&_ElvTradable.CallOpts, tokenId)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address)
@@ -11371,20 +9020,6 @@ func (_ElvTradable *ElvTradableCaller) GetApproved(opts *bind.CallOpts, tokenId 
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ElvTradable *ElvTradableSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradable.Contract.GetApproved(&_ElvTradable.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ElvTradable *ElvTradableCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradable.Contract.GetApproved(&_ElvTradable.CallOpts, tokenId)
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
@@ -11404,20 +9039,6 @@ func (_ElvTradable *ElvTradableCaller) GetTransferFee(opts *bind.CallOpts, _toke
 
 }
 
-// GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
-//
-// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
-func (_ElvTradable *ElvTradableSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.GetTransferFee(&_ElvTradable.CallOpts, _tokenId)
-}
-
-// GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
-//
-// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.GetTransferFee(&_ElvTradable.CallOpts, _tokenId)
-}
-
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
 // Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
@@ -11433,20 +9054,6 @@ func (_ElvTradable *ElvTradableCaller) IsApprovedForAll(opts *bind.CallOpts, own
 
 	return out0, err
 
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradable *ElvTradableSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradable.Contract.IsApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradable.Contract.IsApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
@@ -11466,20 +9073,6 @@ func (_ElvTradable *ElvTradableCaller) IsMinter(opts *bind.CallOpts, account com
 
 }
 
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ElvTradable *ElvTradableSession) IsMinter(account common.Address) (bool, error) {
-	return _ElvTradable.Contract.IsMinter(&_ElvTradable.CallOpts, account)
-}
-
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) IsMinter(account common.Address) (bool, error) {
-	return _ElvTradable.Contract.IsMinter(&_ElvTradable.CallOpts, account)
-}
-
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
 // Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
@@ -11495,20 +9088,6 @@ func (_ElvTradable *ElvTradableCaller) IsMinterSigned(opts *bind.CallOpts, to co
 
 	return out0, err
 
-}
-
-// IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
-//
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradable *ElvTradableSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradable.Contract.IsMinterSigned(&_ElvTradable.CallOpts, to, tokenId, tokenURI, v, r, s)
-}
-
-// IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
-//
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradable.Contract.IsMinterSigned(&_ElvTradable.CallOpts, to, tokenId, tokenURI, v, r, s)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
@@ -11528,20 +9107,6 @@ func (_ElvTradable *ElvTradableCaller) IsOwner(opts *bind.CallOpts) (bool, error
 
 }
 
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_ElvTradable *ElvTradableSession) IsOwner() (bool, error) {
-	return _ElvTradable.Contract.IsOwner(&_ElvTradable.CallOpts)
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) IsOwner() (bool, error) {
-	return _ElvTradable.Contract.IsOwner(&_ElvTradable.CallOpts)
-}
-
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
 // Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
@@ -11557,20 +9122,6 @@ func (_ElvTradable *ElvTradableCaller) IsOwnerSigned(opts *bind.CallOpts, from c
 
 	return out0, err
 
-}
-
-// IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
-//
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradable *ElvTradableSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradable.Contract.IsOwnerSigned(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
-}
-
-// IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
-//
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradable.Contract.IsOwnerSigned(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
@@ -11590,20 +9141,6 @@ func (_ElvTradable *ElvTradableCaller) IsOwnerSignedEIP191(opts *bind.CallOpts, 
 
 }
 
-// IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
-//
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradable *ElvTradableSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradable.Contract.IsOwnerSignedEIP191(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
-}
-
-// IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
-//
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradable.Contract.IsOwnerSignedEIP191(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
-}
-
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
 // Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
@@ -11619,20 +9156,6 @@ func (_ElvTradable *ElvTradableCaller) IsProxyApprovedForAll(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
-//
-// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradable *ElvTradableSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradable.Contract.IsProxyApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
-}
-
-// IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
-//
-// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradable.Contract.IsProxyApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
 }
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
@@ -11652,20 +9175,6 @@ func (_ElvTradable *ElvTradableCaller) Minted(opts *bind.CallOpts) (*big.Int, er
 
 }
 
-// Minted is a free data retrieval call binding the contract method 0x4f02c420.
-//
-// Solidity: function minted() view returns(uint256)
-func (_ElvTradable *ElvTradableSession) Minted() (*big.Int, error) {
-	return _ElvTradable.Contract.Minted(&_ElvTradable.CallOpts)
-}
-
-// Minted is a free data retrieval call binding the contract method 0x4f02c420.
-//
-// Solidity: function minted() view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) Minted() (*big.Int, error) {
-	return _ElvTradable.Contract.Minted(&_ElvTradable.CallOpts)
-}
-
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
@@ -11681,20 +9190,6 @@ func (_ElvTradable *ElvTradableCaller) Name(opts *bind.CallOpts) (string, error)
 
 	return out0, err
 
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ElvTradable *ElvTradableSession) Name() (string, error) {
-	return _ElvTradable.Contract.Name(&_ElvTradable.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ElvTradable *ElvTradableCallerSession) Name() (string, error) {
-	return _ElvTradable.Contract.Name(&_ElvTradable.CallOpts)
 }
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
@@ -11714,20 +9209,6 @@ func (_ElvTradable *ElvTradableCaller) OrdinalOfToken(opts *bind.CallOpts, token
 
 }
 
-// OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
-//
-// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
-func (_ElvTradable *ElvTradableSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.OrdinalOfToken(&_ElvTradable.CallOpts, tokenId)
-}
-
-// OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
-//
-// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.OrdinalOfToken(&_ElvTradable.CallOpts, tokenId)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -11743,20 +9224,6 @@ func (_ElvTradable *ElvTradableCaller) Owner(opts *bind.CallOpts) (common.Addres
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_ElvTradable *ElvTradableSession) Owner() (common.Address, error) {
-	return _ElvTradable.Contract.Owner(&_ElvTradable.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_ElvTradable *ElvTradableCallerSession) Owner() (common.Address, error) {
-	return _ElvTradable.Contract.Owner(&_ElvTradable.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
@@ -11776,20 +9243,6 @@ func (_ElvTradable *ElvTradableCaller) OwnerOf(opts *bind.CallOpts, tokenId *big
 
 }
 
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ElvTradable *ElvTradableSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradable.Contract.OwnerOf(&_ElvTradable.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ElvTradable *ElvTradableCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradable.Contract.OwnerOf(&_ElvTradable.CallOpts, tokenId)
-}
-
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
 // Solidity: function proxyRegistryAddress() view returns(address)
@@ -11805,20 +9258,6 @@ func (_ElvTradable *ElvTradableCaller) ProxyRegistryAddress(opts *bind.CallOpts)
 
 	return out0, err
 
-}
-
-// ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
-//
-// Solidity: function proxyRegistryAddress() view returns(address)
-func (_ElvTradable *ElvTradableSession) ProxyRegistryAddress() (common.Address, error) {
-	return _ElvTradable.Contract.ProxyRegistryAddress(&_ElvTradable.CallOpts)
-}
-
-// ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
-//
-// Solidity: function proxyRegistryAddress() view returns(address)
-func (_ElvTradable *ElvTradableCallerSession) ProxyRegistryAddress() (common.Address, error) {
-	return _ElvTradable.Contract.ProxyRegistryAddress(&_ElvTradable.CallOpts)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -11838,20 +9277,6 @@ func (_ElvTradable *ElvTradableCaller) SupportsInterface(opts *bind.CallOpts, in
 
 }
 
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ElvTradable *ElvTradableSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ElvTradable.Contract.SupportsInterface(&_ElvTradable.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ElvTradable *ElvTradableCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ElvTradable.Contract.SupportsInterface(&_ElvTradable.CallOpts, interfaceId)
-}
-
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
 // Solidity: function symbol() view returns(string)
@@ -11867,20 +9292,6 @@ func (_ElvTradable *ElvTradableCaller) Symbol(opts *bind.CallOpts) (string, erro
 
 	return out0, err
 
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ElvTradable *ElvTradableSession) Symbol() (string, error) {
-	return _ElvTradable.Contract.Symbol(&_ElvTradable.CallOpts)
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ElvTradable *ElvTradableCallerSession) Symbol() (string, error) {
-	return _ElvTradable.Contract.Symbol(&_ElvTradable.CallOpts)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
@@ -11900,20 +9311,6 @@ func (_ElvTradable *ElvTradableCaller) TokenByIndex(opts *bind.CallOpts, index *
 
 }
 
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_ElvTradable *ElvTradableSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.TokenByIndex(&_ElvTradable.CallOpts, index)
-}
-
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.TokenByIndex(&_ElvTradable.CallOpts, index)
-}
-
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
 // Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
@@ -11929,20 +9326,6 @@ func (_ElvTradable *ElvTradableCaller) TokenOfOwnerByIndex(opts *bind.CallOpts, 
 
 	return out0, err
 
-}
-
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
-func (_ElvTradable *ElvTradableSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.TokenOfOwnerByIndex(&_ElvTradable.CallOpts, owner, index)
-}
-
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _ElvTradable.Contract.TokenOfOwnerByIndex(&_ElvTradable.CallOpts, owner, index)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
@@ -11962,20 +9345,6 @@ func (_ElvTradable *ElvTradableCaller) TokenURI(opts *bind.CallOpts, tokenId *bi
 
 }
 
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_ElvTradable *ElvTradableSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _ElvTradable.Contract.TokenURI(&_ElvTradable.CallOpts, tokenId)
-}
-
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_ElvTradable *ElvTradableCallerSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _ElvTradable.Contract.TokenURI(&_ElvTradable.CallOpts, tokenId)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -11991,20 +9360,6 @@ func (_ElvTradable *ElvTradableCaller) TotalSupply(opts *bind.CallOpts) (*big.In
 
 	return out0, err
 
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ElvTradable *ElvTradableSession) TotalSupply() (*big.Int, error) {
-	return _ElvTradable.Contract.TotalSupply(&_ElvTradable.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ElvTradable *ElvTradableCallerSession) TotalSupply() (*big.Int, error) {
-	return _ElvTradable.Contract.TotalSupply(&_ElvTradable.CallOpts)
 }
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
@@ -12024,39 +9379,11 @@ func (_ElvTradable *ElvTradableCaller) TransferFeeProxyAddress(opts *bind.CallOp
 
 }
 
-// TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
-//
-// Solidity: function transferFeeProxyAddress() view returns(address)
-func (_ElvTradable *ElvTradableSession) TransferFeeProxyAddress() (common.Address, error) {
-	return _ElvTradable.Contract.TransferFeeProxyAddress(&_ElvTradable.CallOpts)
-}
-
-// TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
-//
-// Solidity: function transferFeeProxyAddress() view returns(address)
-func (_ElvTradable *ElvTradableCallerSession) TransferFeeProxyAddress() (common.Address, error) {
-	return _ElvTradable.Contract.TransferFeeProxyAddress(&_ElvTradable.CallOpts)
-}
-
 // AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
 //
 // Solidity: function addMinter(address account) returns()
 func (_ElvTradable *ElvTradableTransactor) AddMinter(opts *bind.TransactOpts, account common.Address) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "addMinter", account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ElvTradable *ElvTradableSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.AddMinter(&_ElvTradable.TransactOpts, account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ElvTradable *ElvTradableTransactorSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.AddMinter(&_ElvTradable.TransactOpts, account)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
@@ -12066,39 +9393,11 @@ func (_ElvTradable *ElvTradableTransactor) Approve(opts *bind.TransactOpts, to c
 	return _ElvTradable.contract.Transact(opts, "approve", to, tokenId)
 }
 
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ElvTradable *ElvTradableSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.Approve(&_ElvTradable.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ElvTradable *ElvTradableTransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.Approve(&_ElvTradable.TransactOpts, to, tokenId)
-}
-
 // Burn is a paid mutator transaction binding the contract method 0x42966c68.
 //
 // Solidity: function burn(uint256 tokenId) returns()
 func (_ElvTradable *ElvTradableTransactor) Burn(opts *bind.TransactOpts, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "burn", tokenId)
-}
-
-// Burn is a paid mutator transaction binding the contract method 0x42966c68.
-//
-// Solidity: function burn(uint256 tokenId) returns()
-func (_ElvTradable *ElvTradableSession) Burn(tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.Burn(&_ElvTradable.TransactOpts, tokenId)
-}
-
-// Burn is a paid mutator transaction binding the contract method 0x42966c68.
-//
-// Solidity: function burn(uint256 tokenId) returns()
-func (_ElvTradable *ElvTradableTransactorSession) Burn(tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.Burn(&_ElvTradable.TransactOpts, tokenId)
 }
 
 // BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
@@ -12108,39 +9407,11 @@ func (_ElvTradable *ElvTradableTransactor) BurnSigned(opts *bind.TransactOpts, f
 	return _ElvTradable.contract.Transact(opts, "burnSigned", from, tokenId, v, r, s)
 }
 
-// BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
-//
-// Solidity: function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradable *ElvTradableSession) BurnSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.BurnSigned(&_ElvTradable.TransactOpts, from, tokenId, v, r, s)
-}
-
-// BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
-//
-// Solidity: function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradable *ElvTradableTransactorSession) BurnSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.BurnSigned(&_ElvTradable.TransactOpts, from, tokenId, v, r, s)
-}
-
 // BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
 //
 // Solidity: function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
 func (_ElvTradable *ElvTradableTransactor) BurnSignedEIP191(opts *bind.TransactOpts, from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "burnSignedEIP191", from, tokenId, v, r, s)
-}
-
-// BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
-//
-// Solidity: function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradable *ElvTradableSession) BurnSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.BurnSignedEIP191(&_ElvTradable.TransactOpts, from, tokenId, v, r, s)
-}
-
-// BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
-//
-// Solidity: function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradable *ElvTradableTransactorSession) BurnSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.BurnSignedEIP191(&_ElvTradable.TransactOpts, from, tokenId, v, r, s)
 }
 
 // MintSignedWithTokenURI is a paid mutator transaction binding the contract method 0x3d60d0a8.
@@ -12150,39 +9421,11 @@ func (_ElvTradable *ElvTradableTransactor) MintSignedWithTokenURI(opts *bind.Tra
 	return _ElvTradable.contract.Transact(opts, "mintSignedWithTokenURI", to, tokenId, tokenURI, v, r, s)
 }
 
-// MintSignedWithTokenURI is a paid mutator transaction binding the contract method 0x3d60d0a8.
-//
-// Solidity: function mintSignedWithTokenURI(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradable *ElvTradableSession) MintSignedWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.MintSignedWithTokenURI(&_ElvTradable.TransactOpts, to, tokenId, tokenURI, v, r, s)
-}
-
-// MintSignedWithTokenURI is a paid mutator transaction binding the contract method 0x3d60d0a8.
-//
-// Solidity: function mintSignedWithTokenURI(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradable *ElvTradableTransactorSession) MintSignedWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.MintSignedWithTokenURI(&_ElvTradable.TransactOpts, to, tokenId, tokenURI, v, r, s)
-}
-
 // MintWithTokenURI is a paid mutator transaction binding the contract method 0x50bb4e7f.
 //
 // Solidity: function mintWithTokenURI(address to, uint256 tokenId, string tokenURI) returns(bool)
 func (_ElvTradable *ElvTradableTransactor) MintWithTokenURI(opts *bind.TransactOpts, to common.Address, tokenId *big.Int, tokenURI string) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "mintWithTokenURI", to, tokenId, tokenURI)
-}
-
-// MintWithTokenURI is a paid mutator transaction binding the contract method 0x50bb4e7f.
-//
-// Solidity: function mintWithTokenURI(address to, uint256 tokenId, string tokenURI) returns(bool)
-func (_ElvTradable *ElvTradableSession) MintWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string) (*types.Transaction, error) {
-	return _ElvTradable.Contract.MintWithTokenURI(&_ElvTradable.TransactOpts, to, tokenId, tokenURI)
-}
-
-// MintWithTokenURI is a paid mutator transaction binding the contract method 0x50bb4e7f.
-//
-// Solidity: function mintWithTokenURI(address to, uint256 tokenId, string tokenURI) returns(bool)
-func (_ElvTradable *ElvTradableTransactorSession) MintWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string) (*types.Transaction, error) {
-	return _ElvTradable.Contract.MintWithTokenURI(&_ElvTradable.TransactOpts, to, tokenId, tokenURI)
 }
 
 // RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
@@ -12192,39 +9435,11 @@ func (_ElvTradable *ElvTradableTransactor) RenounceMinter(opts *bind.TransactOpt
 	return _ElvTradable.contract.Transact(opts, "renounceMinter")
 }
 
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ElvTradable *ElvTradableSession) RenounceMinter() (*types.Transaction, error) {
-	return _ElvTradable.Contract.RenounceMinter(&_ElvTradable.TransactOpts)
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ElvTradable *ElvTradableTransactorSession) RenounceMinter() (*types.Transaction, error) {
-	return _ElvTradable.Contract.RenounceMinter(&_ElvTradable.TransactOpts)
-}
-
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
 //
 // Solidity: function renounceOwnership() returns()
 func (_ElvTradable *ElvTradableTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "renounceOwnership")
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_ElvTradable *ElvTradableSession) RenounceOwnership() (*types.Transaction, error) {
-	return _ElvTradable.Contract.RenounceOwnership(&_ElvTradable.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_ElvTradable *ElvTradableTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _ElvTradable.Contract.RenounceOwnership(&_ElvTradable.TransactOpts)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
@@ -12234,39 +9449,11 @@ func (_ElvTradable *ElvTradableTransactor) SafeTransferFrom(opts *bind.TransactO
 	return _ElvTradable.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradable *ElvTradableSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SafeTransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradable *ElvTradableTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SafeTransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
-}
-
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ElvTradable *ElvTradableTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ElvTradable *ElvTradableSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SafeTransferFrom0(&_ElvTradable.TransactOpts, from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ElvTradable *ElvTradableTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SafeTransferFrom0(&_ElvTradable.TransactOpts, from, to, tokenId, _data)
 }
 
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
@@ -12276,39 +9463,11 @@ func (_ElvTradable *ElvTradableTransactor) SetApprovalForAll(opts *bind.Transact
 	return _ElvTradable.contract.Transact(opts, "setApprovalForAll", to, approved)
 }
 
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ElvTradable *ElvTradableSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetApprovalForAll(&_ElvTradable.TransactOpts, to, approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ElvTradable *ElvTradableTransactorSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetApprovalForAll(&_ElvTradable.TransactOpts, to, approved)
-}
-
 // SetBaseTransferFee is a paid mutator transaction binding the contract method 0x10561224.
 //
 // Solidity: function setBaseTransferFee(uint256 _newBaseFee) returns()
 func (_ElvTradable *ElvTradableTransactor) SetBaseTransferFee(opts *bind.TransactOpts, _newBaseFee *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "setBaseTransferFee", _newBaseFee)
-}
-
-// SetBaseTransferFee is a paid mutator transaction binding the contract method 0x10561224.
-//
-// Solidity: function setBaseTransferFee(uint256 _newBaseFee) returns()
-func (_ElvTradable *ElvTradableSession) SetBaseTransferFee(_newBaseFee *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetBaseTransferFee(&_ElvTradable.TransactOpts, _newBaseFee)
-}
-
-// SetBaseTransferFee is a paid mutator transaction binding the contract method 0x10561224.
-//
-// Solidity: function setBaseTransferFee(uint256 _newBaseFee) returns()
-func (_ElvTradable *ElvTradableTransactorSession) SetBaseTransferFee(_newBaseFee *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetBaseTransferFee(&_ElvTradable.TransactOpts, _newBaseFee)
 }
 
 // SetContractURI is a paid mutator transaction binding the contract method 0x938e3d7b.
@@ -12318,39 +9477,11 @@ func (_ElvTradable *ElvTradableTransactor) SetContractURI(opts *bind.TransactOpt
 	return _ElvTradable.contract.Transact(opts, "setContractURI", _newContractURI)
 }
 
-// SetContractURI is a paid mutator transaction binding the contract method 0x938e3d7b.
-//
-// Solidity: function setContractURI(string _newContractURI) returns()
-func (_ElvTradable *ElvTradableSession) SetContractURI(_newContractURI string) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetContractURI(&_ElvTradable.TransactOpts, _newContractURI)
-}
-
-// SetContractURI is a paid mutator transaction binding the contract method 0x938e3d7b.
-//
-// Solidity: function setContractURI(string _newContractURI) returns()
-func (_ElvTradable *ElvTradableTransactorSession) SetContractURI(_newContractURI string) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetContractURI(&_ElvTradable.TransactOpts, _newContractURI)
-}
-
 // SetProxyRegistryAddress is a paid mutator transaction binding the contract method 0xd26ea6c0.
 //
 // Solidity: function setProxyRegistryAddress(address _newProxy) returns()
 func (_ElvTradable *ElvTradableTransactor) SetProxyRegistryAddress(opts *bind.TransactOpts, _newProxy common.Address) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "setProxyRegistryAddress", _newProxy)
-}
-
-// SetProxyRegistryAddress is a paid mutator transaction binding the contract method 0xd26ea6c0.
-//
-// Solidity: function setProxyRegistryAddress(address _newProxy) returns()
-func (_ElvTradable *ElvTradableSession) SetProxyRegistryAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetProxyRegistryAddress(&_ElvTradable.TransactOpts, _newProxy)
-}
-
-// SetProxyRegistryAddress is a paid mutator transaction binding the contract method 0xd26ea6c0.
-//
-// Solidity: function setProxyRegistryAddress(address _newProxy) returns()
-func (_ElvTradable *ElvTradableTransactorSession) SetProxyRegistryAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetProxyRegistryAddress(&_ElvTradable.TransactOpts, _newProxy)
 }
 
 // SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
@@ -12360,39 +9491,11 @@ func (_ElvTradable *ElvTradableTransactor) SetTokenURI(opts *bind.TransactOpts, 
 	return _ElvTradable.contract.Transact(opts, "setTokenURI", tokenId, uri)
 }
 
-// SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
-//
-// Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
-func (_ElvTradable *ElvTradableSession) SetTokenURI(tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetTokenURI(&_ElvTradable.TransactOpts, tokenId, uri)
-}
-
-// SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
-//
-// Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
-func (_ElvTradable *ElvTradableTransactorSession) SetTokenURI(tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetTokenURI(&_ElvTradable.TransactOpts, tokenId, uri)
-}
-
 // SetTransferFeeProxyAddress is a paid mutator transaction binding the contract method 0x2c18fc16.
 //
 // Solidity: function setTransferFeeProxyAddress(address _newProxy) returns()
 func (_ElvTradable *ElvTradableTransactor) SetTransferFeeProxyAddress(opts *bind.TransactOpts, _newProxy common.Address) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "setTransferFeeProxyAddress", _newProxy)
-}
-
-// SetTransferFeeProxyAddress is a paid mutator transaction binding the contract method 0x2c18fc16.
-//
-// Solidity: function setTransferFeeProxyAddress(address _newProxy) returns()
-func (_ElvTradable *ElvTradableSession) SetTransferFeeProxyAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetTransferFeeProxyAddress(&_ElvTradable.TransactOpts, _newProxy)
-}
-
-// SetTransferFeeProxyAddress is a paid mutator transaction binding the contract method 0x2c18fc16.
-//
-// Solidity: function setTransferFeeProxyAddress(address _newProxy) returns()
-func (_ElvTradable *ElvTradableTransactorSession) SetTransferFeeProxyAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.SetTransferFeeProxyAddress(&_ElvTradable.TransactOpts, _newProxy)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
@@ -12402,20 +9505,6 @@ func (_ElvTradable *ElvTradableTransactor) TransferFrom(opts *bind.TransactOpts,
 	return _ElvTradable.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradable *ElvTradableSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.TransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradable *ElvTradableTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.TransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -12423,39 +9512,11 @@ func (_ElvTradable *ElvTradableTransactor) TransferOwnership(opts *bind.Transact
 	return _ElvTradable.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_ElvTradable *ElvTradableSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.TransferOwnership(&_ElvTradable.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_ElvTradable *ElvTradableTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _ElvTradable.Contract.TransferOwnership(&_ElvTradable.TransactOpts, newOwner)
-}
-
 // Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
 //
 // Solidity: function withdraw(uint256 _amount) returns()
 func (_ElvTradable *ElvTradableTransactor) Withdraw(opts *bind.TransactOpts, _amount *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "withdraw", _amount)
-}
-
-// Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
-//
-// Solidity: function withdraw(uint256 _amount) returns()
-func (_ElvTradable *ElvTradableSession) Withdraw(_amount *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.Withdraw(&_ElvTradable.TransactOpts, _amount)
-}
-
-// Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
-//
-// Solidity: function withdraw(uint256 _amount) returns()
-func (_ElvTradable *ElvTradableTransactorSession) Withdraw(_amount *big.Int) (*types.Transaction, error) {
-	return _ElvTradable.Contract.Withdraw(&_ElvTradable.TransactOpts, _amount)
 }
 
 // ElvTradableApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ElvTradable contract.
@@ -13886,7 +10947,7 @@ var ElvTradableLocalBin = ElvTradableLocalMetaData.Bin
 
 // DeployElvTradableLocal deploys a new Ethereum contract, binding an instance of ElvTradableLocal to it.
 func DeployElvTradableLocal(auth *bind.TransactOpts, backend bind.ContractBackend, _name string, _symbol string, _contractURI string, _proxyRegistryAddress common.Address, _baseTransferFee *big.Int, _cap *big.Int, _defHoldSecs *big.Int) (common.Address, *types.Transaction, *ElvTradableLocal, error) {
-	parsed, err := ElvTradableLocalMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ElvTradableLocal)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -13921,43 +10982,6 @@ type ElvTradableLocalTransactor struct {
 // ElvTradableLocalFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ElvTradableLocalFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ElvTradableLocalSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ElvTradableLocalSession struct {
-	Contract     *ElvTradableLocal // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ElvTradableLocalCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ElvTradableLocalCallerSession struct {
-	Contract *ElvTradableLocalCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts           // Call options to use throughout this session
-}
-
-// ElvTradableLocalTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ElvTradableLocalTransactorSession struct {
-	Contract     *ElvTradableLocalTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
-}
-
-// ElvTradableLocalRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ElvTradableLocalRaw struct {
-	Contract *ElvTradableLocal // Generic contract binding to access the raw methods on
-}
-
-// ElvTradableLocalCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ElvTradableLocalCallerRaw struct {
-	Contract *ElvTradableLocalCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ElvTradableLocalTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ElvTradableLocalTransactorRaw struct {
-	Contract *ElvTradableLocalTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewElvTradableLocal creates a new instance of ElvTradableLocal, bound to a specific deployed contract.
@@ -13998,49 +11022,11 @@ func NewElvTradableLocalFilterer(address common.Address, filterer bind.ContractF
 
 // bindElvTradableLocal binds a generic wrapper to an already deployed contract.
 func bindElvTradableLocal(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ElvTradableLocalABI))
+	parsed, err := ParsedABI(K_ElvTradableLocal)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvTradableLocal *ElvTradableLocalRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvTradableLocal.Contract.ElvTradableLocalCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvTradableLocal *ElvTradableLocalRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.ElvTradableLocalTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvTradableLocal *ElvTradableLocalRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.ElvTradableLocalTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ElvTradableLocal *ElvTradableLocalCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ElvTradableLocal.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ElvTradableLocal *ElvTradableLocalTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ElvTradableLocal *ElvTradableLocalTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
@@ -14060,20 +11046,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) PROXYTYPEREGISTRY(opts *bind.Ca
 
 }
 
-// PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
-//
-// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
-func (_ElvTradableLocal *ElvTradableLocalSession) PROXYTYPEREGISTRY() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.PROXYTYPEREGISTRY(&_ElvTradableLocal.CallOpts)
-}
-
-// PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
-//
-// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) PROXYTYPEREGISTRY() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.PROXYTYPEREGISTRY(&_ElvTradableLocal.CallOpts)
-}
-
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
 // Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
@@ -14089,20 +11061,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) PROXYTYPETRANSFERFEE(opts *bind
 
 	return out0, err
 
-}
-
-// PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
-//
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
-func (_ElvTradableLocal *ElvTradableLocalSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.PROXYTYPETRANSFERFEE(&_ElvTradableLocal.CallOpts)
-}
-
-// PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
-//
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.PROXYTYPETRANSFERFEE(&_ElvTradableLocal.CallOpts)
 }
 
 // AllTokensHolds is a free data retrieval call binding the contract method 0x7bc3188b.
@@ -14122,20 +11080,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) AllTokensHolds(opts *bind.CallO
 
 }
 
-// AllTokensHolds is a free data retrieval call binding the contract method 0x7bc3188b.
-//
-// Solidity: function _allTokensHolds(uint256 ) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) AllTokensHolds(arg0 *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.AllTokensHolds(&_ElvTradableLocal.CallOpts, arg0)
-}
-
-// AllTokensHolds is a free data retrieval call binding the contract method 0x7bc3188b.
-//
-// Solidity: function _allTokensHolds(uint256 ) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) AllTokensHolds(arg0 *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.AllTokensHolds(&_ElvTradableLocal.CallOpts, arg0)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address owner) view returns(uint256)
@@ -14151,20 +11095,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) BalanceOf(opts *bind.CallOpts, 
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.BalanceOf(&_ElvTradableLocal.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.BalanceOf(&_ElvTradableLocal.CallOpts, owner)
 }
 
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
@@ -14184,20 +11114,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) BaseTransferFee(opts *bind.Call
 
 }
 
-// BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
-//
-// Solidity: function baseTransferFee() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) BaseTransferFee() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.BaseTransferFee(&_ElvTradableLocal.CallOpts)
-}
-
-// BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
-//
-// Solidity: function baseTransferFee() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) BaseTransferFee() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.BaseTransferFee(&_ElvTradableLocal.CallOpts)
-}
-
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
 // Solidity: function cap() view returns(uint256)
@@ -14213,20 +11129,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Cap(opts *bind.CallOpts) (*big.
 
 	return out0, err
 
-}
-
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) Cap() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.Cap(&_ElvTradableLocal.CallOpts)
-}
-
-// Cap is a free data retrieval call binding the contract method 0x355274ea.
-//
-// Solidity: function cap() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) Cap() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.Cap(&_ElvTradableLocal.CallOpts)
 }
 
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
@@ -14246,20 +11148,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) ContractURI(opts *bind.CallOpts
 
 }
 
-// ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
-//
-// Solidity: function contractURI() view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalSession) ContractURI() (string, error) {
-	return _ElvTradableLocal.Contract.ContractURI(&_ElvTradableLocal.CallOpts)
-}
-
-// ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
-//
-// Solidity: function contractURI() view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) ContractURI() (string, error) {
-	return _ElvTradableLocal.Contract.ContractURI(&_ElvTradableLocal.CallOpts)
-}
-
 // DefHoldSecs is a free data retrieval call binding the contract method 0x96828a3b.
 //
 // Solidity: function defHoldSecs() view returns(uint256)
@@ -14275,20 +11163,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) DefHoldSecs(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// DefHoldSecs is a free data retrieval call binding the contract method 0x96828a3b.
-//
-// Solidity: function defHoldSecs() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) DefHoldSecs() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.DefHoldSecs(&_ElvTradableLocal.CallOpts)
-}
-
-// DefHoldSecs is a free data retrieval call binding the contract method 0x96828a3b.
-//
-// Solidity: function defHoldSecs() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) DefHoldSecs() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.DefHoldSecs(&_ElvTradableLocal.CallOpts)
 }
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
@@ -14308,20 +11182,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Exists(opts *bind.CallOpts, tok
 
 }
 
-// Exists is a free data retrieval call binding the contract method 0x4f558e79.
-//
-// Solidity: function exists(uint256 tokenId) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) Exists(tokenId *big.Int) (bool, error) {
-	return _ElvTradableLocal.Contract.Exists(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
-// Exists is a free data retrieval call binding the contract method 0x4f558e79.
-//
-// Solidity: function exists(uint256 tokenId) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) Exists(tokenId *big.Int) (bool, error) {
-	return _ElvTradableLocal.Contract.Exists(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address)
@@ -14337,20 +11197,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) GetApproved(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradableLocal.Contract.GetApproved(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradableLocal.Contract.GetApproved(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
@@ -14370,20 +11216,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) GetTransferFee(opts *bind.CallO
 
 }
 
-// GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
-//
-// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.GetTransferFee(&_ElvTradableLocal.CallOpts, _tokenId)
-}
-
-// GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
-//
-// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.GetTransferFee(&_ElvTradableLocal.CallOpts, _tokenId)
-}
-
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
 // Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
@@ -14399,20 +11231,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsApprovedForAll(opts *bind.Cal
 
 	return out0, err
 
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradableLocal.Contract.IsApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradableLocal.Contract.IsApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
@@ -14432,20 +11250,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsMinter(opts *bind.CallOpts, a
 
 }
 
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) IsMinter(account common.Address) (bool, error) {
-	return _ElvTradableLocal.Contract.IsMinter(&_ElvTradableLocal.CallOpts, account)
-}
-
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsMinter(account common.Address) (bool, error) {
-	return _ElvTradableLocal.Contract.IsMinter(&_ElvTradableLocal.CallOpts, account)
-}
-
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
 // Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
@@ -14461,20 +11265,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsMinterSigned(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
-//
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.IsMinterSigned(&_ElvTradableLocal.CallOpts, to, tokenId, tokenURI, v, r, s)
-}
-
-// IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
-//
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.IsMinterSigned(&_ElvTradableLocal.CallOpts, to, tokenId, tokenURI, v, r, s)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
@@ -14494,20 +11284,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwner(opts *bind.CallOpts) (b
 
 }
 
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) IsOwner() (bool, error) {
-	return _ElvTradableLocal.Contract.IsOwner(&_ElvTradableLocal.CallOpts)
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsOwner() (bool, error) {
-	return _ElvTradableLocal.Contract.IsOwner(&_ElvTradableLocal.CallOpts)
-}
-
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
 // Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
@@ -14523,20 +11299,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwnerSigned(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
-//
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.IsOwnerSigned(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
-}
-
-// IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
-//
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.IsOwnerSigned(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
@@ -14556,20 +11318,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwnerSignedEIP191(opts *bind.
 
 }
 
-// IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
-//
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.IsOwnerSignedEIP191(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
-}
-
-// IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
-//
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.IsOwnerSignedEIP191(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
-}
-
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
 // Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
@@ -14585,20 +11333,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsProxyApprovedForAll(opts *bin
 
 	return out0, err
 
-}
-
-// IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
-//
-// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradableLocal.Contract.IsProxyApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
-}
-
-// IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
-//
-// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _ElvTradableLocal.Contract.IsProxyApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
 }
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
@@ -14618,20 +11352,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Minted(opts *bind.CallOpts) (*b
 
 }
 
-// Minted is a free data retrieval call binding the contract method 0x4f02c420.
-//
-// Solidity: function minted() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) Minted() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.Minted(&_ElvTradableLocal.CallOpts)
-}
-
-// Minted is a free data retrieval call binding the contract method 0x4f02c420.
-//
-// Solidity: function minted() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) Minted() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.Minted(&_ElvTradableLocal.CallOpts)
-}
-
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
@@ -14647,20 +11367,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Name(opts *bind.CallOpts) (stri
 
 	return out0, err
 
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalSession) Name() (string, error) {
-	return _ElvTradableLocal.Contract.Name(&_ElvTradableLocal.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) Name() (string, error) {
-	return _ElvTradableLocal.Contract.Name(&_ElvTradableLocal.CallOpts)
 }
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
@@ -14680,20 +11386,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) OrdinalOfToken(opts *bind.CallO
 
 }
 
-// OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
-//
-// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.OrdinalOfToken(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
-// OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
-//
-// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.OrdinalOfToken(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -14709,20 +11401,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Owner(opts *bind.CallOpts) (com
 
 	return out0, err
 
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalSession) Owner() (common.Address, error) {
-	return _ElvTradableLocal.Contract.Owner(&_ElvTradableLocal.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) Owner() (common.Address, error) {
-	return _ElvTradableLocal.Contract.Owner(&_ElvTradableLocal.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
@@ -14742,20 +11420,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) OwnerOf(opts *bind.CallOpts, to
 
 }
 
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradableLocal.Contract.OwnerOf(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _ElvTradableLocal.Contract.OwnerOf(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
 // Solidity: function proxyRegistryAddress() view returns(address)
@@ -14771,20 +11435,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) ProxyRegistryAddress(opts *bind
 
 	return out0, err
 
-}
-
-// ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
-//
-// Solidity: function proxyRegistryAddress() view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalSession) ProxyRegistryAddress() (common.Address, error) {
-	return _ElvTradableLocal.Contract.ProxyRegistryAddress(&_ElvTradableLocal.CallOpts)
-}
-
-// ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
-//
-// Solidity: function proxyRegistryAddress() view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) ProxyRegistryAddress() (common.Address, error) {
-	return _ElvTradableLocal.Contract.ProxyRegistryAddress(&_ElvTradableLocal.CallOpts)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -14804,20 +11454,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) SupportsInterface(opts *bind.Ca
 
 }
 
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.SupportsInterface(&_ElvTradableLocal.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _ElvTradableLocal.Contract.SupportsInterface(&_ElvTradableLocal.CallOpts, interfaceId)
-}
-
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
 // Solidity: function symbol() view returns(string)
@@ -14833,20 +11469,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Symbol(opts *bind.CallOpts) (st
 
 	return out0, err
 
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalSession) Symbol() (string, error) {
-	return _ElvTradableLocal.Contract.Symbol(&_ElvTradableLocal.CallOpts)
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) Symbol() (string, error) {
-	return _ElvTradableLocal.Contract.Symbol(&_ElvTradableLocal.CallOpts)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
@@ -14866,20 +11488,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TokenByIndex(opts *bind.CallOpt
 
 }
 
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.TokenByIndex(&_ElvTradableLocal.CallOpts, index)
-}
-
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.TokenByIndex(&_ElvTradableLocal.CallOpts, index)
-}
-
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
 // Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
@@ -14895,20 +11503,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TokenOfOwnerByIndex(opts *bind.
 
 	return out0, err
 
-}
-
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.TokenOfOwnerByIndex(&_ElvTradableLocal.CallOpts, owner, index)
-}
-
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _ElvTradableLocal.Contract.TokenOfOwnerByIndex(&_ElvTradableLocal.CallOpts, owner, index)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
@@ -14928,20 +11522,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TokenURI(opts *bind.CallOpts, t
 
 }
 
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _ElvTradableLocal.Contract.TokenURI(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _ElvTradableLocal.Contract.TokenURI(&_ElvTradableLocal.CallOpts, tokenId)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -14957,20 +11537,6 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TotalSupply(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalSession) TotalSupply() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.TotalSupply(&_ElvTradableLocal.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) TotalSupply() (*big.Int, error) {
-	return _ElvTradableLocal.Contract.TotalSupply(&_ElvTradableLocal.CallOpts)
 }
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
@@ -14990,39 +11556,11 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TransferFeeProxyAddress(opts *b
 
 }
 
-// TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
-//
-// Solidity: function transferFeeProxyAddress() view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalSession) TransferFeeProxyAddress() (common.Address, error) {
-	return _ElvTradableLocal.Contract.TransferFeeProxyAddress(&_ElvTradableLocal.CallOpts)
-}
-
-// TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
-//
-// Solidity: function transferFeeProxyAddress() view returns(address)
-func (_ElvTradableLocal *ElvTradableLocalCallerSession) TransferFeeProxyAddress() (common.Address, error) {
-	return _ElvTradableLocal.Contract.TransferFeeProxyAddress(&_ElvTradableLocal.CallOpts)
-}
-
 // AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
 //
 // Solidity: function addMinter(address account) returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) AddMinter(opts *bind.TransactOpts, account common.Address) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "addMinter", account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.AddMinter(&_ElvTradableLocal.TransactOpts, account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.AddMinter(&_ElvTradableLocal.TransactOpts, account)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
@@ -15032,39 +11570,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) Approve(opts *bind.Transact
 	return _ElvTradableLocal.contract.Transact(opts, "approve", to, tokenId)
 }
 
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.Approve(&_ElvTradableLocal.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.Approve(&_ElvTradableLocal.TransactOpts, to, tokenId)
-}
-
 // Burn is a paid mutator transaction binding the contract method 0x42966c68.
 //
 // Solidity: function burn(uint256 tokenId) returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) Burn(opts *bind.TransactOpts, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "burn", tokenId)
-}
-
-// Burn is a paid mutator transaction binding the contract method 0x42966c68.
-//
-// Solidity: function burn(uint256 tokenId) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) Burn(tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.Burn(&_ElvTradableLocal.TransactOpts, tokenId)
-}
-
-// Burn is a paid mutator transaction binding the contract method 0x42966c68.
-//
-// Solidity: function burn(uint256 tokenId) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) Burn(tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.Burn(&_ElvTradableLocal.TransactOpts, tokenId)
 }
 
 // BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
@@ -15074,39 +11584,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) BurnSigned(opts *bind.Trans
 	return _ElvTradableLocal.contract.Transact(opts, "burnSigned", from, tokenId, v, r, s)
 }
 
-// BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
-//
-// Solidity: function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) BurnSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.BurnSigned(&_ElvTradableLocal.TransactOpts, from, tokenId, v, r, s)
-}
-
-// BurnSigned is a paid mutator transaction binding the contract method 0x7b3d203d.
-//
-// Solidity: function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) BurnSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.BurnSigned(&_ElvTradableLocal.TransactOpts, from, tokenId, v, r, s)
-}
-
 // BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
 //
 // Solidity: function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalTransactor) BurnSignedEIP191(opts *bind.TransactOpts, from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "burnSignedEIP191", from, tokenId, v, r, s)
-}
-
-// BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
-//
-// Solidity: function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) BurnSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.BurnSignedEIP191(&_ElvTradableLocal.TransactOpts, from, tokenId, v, r, s)
-}
-
-// BurnSignedEIP191 is a paid mutator transaction binding the contract method 0x61433e71.
-//
-// Solidity: function burnSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) BurnSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.BurnSignedEIP191(&_ElvTradableLocal.TransactOpts, from, tokenId, v, r, s)
 }
 
 // MintHoldWithTokenURI is a paid mutator transaction binding the contract method 0x97cc0889.
@@ -15116,39 +11598,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) MintHoldWithTokenURI(opts *
 	return _ElvTradableLocal.contract.Transact(opts, "mintHoldWithTokenURI", to, tokenId, tokenURI, holdSecs)
 }
 
-// MintHoldWithTokenURI is a paid mutator transaction binding the contract method 0x97cc0889.
-//
-// Solidity: function mintHoldWithTokenURI(address to, uint256 tokenId, string tokenURI, uint256 holdSecs) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) MintHoldWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string, holdSecs *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.MintHoldWithTokenURI(&_ElvTradableLocal.TransactOpts, to, tokenId, tokenURI, holdSecs)
-}
-
-// MintHoldWithTokenURI is a paid mutator transaction binding the contract method 0x97cc0889.
-//
-// Solidity: function mintHoldWithTokenURI(address to, uint256 tokenId, string tokenURI, uint256 holdSecs) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) MintHoldWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string, holdSecs *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.MintHoldWithTokenURI(&_ElvTradableLocal.TransactOpts, to, tokenId, tokenURI, holdSecs)
-}
-
 // MintSignedWithTokenURI is a paid mutator transaction binding the contract method 0x3d60d0a8.
 //
 // Solidity: function mintSignedWithTokenURI(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalTransactor) MintSignedWithTokenURI(opts *bind.TransactOpts, to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "mintSignedWithTokenURI", to, tokenId, tokenURI, v, r, s)
-}
-
-// MintSignedWithTokenURI is a paid mutator transaction binding the contract method 0x3d60d0a8.
-//
-// Solidity: function mintSignedWithTokenURI(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) MintSignedWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.MintSignedWithTokenURI(&_ElvTradableLocal.TransactOpts, to, tokenId, tokenURI, v, r, s)
-}
-
-// MintSignedWithTokenURI is a paid mutator transaction binding the contract method 0x3d60d0a8.
-//
-// Solidity: function mintSignedWithTokenURI(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) MintSignedWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.MintSignedWithTokenURI(&_ElvTradableLocal.TransactOpts, to, tokenId, tokenURI, v, r, s)
 }
 
 // MintWithTokenURI is a paid mutator transaction binding the contract method 0x50bb4e7f.
@@ -15158,39 +11612,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) MintWithTokenURI(opts *bind
 	return _ElvTradableLocal.contract.Transact(opts, "mintWithTokenURI", to, tokenId, tokenURI)
 }
 
-// MintWithTokenURI is a paid mutator transaction binding the contract method 0x50bb4e7f.
-//
-// Solidity: function mintWithTokenURI(address to, uint256 tokenId, string tokenURI) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalSession) MintWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.MintWithTokenURI(&_ElvTradableLocal.TransactOpts, to, tokenId, tokenURI)
-}
-
-// MintWithTokenURI is a paid mutator transaction binding the contract method 0x50bb4e7f.
-//
-// Solidity: function mintWithTokenURI(address to, uint256 tokenId, string tokenURI) returns(bool)
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) MintWithTokenURI(to common.Address, tokenId *big.Int, tokenURI string) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.MintWithTokenURI(&_ElvTradableLocal.TransactOpts, to, tokenId, tokenURI)
-}
-
 // RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
 //
 // Solidity: function renounceMinter() returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) RenounceMinter(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "renounceMinter")
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) RenounceMinter() (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.RenounceMinter(&_ElvTradableLocal.TransactOpts)
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) RenounceMinter() (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.RenounceMinter(&_ElvTradableLocal.TransactOpts)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -15200,39 +11626,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) RenounceOwnership(opts *bin
 	return _ElvTradableLocal.contract.Transact(opts, "renounceOwnership")
 }
 
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) RenounceOwnership() (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.RenounceOwnership(&_ElvTradableLocal.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.RenounceOwnership(&_ElvTradableLocal.TransactOpts)
-}
-
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SafeTransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SafeTransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
@@ -15242,39 +11640,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) SafeTransferFrom0(opts *bin
 	return _ElvTradableLocal.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
 }
 
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SafeTransferFrom0(&_ElvTradableLocal.TransactOpts, from, to, tokenId, _data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SafeTransferFrom0(&_ElvTradableLocal.TransactOpts, from, to, tokenId, _data)
-}
-
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
 //
 // Solidity: function setApprovalForAll(address to, bool approved) returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) SetApprovalForAll(opts *bind.TransactOpts, to common.Address, approved bool) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "setApprovalForAll", to, approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetApprovalForAll(&_ElvTradableLocal.TransactOpts, to, approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address to, bool approved) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SetApprovalForAll(to common.Address, approved bool) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetApprovalForAll(&_ElvTradableLocal.TransactOpts, to, approved)
 }
 
 // SetBaseTransferFee is a paid mutator transaction binding the contract method 0x10561224.
@@ -15284,39 +11654,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) SetBaseTransferFee(opts *bi
 	return _ElvTradableLocal.contract.Transact(opts, "setBaseTransferFee", _newBaseFee)
 }
 
-// SetBaseTransferFee is a paid mutator transaction binding the contract method 0x10561224.
-//
-// Solidity: function setBaseTransferFee(uint256 _newBaseFee) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SetBaseTransferFee(_newBaseFee *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetBaseTransferFee(&_ElvTradableLocal.TransactOpts, _newBaseFee)
-}
-
-// SetBaseTransferFee is a paid mutator transaction binding the contract method 0x10561224.
-//
-// Solidity: function setBaseTransferFee(uint256 _newBaseFee) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SetBaseTransferFee(_newBaseFee *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetBaseTransferFee(&_ElvTradableLocal.TransactOpts, _newBaseFee)
-}
-
 // SetContractURI is a paid mutator transaction binding the contract method 0x938e3d7b.
 //
 // Solidity: function setContractURI(string _newContractURI) returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) SetContractURI(opts *bind.TransactOpts, _newContractURI string) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "setContractURI", _newContractURI)
-}
-
-// SetContractURI is a paid mutator transaction binding the contract method 0x938e3d7b.
-//
-// Solidity: function setContractURI(string _newContractURI) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SetContractURI(_newContractURI string) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetContractURI(&_ElvTradableLocal.TransactOpts, _newContractURI)
-}
-
-// SetContractURI is a paid mutator transaction binding the contract method 0x938e3d7b.
-//
-// Solidity: function setContractURI(string _newContractURI) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SetContractURI(_newContractURI string) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetContractURI(&_ElvTradableLocal.TransactOpts, _newContractURI)
 }
 
 // SetProxyRegistryAddress is a paid mutator transaction binding the contract method 0xd26ea6c0.
@@ -15326,39 +11668,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) SetProxyRegistryAddress(opt
 	return _ElvTradableLocal.contract.Transact(opts, "setProxyRegistryAddress", _newProxy)
 }
 
-// SetProxyRegistryAddress is a paid mutator transaction binding the contract method 0xd26ea6c0.
-//
-// Solidity: function setProxyRegistryAddress(address _newProxy) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SetProxyRegistryAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetProxyRegistryAddress(&_ElvTradableLocal.TransactOpts, _newProxy)
-}
-
-// SetProxyRegistryAddress is a paid mutator transaction binding the contract method 0xd26ea6c0.
-//
-// Solidity: function setProxyRegistryAddress(address _newProxy) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SetProxyRegistryAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetProxyRegistryAddress(&_ElvTradableLocal.TransactOpts, _newProxy)
-}
-
 // SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
 //
 // Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) SetTokenURI(opts *bind.TransactOpts, tokenId *big.Int, uri string) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "setTokenURI", tokenId, uri)
-}
-
-// SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
-//
-// Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SetTokenURI(tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetTokenURI(&_ElvTradableLocal.TransactOpts, tokenId, uri)
-}
-
-// SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
-//
-// Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SetTokenURI(tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetTokenURI(&_ElvTradableLocal.TransactOpts, tokenId, uri)
 }
 
 // SetTransferFeeProxyAddress is a paid mutator transaction binding the contract method 0x2c18fc16.
@@ -15368,39 +11682,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) SetTransferFeeProxyAddress(
 	return _ElvTradableLocal.contract.Transact(opts, "setTransferFeeProxyAddress", _newProxy)
 }
 
-// SetTransferFeeProxyAddress is a paid mutator transaction binding the contract method 0x2c18fc16.
-//
-// Solidity: function setTransferFeeProxyAddress(address _newProxy) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) SetTransferFeeProxyAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetTransferFeeProxyAddress(&_ElvTradableLocal.TransactOpts, _newProxy)
-}
-
-// SetTransferFeeProxyAddress is a paid mutator transaction binding the contract method 0x2c18fc16.
-//
-// Solidity: function setTransferFeeProxyAddress(address _newProxy) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SetTransferFeeProxyAddress(_newProxy common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.SetTransferFeeProxyAddress(&_ElvTradableLocal.TransactOpts, _newProxy)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "transferFrom", from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.TransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.TransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -15410,39 +11696,11 @@ func (_ElvTradableLocal *ElvTradableLocalTransactor) TransferOwnership(opts *bin
 	return _ElvTradableLocal.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.TransferOwnership(&_ElvTradableLocal.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.TransferOwnership(&_ElvTradableLocal.TransactOpts, newOwner)
-}
-
 // Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
 //
 // Solidity: function withdraw(uint256 _amount) returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) Withdraw(opts *bind.TransactOpts, _amount *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "withdraw", _amount)
-}
-
-// Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
-//
-// Solidity: function withdraw(uint256 _amount) returns()
-func (_ElvTradableLocal *ElvTradableLocalSession) Withdraw(_amount *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.Withdraw(&_ElvTradableLocal.TransactOpts, _amount)
-}
-
-// Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
-//
-// Solidity: function withdraw(uint256 _amount) returns()
-func (_ElvTradableLocal *ElvTradableLocalTransactorSession) Withdraw(_amount *big.Int) (*types.Transaction, error) {
-	return _ElvTradableLocal.Contract.Withdraw(&_ElvTradableLocal.TransactOpts, _amount)
 }
 
 // ElvTradableLocalApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the ElvTradableLocal contract.
@@ -16837,43 +13095,6 @@ type IERC165Filterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// IERC165Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type IERC165Session struct {
-	Contract     *IERC165          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC165CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type IERC165CallerSession struct {
-	Contract *IERC165Caller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// IERC165TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type IERC165TransactorSession struct {
-	Contract     *IERC165Transactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// IERC165Raw is an auto generated low-level Go binding around an Ethereum contract.
-type IERC165Raw struct {
-	Contract *IERC165 // Generic contract binding to access the raw methods on
-}
-
-// IERC165CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type IERC165CallerRaw struct {
-	Contract *IERC165Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// IERC165TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type IERC165TransactorRaw struct {
-	Contract *IERC165Transactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewIERC165 creates a new instance of IERC165, bound to a specific deployed contract.
 func NewIERC165(address common.Address, backend bind.ContractBackend) (*IERC165, error) {
 	contract, err := bindIERC165(address, backend, backend, backend)
@@ -16912,49 +13133,11 @@ func NewIERC165Filterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindIERC165 binds a generic wrapper to an already deployed contract.
 func bindIERC165(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(IERC165ABI))
+	parsed, err := ParsedABI(K_IERC165)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC165 *IERC165Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC165.Contract.IERC165Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC165 *IERC165Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC165.Contract.IERC165Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC165 *IERC165Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC165.Contract.IERC165Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC165 *IERC165CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC165.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC165 *IERC165TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC165.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC165 *IERC165TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC165.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -16972,20 +13155,6 @@ func (_IERC165 *IERC165Caller) SupportsInterface(opts *bind.CallOpts, interfaceI
 
 	return out0, err
 
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC165 *IERC165Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC165.Contract.SupportsInterface(&_IERC165.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC165 *IERC165CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC165.Contract.SupportsInterface(&_IERC165.CallOpts, interfaceId)
 }
 
 // IERC20MetaData contains all meta data concerning the IERC20 contract.
@@ -17031,43 +13200,6 @@ type IERC20Filterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// IERC20Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type IERC20Session struct {
-	Contract     *IERC20           // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC20CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type IERC20CallerSession struct {
-	Contract *IERC20Caller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// IERC20TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type IERC20TransactorSession struct {
-	Contract     *IERC20Transactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC20Raw is an auto generated low-level Go binding around an Ethereum contract.
-type IERC20Raw struct {
-	Contract *IERC20 // Generic contract binding to access the raw methods on
-}
-
-// IERC20CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type IERC20CallerRaw struct {
-	Contract *IERC20Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// IERC20TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type IERC20TransactorRaw struct {
-	Contract *IERC20Transactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewIERC20 creates a new instance of IERC20, bound to a specific deployed contract.
 func NewIERC20(address common.Address, backend bind.ContractBackend) (*IERC20, error) {
 	contract, err := bindIERC20(address, backend, backend, backend)
@@ -17106,49 +13238,11 @@ func NewIERC20Filterer(address common.Address, filterer bind.ContractFilterer) (
 
 // bindIERC20 binds a generic wrapper to an already deployed contract.
 func bindIERC20(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(IERC20ABI))
+	parsed, err := ParsedABI(K_IERC20)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC20.Contract.IERC20Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC20 *IERC20Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC20.Contract.IERC20Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC20 *IERC20Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC20.Contract.IERC20Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC20.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC20 *IERC20TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC20.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC20 *IERC20TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC20.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -17168,20 +13262,6 @@ func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_IERC20 *IERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_IERC20 *IERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address who) view returns(uint256)
@@ -17197,20 +13277,6 @@ func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, who common.Address) 
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address who) view returns(uint256)
-func (_IERC20 *IERC20Session) BalanceOf(who common.Address) (*big.Int, error) {
-	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, who)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address who) view returns(uint256)
-func (_IERC20 *IERC20CallerSession) BalanceOf(who common.Address) (*big.Int, error) {
-	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, who)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
@@ -17230,39 +13296,11 @@ func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) 
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_IERC20 *IERC20Session) TotalSupply() (*big.Int, error) {
-	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_IERC20 *IERC20CallerSession) TotalSupply() (*big.Int, error) {
-	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address spender, uint256 value) returns(bool)
 func (_IERC20 *IERC20Transactor) Approve(opts *bind.TransactOpts, spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _IERC20.contract.Transact(opts, "approve", spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_IERC20 *IERC20Session) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Approve(&_IERC20.TransactOpts, spender, value)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 value) returns(bool)
-func (_IERC20 *IERC20TransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Approve(&_IERC20.TransactOpts, spender, value)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
@@ -17272,39 +13310,11 @@ func (_IERC20 *IERC20Transactor) Transfer(opts *bind.TransactOpts, to common.Add
 	return _IERC20.contract.Transact(opts, "transfer", to, value)
 }
 
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_IERC20 *IERC20Session) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Transfer(&_IERC20.TransactOpts, to, value)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address to, uint256 value) returns(bool)
-func (_IERC20 *IERC20TransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Transfer(&_IERC20.TransactOpts, to, value)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_IERC20 *IERC20Transactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _IERC20.contract.Transact(opts, "transferFrom", from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_IERC20 *IERC20Session) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.TransferFrom(&_IERC20.TransactOpts, from, to, value)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
-func (_IERC20 *IERC20TransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.TransferFrom(&_IERC20.TransactOpts, from, to, value)
 }
 
 // IERC20ApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the IERC20 contract.
@@ -17662,43 +13672,6 @@ type IERC721Filterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// IERC721Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type IERC721Session struct {
-	Contract     *IERC721          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC721CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type IERC721CallerSession struct {
-	Contract *IERC721Caller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// IERC721TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type IERC721TransactorSession struct {
-	Contract     *IERC721Transactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// IERC721Raw is an auto generated low-level Go binding around an Ethereum contract.
-type IERC721Raw struct {
-	Contract *IERC721 // Generic contract binding to access the raw methods on
-}
-
-// IERC721CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type IERC721CallerRaw struct {
-	Contract *IERC721Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// IERC721TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type IERC721TransactorRaw struct {
-	Contract *IERC721Transactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewIERC721 creates a new instance of IERC721, bound to a specific deployed contract.
 func NewIERC721(address common.Address, backend bind.ContractBackend) (*IERC721, error) {
 	contract, err := bindIERC721(address, backend, backend, backend)
@@ -17737,49 +13710,11 @@ func NewIERC721Filterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindIERC721 binds a generic wrapper to an already deployed contract.
 func bindIERC721(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(IERC721ABI))
+	parsed, err := ParsedABI(K_IERC721)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721 *IERC721Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721.Contract.IERC721Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721 *IERC721Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721.Contract.IERC721Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721 *IERC721Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721.Contract.IERC721Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721 *IERC721CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721 *IERC721TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721 *IERC721TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -17799,20 +13734,6 @@ func (_IERC721 *IERC721Caller) BalanceOf(opts *bind.CallOpts, owner common.Addre
 
 }
 
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256 balance)
-func (_IERC721 *IERC721Session) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _IERC721.Contract.BalanceOf(&_IERC721.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256 balance)
-func (_IERC721 *IERC721CallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _IERC721.Contract.BalanceOf(&_IERC721.CallOpts, owner)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address operator)
@@ -17828,20 +13749,6 @@ func (_IERC721 *IERC721Caller) GetApproved(opts *bind.CallOpts, tokenId *big.Int
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
-func (_IERC721 *IERC721Session) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _IERC721.Contract.GetApproved(&_IERC721.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
-func (_IERC721 *IERC721CallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _IERC721.Contract.GetApproved(&_IERC721.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
@@ -17861,20 +13768,6 @@ func (_IERC721 *IERC721Caller) IsApprovedForAll(opts *bind.CallOpts, owner commo
 
 }
 
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_IERC721 *IERC721Session) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _IERC721.Contract.IsApprovedForAll(&_IERC721.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_IERC721 *IERC721CallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _IERC721.Contract.IsApprovedForAll(&_IERC721.CallOpts, owner, operator)
-}
-
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
 // Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
@@ -17890,20 +13783,6 @@ func (_IERC721 *IERC721Caller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (c
 
 	return out0, err
 
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
-func (_IERC721 *IERC721Session) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _IERC721.Contract.OwnerOf(&_IERC721.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
-func (_IERC721 *IERC721CallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _IERC721.Contract.OwnerOf(&_IERC721.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -17923,39 +13802,11 @@ func (_IERC721 *IERC721Caller) SupportsInterface(opts *bind.CallOpts, interfaceI
 
 }
 
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC721 *IERC721Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC721.Contract.SupportsInterface(&_IERC721.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC721 *IERC721CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC721.Contract.SupportsInterface(&_IERC721.CallOpts, interfaceId)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address to, uint256 tokenId) returns()
 func (_IERC721 *IERC721Transactor) Approve(opts *bind.TransactOpts, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.contract.Transact(opts, "approve", to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_IERC721 *IERC721Session) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721.Contract.Approve(&_IERC721.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_IERC721 *IERC721TransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721.Contract.Approve(&_IERC721.TransactOpts, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
@@ -17965,39 +13816,11 @@ func (_IERC721 *IERC721Transactor) SafeTransferFrom(opts *bind.TransactOpts, fro
 	return _IERC721.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721 *IERC721Session) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721.Contract.SafeTransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721 *IERC721TransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721.Contract.SafeTransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
-}
-
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721 *IERC721Transactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
-func (_IERC721 *IERC721Session) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721.Contract.SafeTransferFrom0(&_IERC721.TransactOpts, from, to, tokenId, data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
-func (_IERC721 *IERC721TransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721.Contract.SafeTransferFrom0(&_IERC721.TransactOpts, from, to, tokenId, data)
 }
 
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
@@ -18007,39 +13830,11 @@ func (_IERC721 *IERC721Transactor) SetApprovalForAll(opts *bind.TransactOpts, op
 	return _IERC721.contract.Transact(opts, "setApprovalForAll", operator, _approved)
 }
 
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address operator, bool _approved) returns()
-func (_IERC721 *IERC721Session) SetApprovalForAll(operator common.Address, _approved bool) (*types.Transaction, error) {
-	return _IERC721.Contract.SetApprovalForAll(&_IERC721.TransactOpts, operator, _approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address operator, bool _approved) returns()
-func (_IERC721 *IERC721TransactorSession) SetApprovalForAll(operator common.Address, _approved bool) (*types.Transaction, error) {
-	return _IERC721.Contract.SetApprovalForAll(&_IERC721.TransactOpts, operator, _approved)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721 *IERC721Transactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.contract.Transact(opts, "transferFrom", from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721 *IERC721Session) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721.Contract.TransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721 *IERC721TransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721.Contract.TransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
 }
 
 // IERC721ApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the IERC721 contract.
@@ -18570,43 +14365,6 @@ type IERC721EnumerableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// IERC721EnumerableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type IERC721EnumerableSession struct {
-	Contract     *IERC721Enumerable // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts      // Call options to use throughout this session
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// IERC721EnumerableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type IERC721EnumerableCallerSession struct {
-	Contract *IERC721EnumerableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts            // Call options to use throughout this session
-}
-
-// IERC721EnumerableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type IERC721EnumerableTransactorSession struct {
-	Contract     *IERC721EnumerableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts            // Transaction auth options to use throughout this session
-}
-
-// IERC721EnumerableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type IERC721EnumerableRaw struct {
-	Contract *IERC721Enumerable // Generic contract binding to access the raw methods on
-}
-
-// IERC721EnumerableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type IERC721EnumerableCallerRaw struct {
-	Contract *IERC721EnumerableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// IERC721EnumerableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type IERC721EnumerableTransactorRaw struct {
-	Contract *IERC721EnumerableTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewIERC721Enumerable creates a new instance of IERC721Enumerable, bound to a specific deployed contract.
 func NewIERC721Enumerable(address common.Address, backend bind.ContractBackend) (*IERC721Enumerable, error) {
 	contract, err := bindIERC721Enumerable(address, backend, backend, backend)
@@ -18645,49 +14403,11 @@ func NewIERC721EnumerableFilterer(address common.Address, filterer bind.Contract
 
 // bindIERC721Enumerable binds a generic wrapper to an already deployed contract.
 func bindIERC721Enumerable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(IERC721EnumerableABI))
+	parsed, err := ParsedABI(K_IERC721Enumerable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721Enumerable *IERC721EnumerableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721Enumerable.Contract.IERC721EnumerableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721Enumerable *IERC721EnumerableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.IERC721EnumerableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721Enumerable *IERC721EnumerableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.IERC721EnumerableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721Enumerable *IERC721EnumerableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721Enumerable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721Enumerable *IERC721EnumerableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721Enumerable *IERC721EnumerableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -18707,20 +14427,6 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) BalanceOf(opts *bind.CallOpts
 
 }
 
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256 balance)
-func (_IERC721Enumerable *IERC721EnumerableSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _IERC721Enumerable.Contract.BalanceOf(&_IERC721Enumerable.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256 balance)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _IERC721Enumerable.Contract.BalanceOf(&_IERC721Enumerable.CallOpts, owner)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address operator)
@@ -18736,20 +14442,6 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) GetApproved(opts *bind.CallOp
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
-func (_IERC721Enumerable *IERC721EnumerableSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Enumerable.Contract.GetApproved(&_IERC721Enumerable.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Enumerable.Contract.GetApproved(&_IERC721Enumerable.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
@@ -18769,20 +14461,6 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) IsApprovedForAll(opts *bind.C
 
 }
 
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_IERC721Enumerable *IERC721EnumerableSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _IERC721Enumerable.Contract.IsApprovedForAll(&_IERC721Enumerable.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _IERC721Enumerable.Contract.IsApprovedForAll(&_IERC721Enumerable.CallOpts, owner, operator)
-}
-
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
 // Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
@@ -18798,20 +14476,6 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) OwnerOf(opts *bind.CallOpts, 
 
 	return out0, err
 
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
-func (_IERC721Enumerable *IERC721EnumerableSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Enumerable.Contract.OwnerOf(&_IERC721Enumerable.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Enumerable.Contract.OwnerOf(&_IERC721Enumerable.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -18831,20 +14495,6 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) SupportsInterface(opts *bind.
 
 }
 
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC721Enumerable *IERC721EnumerableSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC721Enumerable.Contract.SupportsInterface(&_IERC721Enumerable.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC721Enumerable.Contract.SupportsInterface(&_IERC721Enumerable.CallOpts, interfaceId)
-}
-
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
 // Solidity: function tokenByIndex(uint256 index) view returns(uint256)
@@ -18860,20 +14510,6 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) TokenByIndex(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_IERC721Enumerable *IERC721EnumerableSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _IERC721Enumerable.Contract.TokenByIndex(&_IERC721Enumerable.CallOpts, index)
-}
-
-// TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
-//
-// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
-	return _IERC721Enumerable.Contract.TokenByIndex(&_IERC721Enumerable.CallOpts, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
@@ -18893,20 +14529,6 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) TokenOfOwnerByIndex(opts *bin
 
 }
 
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256 tokenId)
-func (_IERC721Enumerable *IERC721EnumerableSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _IERC721Enumerable.Contract.TokenOfOwnerByIndex(&_IERC721Enumerable.CallOpts, owner, index)
-}
-
-// TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
-//
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256 tokenId)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
-	return _IERC721Enumerable.Contract.TokenOfOwnerByIndex(&_IERC721Enumerable.CallOpts, owner, index)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -18924,39 +14546,11 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) TotalSupply(opts *bind.CallOp
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_IERC721Enumerable *IERC721EnumerableSession) TotalSupply() (*big.Int, error) {
-	return _IERC721Enumerable.Contract.TotalSupply(&_IERC721Enumerable.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_IERC721Enumerable *IERC721EnumerableCallerSession) TotalSupply() (*big.Int, error) {
-	return _IERC721Enumerable.Contract.TotalSupply(&_IERC721Enumerable.CallOpts)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address to, uint256 tokenId) returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactor) Approve(opts *bind.TransactOpts, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.contract.Transact(opts, "approve", to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_IERC721Enumerable *IERC721EnumerableSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.Approve(&_IERC721Enumerable.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_IERC721Enumerable *IERC721EnumerableTransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.Approve(&_IERC721Enumerable.TransactOpts, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
@@ -18966,39 +14560,11 @@ func (_IERC721Enumerable *IERC721EnumerableTransactor) SafeTransferFrom(opts *bi
 	return _IERC721Enumerable.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Enumerable *IERC721EnumerableSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.SafeTransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Enumerable *IERC721EnumerableTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.SafeTransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
-}
-
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Enumerable.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
-func (_IERC721Enumerable *IERC721EnumerableSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.SafeTransferFrom0(&_IERC721Enumerable.TransactOpts, from, to, tokenId, data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
-func (_IERC721Enumerable *IERC721EnumerableTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.SafeTransferFrom0(&_IERC721Enumerable.TransactOpts, from, to, tokenId, data)
 }
 
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
@@ -19008,39 +14574,11 @@ func (_IERC721Enumerable *IERC721EnumerableTransactor) SetApprovalForAll(opts *b
 	return _IERC721Enumerable.contract.Transact(opts, "setApprovalForAll", operator, _approved)
 }
 
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address operator, bool _approved) returns()
-func (_IERC721Enumerable *IERC721EnumerableSession) SetApprovalForAll(operator common.Address, _approved bool) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.SetApprovalForAll(&_IERC721Enumerable.TransactOpts, operator, _approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address operator, bool _approved) returns()
-func (_IERC721Enumerable *IERC721EnumerableTransactorSession) SetApprovalForAll(operator common.Address, _approved bool) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.SetApprovalForAll(&_IERC721Enumerable.TransactOpts, operator, _approved)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.contract.Transact(opts, "transferFrom", from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Enumerable *IERC721EnumerableSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.TransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Enumerable *IERC721EnumerableTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Enumerable.Contract.TransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // IERC721EnumerableApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the IERC721Enumerable contract.
@@ -19571,43 +15109,6 @@ type IERC721MetadataFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// IERC721MetadataSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type IERC721MetadataSession struct {
-	Contract     *IERC721Metadata  // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC721MetadataCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type IERC721MetadataCallerSession struct {
-	Contract *IERC721MetadataCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts          // Call options to use throughout this session
-}
-
-// IERC721MetadataTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type IERC721MetadataTransactorSession struct {
-	Contract     *IERC721MetadataTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts          // Transaction auth options to use throughout this session
-}
-
-// IERC721MetadataRaw is an auto generated low-level Go binding around an Ethereum contract.
-type IERC721MetadataRaw struct {
-	Contract *IERC721Metadata // Generic contract binding to access the raw methods on
-}
-
-// IERC721MetadataCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type IERC721MetadataCallerRaw struct {
-	Contract *IERC721MetadataCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// IERC721MetadataTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type IERC721MetadataTransactorRaw struct {
-	Contract *IERC721MetadataTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewIERC721Metadata creates a new instance of IERC721Metadata, bound to a specific deployed contract.
 func NewIERC721Metadata(address common.Address, backend bind.ContractBackend) (*IERC721Metadata, error) {
 	contract, err := bindIERC721Metadata(address, backend, backend, backend)
@@ -19646,49 +15147,11 @@ func NewIERC721MetadataFilterer(address common.Address, filterer bind.ContractFi
 
 // bindIERC721Metadata binds a generic wrapper to an already deployed contract.
 func bindIERC721Metadata(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(IERC721MetadataABI))
+	parsed, err := ParsedABI(K_IERC721Metadata)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721Metadata *IERC721MetadataRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721Metadata.Contract.IERC721MetadataCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721Metadata *IERC721MetadataRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.IERC721MetadataTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721Metadata *IERC721MetadataRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.IERC721MetadataTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721Metadata *IERC721MetadataCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721Metadata.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721Metadata *IERC721MetadataTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721Metadata *IERC721MetadataTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -19708,20 +15171,6 @@ func (_IERC721Metadata *IERC721MetadataCaller) BalanceOf(opts *bind.CallOpts, ow
 
 }
 
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256 balance)
-func (_IERC721Metadata *IERC721MetadataSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _IERC721Metadata.Contract.BalanceOf(&_IERC721Metadata.CallOpts, owner)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address owner) view returns(uint256 balance)
-func (_IERC721Metadata *IERC721MetadataCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
-	return _IERC721Metadata.Contract.BalanceOf(&_IERC721Metadata.CallOpts, owner)
-}
-
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address operator)
@@ -19737,20 +15186,6 @@ func (_IERC721Metadata *IERC721MetadataCaller) GetApproved(opts *bind.CallOpts, 
 
 	return out0, err
 
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
-func (_IERC721Metadata *IERC721MetadataSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Metadata.Contract.GetApproved(&_IERC721Metadata.CallOpts, tokenId)
-}
-
-// GetApproved is a free data retrieval call binding the contract method 0x081812fc.
-//
-// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
-func (_IERC721Metadata *IERC721MetadataCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Metadata.Contract.GetApproved(&_IERC721Metadata.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
@@ -19770,20 +15205,6 @@ func (_IERC721Metadata *IERC721MetadataCaller) IsApprovedForAll(opts *bind.CallO
 
 }
 
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_IERC721Metadata *IERC721MetadataSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _IERC721Metadata.Contract.IsApprovedForAll(&_IERC721Metadata.CallOpts, owner, operator)
-}
-
-// IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
-//
-// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
-func (_IERC721Metadata *IERC721MetadataCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
-	return _IERC721Metadata.Contract.IsApprovedForAll(&_IERC721Metadata.CallOpts, owner, operator)
-}
-
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
@@ -19799,20 +15220,6 @@ func (_IERC721Metadata *IERC721MetadataCaller) Name(opts *bind.CallOpts) (string
 
 	return out0, err
 
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_IERC721Metadata *IERC721MetadataSession) Name() (string, error) {
-	return _IERC721Metadata.Contract.Name(&_IERC721Metadata.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_IERC721Metadata *IERC721MetadataCallerSession) Name() (string, error) {
-	return _IERC721Metadata.Contract.Name(&_IERC721Metadata.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
@@ -19832,20 +15239,6 @@ func (_IERC721Metadata *IERC721MetadataCaller) OwnerOf(opts *bind.CallOpts, toke
 
 }
 
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
-func (_IERC721Metadata *IERC721MetadataSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Metadata.Contract.OwnerOf(&_IERC721Metadata.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
-func (_IERC721Metadata *IERC721MetadataCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _IERC721Metadata.Contract.OwnerOf(&_IERC721Metadata.CallOpts, tokenId)
-}
-
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
 // Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
@@ -19861,20 +15254,6 @@ func (_IERC721Metadata *IERC721MetadataCaller) SupportsInterface(opts *bind.Call
 
 	return out0, err
 
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC721Metadata *IERC721MetadataSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC721Metadata.Contract.SupportsInterface(&_IERC721Metadata.CallOpts, interfaceId)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
-func (_IERC721Metadata *IERC721MetadataCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
-	return _IERC721Metadata.Contract.SupportsInterface(&_IERC721Metadata.CallOpts, interfaceId)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
@@ -19894,20 +15273,6 @@ func (_IERC721Metadata *IERC721MetadataCaller) Symbol(opts *bind.CallOpts) (stri
 
 }
 
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_IERC721Metadata *IERC721MetadataSession) Symbol() (string, error) {
-	return _IERC721Metadata.Contract.Symbol(&_IERC721Metadata.CallOpts)
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_IERC721Metadata *IERC721MetadataCallerSession) Symbol() (string, error) {
-	return _IERC721Metadata.Contract.Symbol(&_IERC721Metadata.CallOpts)
-}
-
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
 // Solidity: function tokenURI(uint256 tokenId) view returns(string)
@@ -19925,39 +15290,11 @@ func (_IERC721Metadata *IERC721MetadataCaller) TokenURI(opts *bind.CallOpts, tok
 
 }
 
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_IERC721Metadata *IERC721MetadataSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _IERC721Metadata.Contract.TokenURI(&_IERC721Metadata.CallOpts, tokenId)
-}
-
-// TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
-//
-// Solidity: function tokenURI(uint256 tokenId) view returns(string)
-func (_IERC721Metadata *IERC721MetadataCallerSession) TokenURI(tokenId *big.Int) (string, error) {
-	return _IERC721Metadata.Contract.TokenURI(&_IERC721Metadata.CallOpts, tokenId)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address to, uint256 tokenId) returns()
 func (_IERC721Metadata *IERC721MetadataTransactor) Approve(opts *bind.TransactOpts, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.contract.Transact(opts, "approve", to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_IERC721Metadata *IERC721MetadataSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.Approve(&_IERC721Metadata.TransactOpts, to, tokenId)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address to, uint256 tokenId) returns()
-func (_IERC721Metadata *IERC721MetadataTransactorSession) Approve(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.Approve(&_IERC721Metadata.TransactOpts, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
@@ -19967,39 +15304,11 @@ func (_IERC721Metadata *IERC721MetadataTransactor) SafeTransferFrom(opts *bind.T
 	return _IERC721Metadata.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Metadata *IERC721MetadataSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.SafeTransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
-}
-
-// SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Metadata *IERC721MetadataTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.SafeTransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
-}
-
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Metadata.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
-func (_IERC721Metadata *IERC721MetadataSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.SafeTransferFrom0(&_IERC721Metadata.TransactOpts, from, to, tokenId, data)
-}
-
-// SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
-//
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
-func (_IERC721Metadata *IERC721MetadataTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.SafeTransferFrom0(&_IERC721Metadata.TransactOpts, from, to, tokenId, data)
 }
 
 // SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
@@ -20009,39 +15318,11 @@ func (_IERC721Metadata *IERC721MetadataTransactor) SetApprovalForAll(opts *bind.
 	return _IERC721Metadata.contract.Transact(opts, "setApprovalForAll", operator, _approved)
 }
 
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address operator, bool _approved) returns()
-func (_IERC721Metadata *IERC721MetadataSession) SetApprovalForAll(operator common.Address, _approved bool) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.SetApprovalForAll(&_IERC721Metadata.TransactOpts, operator, _approved)
-}
-
-// SetApprovalForAll is a paid mutator transaction binding the contract method 0xa22cb465.
-//
-// Solidity: function setApprovalForAll(address operator, bool _approved) returns()
-func (_IERC721Metadata *IERC721MetadataTransactorSession) SetApprovalForAll(operator common.Address, _approved bool) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.SetApprovalForAll(&_IERC721Metadata.TransactOpts, operator, _approved)
-}
-
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.contract.Transact(opts, "transferFrom", from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Metadata *IERC721MetadataSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.TransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
-func (_IERC721Metadata *IERC721MetadataTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _IERC721Metadata.Contract.TransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // IERC721MetadataApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the IERC721Metadata contract.
@@ -20560,43 +15841,6 @@ type IERC721ReceiverFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// IERC721ReceiverSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type IERC721ReceiverSession struct {
-	Contract     *IERC721Receiver  // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC721ReceiverCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type IERC721ReceiverCallerSession struct {
-	Contract *IERC721ReceiverCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts          // Call options to use throughout this session
-}
-
-// IERC721ReceiverTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type IERC721ReceiverTransactorSession struct {
-	Contract     *IERC721ReceiverTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts          // Transaction auth options to use throughout this session
-}
-
-// IERC721ReceiverRaw is an auto generated low-level Go binding around an Ethereum contract.
-type IERC721ReceiverRaw struct {
-	Contract *IERC721Receiver // Generic contract binding to access the raw methods on
-}
-
-// IERC721ReceiverCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type IERC721ReceiverCallerRaw struct {
-	Contract *IERC721ReceiverCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// IERC721ReceiverTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type IERC721ReceiverTransactorRaw struct {
-	Contract *IERC721ReceiverTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewIERC721Receiver creates a new instance of IERC721Receiver, bound to a specific deployed contract.
 func NewIERC721Receiver(address common.Address, backend bind.ContractBackend) (*IERC721Receiver, error) {
 	contract, err := bindIERC721Receiver(address, backend, backend, backend)
@@ -20635,49 +15879,11 @@ func NewIERC721ReceiverFilterer(address common.Address, filterer bind.ContractFi
 
 // bindIERC721Receiver binds a generic wrapper to an already deployed contract.
 func bindIERC721Receiver(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(IERC721ReceiverABI))
+	parsed, err := ParsedABI(K_IERC721Receiver)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721Receiver *IERC721ReceiverRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721Receiver.Contract.IERC721ReceiverCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721Receiver *IERC721ReceiverRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721Receiver.Contract.IERC721ReceiverTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721Receiver *IERC721ReceiverRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721Receiver.Contract.IERC721ReceiverTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC721Receiver *IERC721ReceiverCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _IERC721Receiver.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC721Receiver *IERC721ReceiverTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC721Receiver.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC721Receiver *IERC721ReceiverTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC721Receiver.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // OnERC721Received is a paid mutator transaction binding the contract method 0x150b7a02.
@@ -20685,20 +15891,6 @@ func (_IERC721Receiver *IERC721ReceiverTransactorRaw) Transact(opts *bind.Transa
 // Solidity: function onERC721Received(address operator, address from, uint256 tokenId, bytes data) returns(bytes4)
 func (_IERC721Receiver *IERC721ReceiverTransactor) OnERC721Received(opts *bind.TransactOpts, operator common.Address, from common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Receiver.contract.Transact(opts, "onERC721Received", operator, from, tokenId, data)
-}
-
-// OnERC721Received is a paid mutator transaction binding the contract method 0x150b7a02.
-//
-// Solidity: function onERC721Received(address operator, address from, uint256 tokenId, bytes data) returns(bytes4)
-func (_IERC721Receiver *IERC721ReceiverSession) OnERC721Received(operator common.Address, from common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721Receiver.Contract.OnERC721Received(&_IERC721Receiver.TransactOpts, operator, from, tokenId, data)
-}
-
-// OnERC721Received is a paid mutator transaction binding the contract method 0x150b7a02.
-//
-// Solidity: function onERC721Received(address operator, address from, uint256 tokenId, bytes data) returns(bytes4)
-func (_IERC721Receiver *IERC721ReceiverTransactorSession) OnERC721Received(operator common.Address, from common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
-	return _IERC721Receiver.Contract.OnERC721Received(&_IERC721Receiver.TransactOpts, operator, from, tokenId, data)
 }
 
 // ISettableTokenURIMetaData contains all meta data concerning the ISettableTokenURI contract.
@@ -20739,43 +15931,6 @@ type ISettableTokenURIFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// ISettableTokenURISession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ISettableTokenURISession struct {
-	Contract     *ISettableTokenURI // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts      // Call options to use throughout this session
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// ISettableTokenURICallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ISettableTokenURICallerSession struct {
-	Contract *ISettableTokenURICaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts            // Call options to use throughout this session
-}
-
-// ISettableTokenURITransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ISettableTokenURITransactorSession struct {
-	Contract     *ISettableTokenURITransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts            // Transaction auth options to use throughout this session
-}
-
-// ISettableTokenURIRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ISettableTokenURIRaw struct {
-	Contract *ISettableTokenURI // Generic contract binding to access the raw methods on
-}
-
-// ISettableTokenURICallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ISettableTokenURICallerRaw struct {
-	Contract *ISettableTokenURICaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ISettableTokenURITransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ISettableTokenURITransactorRaw struct {
-	Contract *ISettableTokenURITransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewISettableTokenURI creates a new instance of ISettableTokenURI, bound to a specific deployed contract.
 func NewISettableTokenURI(address common.Address, backend bind.ContractBackend) (*ISettableTokenURI, error) {
 	contract, err := bindISettableTokenURI(address, backend, backend, backend)
@@ -20814,49 +15969,11 @@ func NewISettableTokenURIFilterer(address common.Address, filterer bind.Contract
 
 // bindISettableTokenURI binds a generic wrapper to an already deployed contract.
 func bindISettableTokenURI(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ISettableTokenURIABI))
+	parsed, err := ParsedABI(K_ISettableTokenURI)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ISettableTokenURI *ISettableTokenURIRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ISettableTokenURI.Contract.ISettableTokenURICaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ISettableTokenURI *ISettableTokenURIRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ISettableTokenURI.Contract.ISettableTokenURITransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ISettableTokenURI *ISettableTokenURIRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ISettableTokenURI.Contract.ISettableTokenURITransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ISettableTokenURI *ISettableTokenURICallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ISettableTokenURI.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ISettableTokenURI *ISettableTokenURITransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ISettableTokenURI.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ISettableTokenURI *ISettableTokenURITransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ISettableTokenURI.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
@@ -20864,20 +15981,6 @@ func (_ISettableTokenURI *ISettableTokenURITransactorRaw) Transact(opts *bind.Tr
 // Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
 func (_ISettableTokenURI *ISettableTokenURITransactor) SetTokenURI(opts *bind.TransactOpts, tokenId *big.Int, uri string) (*types.Transaction, error) {
 	return _ISettableTokenURI.contract.Transact(opts, "setTokenURI", tokenId, uri)
-}
-
-// SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
-//
-// Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
-func (_ISettableTokenURI *ISettableTokenURISession) SetTokenURI(tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _ISettableTokenURI.Contract.SetTokenURI(&_ISettableTokenURI.TransactOpts, tokenId, uri)
-}
-
-// SetTokenURI is a paid mutator transaction binding the contract method 0x162094c4.
-//
-// Solidity: function setTokenURI(uint256 tokenId, string uri) returns()
-func (_ISettableTokenURI *ISettableTokenURITransactorSession) SetTokenURI(tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _ISettableTokenURI.Contract.SetTokenURI(&_ISettableTokenURI.TransactOpts, tokenId, uri)
 }
 
 // MinterRoleMetaData contains all meta data concerning the MinterRole contract.
@@ -20920,43 +16023,6 @@ type MinterRoleFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// MinterRoleSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type MinterRoleSession struct {
-	Contract     *MinterRole       // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// MinterRoleCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type MinterRoleCallerSession struct {
-	Contract *MinterRoleCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts     // Call options to use throughout this session
-}
-
-// MinterRoleTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type MinterRoleTransactorSession struct {
-	Contract     *MinterRoleTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
-}
-
-// MinterRoleRaw is an auto generated low-level Go binding around an Ethereum contract.
-type MinterRoleRaw struct {
-	Contract *MinterRole // Generic contract binding to access the raw methods on
-}
-
-// MinterRoleCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type MinterRoleCallerRaw struct {
-	Contract *MinterRoleCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// MinterRoleTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type MinterRoleTransactorRaw struct {
-	Contract *MinterRoleTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewMinterRole creates a new instance of MinterRole, bound to a specific deployed contract.
 func NewMinterRole(address common.Address, backend bind.ContractBackend) (*MinterRole, error) {
 	contract, err := bindMinterRole(address, backend, backend, backend)
@@ -20995,49 +16061,11 @@ func NewMinterRoleFilterer(address common.Address, filterer bind.ContractFiltere
 
 // bindMinterRole binds a generic wrapper to an already deployed contract.
 func bindMinterRole(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(MinterRoleABI))
+	parsed, err := ParsedABI(K_MinterRole)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_MinterRole *MinterRoleRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _MinterRole.Contract.MinterRoleCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_MinterRole *MinterRoleRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _MinterRole.Contract.MinterRoleTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_MinterRole *MinterRoleRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _MinterRole.Contract.MinterRoleTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_MinterRole *MinterRoleCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _MinterRole.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_MinterRole *MinterRoleTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _MinterRole.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_MinterRole *MinterRoleTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _MinterRole.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
@@ -21057,20 +16085,6 @@ func (_MinterRole *MinterRoleCaller) IsMinter(opts *bind.CallOpts, account commo
 
 }
 
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_MinterRole *MinterRoleSession) IsMinter(account common.Address) (bool, error) {
-	return _MinterRole.Contract.IsMinter(&_MinterRole.CallOpts, account)
-}
-
-// IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
-//
-// Solidity: function isMinter(address account) view returns(bool)
-func (_MinterRole *MinterRoleCallerSession) IsMinter(account common.Address) (bool, error) {
-	return _MinterRole.Contract.IsMinter(&_MinterRole.CallOpts, account)
-}
-
 // AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
 //
 // Solidity: function addMinter(address account) returns()
@@ -21078,39 +16092,11 @@ func (_MinterRole *MinterRoleTransactor) AddMinter(opts *bind.TransactOpts, acco
 	return _MinterRole.contract.Transact(opts, "addMinter", account)
 }
 
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_MinterRole *MinterRoleSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _MinterRole.Contract.AddMinter(&_MinterRole.TransactOpts, account)
-}
-
-// AddMinter is a paid mutator transaction binding the contract method 0x983b2d56.
-//
-// Solidity: function addMinter(address account) returns()
-func (_MinterRole *MinterRoleTransactorSession) AddMinter(account common.Address) (*types.Transaction, error) {
-	return _MinterRole.Contract.AddMinter(&_MinterRole.TransactOpts, account)
-}
-
 // RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
 //
 // Solidity: function renounceMinter() returns()
 func (_MinterRole *MinterRoleTransactor) RenounceMinter(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _MinterRole.contract.Transact(opts, "renounceMinter")
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_MinterRole *MinterRoleSession) RenounceMinter() (*types.Transaction, error) {
-	return _MinterRole.Contract.RenounceMinter(&_MinterRole.TransactOpts)
-}
-
-// RenounceMinter is a paid mutator transaction binding the contract method 0x98650275.
-//
-// Solidity: function renounceMinter() returns()
-func (_MinterRole *MinterRoleTransactorSession) RenounceMinter() (*types.Transaction, error) {
-	return _MinterRole.Contract.RenounceMinter(&_MinterRole.TransactOpts)
 }
 
 // MinterRoleMinterAddedIterator is returned from FilterMinterAdded and is used to iterate over the raw logs and unpacked data for MinterAdded events raised by the MinterRole contract.
@@ -21442,43 +16428,6 @@ type OwnableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// OwnableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type OwnableSession struct {
-	Contract     *Ownable          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// OwnableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type OwnableCallerSession struct {
-	Contract *OwnableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// OwnableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type OwnableTransactorSession struct {
-	Contract     *OwnableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// OwnableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type OwnableRaw struct {
-	Contract *Ownable // Generic contract binding to access the raw methods on
-}
-
-// OwnableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type OwnableCallerRaw struct {
-	Contract *OwnableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// OwnableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type OwnableTransactorRaw struct {
-	Contract *OwnableTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewOwnable creates a new instance of Ownable, bound to a specific deployed contract.
 func NewOwnable(address common.Address, backend bind.ContractBackend) (*Ownable, error) {
 	contract, err := bindOwnable(address, backend, backend, backend)
@@ -21517,49 +16466,11 @@ func NewOwnableFilterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindOwnable binds a generic wrapper to an already deployed contract.
 func bindOwnable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(OwnableABI))
+	parsed, err := ParsedABI(K_Ownable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Ownable *OwnableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Ownable.Contract.OwnableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Ownable *OwnableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Ownable.Contract.OwnableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Ownable *OwnableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Ownable.Contract.OwnableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Ownable *OwnableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Ownable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Ownable *OwnableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Ownable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Ownable *OwnableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Ownable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
@@ -21579,20 +16490,6 @@ func (_Ownable *OwnableCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 
 }
 
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_Ownable *OwnableSession) IsOwner() (bool, error) {
-	return _Ownable.Contract.IsOwner(&_Ownable.CallOpts)
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_Ownable *OwnableCallerSession) IsOwner() (bool, error) {
-	return _Ownable.Contract.IsOwner(&_Ownable.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -21610,20 +16507,6 @@ func (_Ownable *OwnableCaller) Owner(opts *bind.CallOpts) (common.Address, error
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Ownable *OwnableSession) Owner() (common.Address, error) {
-	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Ownable *OwnableCallerSession) Owner() (common.Address, error) {
-	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
-}
-
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
 //
 // Solidity: function renounceOwnership() returns()
@@ -21631,39 +16514,11 @@ func (_Ownable *OwnableTransactor) RenounceOwnership(opts *bind.TransactOpts) (*
 	return _Ownable.contract.Transact(opts, "renounceOwnership")
 }
 
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_Ownable *OwnableSession) RenounceOwnership() (*types.Transaction, error) {
-	return _Ownable.Contract.RenounceOwnership(&_Ownable.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_Ownable *OwnableTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _Ownable.Contract.RenounceOwnership(&_Ownable.TransactOpts)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_Ownable *OwnableTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
 	return _Ownable.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Ownable *OwnableSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Ownable.Contract.TransferOwnership(&_Ownable.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Ownable *OwnableTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Ownable.Contract.TransferOwnership(&_Ownable.TransactOpts, newOwner)
 }
 
 // OwnableOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the Ownable contract.
@@ -21835,7 +16690,7 @@ var OwnableDelegateProxyBin = OwnableDelegateProxyMetaData.Bin
 
 // DeployOwnableDelegateProxy deploys a new Ethereum contract, binding an instance of OwnableDelegateProxy to it.
 func DeployOwnableDelegateProxy(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *OwnableDelegateProxy, error) {
-	parsed, err := OwnableDelegateProxyMetaData.GetAbi()
+	parsed, err := ParsedABI(K_OwnableDelegateProxy)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -21870,43 +16725,6 @@ type OwnableDelegateProxyTransactor struct {
 // OwnableDelegateProxyFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type OwnableDelegateProxyFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// OwnableDelegateProxySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type OwnableDelegateProxySession struct {
-	Contract     *OwnableDelegateProxy // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts         // Call options to use throughout this session
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
-}
-
-// OwnableDelegateProxyCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type OwnableDelegateProxyCallerSession struct {
-	Contract *OwnableDelegateProxyCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts               // Call options to use throughout this session
-}
-
-// OwnableDelegateProxyTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type OwnableDelegateProxyTransactorSession struct {
-	Contract     *OwnableDelegateProxyTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts               // Transaction auth options to use throughout this session
-}
-
-// OwnableDelegateProxyRaw is an auto generated low-level Go binding around an Ethereum contract.
-type OwnableDelegateProxyRaw struct {
-	Contract *OwnableDelegateProxy // Generic contract binding to access the raw methods on
-}
-
-// OwnableDelegateProxyCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type OwnableDelegateProxyCallerRaw struct {
-	Contract *OwnableDelegateProxyCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// OwnableDelegateProxyTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type OwnableDelegateProxyTransactorRaw struct {
-	Contract *OwnableDelegateProxyTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewOwnableDelegateProxy creates a new instance of OwnableDelegateProxy, bound to a specific deployed contract.
@@ -21947,49 +16765,11 @@ func NewOwnableDelegateProxyFilterer(address common.Address, filterer bind.Contr
 
 // bindOwnableDelegateProxy binds a generic wrapper to an already deployed contract.
 func bindOwnableDelegateProxy(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(OwnableDelegateProxyABI))
+	parsed, err := ParsedABI(K_OwnableDelegateProxy)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_OwnableDelegateProxy *OwnableDelegateProxyRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _OwnableDelegateProxy.Contract.OwnableDelegateProxyCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_OwnableDelegateProxy *OwnableDelegateProxyRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _OwnableDelegateProxy.Contract.OwnableDelegateProxyTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_OwnableDelegateProxy *OwnableDelegateProxyRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _OwnableDelegateProxy.Contract.OwnableDelegateProxyTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_OwnableDelegateProxy *OwnableDelegateProxyCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _OwnableDelegateProxy.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_OwnableDelegateProxy *OwnableDelegateProxyTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _OwnableDelegateProxy.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_OwnableDelegateProxy *OwnableDelegateProxyTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _OwnableDelegateProxy.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // OwnerProxyRegistryMetaData contains all meta data concerning the OwnerProxyRegistry contract.
@@ -22022,7 +16802,7 @@ var OwnerProxyRegistryBin = OwnerProxyRegistryMetaData.Bin
 
 // DeployOwnerProxyRegistry deploys a new Ethereum contract, binding an instance of OwnerProxyRegistry to it.
 func DeployOwnerProxyRegistry(auth *bind.TransactOpts, backend bind.ContractBackend, initDelegates [10]common.Address) (common.Address, *types.Transaction, *OwnerProxyRegistry, error) {
-	parsed, err := OwnerProxyRegistryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_OwnerProxyRegistry)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -22057,43 +16837,6 @@ type OwnerProxyRegistryTransactor struct {
 // OwnerProxyRegistryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type OwnerProxyRegistryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// OwnerProxyRegistrySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type OwnerProxyRegistrySession struct {
-	Contract     *OwnerProxyRegistry // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts       // Call options to use throughout this session
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// OwnerProxyRegistryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type OwnerProxyRegistryCallerSession struct {
-	Contract *OwnerProxyRegistryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts             // Call options to use throughout this session
-}
-
-// OwnerProxyRegistryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type OwnerProxyRegistryTransactorSession struct {
-	Contract     *OwnerProxyRegistryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts             // Transaction auth options to use throughout this session
-}
-
-// OwnerProxyRegistryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type OwnerProxyRegistryRaw struct {
-	Contract *OwnerProxyRegistry // Generic contract binding to access the raw methods on
-}
-
-// OwnerProxyRegistryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type OwnerProxyRegistryCallerRaw struct {
-	Contract *OwnerProxyRegistryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// OwnerProxyRegistryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type OwnerProxyRegistryTransactorRaw struct {
-	Contract *OwnerProxyRegistryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewOwnerProxyRegistry creates a new instance of OwnerProxyRegistry, bound to a specific deployed contract.
@@ -22134,49 +16877,11 @@ func NewOwnerProxyRegistryFilterer(address common.Address, filterer bind.Contrac
 
 // bindOwnerProxyRegistry binds a generic wrapper to an already deployed contract.
 func bindOwnerProxyRegistry(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(OwnerProxyRegistryABI))
+	parsed, err := ParsedABI(K_OwnerProxyRegistry)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_OwnerProxyRegistry *OwnerProxyRegistryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _OwnerProxyRegistry.Contract.OwnerProxyRegistryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_OwnerProxyRegistry *OwnerProxyRegistryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.OwnerProxyRegistryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_OwnerProxyRegistry *OwnerProxyRegistryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.OwnerProxyRegistryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_OwnerProxyRegistry *OwnerProxyRegistryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _OwnerProxyRegistry.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_OwnerProxyRegistry *OwnerProxyRegistryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_OwnerProxyRegistry *OwnerProxyRegistryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
@@ -22196,20 +16901,6 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) CountDelegates(opts *bind.C
 
 }
 
-// CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
-//
-// Solidity: function countDelegates() view returns(int256)
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) CountDelegates() (*big.Int, error) {
-	return _OwnerProxyRegistry.Contract.CountDelegates(&_OwnerProxyRegistry.CallOpts)
-}
-
-// CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
-//
-// Solidity: function countDelegates() view returns(int256)
-func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) CountDelegates() (*big.Int, error) {
-	return _OwnerProxyRegistry.Contract.CountDelegates(&_OwnerProxyRegistry.CallOpts)
-}
-
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
 // Solidity: function isOwner() view returns(bool)
@@ -22225,20 +16916,6 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) IsOwner(opts *bind.CallOpts
 
 	return out0, err
 
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) IsOwner() (bool, error) {
-	return _OwnerProxyRegistry.Contract.IsOwner(&_OwnerProxyRegistry.CallOpts)
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) IsOwner() (bool, error) {
-	return _OwnerProxyRegistry.Contract.IsOwner(&_OwnerProxyRegistry.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -22258,20 +16935,6 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) Owner(opts *bind.CallOpts) 
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) Owner() (common.Address, error) {
-	return _OwnerProxyRegistry.Contract.Owner(&_OwnerProxyRegistry.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) Owner() (common.Address, error) {
-	return _OwnerProxyRegistry.Contract.Owner(&_OwnerProxyRegistry.CallOpts)
-}
-
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
 // Solidity: function proxies(address ) view returns(address)
@@ -22289,39 +16952,11 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) Proxies(opts *bind.CallOpts
 
 }
 
-// Proxies is a free data retrieval call binding the contract method 0xc4552791.
-//
-// Solidity: function proxies(address ) view returns(address)
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) Proxies(arg0 common.Address) (common.Address, error) {
-	return _OwnerProxyRegistry.Contract.Proxies(&_OwnerProxyRegistry.CallOpts, arg0)
-}
-
-// Proxies is a free data retrieval call binding the contract method 0xc4552791.
-//
-// Solidity: function proxies(address ) view returns(address)
-func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) Proxies(arg0 common.Address) (common.Address, error) {
-	return _OwnerProxyRegistry.Contract.Proxies(&_OwnerProxyRegistry.CallOpts, arg0)
-}
-
 // AddDelegate is a paid mutator transaction binding the contract method 0xe71bdf41.
 //
 // Solidity: function addDelegate(address from) returns()
 func (_OwnerProxyRegistry *OwnerProxyRegistryTransactor) AddDelegate(opts *bind.TransactOpts, from common.Address) (*types.Transaction, error) {
 	return _OwnerProxyRegistry.contract.Transact(opts, "addDelegate", from)
-}
-
-// AddDelegate is a paid mutator transaction binding the contract method 0xe71bdf41.
-//
-// Solidity: function addDelegate(address from) returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) AddDelegate(from common.Address) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.AddDelegate(&_OwnerProxyRegistry.TransactOpts, from)
-}
-
-// AddDelegate is a paid mutator transaction binding the contract method 0xe71bdf41.
-//
-// Solidity: function addDelegate(address from) returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistryTransactorSession) AddDelegate(from common.Address) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.AddDelegate(&_OwnerProxyRegistry.TransactOpts, from)
 }
 
 // Finalize is a paid mutator transaction binding the contract method 0x4bb278f3.
@@ -22331,20 +16966,6 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryTransactor) Finalize(opts *bind.Tra
 	return _OwnerProxyRegistry.contract.Transact(opts, "finalize")
 }
 
-// Finalize is a paid mutator transaction binding the contract method 0x4bb278f3.
-//
-// Solidity: function finalize() returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) Finalize() (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.Finalize(&_OwnerProxyRegistry.TransactOpts)
-}
-
-// Finalize is a paid mutator transaction binding the contract method 0x4bb278f3.
-//
-// Solidity: function finalize() returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistryTransactorSession) Finalize() (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.Finalize(&_OwnerProxyRegistry.TransactOpts)
-}
-
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
 //
 // Solidity: function renounceOwnership() returns()
@@ -22352,39 +16973,11 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryTransactor) RenounceOwnership(opts 
 	return _OwnerProxyRegistry.contract.Transact(opts, "renounceOwnership")
 }
 
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) RenounceOwnership() (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.RenounceOwnership(&_OwnerProxyRegistry.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistryTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.RenounceOwnership(&_OwnerProxyRegistry.TransactOpts)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_OwnerProxyRegistry *OwnerProxyRegistryTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
 	return _OwnerProxyRegistry.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistrySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.TransferOwnership(&_OwnerProxyRegistry.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_OwnerProxyRegistry *OwnerProxyRegistryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _OwnerProxyRegistry.Contract.TransferOwnership(&_OwnerProxyRegistry.TransactOpts, newOwner)
 }
 
 // OwnerProxyRegistryOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the OwnerProxyRegistry contract.
@@ -22583,43 +17176,6 @@ type PausableFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PausableSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type PausableSession struct {
-	Contract     *Pausable         // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// PausableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type PausableCallerSession struct {
-	Contract *PausableCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts   // Call options to use throughout this session
-}
-
-// PausableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type PausableTransactorSession struct {
-	Contract     *PausableTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// PausableRaw is an auto generated low-level Go binding around an Ethereum contract.
-type PausableRaw struct {
-	Contract *Pausable // Generic contract binding to access the raw methods on
-}
-
-// PausableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type PausableCallerRaw struct {
-	Contract *PausableCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// PausableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type PausableTransactorRaw struct {
-	Contract *PausableTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewPausable creates a new instance of Pausable, bound to a specific deployed contract.
 func NewPausable(address common.Address, backend bind.ContractBackend) (*Pausable, error) {
 	contract, err := bindPausable(address, backend, backend, backend)
@@ -22658,49 +17214,11 @@ func NewPausableFilterer(address common.Address, filterer bind.ContractFilterer)
 
 // bindPausable binds a generic wrapper to an already deployed contract.
 func bindPausable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(PausableABI))
+	parsed, err := ParsedABI(K_Pausable)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Pausable *PausableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Pausable.Contract.PausableCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Pausable *PausableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Pausable.Contract.PausableTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Pausable *PausableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Pausable.Contract.PausableTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Pausable *PausableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Pausable.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Pausable *PausableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Pausable.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Pausable *PausableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Pausable.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
@@ -22720,20 +17238,6 @@ func (_Pausable *PausableCaller) IsPauser(opts *bind.CallOpts, account common.Ad
 
 }
 
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_Pausable *PausableSession) IsPauser(account common.Address) (bool, error) {
-	return _Pausable.Contract.IsPauser(&_Pausable.CallOpts, account)
-}
-
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_Pausable *PausableCallerSession) IsPauser(account common.Address) (bool, error) {
-	return _Pausable.Contract.IsPauser(&_Pausable.CallOpts, account)
-}
-
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
 // Solidity: function paused() view returns(bool)
@@ -22751,39 +17255,11 @@ func (_Pausable *PausableCaller) Paused(opts *bind.CallOpts) (bool, error) {
 
 }
 
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_Pausable *PausableSession) Paused() (bool, error) {
-	return _Pausable.Contract.Paused(&_Pausable.CallOpts)
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_Pausable *PausableCallerSession) Paused() (bool, error) {
-	return _Pausable.Contract.Paused(&_Pausable.CallOpts)
-}
-
 // AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
 //
 // Solidity: function addPauser(address account) returns()
 func (_Pausable *PausableTransactor) AddPauser(opts *bind.TransactOpts, account common.Address) (*types.Transaction, error) {
 	return _Pausable.contract.Transact(opts, "addPauser", account)
-}
-
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_Pausable *PausableSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _Pausable.Contract.AddPauser(&_Pausable.TransactOpts, account)
-}
-
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_Pausable *PausableTransactorSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _Pausable.Contract.AddPauser(&_Pausable.TransactOpts, account)
 }
 
 // Pause is a paid mutator transaction binding the contract method 0x8456cb59.
@@ -22793,20 +17269,6 @@ func (_Pausable *PausableTransactor) Pause(opts *bind.TransactOpts) (*types.Tran
 	return _Pausable.contract.Transact(opts, "pause")
 }
 
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_Pausable *PausableSession) Pause() (*types.Transaction, error) {
-	return _Pausable.Contract.Pause(&_Pausable.TransactOpts)
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_Pausable *PausableTransactorSession) Pause() (*types.Transaction, error) {
-	return _Pausable.Contract.Pause(&_Pausable.TransactOpts)
-}
-
 // RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
 //
 // Solidity: function renouncePauser() returns()
@@ -22814,39 +17276,11 @@ func (_Pausable *PausableTransactor) RenouncePauser(opts *bind.TransactOpts) (*t
 	return _Pausable.contract.Transact(opts, "renouncePauser")
 }
 
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_Pausable *PausableSession) RenouncePauser() (*types.Transaction, error) {
-	return _Pausable.Contract.RenouncePauser(&_Pausable.TransactOpts)
-}
-
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_Pausable *PausableTransactorSession) RenouncePauser() (*types.Transaction, error) {
-	return _Pausable.Contract.RenouncePauser(&_Pausable.TransactOpts)
-}
-
 // Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
 //
 // Solidity: function unpause() returns()
 func (_Pausable *PausableTransactor) Unpause(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Pausable.contract.Transact(opts, "unpause")
-}
-
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
-//
-// Solidity: function unpause() returns()
-func (_Pausable *PausableSession) Unpause() (*types.Transaction, error) {
-	return _Pausable.Contract.Unpause(&_Pausable.TransactOpts)
-}
-
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
-//
-// Solidity: function unpause() returns()
-func (_Pausable *PausableTransactorSession) Unpause() (*types.Transaction, error) {
-	return _Pausable.Contract.Unpause(&_Pausable.TransactOpts)
 }
 
 // PausablePausedIterator is returned from FilterPaused and is used to iterate over the raw logs and unpacked data for Paused events raised by the Pausable contract.
@@ -23445,43 +17879,6 @@ type PauserRoleFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PauserRoleSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type PauserRoleSession struct {
-	Contract     *PauserRole       // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// PauserRoleCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type PauserRoleCallerSession struct {
-	Contract *PauserRoleCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts     // Call options to use throughout this session
-}
-
-// PauserRoleTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type PauserRoleTransactorSession struct {
-	Contract     *PauserRoleTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
-}
-
-// PauserRoleRaw is an auto generated low-level Go binding around an Ethereum contract.
-type PauserRoleRaw struct {
-	Contract *PauserRole // Generic contract binding to access the raw methods on
-}
-
-// PauserRoleCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type PauserRoleCallerRaw struct {
-	Contract *PauserRoleCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// PauserRoleTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type PauserRoleTransactorRaw struct {
-	Contract *PauserRoleTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewPauserRole creates a new instance of PauserRole, bound to a specific deployed contract.
 func NewPauserRole(address common.Address, backend bind.ContractBackend) (*PauserRole, error) {
 	contract, err := bindPauserRole(address, backend, backend, backend)
@@ -23520,49 +17917,11 @@ func NewPauserRoleFilterer(address common.Address, filterer bind.ContractFiltere
 
 // bindPauserRole binds a generic wrapper to an already deployed contract.
 func bindPauserRole(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(PauserRoleABI))
+	parsed, err := ParsedABI(K_PauserRole)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_PauserRole *PauserRoleRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _PauserRole.Contract.PauserRoleCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_PauserRole *PauserRoleRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _PauserRole.Contract.PauserRoleTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_PauserRole *PauserRoleRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _PauserRole.Contract.PauserRoleTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_PauserRole *PauserRoleCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _PauserRole.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_PauserRole *PauserRoleTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _PauserRole.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_PauserRole *PauserRoleTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _PauserRole.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
@@ -23582,20 +17941,6 @@ func (_PauserRole *PauserRoleCaller) IsPauser(opts *bind.CallOpts, account commo
 
 }
 
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_PauserRole *PauserRoleSession) IsPauser(account common.Address) (bool, error) {
-	return _PauserRole.Contract.IsPauser(&_PauserRole.CallOpts, account)
-}
-
-// IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
-//
-// Solidity: function isPauser(address account) view returns(bool)
-func (_PauserRole *PauserRoleCallerSession) IsPauser(account common.Address) (bool, error) {
-	return _PauserRole.Contract.IsPauser(&_PauserRole.CallOpts, account)
-}
-
 // AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
 //
 // Solidity: function addPauser(address account) returns()
@@ -23603,39 +17948,11 @@ func (_PauserRole *PauserRoleTransactor) AddPauser(opts *bind.TransactOpts, acco
 	return _PauserRole.contract.Transact(opts, "addPauser", account)
 }
 
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_PauserRole *PauserRoleSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _PauserRole.Contract.AddPauser(&_PauserRole.TransactOpts, account)
-}
-
-// AddPauser is a paid mutator transaction binding the contract method 0x82dc1ec4.
-//
-// Solidity: function addPauser(address account) returns()
-func (_PauserRole *PauserRoleTransactorSession) AddPauser(account common.Address) (*types.Transaction, error) {
-	return _PauserRole.Contract.AddPauser(&_PauserRole.TransactOpts, account)
-}
-
 // RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
 //
 // Solidity: function renouncePauser() returns()
 func (_PauserRole *PauserRoleTransactor) RenouncePauser(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _PauserRole.contract.Transact(opts, "renouncePauser")
-}
-
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_PauserRole *PauserRoleSession) RenouncePauser() (*types.Transaction, error) {
-	return _PauserRole.Contract.RenouncePauser(&_PauserRole.TransactOpts)
-}
-
-// RenouncePauser is a paid mutator transaction binding the contract method 0x6ef8d66d.
-//
-// Solidity: function renouncePauser() returns()
-func (_PauserRole *PauserRoleTransactorSession) RenouncePauser() (*types.Transaction, error) {
-	return _PauserRole.Contract.RenouncePauser(&_PauserRole.TransactOpts)
 }
 
 // PauserRolePauserAddedIterator is returned from FilterPauserAdded and is used to iterate over the raw logs and unpacked data for PauserAdded events raised by the PauserRole contract.
@@ -23949,7 +18266,7 @@ var ProxyRegistryBin = ProxyRegistryMetaData.Bin
 
 // DeployProxyRegistry deploys a new Ethereum contract, binding an instance of ProxyRegistry to it.
 func DeployProxyRegistry(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ProxyRegistry, error) {
-	parsed, err := ProxyRegistryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_ProxyRegistry)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -23984,43 +18301,6 @@ type ProxyRegistryTransactor struct {
 // ProxyRegistryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type ProxyRegistryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ProxyRegistrySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ProxyRegistrySession struct {
-	Contract     *ProxyRegistry    // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ProxyRegistryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ProxyRegistryCallerSession struct {
-	Contract *ProxyRegistryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts        // Call options to use throughout this session
-}
-
-// ProxyRegistryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ProxyRegistryTransactorSession struct {
-	Contract     *ProxyRegistryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts        // Transaction auth options to use throughout this session
-}
-
-// ProxyRegistryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ProxyRegistryRaw struct {
-	Contract *ProxyRegistry // Generic contract binding to access the raw methods on
-}
-
-// ProxyRegistryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ProxyRegistryCallerRaw struct {
-	Contract *ProxyRegistryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ProxyRegistryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ProxyRegistryTransactorRaw struct {
-	Contract *ProxyRegistryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewProxyRegistry creates a new instance of ProxyRegistry, bound to a specific deployed contract.
@@ -24061,49 +18341,11 @@ func NewProxyRegistryFilterer(address common.Address, filterer bind.ContractFilt
 
 // bindProxyRegistry binds a generic wrapper to an already deployed contract.
 func bindProxyRegistry(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ProxyRegistryABI))
+	parsed, err := ParsedABI(K_ProxyRegistry)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ProxyRegistry *ProxyRegistryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ProxyRegistry.Contract.ProxyRegistryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ProxyRegistry *ProxyRegistryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ProxyRegistry.Contract.ProxyRegistryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ProxyRegistry *ProxyRegistryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ProxyRegistry.Contract.ProxyRegistryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_ProxyRegistry *ProxyRegistryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _ProxyRegistry.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_ProxyRegistry *ProxyRegistryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _ProxyRegistry.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_ProxyRegistry *ProxyRegistryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _ProxyRegistry.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
@@ -24123,20 +18365,6 @@ func (_ProxyRegistry *ProxyRegistryCaller) Proxies(opts *bind.CallOpts, arg0 com
 
 }
 
-// Proxies is a free data retrieval call binding the contract method 0xc4552791.
-//
-// Solidity: function proxies(address ) view returns(address)
-func (_ProxyRegistry *ProxyRegistrySession) Proxies(arg0 common.Address) (common.Address, error) {
-	return _ProxyRegistry.Contract.Proxies(&_ProxyRegistry.CallOpts, arg0)
-}
-
-// Proxies is a free data retrieval call binding the contract method 0xc4552791.
-//
-// Solidity: function proxies(address ) view returns(address)
-func (_ProxyRegistry *ProxyRegistryCallerSession) Proxies(arg0 common.Address) (common.Address, error) {
-	return _ProxyRegistry.Contract.Proxies(&_ProxyRegistry.CallOpts, arg0)
-}
-
 // RolesMetaData contains all meta data concerning the Roles contract.
 var RolesMetaData = &bind.MetaData{
 	ABI: "[]",
@@ -24153,7 +18381,7 @@ var RolesBin = RolesMetaData.Bin
 
 // DeployRoles deploys a new Ethereum contract, binding an instance of Roles to it.
 func DeployRoles(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Roles, error) {
-	parsed, err := RolesMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Roles)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -24188,43 +18416,6 @@ type RolesTransactor struct {
 // RolesFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type RolesFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// RolesSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type RolesSession struct {
-	Contract     *Roles            // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// RolesCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type RolesCallerSession struct {
-	Contract *RolesCaller  // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// RolesTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type RolesTransactorSession struct {
-	Contract     *RolesTransactor  // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// RolesRaw is an auto generated low-level Go binding around an Ethereum contract.
-type RolesRaw struct {
-	Contract *Roles // Generic contract binding to access the raw methods on
-}
-
-// RolesCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type RolesCallerRaw struct {
-	Contract *RolesCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// RolesTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type RolesTransactorRaw struct {
-	Contract *RolesTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewRoles creates a new instance of Roles, bound to a specific deployed contract.
@@ -24265,49 +18456,11 @@ func NewRolesFilterer(address common.Address, filterer bind.ContractFilterer) (*
 
 // bindRoles binds a generic wrapper to an already deployed contract.
 func bindRoles(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(RolesABI))
+	parsed, err := ParsedABI(K_Roles)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Roles *RolesRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Roles.Contract.RolesCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Roles *RolesRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Roles.Contract.RolesTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Roles *RolesRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Roles.Contract.RolesTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Roles *RolesCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Roles.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Roles *RolesTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Roles.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Roles *RolesTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Roles.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // SafeMathMetaData contains all meta data concerning the SafeMath contract.
@@ -24326,7 +18479,7 @@ var SafeMathBin = SafeMathMetaData.Bin
 
 // DeploySafeMath deploys a new Ethereum contract, binding an instance of SafeMath to it.
 func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
-	parsed, err := SafeMathMetaData.GetAbi()
+	parsed, err := ParsedABI(K_SafeMath)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -24361,43 +18514,6 @@ type SafeMathTransactor struct {
 // SafeMathFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type SafeMathFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// SafeMathSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type SafeMathSession struct {
-	Contract     *SafeMath         // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// SafeMathCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type SafeMathCallerSession struct {
-	Contract *SafeMathCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts   // Call options to use throughout this session
-}
-
-// SafeMathTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type SafeMathTransactorSession struct {
-	Contract     *SafeMathTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// SafeMathRaw is an auto generated low-level Go binding around an Ethereum contract.
-type SafeMathRaw struct {
-	Contract *SafeMath // Generic contract binding to access the raw methods on
-}
-
-// SafeMathCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type SafeMathCallerRaw struct {
-	Contract *SafeMathCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// SafeMathTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type SafeMathTransactorRaw struct {
-	Contract *SafeMathTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewSafeMath creates a new instance of SafeMath, bound to a specific deployed contract.
@@ -24438,49 +18554,11 @@ func NewSafeMathFilterer(address common.Address, filterer bind.ContractFilterer)
 
 // bindSafeMath binds a generic wrapper to an already deployed contract.
 func bindSafeMath(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(SafeMathABI))
+	parsed, err := ParsedABI(K_SafeMath)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_SafeMath *SafeMathRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _SafeMath.Contract.SafeMathCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_SafeMath *SafeMathRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _SafeMath.Contract.SafeMathTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_SafeMath *SafeMathRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _SafeMath.Contract.SafeMathTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_SafeMath *SafeMathCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _SafeMath.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_SafeMath *SafeMathTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _SafeMath.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_SafeMath *SafeMathTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _SafeMath.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // StringsMetaData contains all meta data concerning the Strings contract.
@@ -24499,7 +18577,7 @@ var StringsBin = StringsMetaData.Bin
 
 // DeployStrings deploys a new Ethereum contract, binding an instance of Strings to it.
 func DeployStrings(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Strings, error) {
-	parsed, err := StringsMetaData.GetAbi()
+	parsed, err := ParsedABI(K_Strings)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -24534,43 +18612,6 @@ type StringsTransactor struct {
 // StringsFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type StringsFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// StringsSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type StringsSession struct {
-	Contract     *Strings          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// StringsCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type StringsCallerSession struct {
-	Contract *StringsCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// StringsTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type StringsTransactorSession struct {
-	Contract     *StringsTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// StringsRaw is an auto generated low-level Go binding around an Ethereum contract.
-type StringsRaw struct {
-	Contract *Strings // Generic contract binding to access the raw methods on
-}
-
-// StringsCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type StringsCallerRaw struct {
-	Contract *StringsCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// StringsTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type StringsTransactorRaw struct {
-	Contract *StringsTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewStrings creates a new instance of Strings, bound to a specific deployed contract.
@@ -24611,49 +18652,11 @@ func NewStringsFilterer(address common.Address, filterer bind.ContractFilterer) 
 
 // bindStrings binds a generic wrapper to an already deployed contract.
 func bindStrings(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(StringsABI))
+	parsed, err := ParsedABI(K_Strings)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Strings *StringsRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Strings.Contract.StringsCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Strings *StringsRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Strings.Contract.StringsTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Strings *StringsRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Strings.Contract.StringsTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Strings *StringsCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Strings.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Strings *StringsTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Strings.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Strings *StringsTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Strings.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // TransferFeeProxyMetaData contains all meta data concerning the TransferFeeProxy contract.
@@ -24694,43 +18697,6 @@ type TransferFeeProxyFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// TransferFeeProxySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type TransferFeeProxySession struct {
-	Contract     *TransferFeeProxy // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// TransferFeeProxyCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type TransferFeeProxyCallerSession struct {
-	Contract *TransferFeeProxyCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts           // Call options to use throughout this session
-}
-
-// TransferFeeProxyTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type TransferFeeProxyTransactorSession struct {
-	Contract     *TransferFeeProxyTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
-}
-
-// TransferFeeProxyRaw is an auto generated low-level Go binding around an Ethereum contract.
-type TransferFeeProxyRaw struct {
-	Contract *TransferFeeProxy // Generic contract binding to access the raw methods on
-}
-
-// TransferFeeProxyCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type TransferFeeProxyCallerRaw struct {
-	Contract *TransferFeeProxyCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// TransferFeeProxyTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type TransferFeeProxyTransactorRaw struct {
-	Contract *TransferFeeProxyTransactor // Generic write-only contract binding to access the raw methods on
-}
-
 // NewTransferFeeProxy creates a new instance of TransferFeeProxy, bound to a specific deployed contract.
 func NewTransferFeeProxy(address common.Address, backend bind.ContractBackend) (*TransferFeeProxy, error) {
 	contract, err := bindTransferFeeProxy(address, backend, backend, backend)
@@ -24769,49 +18735,11 @@ func NewTransferFeeProxyFilterer(address common.Address, filterer bind.ContractF
 
 // bindTransferFeeProxy binds a generic wrapper to an already deployed contract.
 func bindTransferFeeProxy(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(TransferFeeProxyABI))
+	parsed, err := ParsedABI(K_TransferFeeProxy)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_TransferFeeProxy *TransferFeeProxyRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _TransferFeeProxy.Contract.TransferFeeProxyCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_TransferFeeProxy *TransferFeeProxyRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TransferFeeProxy.Contract.TransferFeeProxyTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_TransferFeeProxy *TransferFeeProxyRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TransferFeeProxy.Contract.TransferFeeProxyTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_TransferFeeProxy *TransferFeeProxyCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _TransferFeeProxy.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_TransferFeeProxy *TransferFeeProxyTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TransferFeeProxy.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_TransferFeeProxy *TransferFeeProxyTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TransferFeeProxy.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
@@ -24829,20 +18757,6 @@ func (_TransferFeeProxy *TransferFeeProxyCaller) GetTransferFee(opts *bind.CallO
 
 	return out0, err
 
-}
-
-// GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
-//
-// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
-func (_TransferFeeProxy *TransferFeeProxySession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
-	return _TransferFeeProxy.Contract.GetTransferFee(&_TransferFeeProxy.CallOpts, _tokenId)
-}
-
-// GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
-//
-// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
-func (_TransferFeeProxy *TransferFeeProxyCallerSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
-	return _TransferFeeProxy.Contract.GetTransferFee(&_TransferFeeProxy.CallOpts, _tokenId)
 }
 
 // TransferProxyRegistryMetaData contains all meta data concerning the TransferProxyRegistry contract.
@@ -24877,7 +18791,7 @@ var TransferProxyRegistryBin = TransferProxyRegistryMetaData.Bin
 
 // DeployTransferProxyRegistry deploys a new Ethereum contract, binding an instance of TransferProxyRegistry to it.
 func DeployTransferProxyRegistry(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *TransferProxyRegistry, error) {
-	parsed, err := TransferProxyRegistryMetaData.GetAbi()
+	parsed, err := ParsedABI(K_TransferProxyRegistry)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -24912,43 +18826,6 @@ type TransferProxyRegistryTransactor struct {
 // TransferProxyRegistryFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type TransferProxyRegistryFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// TransferProxyRegistrySession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type TransferProxyRegistrySession struct {
-	Contract     *TransferProxyRegistry // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts          // Call options to use throughout this session
-	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
-}
-
-// TransferProxyRegistryCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type TransferProxyRegistryCallerSession struct {
-	Contract *TransferProxyRegistryCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts                // Call options to use throughout this session
-}
-
-// TransferProxyRegistryTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type TransferProxyRegistryTransactorSession struct {
-	Contract     *TransferProxyRegistryTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts                // Transaction auth options to use throughout this session
-}
-
-// TransferProxyRegistryRaw is an auto generated low-level Go binding around an Ethereum contract.
-type TransferProxyRegistryRaw struct {
-	Contract *TransferProxyRegistry // Generic contract binding to access the raw methods on
-}
-
-// TransferProxyRegistryCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type TransferProxyRegistryCallerRaw struct {
-	Contract *TransferProxyRegistryCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// TransferProxyRegistryTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type TransferProxyRegistryTransactorRaw struct {
-	Contract *TransferProxyRegistryTransactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewTransferProxyRegistry creates a new instance of TransferProxyRegistry, bound to a specific deployed contract.
@@ -24989,49 +18866,11 @@ func NewTransferProxyRegistryFilterer(address common.Address, filterer bind.Cont
 
 // bindTransferProxyRegistry binds a generic wrapper to an already deployed contract.
 func bindTransferProxyRegistry(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(TransferProxyRegistryABI))
+	parsed, err := ParsedABI(K_TransferProxyRegistry)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_TransferProxyRegistry *TransferProxyRegistryRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _TransferProxyRegistry.Contract.TransferProxyRegistryCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_TransferProxyRegistry *TransferProxyRegistryRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.TransferProxyRegistryTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_TransferProxyRegistry *TransferProxyRegistryRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.TransferProxyRegistryTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_TransferProxyRegistry *TransferProxyRegistryCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _TransferProxyRegistry.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
@@ -25051,20 +18890,6 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) CountDelegates(opts *
 
 }
 
-// CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
-//
-// Solidity: function countDelegates() view returns(int256)
-func (_TransferProxyRegistry *TransferProxyRegistrySession) CountDelegates() (*big.Int, error) {
-	return _TransferProxyRegistry.Contract.CountDelegates(&_TransferProxyRegistry.CallOpts)
-}
-
-// CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
-//
-// Solidity: function countDelegates() view returns(int256)
-func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) CountDelegates() (*big.Int, error) {
-	return _TransferProxyRegistry.Contract.CountDelegates(&_TransferProxyRegistry.CallOpts)
-}
-
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
 // Solidity: function isOwner() view returns(bool)
@@ -25080,20 +18905,6 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) IsOwner(opts *bind.Ca
 
 	return out0, err
 
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_TransferProxyRegistry *TransferProxyRegistrySession) IsOwner() (bool, error) {
-	return _TransferProxyRegistry.Contract.IsOwner(&_TransferProxyRegistry.CallOpts)
-}
-
-// IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
-//
-// Solidity: function isOwner() view returns(bool)
-func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) IsOwner() (bool, error) {
-	return _TransferProxyRegistry.Contract.IsOwner(&_TransferProxyRegistry.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -25113,20 +18924,6 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) Owner(opts *bind.Call
 
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_TransferProxyRegistry *TransferProxyRegistrySession) Owner() (common.Address, error) {
-	return _TransferProxyRegistry.Contract.Owner(&_TransferProxyRegistry.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) Owner() (common.Address, error) {
-	return _TransferProxyRegistry.Contract.Owner(&_TransferProxyRegistry.CallOpts)
-}
-
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
 // Solidity: function proxies(address ) view returns(address)
@@ -25144,39 +18941,11 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) Proxies(opts *bind.Ca
 
 }
 
-// Proxies is a free data retrieval call binding the contract method 0xc4552791.
-//
-// Solidity: function proxies(address ) view returns(address)
-func (_TransferProxyRegistry *TransferProxyRegistrySession) Proxies(arg0 common.Address) (common.Address, error) {
-	return _TransferProxyRegistry.Contract.Proxies(&_TransferProxyRegistry.CallOpts, arg0)
-}
-
-// Proxies is a free data retrieval call binding the contract method 0xc4552791.
-//
-// Solidity: function proxies(address ) view returns(address)
-func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) Proxies(arg0 common.Address) (common.Address, error) {
-	return _TransferProxyRegistry.Contract.Proxies(&_TransferProxyRegistry.CallOpts, arg0)
-}
-
 // Finalize is a paid mutator transaction binding the contract method 0x4bb278f3.
 //
 // Solidity: function finalize() returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactor) Finalize(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _TransferProxyRegistry.contract.Transact(opts, "finalize")
-}
-
-// Finalize is a paid mutator transaction binding the contract method 0x4bb278f3.
-//
-// Solidity: function finalize() returns()
-func (_TransferProxyRegistry *TransferProxyRegistrySession) Finalize() (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.Finalize(&_TransferProxyRegistry.TransactOpts)
-}
-
-// Finalize is a paid mutator transaction binding the contract method 0x4bb278f3.
-//
-// Solidity: function finalize() returns()
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) Finalize() (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.Finalize(&_TransferProxyRegistry.TransactOpts)
 }
 
 // ProxySetTokenURI is a paid mutator transaction binding the contract method 0x0ad7a11e.
@@ -25186,39 +18955,11 @@ func (_TransferProxyRegistry *TransferProxyRegistryTransactor) ProxySetTokenURI(
 	return _TransferProxyRegistry.contract.Transact(opts, "proxySetTokenURI", target, tokenId, uri)
 }
 
-// ProxySetTokenURI is a paid mutator transaction binding the contract method 0x0ad7a11e.
-//
-// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) payable returns()
-func (_TransferProxyRegistry *TransferProxyRegistrySession) ProxySetTokenURI(target common.Address, tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.ProxySetTokenURI(&_TransferProxyRegistry.TransactOpts, target, tokenId, uri)
-}
-
-// ProxySetTokenURI is a paid mutator transaction binding the contract method 0x0ad7a11e.
-//
-// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) payable returns()
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) ProxySetTokenURI(target common.Address, tokenId *big.Int, uri string) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.ProxySetTokenURI(&_TransferProxyRegistry.TransactOpts, target, tokenId, uri)
-}
-
 // ProxySetTokenURIMany is a paid mutator transaction binding the contract method 0x878b2633.
 //
 // Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactor) ProxySetTokenURIMany(opts *bind.TransactOpts, target common.Address, tokenIds []*big.Int, uris []string) (*types.Transaction, error) {
 	return _TransferProxyRegistry.contract.Transact(opts, "proxySetTokenURIMany", target, tokenIds, uris)
-}
-
-// ProxySetTokenURIMany is a paid mutator transaction binding the contract method 0x878b2633.
-//
-// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) payable returns()
-func (_TransferProxyRegistry *TransferProxyRegistrySession) ProxySetTokenURIMany(target common.Address, tokenIds []*big.Int, uris []string) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.ProxySetTokenURIMany(&_TransferProxyRegistry.TransactOpts, target, tokenIds, uris)
-}
-
-// ProxySetTokenURIMany is a paid mutator transaction binding the contract method 0x878b2633.
-//
-// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) payable returns()
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) ProxySetTokenURIMany(target common.Address, tokenIds []*big.Int, uris []string) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.ProxySetTokenURIMany(&_TransferProxyRegistry.TransactOpts, target, tokenIds, uris)
 }
 
 // ProxyTransferFrom is a paid mutator transaction binding the contract method 0x281083c7.
@@ -25228,20 +18969,6 @@ func (_TransferProxyRegistry *TransferProxyRegistryTransactor) ProxyTransferFrom
 	return _TransferProxyRegistry.contract.Transact(opts, "proxyTransferFrom", target, from, to, tokenId)
 }
 
-// ProxyTransferFrom is a paid mutator transaction binding the contract method 0x281083c7.
-//
-// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) payable returns()
-func (_TransferProxyRegistry *TransferProxyRegistrySession) ProxyTransferFrom(target common.Address, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.ProxyTransferFrom(&_TransferProxyRegistry.TransactOpts, target, from, to, tokenId)
-}
-
-// ProxyTransferFrom is a paid mutator transaction binding the contract method 0x281083c7.
-//
-// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) payable returns()
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) ProxyTransferFrom(target common.Address, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.ProxyTransferFrom(&_TransferProxyRegistry.TransactOpts, target, from, to, tokenId)
-}
-
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
 //
 // Solidity: function renounceOwnership() returns()
@@ -25249,39 +18976,11 @@ func (_TransferProxyRegistry *TransferProxyRegistryTransactor) RenounceOwnership
 	return _TransferProxyRegistry.contract.Transact(opts, "renounceOwnership")
 }
 
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_TransferProxyRegistry *TransferProxyRegistrySession) RenounceOwnership() (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.RenounceOwnership(&_TransferProxyRegistry.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.RenounceOwnership(&_TransferProxyRegistry.TransactOpts)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
 	return _TransferProxyRegistry.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_TransferProxyRegistry *TransferProxyRegistrySession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.TransferOwnership(&_TransferProxyRegistry.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _TransferProxyRegistry.Contract.TransferOwnership(&_TransferProxyRegistry.TransactOpts, newOwner)
 }
 
 // TransferProxyRegistryOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the TransferProxyRegistry contract.
@@ -25470,7 +19169,7 @@ var WELV9Bin = WELV9MetaData.Bin
 
 // DeployWELV9 deploys a new Ethereum contract, binding an instance of WELV9 to it.
 func DeployWELV9(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *WELV9, error) {
-	parsed, err := WELV9MetaData.GetAbi()
+	parsed, err := ParsedABI(K_WELV9)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -25505,43 +19204,6 @@ type WELV9Transactor struct {
 // WELV9Filterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type WELV9Filterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// WELV9Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type WELV9Session struct {
-	Contract     *WELV9            // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// WELV9CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type WELV9CallerSession struct {
-	Contract *WELV9Caller  // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// WELV9TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type WELV9TransactorSession struct {
-	Contract     *WELV9Transactor  // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// WELV9Raw is an auto generated low-level Go binding around an Ethereum contract.
-type WELV9Raw struct {
-	Contract *WELV9 // Generic contract binding to access the raw methods on
-}
-
-// WELV9CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type WELV9CallerRaw struct {
-	Contract *WELV9Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// WELV9TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type WELV9TransactorRaw struct {
-	Contract *WELV9Transactor // Generic write-only contract binding to access the raw methods on
 }
 
 // NewWELV9 creates a new instance of WELV9, bound to a specific deployed contract.
@@ -25582,49 +19244,11 @@ func NewWELV9Filterer(address common.Address, filterer bind.ContractFilterer) (*
 
 // bindWELV9 binds a generic wrapper to an already deployed contract.
 func bindWELV9(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(WELV9ABI))
+	parsed, err := ParsedABI(K_WELV9)
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_WELV9 *WELV9Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _WELV9.Contract.WELV9Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_WELV9 *WELV9Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _WELV9.Contract.WELV9Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_WELV9 *WELV9Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _WELV9.Contract.WELV9Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_WELV9 *WELV9CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _WELV9.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_WELV9 *WELV9TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _WELV9.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_WELV9 *WELV9TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _WELV9.Contract.contract.Transact(opts, method, params...)
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -25644,20 +19268,6 @@ func (_WELV9 *WELV9Caller) Allowance(opts *bind.CallOpts, arg0 common.Address, a
 
 }
 
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address , address ) view returns(uint256)
-func (_WELV9 *WELV9Session) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
-	return _WELV9.Contract.Allowance(&_WELV9.CallOpts, arg0, arg1)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address , address ) view returns(uint256)
-func (_WELV9 *WELV9CallerSession) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
-	return _WELV9.Contract.Allowance(&_WELV9.CallOpts, arg0, arg1)
-}
-
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address ) view returns(uint256)
@@ -25673,20 +19283,6 @@ func (_WELV9 *WELV9Caller) BalanceOf(opts *bind.CallOpts, arg0 common.Address) (
 
 	return out0, err
 
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address ) view returns(uint256)
-func (_WELV9 *WELV9Session) BalanceOf(arg0 common.Address) (*big.Int, error) {
-	return _WELV9.Contract.BalanceOf(&_WELV9.CallOpts, arg0)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address ) view returns(uint256)
-func (_WELV9 *WELV9CallerSession) BalanceOf(arg0 common.Address) (*big.Int, error) {
-	return _WELV9.Contract.BalanceOf(&_WELV9.CallOpts, arg0)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
@@ -25706,20 +19302,6 @@ func (_WELV9 *WELV9Caller) Decimals(opts *bind.CallOpts) (uint8, error) {
 
 }
 
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint8)
-func (_WELV9 *WELV9Session) Decimals() (uint8, error) {
-	return _WELV9.Contract.Decimals(&_WELV9.CallOpts)
-}
-
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint8)
-func (_WELV9 *WELV9CallerSession) Decimals() (uint8, error) {
-	return _WELV9.Contract.Decimals(&_WELV9.CallOpts)
-}
-
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
@@ -25735,20 +19317,6 @@ func (_WELV9 *WELV9Caller) Name(opts *bind.CallOpts) (string, error) {
 
 	return out0, err
 
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_WELV9 *WELV9Session) Name() (string, error) {
-	return _WELV9.Contract.Name(&_WELV9.CallOpts)
-}
-
-// Name is a free data retrieval call binding the contract method 0x06fdde03.
-//
-// Solidity: function name() view returns(string)
-func (_WELV9 *WELV9CallerSession) Name() (string, error) {
-	return _WELV9.Contract.Name(&_WELV9.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
@@ -25768,20 +19336,6 @@ func (_WELV9 *WELV9Caller) Symbol(opts *bind.CallOpts) (string, error) {
 
 }
 
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_WELV9 *WELV9Session) Symbol() (string, error) {
-	return _WELV9.Contract.Symbol(&_WELV9.CallOpts)
-}
-
-// Symbol is a free data retrieval call binding the contract method 0x95d89b41.
-//
-// Solidity: function symbol() view returns(string)
-func (_WELV9 *WELV9CallerSession) Symbol() (string, error) {
-	return _WELV9.Contract.Symbol(&_WELV9.CallOpts)
-}
-
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
 // Solidity: function totalSupply() view returns(uint256)
@@ -25799,39 +19353,11 @@ func (_WELV9 *WELV9Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 
 }
 
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_WELV9 *WELV9Session) TotalSupply() (*big.Int, error) {
-	return _WELV9.Contract.TotalSupply(&_WELV9.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_WELV9 *WELV9CallerSession) TotalSupply() (*big.Int, error) {
-	return _WELV9.Contract.TotalSupply(&_WELV9.CallOpts)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address guy, uint256 wad) returns(bool)
 func (_WELV9 *WELV9Transactor) Approve(opts *bind.TransactOpts, guy common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _WELV9.contract.Transact(opts, "approve", guy, wad)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address guy, uint256 wad) returns(bool)
-func (_WELV9 *WELV9Session) Approve(guy common.Address, wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.Approve(&_WELV9.TransactOpts, guy, wad)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address guy, uint256 wad) returns(bool)
-func (_WELV9 *WELV9TransactorSession) Approve(guy common.Address, wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.Approve(&_WELV9.TransactOpts, guy, wad)
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
@@ -25841,39 +19367,11 @@ func (_WELV9 *WELV9Transactor) Deposit(opts *bind.TransactOpts) (*types.Transact
 	return _WELV9.contract.Transact(opts, "deposit")
 }
 
-// Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
-//
-// Solidity: function deposit() payable returns()
-func (_WELV9 *WELV9Session) Deposit() (*types.Transaction, error) {
-	return _WELV9.Contract.Deposit(&_WELV9.TransactOpts)
-}
-
-// Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
-//
-// Solidity: function deposit() payable returns()
-func (_WELV9 *WELV9TransactorSession) Deposit() (*types.Transaction, error) {
-	return _WELV9.Contract.Deposit(&_WELV9.TransactOpts)
-}
-
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address dst, uint256 wad) returns(bool)
 func (_WELV9 *WELV9Transactor) Transfer(opts *bind.TransactOpts, dst common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _WELV9.contract.Transact(opts, "transfer", dst, wad)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address dst, uint256 wad) returns(bool)
-func (_WELV9 *WELV9Session) Transfer(dst common.Address, wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.Transfer(&_WELV9.TransactOpts, dst, wad)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address dst, uint256 wad) returns(bool)
-func (_WELV9 *WELV9TransactorSession) Transfer(dst common.Address, wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.Transfer(&_WELV9.TransactOpts, dst, wad)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
@@ -25883,20 +19381,6 @@ func (_WELV9 *WELV9Transactor) TransferFrom(opts *bind.TransactOpts, src common.
 	return _WELV9.contract.Transact(opts, "transferFrom", src, dst, wad)
 }
 
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address src, address dst, uint256 wad) returns(bool)
-func (_WELV9 *WELV9Session) TransferFrom(src common.Address, dst common.Address, wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.TransferFrom(&_WELV9.TransactOpts, src, dst, wad)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address src, address dst, uint256 wad) returns(bool)
-func (_WELV9 *WELV9TransactorSession) TransferFrom(src common.Address, dst common.Address, wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.TransferFrom(&_WELV9.TransactOpts, src, dst, wad)
-}
-
 // Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
 //
 // Solidity: function withdraw(uint256 wad) returns()
@@ -25904,39 +19388,11 @@ func (_WELV9 *WELV9Transactor) Withdraw(opts *bind.TransactOpts, wad *big.Int) (
 	return _WELV9.contract.Transact(opts, "withdraw", wad)
 }
 
-// Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
-//
-// Solidity: function withdraw(uint256 wad) returns()
-func (_WELV9 *WELV9Session) Withdraw(wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.Withdraw(&_WELV9.TransactOpts, wad)
-}
-
-// Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
-//
-// Solidity: function withdraw(uint256 wad) returns()
-func (_WELV9 *WELV9TransactorSession) Withdraw(wad *big.Int) (*types.Transaction, error) {
-	return _WELV9.Contract.Withdraw(&_WELV9.TransactOpts, wad)
-}
-
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
 func (_WELV9 *WELV9Transactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _WELV9.contract.RawTransact(opts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_WELV9 *WELV9Session) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _WELV9.Contract.Fallback(&_WELV9.TransactOpts, calldata)
-}
-
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_WELV9 *WELV9TransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _WELV9.Contract.Fallback(&_WELV9.TransactOpts, calldata)
 }
 
 // WELV9ApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the WELV9 contract.

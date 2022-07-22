@@ -9,10 +9,10 @@ error ErrAllocated();
 error ErrClaim();
 error ErrBurn();
 error ErrAuth();
+error ErrTimeStamp();
 
 contract ClaimerTest is Test {
     Claimer claimer;
-    Claimer claimerTest;
 
     function setUp() public {
         claimer = new Claimer();
@@ -20,10 +20,26 @@ contract ClaimerTest is Test {
 
     function testOwner() public {
         vm.prank(msg.sender);
-        claimerTest = new Claimer();
-        if(msg.sender != claimerTest.owner()){
+        Claimer claimerOwnerTest = new Claimer();
+        if(msg.sender != claimerOwnerTest.owner()){
             revert ErrOwner(); 
         }
+    }
+
+    function testTimeStamp() public {
+        address currAdr = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
+        uint expirDate = 1000;
+        claimer.addAuthorizedAdr(currAdr);
+        claimer.allocate(currAdr, 10, expirDate);
+
+        claimer.allocate(currAdr, 15, 1002);
+        vm.warp(1001); //so now the first allocation is expired
+        vm.prank(currAdr); 
+        claimer.claim(10);
+        
+        if(claimer.getAmount(currAdr, 0) != 5 && claimer.claims(currAdr) != 10) revert ErrTimeStamp();
+        
+        
     }
 
     function testMultipleAllocations() public {

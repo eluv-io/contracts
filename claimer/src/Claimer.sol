@@ -24,7 +24,7 @@ contract Claimer {
     /*
         We certify that the owner is the creator of the contract 
     */
-    constructor ()  {
+    constructor () {
        owner = msg.sender;
        addAuthorizedAdr(msg.sender);
     }
@@ -46,7 +46,7 @@ contract Claimer {
         @param _amount : amount given
         @param _expirationDate : expiration date of the allocation
     */
-    function allocate(address _addr, uint _amount, uint _expirationDate) public ownerOnly authorizedAdr(_addr) {
+    function allocate(address _addr, uint _amount, uint _expirationDate) external ownerOnly authorizedAdr(_addr) {
         require(block.timestamp < _expirationDate, "The expiration date is not valid.");
 
         Allocation memory currentAllocation;
@@ -67,7 +67,7 @@ contract Claimer {
     /*
         @param _addr : id of the user we want to remove to our authorized address
     */
-    function rmAuthorizedAdr(address _addr) public ownerOnly authorizedAdr(_addr) {
+    function rmAuthorizedAdr(address _addr) external ownerOnly authorizedAdr(_addr) {
         allocationAuthorities[_addr] = false;
     }
 
@@ -76,7 +76,7 @@ contract Claimer {
         We give the maximum to the user: for example if a user wants 200, but only 100 is allocated, we give him the 100.
         @param _amount : the amount that claims the user
     */
-    function claim (uint _amount) public authorizedAdr(msg.sender){
+    function claim (uint _amount) external authorizedAdr(msg.sender){
         claimAndBurn(_amount, true);
     }
 
@@ -85,7 +85,7 @@ contract Claimer {
         As for claim, we burn the maximum possible.
         @param _amount : the amount that burns the user
     */
-    function burn (uint _amount) public authorizedAdr(msg.sender){
+    function burn (uint _amount) external authorizedAdr(msg.sender){
         claimAndBurn(_amount, false);
     }
 
@@ -96,7 +96,9 @@ contract Claimer {
     */
     function claimAndBurn(uint _amount, bool isClaiming) private {
         uint tot = 0;
-        for(uint i = 0; i < allocations[msg.sender].length;  i++) {
+        uint i = 0;
+        bool increment = true;
+        while(i < allocations[msg.sender].length){
             
             Allocation memory currentAllocation = allocations[msg.sender][i];
             if(currentAllocation.expirationDate > block.timestamp){ //we verify that the allocation is not expired
@@ -115,12 +117,17 @@ contract Claimer {
                     allocations[msg.sender][i].amount = 0;
                 }
             } else { //if expired, we remove it from the array
-                if(i !=  allocations[msg.sender].length - 1){
-                    allocations[msg.sender][i + 1] = allocations[msg.sender][i - 1];
+                uint lastIdx = allocations[msg.sender].length - 1;
+                if(i != lastIdx){
+                    allocations[msg.sender][i] = allocations[msg.sender][lastIdx];
+                    increment = false; //we do not increment bc we want to verify the current i
                 }
                 allocations[msg.sender].pop();
             }
-           
+
+            if(increment) i++;  
+            else increment = true;
+            
         }
 
         if(isClaiming){
@@ -137,9 +144,10 @@ contract Claimer {
 
     
     //============UTILS FUNCTIONS FOR TESTING=============
-    function getAmount(address _addr, uint idx) public view returns(uint){
+    function getAmount(address _addr, uint idx) external view returns(uint){
         return allocations[_addr][idx].amount;
     } 
+
 
 
 }

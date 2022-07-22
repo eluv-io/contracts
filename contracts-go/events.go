@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/eluv-io/contracts/contracts-go/contracts"
 	c201903 "github.com/eluv-io/contracts/contracts-go/contracts_20190331"
 	c202002 "github.com/eluv-io/contracts/contracts-go/contracts_20200206"
 	c202008 "github.com/eluv-io/contracts/contracts-go/contracts_20200803"
 	"github.com/eluv-io/contracts/contracts-go/events"
 	"github.com/eluv-io/contracts/contracts-go/tradable"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var (

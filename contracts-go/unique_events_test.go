@@ -57,7 +57,7 @@ func TestDuplicateEvents(t *testing.T) {
 		for _, version := range []string{"201903", "202002", "202008"} {
 			if id, ok := getId(version, name); ok && id != ev.ID.String() {
 				switch name {
-				case "RunAccessCharge", "VersionConfirm":
+				case "RunAccessCharge", "VersionConfirm", "AccessRequest":
 					// RunAccessCharge and VersionConfirm are known to have changed
 				default:
 					t.Errorf("id mismatch - version %s, event %s", version, name)

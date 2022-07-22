@@ -17,8 +17,20 @@ type EventInfo struct {
 	Types []EventType // Normally a single item unless otherwise identical events differ in terms of "indexed" arguments.
 }
 
-func (ev *EventInfo) Value(log types.Log) (res reflect.Value, err error) {
+// Value returns a value constructed from the type of the event and filled via
+// the bound contract's UnpackLog function.
+// The optional typ parameter allows to disambiguate the type to select. This is
+// useful in cases where the ID of an EventInfo refers to multiples EventType
+// where each of the bound contract would be able to unpack the log with no error.
+func (ev *EventInfo) Value(log types.Log, typ ...reflect.Type) (res reflect.Value, err error) {
+	var ty reflect.Type
+	if len(typ) > 0 {
+		ty = typ[0]
+	}
 	for _, u := range ev.Types {
+		if ty != nil && ty != u.Type {
+			continue
+		}
 		event := reflect.New(u.Type.Elem())
 		err = u.BoundContract.UnpackLog(event.Interface(), ev.Name, log)
 		if err != nil {

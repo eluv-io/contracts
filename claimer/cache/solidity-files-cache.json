@@ -302,8 +302,8 @@
       }
     },
     "src/Claimer.sol": {
-      "lastModificationDate": 1658249043166,
-      "contentHash": "25a29f5d546b47880d257a2e91644816",
+      "lastModificationDate": 1658519899446,
+      "contentHash": "85b834135344571e3f4208bba7d7153c",
       "sourceName": "src/Claimer.sol",
       "solcConfig": {
         "settings": {
@@ -340,7 +340,7 @@
       }
     },
     "test/Claimer.t.sol": {
-      "lastModificationDate": 1658249076150,
+      "lastModificationDate": 1658518153335,
       "contentHash": "eba3e926e15341214b6fbe09478c5f53",
       "sourceName": "test/Claimer.t.sol",
       "solcConfig": {

@@ -77,26 +77,7 @@ contract Claimer {
         @param _amount : the amount that claims the user
     */
     function claim (uint _amount) public authorizedAdr(msg.sender){
-        uint tot = 0;
-        for(uint i = 0; i < allocations[msg.sender].length;  i++) {
-            
-            Allocation memory currentAllocation = allocations[msg.sender][i];
-            if(currentAllocation.expirationDate > block.timestamp){ //we verify that the allocation is not expired
-                if(currentAllocation.amount + tot >= _amount){
-                    allocations[msg.sender][i].amount -= _amount - tot;
-                    claims[msg.sender] += _amount;
-                    emit ClaimerClaim(_amount);
-                    return;
-                } else {
-                    tot += currentAllocation.amount;
-                    allocations[msg.sender][i].amount = 0;
-                }
-            }
-           
-        }
-
-        claims[msg.sender] += tot;
-        emit ClaimerClaim(tot);
+        claimAndBurn(_amount, true);
     }
 
     /*
@@ -105,6 +86,15 @@ contract Claimer {
         @param _amount : the amount that burns the user
     */
     function burn (uint _amount) public authorizedAdr(msg.sender){
+        claimAndBurn(_amount, false);
+    }
+
+    /*
+        Function that can do claiming or burning by using a boolean specifier
+        @param _amount : the amount that claims/burns the user
+        @param isClaiming : the boolean that specify the behavior of the function
+    */
+    function claimAndBurn(uint _amount, bool isClaiming) private {
         uint tot = 0;
         for(uint i = 0; i < allocations[msg.sender].length;  i++) {
             
@@ -112,20 +102,38 @@ contract Claimer {
             if(currentAllocation.expirationDate > block.timestamp){ //we verify that the allocation is not expired
                 if(currentAllocation.amount + tot >= _amount){
                     allocations[msg.sender][i].amount -= _amount - tot;
-                    burns[msg.sender] += _amount;
-                    emit ClaimerBurn(_amount);
+                    if(isClaiming){
+                        claims[msg.sender] += _amount;
+                        emit ClaimerClaim(_amount);
+                    } else {
+                        burns[msg.sender] += _amount;
+                        emit ClaimerBurn(_amount);
+                    }
                     return;
                 } else {
                     tot += currentAllocation.amount;
                     allocations[msg.sender][i].amount = 0;
                 }
+            } else { //if expired, we remove it from the array
+                if(i !=  allocations[msg.sender].length - 1){
+                    allocations[msg.sender][i + 1] = allocations[msg.sender][i - 1];
+                }
+                allocations[msg.sender].pop();
             }
            
         }
 
-        burns[msg.sender] += tot;
-        emit ClaimerBurn(tot);
+        if(isClaiming){
+            claims[msg.sender] += tot;
+            emit ClaimerClaim(tot);
+        } else {
+            burns[msg.sender] += tot;
+            emit ClaimerBurn(tot);
+        }
+
     }
+    
+  
 
     
     //============UTILS FUNCTIONS FOR TESTING=============

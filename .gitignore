@@ -3,4 +3,4 @@ claimer/cache
 claimer/script
 claimer/lib
 claimer/out
-claimer/foundry.out
+claimer/foundry.toml

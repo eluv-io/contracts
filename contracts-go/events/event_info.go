@@ -17,6 +17,15 @@ type EventInfo struct {
 	Types []EventType // Normally a single item unless otherwise identical events differ in terms of "indexed" arguments.
 }
 
+func (ev *EventInfo) HasType(typ EventType) bool {
+	for _, t := range ev.Types {
+		if t == typ {
+			return true
+		}
+	}
+	return false
+}
+
 // Value returns a value constructed from the type of the event and filled via
 // the bound contract's UnpackLog function.
 // The optional typ parameter allows to disambiguate the type to select. This is

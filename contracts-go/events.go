@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/eluv-io/contracts/contracts-go/contracts"
 	c201903 "github.com/eluv-io/contracts/contracts-go/contracts_20190331"
 	c202002 "github.com/eluv-io/contracts/contracts-go/contracts_20200206"
 	c202008 "github.com/eluv-io/contracts/contracts-go/contracts_20200803"
 	"github.com/eluv-io/contracts/contracts-go/events"
 	"github.com/eluv-io/contracts/contracts-go/tradable"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -27,7 +28,20 @@ var (
 	EventsByID = make(map[common.Hash]*events.EventInfo)
 	// EventNamesByID contains all event names keyed by their id (topic hash)
 	EventNamesByID = make(map[common.Hash]string)
+
+	allEventInfos = []packageEvent{
+		{contracts.UniqueEvents, ""},
+		{tradable.UniqueEvents, "tradable"},
+		{c202008.UniqueEvents, "20200803"},
+		{c202002.UniqueEvents, "20200206"},
+		{c201903.UniqueEvents, "20190331"},
+	}
 )
+
+type packageEvent struct {
+	events map[string]*events.EventInfo
+	suffix string
+}
 
 func init() {
 	addEvents := func(
@@ -49,11 +63,9 @@ func init() {
 		}
 	}
 
-	addEvents(contracts.UniqueEvents, "")
-	addEvents(tradable.UniqueEvents, "tradable")
-	addEvents(c202008.UniqueEvents, "20200803")
-	addEvents(c202002.UniqueEvents, "20200206")
-	addEvents(c201903.UniqueEvents, "20190331")
+	for _, packageEvents := range allEventInfos {
+		addEvents(packageEvents.events, packageEvents.suffix)
+	}
 
 	for name, event := range UniqueEvents {
 		for _, eventType := range event.Types {
@@ -66,5 +78,27 @@ func init() {
 			EventsByType[evt] = event
 		}
 		EventNamesByID[event.ID] = event.Name
+	}
+
+	// above might have left out some types - ensure that all event types are set
+	for _, pes := range allEventInfos {
+		ues := pes.events
+		for _, event := range ues {
+			for _, eventType := range event.Types {
+				evt := eventType.Type
+				ev, _ := EventsByType[evt]
+				if ev == nil {
+					byId, _ := EventsByID[event.ID]
+					if byId == nil {
+						panic(fmt.Sprintf("no event in EventsByID for ID %s",
+							event.ID.String()))
+					}
+					if !byId.HasType(eventType) {
+						byId.Types = append(byId.Types, eventType)
+					}
+					EventsByType[evt] = byId
+				}
+			}
+		}
 	}
 }

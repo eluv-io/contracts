@@ -1,0 +1,2 @@
+# corresponds to github.com/eluv-io/contracts v0.0.0-20200805225515-133cb66c6e67
+20200805@133cb66c6e67fc946c6b73d7f7db3bbb913d4859

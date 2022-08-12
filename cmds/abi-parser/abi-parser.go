@@ -1,3 +1,4 @@
 package abi_parser
 
-//go:generate go run ./gen/gen.go
+//go:generate echo go generate abi-parser.go
+//go:generate go run gen/gen.go

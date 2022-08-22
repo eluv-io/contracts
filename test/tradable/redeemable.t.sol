@@ -10,12 +10,19 @@ contract RedeemableTest is Test {
     Redeemable redeemable;
     address adr = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
 
+    event RedeemableAdded(uint tokenId);
+
     /**
         Set up function, it is the first function executed when we run 'forge test'
     */
     function setUp() public {
         vm.prank(adr, adr); //adr is the creator and the owner of this smart contract
         redeemable = new Redeemable();
+    }
+
+    function testRedeemable() public{
+        uint res = redeemable.addRedeemable();
+        assertEq(res, 10, "result != 10");
     }
 
 }

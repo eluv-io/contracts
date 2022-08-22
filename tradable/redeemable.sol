@@ -16,8 +16,9 @@ contract Redeemable {
         _;
     }
 
-    function addRedeemable() public ownerOnly {
+    function addRedeemable() public ownerOnly returns (uint){
         emit RedeemableAdded();
+        return 10;
     }
 
     function removeRedeemable() public ownerOnly {

@@ -11,8 +11,8 @@ contract RedeemableScript is Script {
         vm.startBroadcast();
         Redeemable redeemabpe = new Redeemable();
 
-        console.log("Creator of the smart contract : ", vm.toString(redeemable.creator()));
-        console.log("Owner of the smart contract : ", vm.toString(redeemable.owner()));
+//        console.log("Creator of the smart contract : ", vm.toString(redeemable.creator()));
+//        console.log("Owner of the smart contract : ", vm.toString(redeemable.owner()));
 
         vm.stopBroadcast();
 

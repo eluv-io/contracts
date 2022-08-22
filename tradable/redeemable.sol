@@ -12,6 +12,10 @@ contract Redeemable {
     event RedeemableRemoved();
     event Redeem();
 
+    modifier ownerOnly(){
+        _;
+    }
+
     function addRedeemable() public ownerOnly {
         emit RedeemableAdded();
     }
@@ -20,7 +24,7 @@ contract Redeemable {
         emit RedeemableRemoved();
     }
 
-    function redeem() {
+    function redeem() public {
         emit Redeem();
     }
 

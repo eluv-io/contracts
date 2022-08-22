@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
 import "forge-std/console2.sol";
-import "../../tradable/redeemable.sol";
+import "tradable/redeemable.sol";
 
 contract RedeemableScript is Script {
 

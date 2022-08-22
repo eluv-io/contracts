@@ -1,0 +1,8 @@
+[profile.default]
+src = 'tradable'
+out = 'out'
+libs = ['lib']
+test = 'test'
+script = 'script'
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

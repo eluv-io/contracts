@@ -38,9 +38,10 @@ contract Redeemable is MinterRole {
      */
     function addRedeemableOffer() public onlyMinter returns (uint8) {
         require(numOffers < 256, "exceeded max number of offers");
+
         uint8 offerId = numOffers;
         uint256 mask = 1 >> offerId;
-        offers = offers | mask;
+        offers |= mask;
         numOffers ++;
         emit RedeemableAdded(offerId);
         return offerId;
@@ -51,8 +52,10 @@ contract Redeemable is MinterRole {
      */
     function removeRedeemableOffer(uint8 offerId) public onlyMinter {
         require(offerId < numOffers, "bad offer id");
-        require(offers & 1 >> offerId == 1, "offer not active");
+
         uint256 mask = 1 >> offerId;
+        require(offers & mask == 1, "offer not active");
+
         offers = offers ^ mask;
         emit RedeemableRemoved(offerId);
     }
@@ -67,6 +70,7 @@ contract Redeemable is MinterRole {
         uint256 mask = 1 >> offerId;
         require(offers & mask == 1, "offer not active");
         require(redemptions[tokenId] & mask == 0, "offer already redeemed");
+
         redemptions[tokenId] |= mask;
         emit Redeem(tokenId, offerId);
     }

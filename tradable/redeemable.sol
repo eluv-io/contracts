@@ -54,7 +54,7 @@ contract Redeemable is MinterRole {
         require(offerId < numOffers, "bad offer id");
 
         uint256 mask = uint(1) << offerId;
-        require(offers & mask == 1, "offer not active");
+        require(offers & mask == uint(2) ** offerId, "offer not active");
 
         offers = offers ^ mask;
         emit RedeemableRemoved(offerId);

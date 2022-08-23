@@ -10,12 +10,13 @@ import "./elv_wrapped.sol";
 import "./elv_token.sol";
 import "./elv_token_helper.sol";
 import "./elv_proxy.sol";
+import "./redeemable.sol";
 
 /**
  * @title ElvTradable
  * ElvTradable - ERC721 contract that whitelists a trading address, and has minting functionality.
  */
-contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableTokenURI, MinterRole, Ownable {
+contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableTokenURI, MinterRole, Redeemable, Ownable {
     using Strings for string;
 
     address public proxyRegistryAddress;

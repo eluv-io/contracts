@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -341,7 +340,7 @@ func (_ERC165 *ERC165TransactorRaw) Transact(opts *bind.TransactOpts, method str
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC165 *ERC165Caller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -353,14 +352,14 @@ func (_ERC165 *ERC165Caller) SupportsInterface(opts *bind.CallOpts, interfaceId 
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC165 *ERC165Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC165.Contract.SupportsInterface(&_ERC165.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC165 *ERC165CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC165.Contract.SupportsInterface(&_ERC165.CallOpts, interfaceId)
 }
@@ -541,7 +540,7 @@ func (_ERC20 *ERC20TransactorRaw) Transact(opts *bind.TransactOpts, method strin
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20 *ERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -553,21 +552,21 @@ func (_ERC20 *ERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, 
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20 *ERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20.Contract.Allowance(&_ERC20.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20 *ERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20.Contract.Allowance(&_ERC20.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20 *ERC20Caller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -579,21 +578,21 @@ func (_ERC20 *ERC20Caller) BalanceOf(opts *bind.CallOpts, owner common.Address) 
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20 *ERC20Session) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20.Contract.BalanceOf(&_ERC20.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20 *ERC20CallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20.Contract.BalanceOf(&_ERC20.CallOpts, owner)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20 *ERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -605,14 +604,14 @@ func (_ERC20 *ERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20 *ERC20Session) TotalSupply() (*big.Int, error) {
 	return _ERC20.Contract.TotalSupply(&_ERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20 *ERC20CallerSession) TotalSupply() (*big.Int, error) {
 	return _ERC20.Contract.TotalSupply(&_ERC20.CallOpts)
 }
@@ -1209,7 +1208,7 @@ func (_ERC20Capped *ERC20CappedTransactorRaw) Transact(opts *bind.TransactOpts, 
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Capped *ERC20CappedCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -1221,21 +1220,21 @@ func (_ERC20Capped *ERC20CappedCaller) Allowance(opts *bind.CallOpts, owner comm
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Capped *ERC20CappedSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Capped.Contract.Allowance(&_ERC20Capped.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Capped *ERC20CappedCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Capped.Contract.Allowance(&_ERC20Capped.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Capped *ERC20CappedCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -1247,21 +1246,21 @@ func (_ERC20Capped *ERC20CappedCaller) BalanceOf(opts *bind.CallOpts, owner comm
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Capped *ERC20CappedSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20Capped.Contract.BalanceOf(&_ERC20Capped.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Capped *ERC20CappedCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20Capped.Contract.BalanceOf(&_ERC20Capped.CallOpts, owner)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ERC20Capped *ERC20CappedCaller) Cap(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -1273,21 +1272,21 @@ func (_ERC20Capped *ERC20CappedCaller) Cap(opts *bind.CallOpts) (*big.Int, error
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ERC20Capped *ERC20CappedSession) Cap() (*big.Int, error) {
 	return _ERC20Capped.Contract.Cap(&_ERC20Capped.CallOpts)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ERC20Capped *ERC20CappedCallerSession) Cap() (*big.Int, error) {
 	return _ERC20Capped.Contract.Cap(&_ERC20Capped.CallOpts)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ERC20Capped *ERC20CappedCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -1299,21 +1298,21 @@ func (_ERC20Capped *ERC20CappedCaller) IsMinter(opts *bind.CallOpts, account com
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ERC20Capped *ERC20CappedSession) IsMinter(account common.Address) (bool, error) {
 	return _ERC20Capped.Contract.IsMinter(&_ERC20Capped.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ERC20Capped *ERC20CappedCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _ERC20Capped.Contract.IsMinter(&_ERC20Capped.CallOpts, account)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Capped *ERC20CappedCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -1325,14 +1324,14 @@ func (_ERC20Capped *ERC20CappedCaller) TotalSupply(opts *bind.CallOpts) (*big.In
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Capped *ERC20CappedSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Capped.Contract.TotalSupply(&_ERC20Capped.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Capped *ERC20CappedCallerSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Capped.Contract.TotalSupply(&_ERC20Capped.CallOpts)
 }
@@ -2257,7 +2256,7 @@ func (_ERC20Detailed *ERC20DetailedTransactorRaw) Transact(opts *bind.TransactOp
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -2269,21 +2268,21 @@ func (_ERC20Detailed *ERC20DetailedCaller) Allowance(opts *bind.CallOpts, owner 
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Detailed.Contract.Allowance(&_ERC20Detailed.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Detailed.Contract.Allowance(&_ERC20Detailed.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address who) constant returns(uint256)
+// Solidity: function balanceOf(address who) view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedCaller) BalanceOf(opts *bind.CallOpts, who common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -2295,21 +2294,21 @@ func (_ERC20Detailed *ERC20DetailedCaller) BalanceOf(opts *bind.CallOpts, who co
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address who) constant returns(uint256)
+// Solidity: function balanceOf(address who) view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedSession) BalanceOf(who common.Address) (*big.Int, error) {
 	return _ERC20Detailed.Contract.BalanceOf(&_ERC20Detailed.CallOpts, who)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address who) constant returns(uint256)
+// Solidity: function balanceOf(address who) view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedCallerSession) BalanceOf(who common.Address) (*big.Int, error) {
 	return _ERC20Detailed.Contract.BalanceOf(&_ERC20Detailed.CallOpts, who)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_ERC20Detailed *ERC20DetailedCaller) Decimals(opts *bind.CallOpts) (uint8, error) {
 	var (
 		ret0 = new(uint8)
@@ -2321,21 +2320,21 @@ func (_ERC20Detailed *ERC20DetailedCaller) Decimals(opts *bind.CallOpts) (uint8,
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_ERC20Detailed *ERC20DetailedSession) Decimals() (uint8, error) {
 	return _ERC20Detailed.Contract.Decimals(&_ERC20Detailed.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_ERC20Detailed *ERC20DetailedCallerSession) Decimals() (uint8, error) {
 	return _ERC20Detailed.Contract.Decimals(&_ERC20Detailed.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ERC20Detailed *ERC20DetailedCaller) Name(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -2347,21 +2346,21 @@ func (_ERC20Detailed *ERC20DetailedCaller) Name(opts *bind.CallOpts) (string, er
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ERC20Detailed *ERC20DetailedSession) Name() (string, error) {
 	return _ERC20Detailed.Contract.Name(&_ERC20Detailed.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ERC20Detailed *ERC20DetailedCallerSession) Name() (string, error) {
 	return _ERC20Detailed.Contract.Name(&_ERC20Detailed.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ERC20Detailed *ERC20DetailedCaller) Symbol(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -2373,21 +2372,21 @@ func (_ERC20Detailed *ERC20DetailedCaller) Symbol(opts *bind.CallOpts) (string, 
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ERC20Detailed *ERC20DetailedSession) Symbol() (string, error) {
 	return _ERC20Detailed.Contract.Symbol(&_ERC20Detailed.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ERC20Detailed *ERC20DetailedCallerSession) Symbol() (string, error) {
 	return _ERC20Detailed.Contract.Symbol(&_ERC20Detailed.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -2399,14 +2398,14 @@ func (_ERC20Detailed *ERC20DetailedCaller) TotalSupply(opts *bind.CallOpts) (*bi
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Detailed.Contract.TotalSupply(&_ERC20Detailed.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Detailed *ERC20DetailedCallerSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Detailed.Contract.TotalSupply(&_ERC20Detailed.CallOpts)
 }
@@ -2960,7 +2959,7 @@ func (_ERC20Mintable *ERC20MintableTransactorRaw) Transact(opts *bind.TransactOp
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Mintable *ERC20MintableCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -2972,21 +2971,21 @@ func (_ERC20Mintable *ERC20MintableCaller) Allowance(opts *bind.CallOpts, owner 
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Mintable *ERC20MintableSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Mintable.Contract.Allowance(&_ERC20Mintable.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Mintable *ERC20MintableCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Mintable.Contract.Allowance(&_ERC20Mintable.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Mintable *ERC20MintableCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -2998,21 +2997,21 @@ func (_ERC20Mintable *ERC20MintableCaller) BalanceOf(opts *bind.CallOpts, owner 
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Mintable *ERC20MintableSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20Mintable.Contract.BalanceOf(&_ERC20Mintable.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Mintable *ERC20MintableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20Mintable.Contract.BalanceOf(&_ERC20Mintable.CallOpts, owner)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ERC20Mintable *ERC20MintableCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -3024,21 +3023,21 @@ func (_ERC20Mintable *ERC20MintableCaller) IsMinter(opts *bind.CallOpts, account
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ERC20Mintable *ERC20MintableSession) IsMinter(account common.Address) (bool, error) {
 	return _ERC20Mintable.Contract.IsMinter(&_ERC20Mintable.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ERC20Mintable *ERC20MintableCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _ERC20Mintable.Contract.IsMinter(&_ERC20Mintable.CallOpts, account)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Mintable *ERC20MintableCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -3050,14 +3049,14 @@ func (_ERC20Mintable *ERC20MintableCaller) TotalSupply(opts *bind.CallOpts) (*bi
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Mintable *ERC20MintableSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Mintable.Contract.TotalSupply(&_ERC20Mintable.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Mintable *ERC20MintableCallerSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Mintable.Contract.TotalSupply(&_ERC20Mintable.CallOpts)
 }
@@ -4004,7 +4003,7 @@ func (_ERC20Pausable *ERC20PausableTransactorRaw) Transact(opts *bind.TransactOp
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Pausable *ERC20PausableCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -4016,21 +4015,21 @@ func (_ERC20Pausable *ERC20PausableCaller) Allowance(opts *bind.CallOpts, owner 
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Pausable *ERC20PausableSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Pausable.Contract.Allowance(&_ERC20Pausable.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ERC20Pausable *ERC20PausableCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ERC20Pausable.Contract.Allowance(&_ERC20Pausable.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Pausable *ERC20PausableCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -4042,21 +4041,21 @@ func (_ERC20Pausable *ERC20PausableCaller) BalanceOf(opts *bind.CallOpts, owner 
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Pausable *ERC20PausableSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20Pausable.Contract.BalanceOf(&_ERC20Pausable.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC20Pausable *ERC20PausableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC20Pausable.Contract.BalanceOf(&_ERC20Pausable.CallOpts, owner)
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_ERC20Pausable *ERC20PausableCaller) IsPauser(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -4068,21 +4067,21 @@ func (_ERC20Pausable *ERC20PausableCaller) IsPauser(opts *bind.CallOpts, account
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_ERC20Pausable *ERC20PausableSession) IsPauser(account common.Address) (bool, error) {
 	return _ERC20Pausable.Contract.IsPauser(&_ERC20Pausable.CallOpts, account)
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_ERC20Pausable *ERC20PausableCallerSession) IsPauser(account common.Address) (bool, error) {
 	return _ERC20Pausable.Contract.IsPauser(&_ERC20Pausable.CallOpts, account)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_ERC20Pausable *ERC20PausableCaller) Paused(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -4094,21 +4093,21 @@ func (_ERC20Pausable *ERC20PausableCaller) Paused(opts *bind.CallOpts) (bool, er
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_ERC20Pausable *ERC20PausableSession) Paused() (bool, error) {
 	return _ERC20Pausable.Contract.Paused(&_ERC20Pausable.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_ERC20Pausable *ERC20PausableCallerSession) Paused() (bool, error) {
 	return _ERC20Pausable.Contract.Paused(&_ERC20Pausable.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Pausable *ERC20PausableCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -4120,14 +4119,14 @@ func (_ERC20Pausable *ERC20PausableCaller) TotalSupply(opts *bind.CallOpts) (*bi
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Pausable *ERC20PausableSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Pausable.Contract.TotalSupply(&_ERC20Pausable.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC20Pausable *ERC20PausableCallerSession) TotalSupply() (*big.Int, error) {
 	return _ERC20Pausable.Contract.TotalSupply(&_ERC20Pausable.CallOpts)
 }
@@ -5357,7 +5356,7 @@ func (_ERC721 *ERC721TransactorRaw) Transact(opts *bind.TransactOpts, method str
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721 *ERC721Caller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -5369,21 +5368,21 @@ func (_ERC721 *ERC721Caller) BalanceOf(opts *bind.CallOpts, owner common.Address
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721 *ERC721Session) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC721.Contract.BalanceOf(&_ERC721.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721 *ERC721CallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC721.Contract.BalanceOf(&_ERC721.CallOpts, owner)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721 *ERC721Caller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -5395,21 +5394,21 @@ func (_ERC721 *ERC721Caller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) 
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721 *ERC721Session) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ERC721.Contract.GetApproved(&_ERC721.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721 *ERC721CallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ERC721.Contract.GetApproved(&_ERC721.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721 *ERC721Caller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -5421,21 +5420,21 @@ func (_ERC721 *ERC721Caller) IsApprovedForAll(opts *bind.CallOpts, owner common.
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721 *ERC721Session) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ERC721.Contract.IsApprovedForAll(&_ERC721.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721 *ERC721CallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ERC721.Contract.IsApprovedForAll(&_ERC721.CallOpts, owner, operator)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721 *ERC721Caller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -5447,21 +5446,21 @@ func (_ERC721 *ERC721Caller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (com
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721 *ERC721Session) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ERC721.Contract.OwnerOf(&_ERC721.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721 *ERC721CallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ERC721.Contract.OwnerOf(&_ERC721.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721 *ERC721Caller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -5473,14 +5472,14 @@ func (_ERC721 *ERC721Caller) SupportsInterface(opts *bind.CallOpts, interfaceId 
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721 *ERC721Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC721.Contract.SupportsInterface(&_ERC721.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721 *ERC721CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC721.Contract.SupportsInterface(&_ERC721.CallOpts, interfaceId)
 }
@@ -5508,42 +5507,42 @@ func (_ERC721 *ERC721TransactorSession) Approve(to common.Address, tokenId *big.
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721 *ERC721Transactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721 *ERC721Session) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.Contract.SafeTransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721 *ERC721TransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.Contract.SafeTransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721 *ERC721Transactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721 *ERC721Session) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721.Contract.SafeTransferFrom0(&_ERC721.TransactOpts, from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721 *ERC721TransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721.Contract.SafeTransferFrom0(&_ERC721.TransactOpts, from, to, tokenId, _data)
 }
@@ -5571,21 +5570,21 @@ func (_ERC721 *ERC721TransactorSession) SetApprovalForAll(to common.Address, app
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721 *ERC721Transactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721 *ERC721Session) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.Contract.TransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721 *ERC721TransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721.Contract.TransferFrom(&_ERC721.TransactOpts, from, to, tokenId)
 }
@@ -6246,7 +6245,7 @@ func (_ERC721Enumerable *ERC721EnumerableTransactorRaw) Transact(opts *bind.Tran
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -6258,21 +6257,21 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) BalanceOf(opts *bind.CallOpts, 
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC721Enumerable.Contract.BalanceOf(&_ERC721Enumerable.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC721Enumerable.Contract.BalanceOf(&_ERC721Enumerable.CallOpts, owner)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721Enumerable *ERC721EnumerableCaller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -6284,21 +6283,21 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) GetApproved(opts *bind.CallOpts
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721Enumerable *ERC721EnumerableSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Enumerable.Contract.GetApproved(&_ERC721Enumerable.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Enumerable.Contract.GetApproved(&_ERC721Enumerable.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721Enumerable *ERC721EnumerableCaller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -6310,21 +6309,21 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) IsApprovedForAll(opts *bind.Cal
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721Enumerable *ERC721EnumerableSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ERC721Enumerable.Contract.IsApprovedForAll(&_ERC721Enumerable.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ERC721Enumerable.Contract.IsApprovedForAll(&_ERC721Enumerable.CallOpts, owner, operator)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721Enumerable *ERC721EnumerableCaller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -6336,21 +6335,21 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) OwnerOf(opts *bind.CallOpts, to
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721Enumerable *ERC721EnumerableSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Enumerable.Contract.OwnerOf(&_ERC721Enumerable.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Enumerable.Contract.OwnerOf(&_ERC721Enumerable.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721Enumerable *ERC721EnumerableCaller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -6362,21 +6361,21 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) SupportsInterface(opts *bind.Ca
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721Enumerable *ERC721EnumerableSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC721Enumerable.Contract.SupportsInterface(&_ERC721Enumerable.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC721Enumerable.Contract.SupportsInterface(&_ERC721Enumerable.CallOpts, interfaceId)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCaller) TokenByIndex(opts *bind.CallOpts, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -6388,21 +6387,21 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) TokenByIndex(opts *bind.CallOpt
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _ERC721Enumerable.Contract.TokenByIndex(&_ERC721Enumerable.CallOpts, index)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _ERC721Enumerable.Contract.TokenByIndex(&_ERC721Enumerable.CallOpts, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCaller) TokenOfOwnerByIndex(opts *bind.CallOpts, owner common.Address, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -6414,21 +6413,21 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) TokenOfOwnerByIndex(opts *bind.
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _ERC721Enumerable.Contract.TokenOfOwnerByIndex(&_ERC721Enumerable.CallOpts, owner, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _ERC721Enumerable.Contract.TokenOfOwnerByIndex(&_ERC721Enumerable.CallOpts, owner, index)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -6440,14 +6439,14 @@ func (_ERC721Enumerable *ERC721EnumerableCaller) TotalSupply(opts *bind.CallOpts
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableSession) TotalSupply() (*big.Int, error) {
 	return _ERC721Enumerable.Contract.TotalSupply(&_ERC721Enumerable.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ERC721Enumerable *ERC721EnumerableCallerSession) TotalSupply() (*big.Int, error) {
 	return _ERC721Enumerable.Contract.TotalSupply(&_ERC721Enumerable.CallOpts)
 }
@@ -6475,42 +6474,42 @@ func (_ERC721Enumerable *ERC721EnumerableTransactorSession) Approve(to common.Ad
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.Contract.SafeTransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.Contract.SafeTransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Enumerable.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Enumerable.Contract.SafeTransferFrom0(&_ERC721Enumerable.TransactOpts, from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Enumerable.Contract.SafeTransferFrom0(&_ERC721Enumerable.TransactOpts, from, to, tokenId, _data)
 }
@@ -6538,21 +6537,21 @@ func (_ERC721Enumerable *ERC721EnumerableTransactorSession) SetApprovalForAll(to
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.Contract.TransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Enumerable *ERC721EnumerableTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Enumerable.Contract.TransferFrom(&_ERC721Enumerable.TransactOpts, from, to, tokenId)
 }
@@ -7213,7 +7212,7 @@ func (_ERC721Metadata *ERC721MetadataTransactorRaw) Transact(opts *bind.Transact
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721Metadata *ERC721MetadataCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -7225,21 +7224,21 @@ func (_ERC721Metadata *ERC721MetadataCaller) BalanceOf(opts *bind.CallOpts, owne
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721Metadata *ERC721MetadataSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC721Metadata.Contract.BalanceOf(&_ERC721Metadata.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ERC721Metadata *ERC721MetadataCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ERC721Metadata.Contract.BalanceOf(&_ERC721Metadata.CallOpts, owner)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721Metadata *ERC721MetadataCaller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -7251,21 +7250,21 @@ func (_ERC721Metadata *ERC721MetadataCaller) GetApproved(opts *bind.CallOpts, to
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721Metadata *ERC721MetadataSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Metadata.Contract.GetApproved(&_ERC721Metadata.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ERC721Metadata *ERC721MetadataCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Metadata.Contract.GetApproved(&_ERC721Metadata.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721Metadata *ERC721MetadataCaller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -7277,21 +7276,21 @@ func (_ERC721Metadata *ERC721MetadataCaller) IsApprovedForAll(opts *bind.CallOpt
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721Metadata *ERC721MetadataSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ERC721Metadata.Contract.IsApprovedForAll(&_ERC721Metadata.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ERC721Metadata *ERC721MetadataCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ERC721Metadata.Contract.IsApprovedForAll(&_ERC721Metadata.CallOpts, owner, operator)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ERC721Metadata *ERC721MetadataCaller) Name(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -7303,21 +7302,21 @@ func (_ERC721Metadata *ERC721MetadataCaller) Name(opts *bind.CallOpts) (string, 
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ERC721Metadata *ERC721MetadataSession) Name() (string, error) {
 	return _ERC721Metadata.Contract.Name(&_ERC721Metadata.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ERC721Metadata *ERC721MetadataCallerSession) Name() (string, error) {
 	return _ERC721Metadata.Contract.Name(&_ERC721Metadata.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721Metadata *ERC721MetadataCaller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -7329,21 +7328,21 @@ func (_ERC721Metadata *ERC721MetadataCaller) OwnerOf(opts *bind.CallOpts, tokenI
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721Metadata *ERC721MetadataSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Metadata.Contract.OwnerOf(&_ERC721Metadata.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ERC721Metadata *ERC721MetadataCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ERC721Metadata.Contract.OwnerOf(&_ERC721Metadata.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721Metadata *ERC721MetadataCaller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -7355,21 +7354,21 @@ func (_ERC721Metadata *ERC721MetadataCaller) SupportsInterface(opts *bind.CallOp
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721Metadata *ERC721MetadataSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC721Metadata.Contract.SupportsInterface(&_ERC721Metadata.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ERC721Metadata *ERC721MetadataCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ERC721Metadata.Contract.SupportsInterface(&_ERC721Metadata.CallOpts, interfaceId)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ERC721Metadata *ERC721MetadataCaller) Symbol(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -7381,21 +7380,21 @@ func (_ERC721Metadata *ERC721MetadataCaller) Symbol(opts *bind.CallOpts) (string
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ERC721Metadata *ERC721MetadataSession) Symbol() (string, error) {
 	return _ERC721Metadata.Contract.Symbol(&_ERC721Metadata.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ERC721Metadata *ERC721MetadataCallerSession) Symbol() (string, error) {
 	return _ERC721Metadata.Contract.Symbol(&_ERC721Metadata.CallOpts)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ERC721Metadata *ERC721MetadataCaller) TokenURI(opts *bind.CallOpts, tokenId *big.Int) (string, error) {
 	var (
 		ret0 = new(string)
@@ -7407,14 +7406,14 @@ func (_ERC721Metadata *ERC721MetadataCaller) TokenURI(opts *bind.CallOpts, token
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ERC721Metadata *ERC721MetadataSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _ERC721Metadata.Contract.TokenURI(&_ERC721Metadata.CallOpts, tokenId)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ERC721Metadata *ERC721MetadataCallerSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _ERC721Metadata.Contract.TokenURI(&_ERC721Metadata.CallOpts, tokenId)
 }
@@ -7442,42 +7441,42 @@ func (_ERC721Metadata *ERC721MetadataTransactorSession) Approve(to common.Addres
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Metadata *ERC721MetadataSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.Contract.SafeTransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.Contract.SafeTransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Metadata.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Metadata *ERC721MetadataSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Metadata.Contract.SafeTransferFrom0(&_ERC721Metadata.TransactOpts, from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ERC721Metadata.Contract.SafeTransferFrom0(&_ERC721Metadata.TransactOpts, from, to, tokenId, _data)
 }
@@ -7505,21 +7504,21 @@ func (_ERC721Metadata *ERC721MetadataTransactorSession) SetApprovalForAll(to com
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Metadata *ERC721MetadataSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.Contract.TransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ERC721Metadata *ERC721MetadataTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ERC721Metadata.Contract.TransferFrom(&_ERC721Metadata.TransactOpts, from, to, tokenId)
 }
@@ -8189,7 +8188,7 @@ func (_ElvToken *ElvTokenTransactorRaw) Transact(opts *bind.TransactOpts, method
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ElvToken *ElvTokenCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -8201,21 +8200,21 @@ func (_ElvToken *ElvTokenCaller) Allowance(opts *bind.CallOpts, owner common.Add
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ElvToken *ElvTokenSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ElvToken.Contract.Allowance(&_ElvToken.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_ElvToken *ElvTokenCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _ElvToken.Contract.Allowance(&_ElvToken.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvToken *ElvTokenCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -8227,21 +8226,21 @@ func (_ElvToken *ElvTokenCaller) BalanceOf(opts *bind.CallOpts, owner common.Add
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvToken *ElvTokenSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ElvToken.Contract.BalanceOf(&_ElvToken.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvToken *ElvTokenCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ElvToken.Contract.BalanceOf(&_ElvToken.CallOpts, owner)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvToken *ElvTokenCaller) Cap(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -8253,21 +8252,21 @@ func (_ElvToken *ElvTokenCaller) Cap(opts *bind.CallOpts) (*big.Int, error) {
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvToken *ElvTokenSession) Cap() (*big.Int, error) {
 	return _ElvToken.Contract.Cap(&_ElvToken.CallOpts)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvToken *ElvTokenCallerSession) Cap() (*big.Int, error) {
 	return _ElvToken.Contract.Cap(&_ElvToken.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_ElvToken *ElvTokenCaller) Decimals(opts *bind.CallOpts) (uint8, error) {
 	var (
 		ret0 = new(uint8)
@@ -8279,21 +8278,21 @@ func (_ElvToken *ElvTokenCaller) Decimals(opts *bind.CallOpts) (uint8, error) {
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_ElvToken *ElvTokenSession) Decimals() (uint8, error) {
 	return _ElvToken.Contract.Decimals(&_ElvToken.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_ElvToken *ElvTokenCallerSession) Decimals() (uint8, error) {
 	return _ElvToken.Contract.Decimals(&_ElvToken.CallOpts)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvToken *ElvTokenCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -8305,21 +8304,21 @@ func (_ElvToken *ElvTokenCaller) IsMinter(opts *bind.CallOpts, account common.Ad
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvToken *ElvTokenSession) IsMinter(account common.Address) (bool, error) {
 	return _ElvToken.Contract.IsMinter(&_ElvToken.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvToken *ElvTokenCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _ElvToken.Contract.IsMinter(&_ElvToken.CallOpts, account)
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_ElvToken *ElvTokenCaller) IsPauser(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -8331,21 +8330,21 @@ func (_ElvToken *ElvTokenCaller) IsPauser(opts *bind.CallOpts, account common.Ad
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_ElvToken *ElvTokenSession) IsPauser(account common.Address) (bool, error) {
 	return _ElvToken.Contract.IsPauser(&_ElvToken.CallOpts, account)
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_ElvToken *ElvTokenCallerSession) IsPauser(account common.Address) (bool, error) {
 	return _ElvToken.Contract.IsPauser(&_ElvToken.CallOpts, account)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvToken *ElvTokenCaller) Name(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -8357,21 +8356,21 @@ func (_ElvToken *ElvTokenCaller) Name(opts *bind.CallOpts) (string, error) {
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvToken *ElvTokenSession) Name() (string, error) {
 	return _ElvToken.Contract.Name(&_ElvToken.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvToken *ElvTokenCallerSession) Name() (string, error) {
 	return _ElvToken.Contract.Name(&_ElvToken.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_ElvToken *ElvTokenCaller) Paused(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -8383,21 +8382,21 @@ func (_ElvToken *ElvTokenCaller) Paused(opts *bind.CallOpts) (bool, error) {
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_ElvToken *ElvTokenSession) Paused() (bool, error) {
 	return _ElvToken.Contract.Paused(&_ElvToken.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_ElvToken *ElvTokenCallerSession) Paused() (bool, error) {
 	return _ElvToken.Contract.Paused(&_ElvToken.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvToken *ElvTokenCaller) Symbol(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -8409,21 +8408,21 @@ func (_ElvToken *ElvTokenCaller) Symbol(opts *bind.CallOpts) (string, error) {
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvToken *ElvTokenSession) Symbol() (string, error) {
 	return _ElvToken.Contract.Symbol(&_ElvToken.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvToken *ElvTokenCallerSession) Symbol() (string, error) {
 	return _ElvToken.Contract.Symbol(&_ElvToken.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvToken *ElvTokenCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -8435,14 +8434,14 @@ func (_ElvToken *ElvTokenCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, err
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvToken *ElvTokenSession) TotalSupply() (*big.Int, error) {
 	return _ElvToken.Contract.TotalSupply(&_ElvToken.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvToken *ElvTokenCallerSession) TotalSupply() (*big.Int, error) {
 	return _ElvToken.Contract.TotalSupply(&_ElvToken.CallOpts)
 }
@@ -10023,7 +10022,7 @@ func (_ElvTokenHelper *ElvTokenHelperTransactorRaw) Transact(opts *bind.Transact
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTokenHelper *ElvTokenHelperCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -10035,21 +10034,21 @@ func (_ElvTokenHelper *ElvTokenHelperCaller) IsOwner(opts *bind.CallOpts) (bool,
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTokenHelper *ElvTokenHelperSession) IsOwner() (bool, error) {
 	return _ElvTokenHelper.Contract.IsOwner(&_ElvTokenHelper.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTokenHelper *ElvTokenHelperCallerSession) IsOwner() (bool, error) {
 	return _ElvTokenHelper.Contract.IsOwner(&_ElvTokenHelper.CallOpts)
 }
 
 // OverrideHoldSecs is a free data retrieval call binding the contract method 0x6a6cb8b3.
 //
-// Solidity: function overrideHoldSecs() constant returns(uint256)
+// Solidity: function overrideHoldSecs() view returns(uint256)
 func (_ElvTokenHelper *ElvTokenHelperCaller) OverrideHoldSecs(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -10061,21 +10060,21 @@ func (_ElvTokenHelper *ElvTokenHelperCaller) OverrideHoldSecs(opts *bind.CallOpt
 
 // OverrideHoldSecs is a free data retrieval call binding the contract method 0x6a6cb8b3.
 //
-// Solidity: function overrideHoldSecs() constant returns(uint256)
+// Solidity: function overrideHoldSecs() view returns(uint256)
 func (_ElvTokenHelper *ElvTokenHelperSession) OverrideHoldSecs() (*big.Int, error) {
 	return _ElvTokenHelper.Contract.OverrideHoldSecs(&_ElvTokenHelper.CallOpts)
 }
 
 // OverrideHoldSecs is a free data retrieval call binding the contract method 0x6a6cb8b3.
 //
-// Solidity: function overrideHoldSecs() constant returns(uint256)
+// Solidity: function overrideHoldSecs() view returns(uint256)
 func (_ElvTokenHelper *ElvTokenHelperCallerSession) OverrideHoldSecs() (*big.Int, error) {
 	return _ElvTokenHelper.Contract.OverrideHoldSecs(&_ElvTokenHelper.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTokenHelper *ElvTokenHelperCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -10087,14 +10086,14 @@ func (_ElvTokenHelper *ElvTokenHelperCaller) Owner(opts *bind.CallOpts) (common.
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTokenHelper *ElvTokenHelperSession) Owner() (common.Address, error) {
 	return _ElvTokenHelper.Contract.Owner(&_ElvTokenHelper.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTokenHelper *ElvTokenHelperCallerSession) Owner() (common.Address, error) {
 	return _ElvTokenHelper.Contract.Owner(&_ElvTokenHelper.CallOpts)
 }
@@ -10660,7 +10659,7 @@ func (_ElvTradable *ElvTradableTransactorRaw) Transact(opts *bind.TransactOpts, 
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
 //
-// Solidity: function PROXY_TYPE_REGISTRY() constant returns(int256)
+// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
 func (_ElvTradable *ElvTradableCaller) PROXYTYPEREGISTRY(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -10672,21 +10671,21 @@ func (_ElvTradable *ElvTradableCaller) PROXYTYPEREGISTRY(opts *bind.CallOpts) (*
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
 //
-// Solidity: function PROXY_TYPE_REGISTRY() constant returns(int256)
+// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
 func (_ElvTradable *ElvTradableSession) PROXYTYPEREGISTRY() (*big.Int, error) {
 	return _ElvTradable.Contract.PROXYTYPEREGISTRY(&_ElvTradable.CallOpts)
 }
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
 //
-// Solidity: function PROXY_TYPE_REGISTRY() constant returns(int256)
+// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
 func (_ElvTradable *ElvTradableCallerSession) PROXYTYPEREGISTRY() (*big.Int, error) {
 	return _ElvTradable.Contract.PROXYTYPEREGISTRY(&_ElvTradable.CallOpts)
 }
 
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() constant returns(int256)
+// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
 func (_ElvTradable *ElvTradableCaller) PROXYTYPETRANSFERFEE(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -10698,21 +10697,21 @@ func (_ElvTradable *ElvTradableCaller) PROXYTYPETRANSFERFEE(opts *bind.CallOpts)
 
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() constant returns(int256)
+// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
 func (_ElvTradable *ElvTradableSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
 	return _ElvTradable.Contract.PROXYTYPETRANSFERFEE(&_ElvTradable.CallOpts)
 }
 
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() constant returns(int256)
+// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
 func (_ElvTradable *ElvTradableCallerSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
 	return _ElvTradable.Contract.PROXYTYPETRANSFERFEE(&_ElvTradable.CallOpts)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -10724,21 +10723,21 @@ func (_ElvTradable *ElvTradableCaller) BalanceOf(opts *bind.CallOpts, owner comm
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvTradable *ElvTradableSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ElvTradable.Contract.BalanceOf(&_ElvTradable.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ElvTradable.Contract.BalanceOf(&_ElvTradable.CallOpts, owner)
 }
 
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
 //
-// Solidity: function baseTransferFee() constant returns(uint256)
+// Solidity: function baseTransferFee() view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) BaseTransferFee(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -10750,21 +10749,21 @@ func (_ElvTradable *ElvTradableCaller) BaseTransferFee(opts *bind.CallOpts) (*bi
 
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
 //
-// Solidity: function baseTransferFee() constant returns(uint256)
+// Solidity: function baseTransferFee() view returns(uint256)
 func (_ElvTradable *ElvTradableSession) BaseTransferFee() (*big.Int, error) {
 	return _ElvTradable.Contract.BaseTransferFee(&_ElvTradable.CallOpts)
 }
 
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
 //
-// Solidity: function baseTransferFee() constant returns(uint256)
+// Solidity: function baseTransferFee() view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) BaseTransferFee() (*big.Int, error) {
 	return _ElvTradable.Contract.BaseTransferFee(&_ElvTradable.CallOpts)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) Cap(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -10776,21 +10775,21 @@ func (_ElvTradable *ElvTradableCaller) Cap(opts *bind.CallOpts) (*big.Int, error
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvTradable *ElvTradableSession) Cap() (*big.Int, error) {
 	return _ElvTradable.Contract.Cap(&_ElvTradable.CallOpts)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) Cap() (*big.Int, error) {
 	return _ElvTradable.Contract.Cap(&_ElvTradable.CallOpts)
 }
 
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
 //
-// Solidity: function contractURI() constant returns(string)
+// Solidity: function contractURI() view returns(string)
 func (_ElvTradable *ElvTradableCaller) ContractURI(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -10802,21 +10801,21 @@ func (_ElvTradable *ElvTradableCaller) ContractURI(opts *bind.CallOpts) (string,
 
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
 //
-// Solidity: function contractURI() constant returns(string)
+// Solidity: function contractURI() view returns(string)
 func (_ElvTradable *ElvTradableSession) ContractURI() (string, error) {
 	return _ElvTradable.Contract.ContractURI(&_ElvTradable.CallOpts)
 }
 
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
 //
-// Solidity: function contractURI() constant returns(string)
+// Solidity: function contractURI() view returns(string)
 func (_ElvTradable *ElvTradableCallerSession) ContractURI() (string, error) {
 	return _ElvTradable.Contract.ContractURI(&_ElvTradable.CallOpts)
 }
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
 //
-// Solidity: function exists(uint256 tokenId) constant returns(bool)
+// Solidity: function exists(uint256 tokenId) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) Exists(opts *bind.CallOpts, tokenId *big.Int) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -10828,21 +10827,21 @@ func (_ElvTradable *ElvTradableCaller) Exists(opts *bind.CallOpts, tokenId *big.
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
 //
-// Solidity: function exists(uint256 tokenId) constant returns(bool)
+// Solidity: function exists(uint256 tokenId) view returns(bool)
 func (_ElvTradable *ElvTradableSession) Exists(tokenId *big.Int) (bool, error) {
 	return _ElvTradable.Contract.Exists(&_ElvTradable.CallOpts, tokenId)
 }
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
 //
-// Solidity: function exists(uint256 tokenId) constant returns(bool)
+// Solidity: function exists(uint256 tokenId) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) Exists(tokenId *big.Int) (bool, error) {
 	return _ElvTradable.Contract.Exists(&_ElvTradable.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ElvTradable *ElvTradableCaller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -10854,21 +10853,21 @@ func (_ElvTradable *ElvTradableCaller) GetApproved(opts *bind.CallOpts, tokenId 
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ElvTradable *ElvTradableSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradable.Contract.GetApproved(&_ElvTradable.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ElvTradable *ElvTradableCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradable.Contract.GetApproved(&_ElvTradable.CallOpts, tokenId)
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) GetTransferFee(opts *bind.CallOpts, _tokenId *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -10880,21 +10879,21 @@ func (_ElvTradable *ElvTradableCaller) GetTransferFee(opts *bind.CallOpts, _toke
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_ElvTradable *ElvTradableSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.GetTransferFee(&_ElvTradable.CallOpts, _tokenId)
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.GetTransferFee(&_ElvTradable.CallOpts, _tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -10906,21 +10905,21 @@ func (_ElvTradable *ElvTradableCaller) IsApprovedForAll(opts *bind.CallOpts, own
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradable *ElvTradableSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradable.Contract.IsApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradable.Contract.IsApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -10932,21 +10931,21 @@ func (_ElvTradable *ElvTradableCaller) IsMinter(opts *bind.CallOpts, account com
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvTradable *ElvTradableSession) IsMinter(account common.Address) (bool, error) {
 	return _ElvTradable.Contract.IsMinter(&_ElvTradable.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _ElvTradable.Contract.IsMinter(&_ElvTradable.CallOpts, account)
 }
 
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) IsMinterSigned(opts *bind.CallOpts, to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -10958,21 +10957,21 @@ func (_ElvTradable *ElvTradableCaller) IsMinterSigned(opts *bind.CallOpts, to co
 
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradable.Contract.IsMinterSigned(&_ElvTradable.CallOpts, to, tokenId, tokenURI, v, r, s)
 }
 
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradable.Contract.IsMinterSigned(&_ElvTradable.CallOpts, to, tokenId, tokenURI, v, r, s)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTradable *ElvTradableCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -10984,21 +10983,21 @@ func (_ElvTradable *ElvTradableCaller) IsOwner(opts *bind.CallOpts) (bool, error
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTradable *ElvTradableSession) IsOwner() (bool, error) {
 	return _ElvTradable.Contract.IsOwner(&_ElvTradable.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) IsOwner() (bool, error) {
 	return _ElvTradable.Contract.IsOwner(&_ElvTradable.CallOpts)
 }
 
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) IsOwnerSigned(opts *bind.CallOpts, from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -11010,21 +11009,21 @@ func (_ElvTradable *ElvTradableCaller) IsOwnerSigned(opts *bind.CallOpts, from c
 
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradable.Contract.IsOwnerSigned(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradable.Contract.IsOwnerSigned(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
 //
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) IsOwnerSignedEIP191(opts *bind.CallOpts, from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -11036,21 +11035,21 @@ func (_ElvTradable *ElvTradableCaller) IsOwnerSignedEIP191(opts *bind.CallOpts, 
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
 //
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradable.Contract.IsOwnerSignedEIP191(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
 //
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradable.Contract.IsOwnerSignedEIP191(&_ElvTradable.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
-// Solidity: function isProxyApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) IsProxyApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -11062,21 +11061,21 @@ func (_ElvTradable *ElvTradableCaller) IsProxyApprovedForAll(opts *bind.CallOpts
 
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
-// Solidity: function isProxyApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradable *ElvTradableSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradable.Contract.IsProxyApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
 }
 
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
-// Solidity: function isProxyApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradable.Contract.IsProxyApprovedForAll(&_ElvTradable.CallOpts, owner, operator)
 }
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
 //
-// Solidity: function minted() constant returns(uint256)
+// Solidity: function minted() view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) Minted(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -11088,21 +11087,21 @@ func (_ElvTradable *ElvTradableCaller) Minted(opts *bind.CallOpts) (*big.Int, er
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
 //
-// Solidity: function minted() constant returns(uint256)
+// Solidity: function minted() view returns(uint256)
 func (_ElvTradable *ElvTradableSession) Minted() (*big.Int, error) {
 	return _ElvTradable.Contract.Minted(&_ElvTradable.CallOpts)
 }
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
 //
-// Solidity: function minted() constant returns(uint256)
+// Solidity: function minted() view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) Minted() (*big.Int, error) {
 	return _ElvTradable.Contract.Minted(&_ElvTradable.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvTradable *ElvTradableCaller) Name(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -11114,21 +11113,21 @@ func (_ElvTradable *ElvTradableCaller) Name(opts *bind.CallOpts) (string, error)
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvTradable *ElvTradableSession) Name() (string, error) {
 	return _ElvTradable.Contract.Name(&_ElvTradable.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvTradable *ElvTradableCallerSession) Name() (string, error) {
 	return _ElvTradable.Contract.Name(&_ElvTradable.CallOpts)
 }
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
 //
-// Solidity: function ordinalOfToken(uint256 tokenId) constant returns(uint256)
+// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) OrdinalOfToken(opts *bind.CallOpts, tokenId *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -11140,21 +11139,21 @@ func (_ElvTradable *ElvTradableCaller) OrdinalOfToken(opts *bind.CallOpts, token
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
 //
-// Solidity: function ordinalOfToken(uint256 tokenId) constant returns(uint256)
+// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
 func (_ElvTradable *ElvTradableSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.OrdinalOfToken(&_ElvTradable.CallOpts, tokenId)
 }
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
 //
-// Solidity: function ordinalOfToken(uint256 tokenId) constant returns(uint256)
+// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.OrdinalOfToken(&_ElvTradable.CallOpts, tokenId)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTradable *ElvTradableCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -11166,21 +11165,21 @@ func (_ElvTradable *ElvTradableCaller) Owner(opts *bind.CallOpts) (common.Addres
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTradable *ElvTradableSession) Owner() (common.Address, error) {
 	return _ElvTradable.Contract.Owner(&_ElvTradable.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTradable *ElvTradableCallerSession) Owner() (common.Address, error) {
 	return _ElvTradable.Contract.Owner(&_ElvTradable.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ElvTradable *ElvTradableCaller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -11192,21 +11191,21 @@ func (_ElvTradable *ElvTradableCaller) OwnerOf(opts *bind.CallOpts, tokenId *big
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ElvTradable *ElvTradableSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradable.Contract.OwnerOf(&_ElvTradable.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ElvTradable *ElvTradableCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradable.Contract.OwnerOf(&_ElvTradable.CallOpts, tokenId)
 }
 
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
-// Solidity: function proxyRegistryAddress() constant returns(address)
+// Solidity: function proxyRegistryAddress() view returns(address)
 func (_ElvTradable *ElvTradableCaller) ProxyRegistryAddress(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -11218,21 +11217,21 @@ func (_ElvTradable *ElvTradableCaller) ProxyRegistryAddress(opts *bind.CallOpts)
 
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
-// Solidity: function proxyRegistryAddress() constant returns(address)
+// Solidity: function proxyRegistryAddress() view returns(address)
 func (_ElvTradable *ElvTradableSession) ProxyRegistryAddress() (common.Address, error) {
 	return _ElvTradable.Contract.ProxyRegistryAddress(&_ElvTradable.CallOpts)
 }
 
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
-// Solidity: function proxyRegistryAddress() constant returns(address)
+// Solidity: function proxyRegistryAddress() view returns(address)
 func (_ElvTradable *ElvTradableCallerSession) ProxyRegistryAddress() (common.Address, error) {
 	return _ElvTradable.Contract.ProxyRegistryAddress(&_ElvTradable.CallOpts)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ElvTradable *ElvTradableCaller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -11244,21 +11243,21 @@ func (_ElvTradable *ElvTradableCaller) SupportsInterface(opts *bind.CallOpts, in
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ElvTradable *ElvTradableSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ElvTradable.Contract.SupportsInterface(&_ElvTradable.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ElvTradable *ElvTradableCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ElvTradable.Contract.SupportsInterface(&_ElvTradable.CallOpts, interfaceId)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvTradable *ElvTradableCaller) Symbol(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -11270,21 +11269,21 @@ func (_ElvTradable *ElvTradableCaller) Symbol(opts *bind.CallOpts) (string, erro
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvTradable *ElvTradableSession) Symbol() (string, error) {
 	return _ElvTradable.Contract.Symbol(&_ElvTradable.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvTradable *ElvTradableCallerSession) Symbol() (string, error) {
 	return _ElvTradable.Contract.Symbol(&_ElvTradable.CallOpts)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) TokenByIndex(opts *bind.CallOpts, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -11296,21 +11295,21 @@ func (_ElvTradable *ElvTradableCaller) TokenByIndex(opts *bind.CallOpts, index *
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ElvTradable *ElvTradableSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.TokenByIndex(&_ElvTradable.CallOpts, index)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.TokenByIndex(&_ElvTradable.CallOpts, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) TokenOfOwnerByIndex(opts *bind.CallOpts, owner common.Address, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -11322,21 +11321,21 @@ func (_ElvTradable *ElvTradableCaller) TokenOfOwnerByIndex(opts *bind.CallOpts, 
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ElvTradable *ElvTradableSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.TokenOfOwnerByIndex(&_ElvTradable.CallOpts, owner, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _ElvTradable.Contract.TokenOfOwnerByIndex(&_ElvTradable.CallOpts, owner, index)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ElvTradable *ElvTradableCaller) TokenURI(opts *bind.CallOpts, tokenId *big.Int) (string, error) {
 	var (
 		ret0 = new(string)
@@ -11348,21 +11347,21 @@ func (_ElvTradable *ElvTradableCaller) TokenURI(opts *bind.CallOpts, tokenId *bi
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ElvTradable *ElvTradableSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _ElvTradable.Contract.TokenURI(&_ElvTradable.CallOpts, tokenId)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ElvTradable *ElvTradableCallerSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _ElvTradable.Contract.TokenURI(&_ElvTradable.CallOpts, tokenId)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvTradable *ElvTradableCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -11374,21 +11373,21 @@ func (_ElvTradable *ElvTradableCaller) TotalSupply(opts *bind.CallOpts) (*big.In
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvTradable *ElvTradableSession) TotalSupply() (*big.Int, error) {
 	return _ElvTradable.Contract.TotalSupply(&_ElvTradable.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvTradable *ElvTradableCallerSession) TotalSupply() (*big.Int, error) {
 	return _ElvTradable.Contract.TotalSupply(&_ElvTradable.CallOpts)
 }
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
 //
-// Solidity: function transferFeeProxyAddress() constant returns(address)
+// Solidity: function transferFeeProxyAddress() view returns(address)
 func (_ElvTradable *ElvTradableCaller) TransferFeeProxyAddress(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -11400,14 +11399,14 @@ func (_ElvTradable *ElvTradableCaller) TransferFeeProxyAddress(opts *bind.CallOp
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
 //
-// Solidity: function transferFeeProxyAddress() constant returns(address)
+// Solidity: function transferFeeProxyAddress() view returns(address)
 func (_ElvTradable *ElvTradableSession) TransferFeeProxyAddress() (common.Address, error) {
 	return _ElvTradable.Contract.TransferFeeProxyAddress(&_ElvTradable.CallOpts)
 }
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
 //
-// Solidity: function transferFeeProxyAddress() constant returns(address)
+// Solidity: function transferFeeProxyAddress() view returns(address)
 func (_ElvTradable *ElvTradableCallerSession) TransferFeeProxyAddress() (common.Address, error) {
 	return _ElvTradable.Contract.TransferFeeProxyAddress(&_ElvTradable.CallOpts)
 }
@@ -11666,42 +11665,42 @@ func (_ElvTradable *ElvTradableTransactorSession) RenounceOwnership() (*types.Tr
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradable *ElvTradableTransactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradable *ElvTradableSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.Contract.SafeTransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradable *ElvTradableTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.Contract.SafeTransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ElvTradable *ElvTradableTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ElvTradable *ElvTradableSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ElvTradable.Contract.SafeTransferFrom0(&_ElvTradable.TransactOpts, from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ElvTradable *ElvTradableTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ElvTradable.Contract.SafeTransferFrom0(&_ElvTradable.TransactOpts, from, to, tokenId, _data)
 }
@@ -11834,21 +11833,21 @@ func (_ElvTradable *ElvTradableTransactorSession) SetTransferFeeProxyAddress(_ne
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradable *ElvTradableTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradable *ElvTradableSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.Contract.TransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradable *ElvTradableTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradable.Contract.TransferFrom(&_ElvTradable.TransactOpts, from, to, tokenId)
 }
@@ -13863,7 +13862,7 @@ func (_ElvTradableLocal *ElvTradableLocalTransactorRaw) Transact(opts *bind.Tran
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
 //
-// Solidity: function PROXY_TYPE_REGISTRY() constant returns(int256)
+// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) PROXYTYPEREGISTRY(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -13875,21 +13874,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) PROXYTYPEREGISTRY(opts *bind.Ca
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
 //
-// Solidity: function PROXY_TYPE_REGISTRY() constant returns(int256)
+// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
 func (_ElvTradableLocal *ElvTradableLocalSession) PROXYTYPEREGISTRY() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.PROXYTYPEREGISTRY(&_ElvTradableLocal.CallOpts)
 }
 
 // PROXYTYPEREGISTRY is a free data retrieval call binding the contract method 0x98e33083.
 //
-// Solidity: function PROXY_TYPE_REGISTRY() constant returns(int256)
+// Solidity: function PROXY_TYPE_REGISTRY() view returns(int256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) PROXYTYPEREGISTRY() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.PROXYTYPEREGISTRY(&_ElvTradableLocal.CallOpts)
 }
 
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() constant returns(int256)
+// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) PROXYTYPETRANSFERFEE(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -13901,21 +13900,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) PROXYTYPETRANSFERFEE(opts *bind
 
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() constant returns(int256)
+// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
 func (_ElvTradableLocal *ElvTradableLocalSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.PROXYTYPETRANSFERFEE(&_ElvTradableLocal.CallOpts)
 }
 
 // PROXYTYPETRANSFERFEE is a free data retrieval call binding the contract method 0x050dd124.
 //
-// Solidity: function PROXY_TYPE_TRANSFER_FEE() constant returns(int256)
+// Solidity: function PROXY_TYPE_TRANSFER_FEE() view returns(int256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) PROXYTYPETRANSFERFEE() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.PROXYTYPETRANSFERFEE(&_ElvTradableLocal.CallOpts)
 }
 
 // AllTokensHolds is a free data retrieval call binding the contract method 0x7bc3188b.
 //
-// Solidity: function _allTokensHolds(uint256 ) constant returns(uint256)
+// Solidity: function _allTokensHolds(uint256 ) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) AllTokensHolds(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -13927,21 +13926,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) AllTokensHolds(opts *bind.CallO
 
 // AllTokensHolds is a free data retrieval call binding the contract method 0x7bc3188b.
 //
-// Solidity: function _allTokensHolds(uint256 ) constant returns(uint256)
+// Solidity: function _allTokensHolds(uint256 ) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) AllTokensHolds(arg0 *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.AllTokensHolds(&_ElvTradableLocal.CallOpts, arg0)
 }
 
 // AllTokensHolds is a free data retrieval call binding the contract method 0x7bc3188b.
 //
-// Solidity: function _allTokensHolds(uint256 ) constant returns(uint256)
+// Solidity: function _allTokensHolds(uint256 ) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) AllTokensHolds(arg0 *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.AllTokensHolds(&_ElvTradableLocal.CallOpts, arg0)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -13953,21 +13952,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) BalanceOf(opts *bind.CallOpts, 
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.BalanceOf(&_ElvTradableLocal.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256)
+// Solidity: function balanceOf(address owner) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.BalanceOf(&_ElvTradableLocal.CallOpts, owner)
 }
 
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
 //
-// Solidity: function baseTransferFee() constant returns(uint256)
+// Solidity: function baseTransferFee() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) BaseTransferFee(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -13979,21 +13978,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) BaseTransferFee(opts *bind.Call
 
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
 //
-// Solidity: function baseTransferFee() constant returns(uint256)
+// Solidity: function baseTransferFee() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) BaseTransferFee() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.BaseTransferFee(&_ElvTradableLocal.CallOpts)
 }
 
 // BaseTransferFee is a free data retrieval call binding the contract method 0x390113c7.
 //
-// Solidity: function baseTransferFee() constant returns(uint256)
+// Solidity: function baseTransferFee() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) BaseTransferFee() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.BaseTransferFee(&_ElvTradableLocal.CallOpts)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) Cap(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14005,21 +14004,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Cap(opts *bind.CallOpts) (*big.
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) Cap() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.Cap(&_ElvTradableLocal.CallOpts)
 }
 
 // Cap is a free data retrieval call binding the contract method 0x355274ea.
 //
-// Solidity: function cap() constant returns(uint256)
+// Solidity: function cap() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) Cap() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.Cap(&_ElvTradableLocal.CallOpts)
 }
 
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
 //
-// Solidity: function contractURI() constant returns(string)
+// Solidity: function contractURI() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCaller) ContractURI(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -14031,21 +14030,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) ContractURI(opts *bind.CallOpts
 
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
 //
-// Solidity: function contractURI() constant returns(string)
+// Solidity: function contractURI() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalSession) ContractURI() (string, error) {
 	return _ElvTradableLocal.Contract.ContractURI(&_ElvTradableLocal.CallOpts)
 }
 
 // ContractURI is a free data retrieval call binding the contract method 0xe8a3d485.
 //
-// Solidity: function contractURI() constant returns(string)
+// Solidity: function contractURI() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) ContractURI() (string, error) {
 	return _ElvTradableLocal.Contract.ContractURI(&_ElvTradableLocal.CallOpts)
 }
 
 // DefHoldSecs is a free data retrieval call binding the contract method 0x96828a3b.
 //
-// Solidity: function defHoldSecs() constant returns(uint256)
+// Solidity: function defHoldSecs() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) DefHoldSecs(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14057,21 +14056,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) DefHoldSecs(opts *bind.CallOpts
 
 // DefHoldSecs is a free data retrieval call binding the contract method 0x96828a3b.
 //
-// Solidity: function defHoldSecs() constant returns(uint256)
+// Solidity: function defHoldSecs() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) DefHoldSecs() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.DefHoldSecs(&_ElvTradableLocal.CallOpts)
 }
 
 // DefHoldSecs is a free data retrieval call binding the contract method 0x96828a3b.
 //
-// Solidity: function defHoldSecs() constant returns(uint256)
+// Solidity: function defHoldSecs() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) DefHoldSecs() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.DefHoldSecs(&_ElvTradableLocal.CallOpts)
 }
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
 //
-// Solidity: function exists(uint256 tokenId) constant returns(bool)
+// Solidity: function exists(uint256 tokenId) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) Exists(opts *bind.CallOpts, tokenId *big.Int) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14083,21 +14082,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Exists(opts *bind.CallOpts, tok
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
 //
-// Solidity: function exists(uint256 tokenId) constant returns(bool)
+// Solidity: function exists(uint256 tokenId) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) Exists(tokenId *big.Int) (bool, error) {
 	return _ElvTradableLocal.Contract.Exists(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // Exists is a free data retrieval call binding the contract method 0x4f558e79.
 //
-// Solidity: function exists(uint256 tokenId) constant returns(bool)
+// Solidity: function exists(uint256 tokenId) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) Exists(tokenId *big.Int) (bool, error) {
 	return _ElvTradableLocal.Contract.Exists(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCaller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -14109,21 +14108,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) GetApproved(opts *bind.CallOpts
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradableLocal.Contract.GetApproved(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address)
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradableLocal.Contract.GetApproved(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) GetTransferFee(opts *bind.CallOpts, _tokenId *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14135,21 +14134,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) GetTransferFee(opts *bind.CallO
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.GetTransferFee(&_ElvTradableLocal.CallOpts, _tokenId)
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.GetTransferFee(&_ElvTradableLocal.CallOpts, _tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14161,21 +14160,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsApprovedForAll(opts *bind.Cal
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradableLocal.Contract.IsApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradableLocal.Contract.IsApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14187,21 +14186,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsMinter(opts *bind.CallOpts, a
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) IsMinter(account common.Address) (bool, error) {
 	return _ElvTradableLocal.Contract.IsMinter(&_ElvTradableLocal.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _ElvTradableLocal.Contract.IsMinter(&_ElvTradableLocal.CallOpts, account)
 }
 
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) IsMinterSigned(opts *bind.CallOpts, to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14213,21 +14212,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsMinterSigned(opts *bind.CallO
 
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.IsMinterSigned(&_ElvTradableLocal.CallOpts, to, tokenId, tokenURI, v, r, s)
 }
 
 // IsMinterSigned is a free data retrieval call binding the contract method 0x94b5fe58.
 //
-// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isMinterSigned(address to, uint256 tokenId, string tokenURI, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsMinterSigned(to common.Address, tokenId *big.Int, tokenURI string, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.IsMinterSigned(&_ElvTradableLocal.CallOpts, to, tokenId, tokenURI, v, r, s)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14239,21 +14238,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwner(opts *bind.CallOpts) (b
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) IsOwner() (bool, error) {
 	return _ElvTradableLocal.Contract.IsOwner(&_ElvTradableLocal.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsOwner() (bool, error) {
 	return _ElvTradableLocal.Contract.IsOwner(&_ElvTradableLocal.CallOpts)
 }
 
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwnerSigned(opts *bind.CallOpts, from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14265,21 +14264,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwnerSigned(opts *bind.CallOp
 
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.IsOwnerSigned(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSigned is a free data retrieval call binding the contract method 0x1a8a1ee9.
 //
-// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsOwnerSigned(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.IsOwnerSigned(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
 //
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwnerSignedEIP191(opts *bind.CallOpts, from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14291,21 +14290,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsOwnerSignedEIP191(opts *bind.
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
 //
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.IsOwnerSignedEIP191(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsOwnerSignedEIP191 is a free data retrieval call binding the contract method 0xba16df6f.
 //
-// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) constant returns(bool)
+// Solidity: function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsOwnerSignedEIP191(from common.Address, tokenId *big.Int, v uint8, r [32]byte, s [32]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.IsOwnerSignedEIP191(&_ElvTradableLocal.CallOpts, from, tokenId, v, r, s)
 }
 
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
-// Solidity: function isProxyApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) IsProxyApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14317,21 +14316,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) IsProxyApprovedForAll(opts *bin
 
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
-// Solidity: function isProxyApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradableLocal.Contract.IsProxyApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
 }
 
 // IsProxyApprovedForAll is a free data retrieval call binding the contract method 0xfac4667d.
 //
-// Solidity: function isProxyApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isProxyApprovedForAll(address owner, address operator) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) IsProxyApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _ElvTradableLocal.Contract.IsProxyApprovedForAll(&_ElvTradableLocal.CallOpts, owner, operator)
 }
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
 //
-// Solidity: function minted() constant returns(uint256)
+// Solidity: function minted() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) Minted(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14343,21 +14342,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Minted(opts *bind.CallOpts) (*b
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
 //
-// Solidity: function minted() constant returns(uint256)
+// Solidity: function minted() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) Minted() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.Minted(&_ElvTradableLocal.CallOpts)
 }
 
 // Minted is a free data retrieval call binding the contract method 0x4f02c420.
 //
-// Solidity: function minted() constant returns(uint256)
+// Solidity: function minted() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) Minted() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.Minted(&_ElvTradableLocal.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCaller) Name(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -14369,21 +14368,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Name(opts *bind.CallOpts) (stri
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalSession) Name() (string, error) {
 	return _ElvTradableLocal.Contract.Name(&_ElvTradableLocal.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) Name() (string, error) {
 	return _ElvTradableLocal.Contract.Name(&_ElvTradableLocal.CallOpts)
 }
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
 //
-// Solidity: function ordinalOfToken(uint256 tokenId) constant returns(uint256)
+// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) OrdinalOfToken(opts *bind.CallOpts, tokenId *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14395,21 +14394,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) OrdinalOfToken(opts *bind.CallO
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
 //
-// Solidity: function ordinalOfToken(uint256 tokenId) constant returns(uint256)
+// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.OrdinalOfToken(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // OrdinalOfToken is a free data retrieval call binding the contract method 0xda06a620.
 //
-// Solidity: function ordinalOfToken(uint256 tokenId) constant returns(uint256)
+// Solidity: function ordinalOfToken(uint256 tokenId) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) OrdinalOfToken(tokenId *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.OrdinalOfToken(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -14421,21 +14420,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Owner(opts *bind.CallOpts) (com
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalSession) Owner() (common.Address, error) {
 	return _ElvTradableLocal.Contract.Owner(&_ElvTradableLocal.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) Owner() (common.Address, error) {
 	return _ElvTradableLocal.Contract.Owner(&_ElvTradableLocal.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCaller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -14447,21 +14446,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) OwnerOf(opts *bind.CallOpts, to
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradableLocal.Contract.OwnerOf(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _ElvTradableLocal.Contract.OwnerOf(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
-// Solidity: function proxyRegistryAddress() constant returns(address)
+// Solidity: function proxyRegistryAddress() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCaller) ProxyRegistryAddress(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -14473,21 +14472,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) ProxyRegistryAddress(opts *bind
 
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
-// Solidity: function proxyRegistryAddress() constant returns(address)
+// Solidity: function proxyRegistryAddress() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalSession) ProxyRegistryAddress() (common.Address, error) {
 	return _ElvTradableLocal.Contract.ProxyRegistryAddress(&_ElvTradableLocal.CallOpts)
 }
 
 // ProxyRegistryAddress is a free data retrieval call binding the contract method 0xcd7c0326.
 //
-// Solidity: function proxyRegistryAddress() constant returns(address)
+// Solidity: function proxyRegistryAddress() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) ProxyRegistryAddress() (common.Address, error) {
 	return _ElvTradableLocal.Contract.ProxyRegistryAddress(&_ElvTradableLocal.CallOpts)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCaller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -14499,21 +14498,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) SupportsInterface(opts *bind.Ca
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.SupportsInterface(&_ElvTradableLocal.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _ElvTradableLocal.Contract.SupportsInterface(&_ElvTradableLocal.CallOpts, interfaceId)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCaller) Symbol(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -14525,21 +14524,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) Symbol(opts *bind.CallOpts) (st
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalSession) Symbol() (string, error) {
 	return _ElvTradableLocal.Contract.Symbol(&_ElvTradableLocal.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) Symbol() (string, error) {
 	return _ElvTradableLocal.Contract.Symbol(&_ElvTradableLocal.CallOpts)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) TokenByIndex(opts *bind.CallOpts, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14551,21 +14550,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TokenByIndex(opts *bind.CallOpt
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.TokenByIndex(&_ElvTradableLocal.CallOpts, index)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.TokenByIndex(&_ElvTradableLocal.CallOpts, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) TokenOfOwnerByIndex(opts *bind.CallOpts, owner common.Address, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14577,21 +14576,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TokenOfOwnerByIndex(opts *bind.
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.TokenOfOwnerByIndex(&_ElvTradableLocal.CallOpts, owner, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _ElvTradableLocal.Contract.TokenOfOwnerByIndex(&_ElvTradableLocal.CallOpts, owner, index)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCaller) TokenURI(opts *bind.CallOpts, tokenId *big.Int) (string, error) {
 	var (
 		ret0 = new(string)
@@ -14603,21 +14602,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TokenURI(opts *bind.CallOpts, t
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _ElvTradableLocal.Contract.TokenURI(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _ElvTradableLocal.Contract.TokenURI(&_ElvTradableLocal.CallOpts, tokenId)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -14629,21 +14628,21 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TotalSupply(opts *bind.CallOpts
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalSession) TotalSupply() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.TotalSupply(&_ElvTradableLocal.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) TotalSupply() (*big.Int, error) {
 	return _ElvTradableLocal.Contract.TotalSupply(&_ElvTradableLocal.CallOpts)
 }
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
 //
-// Solidity: function transferFeeProxyAddress() constant returns(address)
+// Solidity: function transferFeeProxyAddress() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCaller) TransferFeeProxyAddress(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -14655,14 +14654,14 @@ func (_ElvTradableLocal *ElvTradableLocalCaller) TransferFeeProxyAddress(opts *b
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
 //
-// Solidity: function transferFeeProxyAddress() constant returns(address)
+// Solidity: function transferFeeProxyAddress() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalSession) TransferFeeProxyAddress() (common.Address, error) {
 	return _ElvTradableLocal.Contract.TransferFeeProxyAddress(&_ElvTradableLocal.CallOpts)
 }
 
 // TransferFeeProxyAddress is a free data retrieval call binding the contract method 0xd1066f2d.
 //
-// Solidity: function transferFeeProxyAddress() constant returns(address)
+// Solidity: function transferFeeProxyAddress() view returns(address)
 func (_ElvTradableLocal *ElvTradableLocalCallerSession) TransferFeeProxyAddress() (common.Address, error) {
 	return _ElvTradableLocal.Contract.TransferFeeProxyAddress(&_ElvTradableLocal.CallOpts)
 }
@@ -14942,42 +14941,42 @@ func (_ElvTradableLocal *ElvTradableLocalTransactorSession) RenounceOwnership() 
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.Contract.SafeTransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.Contract.SafeTransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ElvTradableLocal.Contract.SafeTransferFrom0(&_ElvTradableLocal.TransactOpts, from, to, tokenId, _data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, _data []byte) (*types.Transaction, error) {
 	return _ElvTradableLocal.Contract.SafeTransferFrom0(&_ElvTradableLocal.TransactOpts, from, to, tokenId, _data)
 }
@@ -15110,21 +15109,21 @@ func (_ElvTradableLocal *ElvTradableLocalTransactorSession) SetTransferFeeProxyA
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.Contract.TransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_ElvTradableLocal *ElvTradableLocalTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _ElvTradableLocal.Contract.TransferFrom(&_ElvTradableLocal.TransactOpts, from, to, tokenId)
 }
@@ -17068,7 +17067,7 @@ func (_IERC165 *IERC165TransactorRaw) Transact(opts *bind.TransactOpts, method s
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC165 *IERC165Caller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -17080,14 +17079,14 @@ func (_IERC165 *IERC165Caller) SupportsInterface(opts *bind.CallOpts, interfaceI
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC165 *IERC165Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC165.Contract.SupportsInterface(&_IERC165.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC165 *IERC165CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC165.Contract.SupportsInterface(&_IERC165.CallOpts, interfaceId)
 }
@@ -17249,7 +17248,7 @@ func (_IERC20 *IERC20TransactorRaw) Transact(opts *bind.TransactOpts, method str
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -17261,21 +17260,21 @@ func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address who) constant returns(uint256)
+// Solidity: function balanceOf(address who) view returns(uint256)
 func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, who common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -17287,21 +17286,21 @@ func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, who common.Address) 
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address who) constant returns(uint256)
+// Solidity: function balanceOf(address who) view returns(uint256)
 func (_IERC20 *IERC20Session) BalanceOf(who common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, who)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address who) constant returns(uint256)
+// Solidity: function balanceOf(address who) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) BalanceOf(who common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, who)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -17313,14 +17312,14 @@ func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) 
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Session) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20CallerSession) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
@@ -17855,7 +17854,7 @@ func (_IERC721 *IERC721TransactorRaw) Transact(opts *bind.TransactOpts, method s
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721 *IERC721Caller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -17867,21 +17866,21 @@ func (_IERC721 *IERC721Caller) BalanceOf(opts *bind.CallOpts, owner common.Addre
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721 *IERC721Session) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _IERC721.Contract.BalanceOf(&_IERC721.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721 *IERC721CallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _IERC721.Contract.BalanceOf(&_IERC721.CallOpts, owner)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721 *IERC721Caller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -17893,21 +17892,21 @@ func (_IERC721 *IERC721Caller) GetApproved(opts *bind.CallOpts, tokenId *big.Int
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721 *IERC721Session) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _IERC721.Contract.GetApproved(&_IERC721.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721 *IERC721CallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _IERC721.Contract.GetApproved(&_IERC721.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721 *IERC721Caller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -17919,21 +17918,21 @@ func (_IERC721 *IERC721Caller) IsApprovedForAll(opts *bind.CallOpts, owner commo
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721 *IERC721Session) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _IERC721.Contract.IsApprovedForAll(&_IERC721.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721 *IERC721CallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _IERC721.Contract.IsApprovedForAll(&_IERC721.CallOpts, owner, operator)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721 *IERC721Caller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -17945,21 +17944,21 @@ func (_IERC721 *IERC721Caller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (c
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721 *IERC721Session) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _IERC721.Contract.OwnerOf(&_IERC721.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721 *IERC721CallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _IERC721.Contract.OwnerOf(&_IERC721.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721 *IERC721Caller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -17971,14 +17970,14 @@ func (_IERC721 *IERC721Caller) SupportsInterface(opts *bind.CallOpts, interfaceI
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721 *IERC721Session) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC721.Contract.SupportsInterface(&_IERC721.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721 *IERC721CallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC721.Contract.SupportsInterface(&_IERC721.CallOpts, interfaceId)
 }
@@ -18006,42 +18005,42 @@ func (_IERC721 *IERC721TransactorSession) Approve(to common.Address, tokenId *bi
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721 *IERC721Transactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721 *IERC721Session) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.Contract.SafeTransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721 *IERC721TransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.Contract.SafeTransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721 *IERC721Transactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721 *IERC721Session) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721.Contract.SafeTransferFrom0(&_IERC721.TransactOpts, from, to, tokenId, data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721 *IERC721TransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721.Contract.SafeTransferFrom0(&_IERC721.TransactOpts, from, to, tokenId, data)
 }
@@ -18069,21 +18068,21 @@ func (_IERC721 *IERC721TransactorSession) SetApprovalForAll(operator common.Addr
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721 *IERC721Transactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721 *IERC721Session) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.Contract.TransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721 *IERC721TransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721.Contract.TransferFrom(&_IERC721.TransactOpts, from, to, tokenId)
 }
@@ -18727,7 +18726,7 @@ func (_IERC721Enumerable *IERC721EnumerableTransactorRaw) Transact(opts *bind.Tr
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721Enumerable *IERC721EnumerableCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -18739,21 +18738,21 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) BalanceOf(opts *bind.CallOpts
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721Enumerable *IERC721EnumerableSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _IERC721Enumerable.Contract.BalanceOf(&_IERC721Enumerable.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _IERC721Enumerable.Contract.BalanceOf(&_IERC721Enumerable.CallOpts, owner)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721Enumerable *IERC721EnumerableCaller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -18765,21 +18764,21 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) GetApproved(opts *bind.CallOp
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721Enumerable *IERC721EnumerableSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Enumerable.Contract.GetApproved(&_IERC721Enumerable.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Enumerable.Contract.GetApproved(&_IERC721Enumerable.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721Enumerable *IERC721EnumerableCaller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -18791,21 +18790,21 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) IsApprovedForAll(opts *bind.C
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721Enumerable *IERC721EnumerableSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _IERC721Enumerable.Contract.IsApprovedForAll(&_IERC721Enumerable.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _IERC721Enumerable.Contract.IsApprovedForAll(&_IERC721Enumerable.CallOpts, owner, operator)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721Enumerable *IERC721EnumerableCaller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -18817,21 +18816,21 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) OwnerOf(opts *bind.CallOpts, 
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721Enumerable *IERC721EnumerableSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Enumerable.Contract.OwnerOf(&_IERC721Enumerable.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Enumerable.Contract.OwnerOf(&_IERC721Enumerable.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721Enumerable *IERC721EnumerableCaller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -18843,21 +18842,21 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) SupportsInterface(opts *bind.
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721Enumerable *IERC721EnumerableSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC721Enumerable.Contract.SupportsInterface(&_IERC721Enumerable.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC721Enumerable.Contract.SupportsInterface(&_IERC721Enumerable.CallOpts, interfaceId)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_IERC721Enumerable *IERC721EnumerableCaller) TokenByIndex(opts *bind.CallOpts, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -18869,21 +18868,21 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) TokenByIndex(opts *bind.CallO
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_IERC721Enumerable *IERC721EnumerableSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _IERC721Enumerable.Contract.TokenByIndex(&_IERC721Enumerable.CallOpts, index)
 }
 
 // TokenByIndex is a free data retrieval call binding the contract method 0x4f6ccce7.
 //
-// Solidity: function tokenByIndex(uint256 index) constant returns(uint256)
+// Solidity: function tokenByIndex(uint256 index) view returns(uint256)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) TokenByIndex(index *big.Int) (*big.Int, error) {
 	return _IERC721Enumerable.Contract.TokenByIndex(&_IERC721Enumerable.CallOpts, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256 tokenId)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256 tokenId)
 func (_IERC721Enumerable *IERC721EnumerableCaller) TokenOfOwnerByIndex(opts *bind.CallOpts, owner common.Address, index *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -18895,21 +18894,21 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) TokenOfOwnerByIndex(opts *bin
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256 tokenId)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256 tokenId)
 func (_IERC721Enumerable *IERC721EnumerableSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _IERC721Enumerable.Contract.TokenOfOwnerByIndex(&_IERC721Enumerable.CallOpts, owner, index)
 }
 
 // TokenOfOwnerByIndex is a free data retrieval call binding the contract method 0x2f745c59.
 //
-// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) constant returns(uint256 tokenId)
+// Solidity: function tokenOfOwnerByIndex(address owner, uint256 index) view returns(uint256 tokenId)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) TokenOfOwnerByIndex(owner common.Address, index *big.Int) (*big.Int, error) {
 	return _IERC721Enumerable.Contract.TokenOfOwnerByIndex(&_IERC721Enumerable.CallOpts, owner, index)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC721Enumerable *IERC721EnumerableCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -18921,14 +18920,14 @@ func (_IERC721Enumerable *IERC721EnumerableCaller) TotalSupply(opts *bind.CallOp
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC721Enumerable *IERC721EnumerableSession) TotalSupply() (*big.Int, error) {
 	return _IERC721Enumerable.Contract.TotalSupply(&_IERC721Enumerable.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC721Enumerable *IERC721EnumerableCallerSession) TotalSupply() (*big.Int, error) {
 	return _IERC721Enumerable.Contract.TotalSupply(&_IERC721Enumerable.CallOpts)
 }
@@ -18956,42 +18955,42 @@ func (_IERC721Enumerable *IERC721EnumerableTransactorSession) Approve(to common.
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.Contract.SafeTransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.Contract.SafeTransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Enumerable.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Enumerable.Contract.SafeTransferFrom0(&_IERC721Enumerable.TransactOpts, from, to, tokenId, data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Enumerable.Contract.SafeTransferFrom0(&_IERC721Enumerable.TransactOpts, from, to, tokenId, data)
 }
@@ -19019,21 +19018,21 @@ func (_IERC721Enumerable *IERC721EnumerableTransactorSession) SetApprovalForAll(
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.Contract.TransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Enumerable *IERC721EnumerableTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Enumerable.Contract.TransferFrom(&_IERC721Enumerable.TransactOpts, from, to, tokenId)
 }
@@ -19677,7 +19676,7 @@ func (_IERC721Metadata *IERC721MetadataTransactorRaw) Transact(opts *bind.Transa
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721Metadata *IERC721MetadataCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -19689,21 +19688,21 @@ func (_IERC721Metadata *IERC721MetadataCaller) BalanceOf(opts *bind.CallOpts, ow
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721Metadata *IERC721MetadataSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _IERC721Metadata.Contract.BalanceOf(&_IERC721Metadata.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address owner) constant returns(uint256 balance)
+// Solidity: function balanceOf(address owner) view returns(uint256 balance)
 func (_IERC721Metadata *IERC721MetadataCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _IERC721Metadata.Contract.BalanceOf(&_IERC721Metadata.CallOpts, owner)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721Metadata *IERC721MetadataCaller) GetApproved(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -19715,21 +19714,21 @@ func (_IERC721Metadata *IERC721MetadataCaller) GetApproved(opts *bind.CallOpts, 
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721Metadata *IERC721MetadataSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Metadata.Contract.GetApproved(&_IERC721Metadata.CallOpts, tokenId)
 }
 
 // GetApproved is a free data retrieval call binding the contract method 0x081812fc.
 //
-// Solidity: function getApproved(uint256 tokenId) constant returns(address operator)
+// Solidity: function getApproved(uint256 tokenId) view returns(address operator)
 func (_IERC721Metadata *IERC721MetadataCallerSession) GetApproved(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Metadata.Contract.GetApproved(&_IERC721Metadata.CallOpts, tokenId)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721Metadata *IERC721MetadataCaller) IsApprovedForAll(opts *bind.CallOpts, owner common.Address, operator common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -19741,21 +19740,21 @@ func (_IERC721Metadata *IERC721MetadataCaller) IsApprovedForAll(opts *bind.CallO
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721Metadata *IERC721MetadataSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _IERC721Metadata.Contract.IsApprovedForAll(&_IERC721Metadata.CallOpts, owner, operator)
 }
 
 // IsApprovedForAll is a free data retrieval call binding the contract method 0xe985e9c5.
 //
-// Solidity: function isApprovedForAll(address owner, address operator) constant returns(bool)
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (_IERC721Metadata *IERC721MetadataCallerSession) IsApprovedForAll(owner common.Address, operator common.Address) (bool, error) {
 	return _IERC721Metadata.Contract.IsApprovedForAll(&_IERC721Metadata.CallOpts, owner, operator)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_IERC721Metadata *IERC721MetadataCaller) Name(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -19767,21 +19766,21 @@ func (_IERC721Metadata *IERC721MetadataCaller) Name(opts *bind.CallOpts) (string
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_IERC721Metadata *IERC721MetadataSession) Name() (string, error) {
 	return _IERC721Metadata.Contract.Name(&_IERC721Metadata.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_IERC721Metadata *IERC721MetadataCallerSession) Name() (string, error) {
 	return _IERC721Metadata.Contract.Name(&_IERC721Metadata.CallOpts)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721Metadata *IERC721MetadataCaller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -19793,21 +19792,21 @@ func (_IERC721Metadata *IERC721MetadataCaller) OwnerOf(opts *bind.CallOpts, toke
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721Metadata *IERC721MetadataSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Metadata.Contract.OwnerOf(&_IERC721Metadata.CallOpts, tokenId)
 }
 
 // OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
 //
-// Solidity: function ownerOf(uint256 tokenId) constant returns(address owner)
+// Solidity: function ownerOf(uint256 tokenId) view returns(address owner)
 func (_IERC721Metadata *IERC721MetadataCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
 	return _IERC721Metadata.Contract.OwnerOf(&_IERC721Metadata.CallOpts, tokenId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721Metadata *IERC721MetadataCaller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -19819,21 +19818,21 @@ func (_IERC721Metadata *IERC721MetadataCaller) SupportsInterface(opts *bind.Call
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721Metadata *IERC721MetadataSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC721Metadata.Contract.SupportsInterface(&_IERC721Metadata.CallOpts, interfaceId)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
 //
-// Solidity: function supportsInterface(bytes4 interfaceId) constant returns(bool)
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (_IERC721Metadata *IERC721MetadataCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
 	return _IERC721Metadata.Contract.SupportsInterface(&_IERC721Metadata.CallOpts, interfaceId)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_IERC721Metadata *IERC721MetadataCaller) Symbol(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -19845,21 +19844,21 @@ func (_IERC721Metadata *IERC721MetadataCaller) Symbol(opts *bind.CallOpts) (stri
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_IERC721Metadata *IERC721MetadataSession) Symbol() (string, error) {
 	return _IERC721Metadata.Contract.Symbol(&_IERC721Metadata.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_IERC721Metadata *IERC721MetadataCallerSession) Symbol() (string, error) {
 	return _IERC721Metadata.Contract.Symbol(&_IERC721Metadata.CallOpts)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_IERC721Metadata *IERC721MetadataCaller) TokenURI(opts *bind.CallOpts, tokenId *big.Int) (string, error) {
 	var (
 		ret0 = new(string)
@@ -19871,14 +19870,14 @@ func (_IERC721Metadata *IERC721MetadataCaller) TokenURI(opts *bind.CallOpts, tok
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_IERC721Metadata *IERC721MetadataSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _IERC721Metadata.Contract.TokenURI(&_IERC721Metadata.CallOpts, tokenId)
 }
 
 // TokenURI is a free data retrieval call binding the contract method 0xc87b56dd.
 //
-// Solidity: function tokenURI(uint256 tokenId) constant returns(string)
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (_IERC721Metadata *IERC721MetadataCallerSession) TokenURI(tokenId *big.Int) (string, error) {
 	return _IERC721Metadata.Contract.TokenURI(&_IERC721Metadata.CallOpts, tokenId)
 }
@@ -19906,42 +19905,42 @@ func (_IERC721Metadata *IERC721MetadataTransactorSession) Approve(to common.Addr
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactor) SafeTransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.contract.Transact(opts, "safeTransferFrom", from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Metadata *IERC721MetadataSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.Contract.SafeTransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom is a paid mutator transaction binding the contract method 0x42842e0e.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactorSession) SafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.Contract.SafeTransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactor) SafeTransferFrom0(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Metadata.contract.Transact(opts, "safeTransferFrom0", from, to, tokenId, data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Metadata *IERC721MetadataSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Metadata.Contract.SafeTransferFrom0(&_IERC721Metadata.TransactOpts, from, to, tokenId, data)
 }
 
 // SafeTransferFrom0 is a paid mutator transaction binding the contract method 0xb88d4fde.
 //
-// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactorSession) SafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) (*types.Transaction, error) {
 	return _IERC721Metadata.Contract.SafeTransferFrom0(&_IERC721Metadata.TransactOpts, from, to, tokenId, data)
 }
@@ -19969,21 +19968,21 @@ func (_IERC721Metadata *IERC721MetadataTransactorSession) SetApprovalForAll(oper
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.contract.Transact(opts, "transferFrom", from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Metadata *IERC721MetadataSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.Contract.TransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) payable returns()
 func (_IERC721Metadata *IERC721MetadataTransactorSession) TransferFrom(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _IERC721Metadata.Contract.TransferFrom(&_IERC721Metadata.TransactOpts, from, to, tokenId)
 }
@@ -20959,7 +20958,7 @@ func (_MinterRole *MinterRoleTransactorRaw) Transact(opts *bind.TransactOpts, me
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_MinterRole *MinterRoleCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -20971,14 +20970,14 @@ func (_MinterRole *MinterRoleCaller) IsMinter(opts *bind.CallOpts, account commo
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_MinterRole *MinterRoleSession) IsMinter(account common.Address) (bool, error) {
 	return _MinterRole.Contract.IsMinter(&_MinterRole.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_MinterRole *MinterRoleCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _MinterRole.Contract.IsMinter(&_MinterRole.CallOpts, account)
 }
@@ -21466,7 +21465,7 @@ func (_Ownable *OwnableTransactorRaw) Transact(opts *bind.TransactOpts, method s
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_Ownable *OwnableCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -21478,21 +21477,21 @@ func (_Ownable *OwnableCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_Ownable *OwnableSession) IsOwner() (bool, error) {
 	return _Ownable.Contract.IsOwner(&_Ownable.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_Ownable *OwnableCallerSession) IsOwner() (bool, error) {
 	return _Ownable.Contract.IsOwner(&_Ownable.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Ownable *OwnableCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -21504,14 +21503,14 @@ func (_Ownable *OwnableCaller) Owner(opts *bind.CallOpts) (common.Address, error
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Ownable *OwnableSession) Owner() (common.Address, error) {
 	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Ownable *OwnableCallerSession) Owner() (common.Address, error) {
 	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
 }
@@ -22048,7 +22047,7 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryTransactorRaw) Transact(opts *bind.
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
 //
-// Solidity: function countDelegates() constant returns(int256)
+// Solidity: function countDelegates() view returns(int256)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) CountDelegates(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -22060,21 +22059,21 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) CountDelegates(opts *bind.C
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
 //
-// Solidity: function countDelegates() constant returns(int256)
+// Solidity: function countDelegates() view returns(int256)
 func (_OwnerProxyRegistry *OwnerProxyRegistrySession) CountDelegates() (*big.Int, error) {
 	return _OwnerProxyRegistry.Contract.CountDelegates(&_OwnerProxyRegistry.CallOpts)
 }
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
 //
-// Solidity: function countDelegates() constant returns(int256)
+// Solidity: function countDelegates() view returns(int256)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) CountDelegates() (*big.Int, error) {
 	return _OwnerProxyRegistry.Contract.CountDelegates(&_OwnerProxyRegistry.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -22086,21 +22085,21 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) IsOwner(opts *bind.CallOpts
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_OwnerProxyRegistry *OwnerProxyRegistrySession) IsOwner() (bool, error) {
 	return _OwnerProxyRegistry.Contract.IsOwner(&_OwnerProxyRegistry.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) IsOwner() (bool, error) {
 	return _OwnerProxyRegistry.Contract.IsOwner(&_OwnerProxyRegistry.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -22112,21 +22111,21 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) Owner(opts *bind.CallOpts) 
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_OwnerProxyRegistry *OwnerProxyRegistrySession) Owner() (common.Address, error) {
 	return _OwnerProxyRegistry.Contract.Owner(&_OwnerProxyRegistry.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) Owner() (common.Address, error) {
 	return _OwnerProxyRegistry.Contract.Owner(&_OwnerProxyRegistry.CallOpts)
 }
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) Proxies(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -22138,14 +22137,14 @@ func (_OwnerProxyRegistry *OwnerProxyRegistryCaller) Proxies(opts *bind.CallOpts
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_OwnerProxyRegistry *OwnerProxyRegistrySession) Proxies(arg0 common.Address) (common.Address, error) {
 	return _OwnerProxyRegistry.Contract.Proxies(&_OwnerProxyRegistry.CallOpts, arg0)
 }
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_OwnerProxyRegistry *OwnerProxyRegistryCallerSession) Proxies(arg0 common.Address) (common.Address, error) {
 	return _OwnerProxyRegistry.Contract.Proxies(&_OwnerProxyRegistry.CallOpts, arg0)
 }
@@ -22543,7 +22542,7 @@ func (_Pausable *PausableTransactorRaw) Transact(opts *bind.TransactOpts, method
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_Pausable *PausableCaller) IsPauser(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -22555,21 +22554,21 @@ func (_Pausable *PausableCaller) IsPauser(opts *bind.CallOpts, account common.Ad
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_Pausable *PausableSession) IsPauser(account common.Address) (bool, error) {
 	return _Pausable.Contract.IsPauser(&_Pausable.CallOpts, account)
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_Pausable *PausableCallerSession) IsPauser(account common.Address) (bool, error) {
 	return _Pausable.Contract.IsPauser(&_Pausable.CallOpts, account)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Pausable *PausableCaller) Paused(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -22581,14 +22580,14 @@ func (_Pausable *PausableCaller) Paused(opts *bind.CallOpts) (bool, error) {
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Pausable *PausableSession) Paused() (bool, error) {
 	return _Pausable.Contract.Paused(&_Pausable.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Pausable *PausableCallerSession) Paused() (bool, error) {
 	return _Pausable.Contract.Paused(&_Pausable.CallOpts)
 }
@@ -23383,7 +23382,7 @@ func (_PauserRole *PauserRoleTransactorRaw) Transact(opts *bind.TransactOpts, me
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_PauserRole *PauserRoleCaller) IsPauser(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -23395,14 +23394,14 @@ func (_PauserRole *PauserRoleCaller) IsPauser(opts *bind.CallOpts, account commo
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_PauserRole *PauserRoleSession) IsPauser(account common.Address) (bool, error) {
 	return _PauserRole.Contract.IsPauser(&_PauserRole.CallOpts, account)
 }
 
 // IsPauser is a free data retrieval call binding the contract method 0x46fbf68e.
 //
-// Solidity: function isPauser(address account) constant returns(bool)
+// Solidity: function isPauser(address account) view returns(bool)
 func (_PauserRole *PauserRoleCallerSession) IsPauser(account common.Address) (bool, error) {
 	return _PauserRole.Contract.IsPauser(&_PauserRole.CallOpts, account)
 }
@@ -23904,7 +23903,7 @@ func (_ProxyRegistry *ProxyRegistryTransactorRaw) Transact(opts *bind.TransactOp
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_ProxyRegistry *ProxyRegistryCaller) Proxies(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -23916,14 +23915,14 @@ func (_ProxyRegistry *ProxyRegistryCaller) Proxies(opts *bind.CallOpts, arg0 com
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_ProxyRegistry *ProxyRegistrySession) Proxies(arg0 common.Address) (common.Address, error) {
 	return _ProxyRegistry.Contract.Proxies(&_ProxyRegistry.CallOpts, arg0)
 }
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_ProxyRegistry *ProxyRegistryCallerSession) Proxies(arg0 common.Address) (common.Address, error) {
 	return _ProxyRegistry.Contract.Proxies(&_ProxyRegistry.CallOpts, arg0)
 }
@@ -24102,7 +24101,7 @@ func (_Redeemable *RedeemableTransactorRaw) Transact(opts *bind.TransactOpts, me
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_Redeemable *RedeemableCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -24114,14 +24113,14 @@ func (_Redeemable *RedeemableCaller) IsMinter(opts *bind.CallOpts, account commo
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_Redeemable *RedeemableSession) IsMinter(account common.Address) (bool, error) {
 	return _Redeemable.Contract.IsMinter(&_Redeemable.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_Redeemable *RedeemableCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _Redeemable.Contract.IsMinter(&_Redeemable.CallOpts, account)
 }
@@ -25555,7 +25554,7 @@ func (_TransferFeeProxy *TransferFeeProxyTransactorRaw) Transact(opts *bind.Tran
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_TransferFeeProxy *TransferFeeProxyCaller) GetTransferFee(opts *bind.CallOpts, _tokenId *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -25567,14 +25566,14 @@ func (_TransferFeeProxy *TransferFeeProxyCaller) GetTransferFee(opts *bind.CallO
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_TransferFeeProxy *TransferFeeProxySession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
 	return _TransferFeeProxy.Contract.GetTransferFee(&_TransferFeeProxy.CallOpts, _tokenId)
 }
 
 // GetTransferFee is a free data retrieval call binding the contract method 0x56c1e949.
 //
-// Solidity: function getTransferFee(uint256 _tokenId) constant returns(uint256)
+// Solidity: function getTransferFee(uint256 _tokenId) view returns(uint256)
 func (_TransferFeeProxy *TransferFeeProxyCallerSession) GetTransferFee(_tokenId *big.Int) (*big.Int, error) {
 	return _TransferFeeProxy.Contract.GetTransferFee(&_TransferFeeProxy.CallOpts, _tokenId)
 }
@@ -25757,7 +25756,7 @@ func (_TransferProxyRegistry *TransferProxyRegistryTransactorRaw) Transact(opts 
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
 //
-// Solidity: function countDelegates() constant returns(int256)
+// Solidity: function countDelegates() view returns(int256)
 func (_TransferProxyRegistry *TransferProxyRegistryCaller) CountDelegates(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -25769,21 +25768,21 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) CountDelegates(opts *
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
 //
-// Solidity: function countDelegates() constant returns(int256)
+// Solidity: function countDelegates() view returns(int256)
 func (_TransferProxyRegistry *TransferProxyRegistrySession) CountDelegates() (*big.Int, error) {
 	return _TransferProxyRegistry.Contract.CountDelegates(&_TransferProxyRegistry.CallOpts)
 }
 
 // CountDelegates is a free data retrieval call binding the contract method 0x453494bf.
 //
-// Solidity: function countDelegates() constant returns(int256)
+// Solidity: function countDelegates() view returns(int256)
 func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) CountDelegates() (*big.Int, error) {
 	return _TransferProxyRegistry.Contract.CountDelegates(&_TransferProxyRegistry.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_TransferProxyRegistry *TransferProxyRegistryCaller) IsOwner(opts *bind.CallOpts) (bool, error) {
 	var (
 		ret0 = new(bool)
@@ -25795,21 +25794,21 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) IsOwner(opts *bind.Ca
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_TransferProxyRegistry *TransferProxyRegistrySession) IsOwner() (bool, error) {
 	return _TransferProxyRegistry.Contract.IsOwner(&_TransferProxyRegistry.CallOpts)
 }
 
 // IsOwner is a free data retrieval call binding the contract method 0x8f32d59b.
 //
-// Solidity: function isOwner() constant returns(bool)
+// Solidity: function isOwner() view returns(bool)
 func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) IsOwner() (bool, error) {
 	return _TransferProxyRegistry.Contract.IsOwner(&_TransferProxyRegistry.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_TransferProxyRegistry *TransferProxyRegistryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -25821,21 +25820,21 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) Owner(opts *bind.Call
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_TransferProxyRegistry *TransferProxyRegistrySession) Owner() (common.Address, error) {
 	return _TransferProxyRegistry.Contract.Owner(&_TransferProxyRegistry.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) Owner() (common.Address, error) {
 	return _TransferProxyRegistry.Contract.Owner(&_TransferProxyRegistry.CallOpts)
 }
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_TransferProxyRegistry *TransferProxyRegistryCaller) Proxies(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -25847,14 +25846,14 @@ func (_TransferProxyRegistry *TransferProxyRegistryCaller) Proxies(opts *bind.Ca
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_TransferProxyRegistry *TransferProxyRegistrySession) Proxies(arg0 common.Address) (common.Address, error) {
 	return _TransferProxyRegistry.Contract.Proxies(&_TransferProxyRegistry.CallOpts, arg0)
 }
 
 // Proxies is a free data retrieval call binding the contract method 0xc4552791.
 //
-// Solidity: function proxies(address ) constant returns(address)
+// Solidity: function proxies(address ) view returns(address)
 func (_TransferProxyRegistry *TransferProxyRegistryCallerSession) Proxies(arg0 common.Address) (common.Address, error) {
 	return _TransferProxyRegistry.Contract.Proxies(&_TransferProxyRegistry.CallOpts, arg0)
 }
@@ -25882,63 +25881,63 @@ func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) Finalize()
 
 // ProxySetTokenURI is a paid mutator transaction binding the contract method 0x0ad7a11e.
 //
-// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) returns()
+// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactor) ProxySetTokenURI(opts *bind.TransactOpts, target common.Address, tokenId *big.Int, uri string) (*types.Transaction, error) {
 	return _TransferProxyRegistry.contract.Transact(opts, "proxySetTokenURI", target, tokenId, uri)
 }
 
 // ProxySetTokenURI is a paid mutator transaction binding the contract method 0x0ad7a11e.
 //
-// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) returns()
+// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistrySession) ProxySetTokenURI(target common.Address, tokenId *big.Int, uri string) (*types.Transaction, error) {
 	return _TransferProxyRegistry.Contract.ProxySetTokenURI(&_TransferProxyRegistry.TransactOpts, target, tokenId, uri)
 }
 
 // ProxySetTokenURI is a paid mutator transaction binding the contract method 0x0ad7a11e.
 //
-// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) returns()
+// Solidity: function proxySetTokenURI(address target, uint256 tokenId, string uri) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) ProxySetTokenURI(target common.Address, tokenId *big.Int, uri string) (*types.Transaction, error) {
 	return _TransferProxyRegistry.Contract.ProxySetTokenURI(&_TransferProxyRegistry.TransactOpts, target, tokenId, uri)
 }
 
 // ProxySetTokenURIMany is a paid mutator transaction binding the contract method 0x878b2633.
 //
-// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) returns()
+// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactor) ProxySetTokenURIMany(opts *bind.TransactOpts, target common.Address, tokenIds []*big.Int, uris []string) (*types.Transaction, error) {
 	return _TransferProxyRegistry.contract.Transact(opts, "proxySetTokenURIMany", target, tokenIds, uris)
 }
 
 // ProxySetTokenURIMany is a paid mutator transaction binding the contract method 0x878b2633.
 //
-// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) returns()
+// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistrySession) ProxySetTokenURIMany(target common.Address, tokenIds []*big.Int, uris []string) (*types.Transaction, error) {
 	return _TransferProxyRegistry.Contract.ProxySetTokenURIMany(&_TransferProxyRegistry.TransactOpts, target, tokenIds, uris)
 }
 
 // ProxySetTokenURIMany is a paid mutator transaction binding the contract method 0x878b2633.
 //
-// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) returns()
+// Solidity: function proxySetTokenURIMany(address target, uint256[] tokenIds, string[] uris) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) ProxySetTokenURIMany(target common.Address, tokenIds []*big.Int, uris []string) (*types.Transaction, error) {
 	return _TransferProxyRegistry.Contract.ProxySetTokenURIMany(&_TransferProxyRegistry.TransactOpts, target, tokenIds, uris)
 }
 
 // ProxyTransferFrom is a paid mutator transaction binding the contract method 0x281083c7.
 //
-// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) returns()
+// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactor) ProxyTransferFrom(opts *bind.TransactOpts, target common.Address, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _TransferProxyRegistry.contract.Transact(opts, "proxyTransferFrom", target, from, to, tokenId)
 }
 
 // ProxyTransferFrom is a paid mutator transaction binding the contract method 0x281083c7.
 //
-// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) returns()
+// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistrySession) ProxyTransferFrom(target common.Address, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _TransferProxyRegistry.Contract.ProxyTransferFrom(&_TransferProxyRegistry.TransactOpts, target, from, to, tokenId)
 }
 
 // ProxyTransferFrom is a paid mutator transaction binding the contract method 0x281083c7.
 //
-// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) returns()
+// Solidity: function proxyTransferFrom(address target, address from, address to, uint256 tokenId) payable returns()
 func (_TransferProxyRegistry *TransferProxyRegistryTransactorSession) ProxyTransferFrom(target common.Address, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
 	return _TransferProxyRegistry.Contract.ProxyTransferFrom(&_TransferProxyRegistry.TransactOpts, target, from, to, tokenId)
 }
@@ -26316,7 +26315,7 @@ func (_WELV9 *WELV9TransactorRaw) Transact(opts *bind.TransactOpts, method strin
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address , address ) constant returns(uint256)
+// Solidity: function allowance(address , address ) view returns(uint256)
 func (_WELV9 *WELV9Caller) Allowance(opts *bind.CallOpts, arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -26328,21 +26327,21 @@ func (_WELV9 *WELV9Caller) Allowance(opts *bind.CallOpts, arg0 common.Address, a
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address , address ) constant returns(uint256)
+// Solidity: function allowance(address , address ) view returns(uint256)
 func (_WELV9 *WELV9Session) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _WELV9.Contract.Allowance(&_WELV9.CallOpts, arg0, arg1)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address , address ) constant returns(uint256)
+// Solidity: function allowance(address , address ) view returns(uint256)
 func (_WELV9 *WELV9CallerSession) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _WELV9.Contract.Allowance(&_WELV9.CallOpts, arg0, arg1)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address ) constant returns(uint256)
+// Solidity: function balanceOf(address ) view returns(uint256)
 func (_WELV9 *WELV9Caller) BalanceOf(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -26354,21 +26353,21 @@ func (_WELV9 *WELV9Caller) BalanceOf(opts *bind.CallOpts, arg0 common.Address) (
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address ) constant returns(uint256)
+// Solidity: function balanceOf(address ) view returns(uint256)
 func (_WELV9 *WELV9Session) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _WELV9.Contract.BalanceOf(&_WELV9.CallOpts, arg0)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address ) constant returns(uint256)
+// Solidity: function balanceOf(address ) view returns(uint256)
 func (_WELV9 *WELV9CallerSession) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _WELV9.Contract.BalanceOf(&_WELV9.CallOpts, arg0)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_WELV9 *WELV9Caller) Decimals(opts *bind.CallOpts) (uint8, error) {
 	var (
 		ret0 = new(uint8)
@@ -26380,21 +26379,21 @@ func (_WELV9 *WELV9Caller) Decimals(opts *bind.CallOpts) (uint8, error) {
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_WELV9 *WELV9Session) Decimals() (uint8, error) {
 	return _WELV9.Contract.Decimals(&_WELV9.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_WELV9 *WELV9CallerSession) Decimals() (uint8, error) {
 	return _WELV9.Contract.Decimals(&_WELV9.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_WELV9 *WELV9Caller) Name(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -26406,21 +26405,21 @@ func (_WELV9 *WELV9Caller) Name(opts *bind.CallOpts) (string, error) {
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_WELV9 *WELV9Session) Name() (string, error) {
 	return _WELV9.Contract.Name(&_WELV9.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_WELV9 *WELV9CallerSession) Name() (string, error) {
 	return _WELV9.Contract.Name(&_WELV9.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_WELV9 *WELV9Caller) Symbol(opts *bind.CallOpts) (string, error) {
 	var (
 		ret0 = new(string)
@@ -26432,21 +26431,21 @@ func (_WELV9 *WELV9Caller) Symbol(opts *bind.CallOpts) (string, error) {
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_WELV9 *WELV9Session) Symbol() (string, error) {
 	return _WELV9.Contract.Symbol(&_WELV9.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_WELV9 *WELV9CallerSession) Symbol() (string, error) {
 	return _WELV9.Contract.Symbol(&_WELV9.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_WELV9 *WELV9Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -26458,14 +26457,14 @@ func (_WELV9 *WELV9Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_WELV9 *WELV9Session) TotalSupply() (*big.Int, error) {
 	return _WELV9.Contract.TotalSupply(&_WELV9.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_WELV9 *WELV9CallerSession) TotalSupply() (*big.Int, error) {
 	return _WELV9.Contract.TotalSupply(&_WELV9.CallOpts)
 }
@@ -26493,21 +26492,21 @@ func (_WELV9 *WELV9TransactorSession) Approve(guy common.Address, wad *big.Int) 
 
 // Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
 //
-// Solidity: function deposit() returns()
+// Solidity: function deposit() payable returns()
 func (_WELV9 *WELV9Transactor) Deposit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _WELV9.contract.Transact(opts, "deposit")
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
 //
-// Solidity: function deposit() returns()
+// Solidity: function deposit() payable returns()
 func (_WELV9 *WELV9Session) Deposit() (*types.Transaction, error) {
 	return _WELV9.Contract.Deposit(&_WELV9.TransactOpts)
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
 //
-// Solidity: function deposit() returns()
+// Solidity: function deposit() payable returns()
 func (_WELV9 *WELV9TransactorSession) Deposit() (*types.Transaction, error) {
 	return _WELV9.Contract.Deposit(&_WELV9.TransactOpts)
 }
@@ -26573,6 +26572,27 @@ func (_WELV9 *WELV9Session) Withdraw(wad *big.Int) (*types.Transaction, error) {
 // Solidity: function withdraw(uint256 wad) returns()
 func (_WELV9 *WELV9TransactorSession) Withdraw(wad *big.Int) (*types.Transaction, error) {
 	return _WELV9.Contract.Withdraw(&_WELV9.TransactOpts, wad)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_WELV9 *WELV9Transactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
+	return _WELV9.contract.RawTransact(opts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_WELV9 *WELV9Session) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _WELV9.Contract.Fallback(&_WELV9.TransactOpts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_WELV9 *WELV9TransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _WELV9.Contract.Fallback(&_WELV9.TransactOpts, calldata)
 }
 
 // WELV9ApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the WELV9 contract.

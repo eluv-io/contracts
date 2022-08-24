@@ -21,7 +21,7 @@ contract RedeemableTest is Test {
         redeemable = new Redeemable();
     }
 
-    function testAdminRedeemable() public{
+    function testAdminRedeemableBasics() public{
 
         vm.prank(minter);
         uint res = redeemable.addRedeemableOffer();
@@ -37,7 +37,7 @@ contract RedeemableTest is Test {
 
     }
 
-    function testRedeem() public{
+    function testRedeemBasics() public {
 
         vm.expectRevert(bytes("offer not active"));
         redeemable.redeemOffer(1000, 0);
@@ -56,6 +56,90 @@ contract RedeemableTest is Test {
 
         redeemable.redeemOffer(1001, 0);
 
+    }
+
+    function testOfferOps() public{
+        vm.prank(minter);
+
+        uint256 expectedBitmap = 0;
+        uint256 offers;
+        uint16 num;
+
+        // Create all offers
+        for (uint i = 0; i < 256; i ++ ) {
+            uint res = redeemable.addRedeemableOffer();
+            assertEq(res, i, "result != i");
+
+            (offers, num) = redeemable.getOffers();
+            assertEq(num, i + 1, "num != i + 1");
+            expectedBitmap += 1 << i;
+            assertEq(offers, expectedBitmap, "offer != expectedBitmap");
+            // log_uint(offers);
+        }
+
+        vm.expectRevert(bytes("exceeded max number of offers"));
+        redeemable.addRedeemableOffer();
+
+        (offers, num) = redeemable.getOffers();
+        //log_uint(offers);
+
+        bool act = redeemable.isOfferActive(100);
+
+        redeemable.removeRedeemableOffer(100);
+        act = redeemable.isOfferActive(100);
+        assertEq(act, false, "act not false");
+
+        vm.expectRevert(bytes("exceeded max number of offers"));
+        redeemable.addRedeemableOffer();
+
+        // Boundary 'removes'
+        redeemable.removeRedeemableOffer(255);
+        act = redeemable.isOfferActive(255);
+        assertEq(act, false, "act not false");
+
+        redeemable.removeRedeemableOffer(0);
+        act = redeemable.isOfferActive(0);
+        assertEq(act, false, "act not false");
+    }
+
+    function testRedeemOps() public{
+        vm.prank(minter);
+
+        uint256 expectedBitmap = 0;
+        uint256 offers;
+        uint16 num;
+
+        // Create all offers
+        for (uint i = 0; i < 256; i ++ ) {
+            uint res = redeemable.addRedeemableOffer();
+            assertEq(res, i, "result != i");
+
+            (offers, num) = redeemable.getOffers();
+            assertEq(num, i + 1, "num != i + 1");
+            expectedBitmap += 1 << i;
+            assertEq(offers, expectedBitmap, "offer != expectedBitmap");
+            // log_uint(offers);
+        }
+
+        // Redeem all offers
+        uint256 tokenId = 131071;
+
+        for (uint8 i = 0; i <= 255; i ++) {
+            bool res = redeemable.isOfferRedeemed(tokenId, i);
+            assertEq(res, false, "isOfferRedeemed should be false");
+
+            res = redeemable.isOfferRedeemed(tokenId, 255);
+            assertEq(res, false, "isOfferRedeemed 255 should be false");
+
+            redeemable.redeemOffer(tokenId, i);
+
+            res = redeemable.isOfferRedeemed(tokenId, i);
+            assertEq(res, true, "isOfferRedeemed should be true");
+
+            if (i == 255) {
+                break; // Avoid wrapping back to 0
+            }
+        }
     }
 
 }

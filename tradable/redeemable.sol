@@ -110,3 +110,4 @@ contract Redeemable is MinterRole {
     }
 
 }
+

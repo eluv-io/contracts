@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.4 <0.9.0;
-//pragma solidity ^0.6.12;
 
-import "src/MinterRole.sol";
+import "./oz_token/access/roles/MinterRole.sol";
 
 /**
  * @title Redeemable
@@ -63,10 +62,9 @@ contract Redeemable is MinterRole {
 
     /**
      * @dev Redeem an offer, as a token owner.
+     * Calling contract must override and require caller is owner of tokenId.
      */
-    function redeemOffer(uint256 tokenId, uint8 offerId) public {
-
-        // Caller contract must ensure owner of tokenId
+    function redeemOffer(uint256 tokenId, uint8 offerId) public payable {
 
         uint256 mask = 1 << uint256(offerId);
         require(offers & mask > 0, "offer not active");
@@ -110,4 +108,3 @@ contract Redeemable is MinterRole {
     }
 
 }
-

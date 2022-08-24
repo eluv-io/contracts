@@ -142,4 +142,19 @@ contract RedeemableTest is Test {
         }
     }
 
+    /*
+     * Redeem a large batch for gas testing
+     */
+    function testRedeemMany() public{
+        vm.prank(minter);
+        uint res = redeemable.addRedeemableOffer();
+        assertEq(res, 0, "result != 0");
+
+        uint n = 800;
+
+        for (uint i = 0; i < n; i ++ ) {
+            redeemable.redeemOffer(i, 0);
+        }
+    }
+
 }

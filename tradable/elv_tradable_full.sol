@@ -234,6 +234,27 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
             return true;
         return super.isApprovedForAll(owner, operator);
     }
+
+    /**
+     * Override Redeemable.redeemOffer(tokenId, offerId)
+     * Require caller is the owner of the token.
+     *
+     */
+    function redeemOffer(uint256 tokenId, uint8 offerId) public payable {
+        require(_isApprovedOrOwner(msg.sender, tokenId));
+        super.redeemOffer(tokenId, offerId);
+    }
+
+    /**
+     * Alternative, delegated Redeemable.redeemOffer(tokenId, offerId)
+     * Require caller is minter and call is signed by owner of the token.
+     *
+     */
+    function redeemOfferSigned(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
+        require(isOwnerSigned(from, tokenId, v, r, s));
+        require(msg.sender == from && isMinter(from));
+        super.redeemOffer(tokenId, offerId);
+    }
 }
 
 // ElvTradableLocal

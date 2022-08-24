@@ -110,6 +110,9 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
     }
 
+    /**
+     * This function can only be called by an ElvTokenHelper contract.
+     */
     function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
         require(isOwnerSigned(from, tokenId, v, r, s));
         require(msg.sender == from && isMinter(from));
@@ -246,12 +249,28 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
     }
 
     /**
+     * Check that an offer redemption message is signed by the token owner or approved proy.
+     * Simmilar to isOwnerSigned but includes the offer ID in the signed message
+     */
+    function isOfferOwnerSigned(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
+        return _isApprovedOrOwner(ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId, offerId)), v, r, s), tokenId);
+    }
+
+    /**
+     * Check that an offer redemption message is signed by the token owner or approved proy.
+     * Simmilar to isOwnerSignedEIP191 but includes the offer ID in the signed message
+     */
+    function isOfferOwnerSignedEIP191(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
+        return _isApprovedOrOwner(ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId, offerId))), v, r, s), tokenId);
+    }
+
+    /**
      * Delegated Redeemable.redeemOffer(tokenId, offerId)
      * Require caller is minter and call is signed by owner of the token.
      *
      */
     function redeemOfferSigned(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
-        require(isOwnerSigned(from, tokenId, v, r, s));
+        require(isOfferOwnerSigned(from, tokenId, offerId, v, r, s));
         require(msg.sender == from && isMinter(from));
         super.redeemOffer(tokenId, offerId);
     }
@@ -262,7 +281,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
      *
      */
     function redeemOfferSignedEIP191(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
-        require(isOwnerSignedEIP191(from, tokenId, v, r, s));
+        require(isOfferOwnerSignedEIP191(from, tokenId, offerId, v, r, s));
         require(msg.sender == from && isMinter(from));
         super.redeemOffer(tokenId, offerId);
     }

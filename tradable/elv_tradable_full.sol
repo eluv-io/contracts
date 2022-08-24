@@ -246,7 +246,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
     }
 
     /**
-     * Alternative, delegated Redeemable.redeemOffer(tokenId, offerId)
+     * Delegated Redeemable.redeemOffer(tokenId, offerId)
      * Require caller is minter and call is signed by owner of the token.
      *
      */
@@ -255,6 +255,18 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
         require(msg.sender == from && isMinter(from));
         super.redeemOffer(tokenId, offerId);
     }
+
+    /**
+     * Delegated Redeemable.redeemOffer(tokenId, offerId) using Ethereum EIP191 personal signature
+     * Require caller is minter and call is signed by owner of the token.
+     *
+     */
+    function redeemOfferSignedEIP191(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
+        require(isOwnerSignedEIP191(from, tokenId, v, r, s));
+        require(msg.sender == from && isMinter(from));
+        super.redeemOffer(tokenId, offerId);
+    }
+
 }
 
 // ElvTradableLocal

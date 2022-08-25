@@ -32,6 +32,9 @@ contract ElvTokenHelper is Ownable {
     /**
      * @dev Burns the specified token for the owner. Useful when the owner does
      * not have gas, e.g. custodial wallet.
+     * The message signed by the token owner is a concatenation (packing) of the following:
+     *   token contract address | mint helper address | token ID
+     *
      * @param token contract of the token to burn
      * @param tokenId ID of the token to burn
      * @param v part of the owner's signature giving permission to burn the token
@@ -137,4 +140,15 @@ contract ElvTokenHelper is Ownable {
             return mintWithTokenURIMany(mintTokens, to, mintTokenIds, mintTokenURIs);
         }
     }
+
+    function redeemOfferSigned(address token, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public onlyOwner {
+        ElvTradable t = ElvTradable(token);
+        t.redeemOfferSigned(address(this), tokenId, offerId, v, r, s);
+    }
+
+    function redeemOfferSignedEIP191(address token, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public onlyOwner{
+        ElvTradable t = ElvTradable(token);
+        t.redeemOfferSignedEIP191(address(this), tokenId, offerId, v, r, s);
+    }
+
 }

@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 # Must use:
 # - solc 0.5.4
+badreq=
 solc --version | grep -q 0.5.4+commit.9549d8ff || badreq=true
 if test $badreq; then
   echo "Must use abigen 1.9.19 and solc 0.5.4"
@@ -35,8 +36,8 @@ hash solc || {
     exit 1
 }
 
-run_solc "${sol_dir}/base_content_space.sol"
-echo -e "\n${separator}\n"
+#run_solc "${sol_dir}/base_content_space.sol"
+#echo -e "\n${separator}\n"
 #run_solc "${sol_dir}/lv_recording.sol"
 #echo -e "\n${separator}\n"
 #run_solc "${sol_dir}/payment_service.sol"

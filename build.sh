@@ -36,8 +36,8 @@ hash solc || {
     exit 1
 }
 
-#run_solc "${sol_dir}/base_content_space.sol"
-#echo -e "\n${separator}\n"
+run_solc "${sol_dir}/base_content_space.sol"
+echo -e "\n${separator}\n"
 #run_solc "${sol_dir}/lv_recording.sol"
 #echo -e "\n${separator}\n"
 #run_solc "${sol_dir}/payment_service.sol"

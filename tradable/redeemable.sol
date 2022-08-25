@@ -19,7 +19,7 @@ contract Redeemable is MinterRole {
 
     event RedeemableAdded(uint8 offerId);
     event RedeemableRemoved(uint8 offerId);
-    event Redeem(uint256 tokenId, uint offerId);
+    event Redeem(address redeemer, uint256 tokenId, uint offerId);
 
     // Offers
     uint256 private offers;  // Bitmap of current offers - "1" means active
@@ -62,16 +62,18 @@ contract Redeemable is MinterRole {
 
     /**
      * @dev Redeem an offer, as a token owner.
-     * Calling contract must override and require caller is owner of tokenId.
+     * Calling contract must override this method and:
+     * - require that the caller is owner of tokenId
+     * - supply the correct 'redeemer' argument
      */
-    function redeemOffer(uint256 tokenId, uint8 offerId) public payable {
+    function redeemOffer(address redeemer, uint256 tokenId, uint8 offerId) public payable {
 
         uint256 mask = 1 << uint256(offerId);
         require(offers & mask > 0, "offer not active");
         require(redemptions[tokenId] & mask == 0, "offer already redeemed");
 
         redemptions[tokenId] |= mask;
-        emit Redeem(tokenId, offerId);
+        emit Redeem(redeemer, tokenId, offerId);
     }
 
     /**

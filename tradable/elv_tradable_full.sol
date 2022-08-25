@@ -242,7 +242,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
      */
     function redeemOffer(uint256 tokenId, uint8 offerId) public payable {
         require(_isApprovedOrOwner(msg.sender, tokenId));
-        super.redeemOffer(tokenId, offerId);
+        super.redeemOffer(ownerOf(tokenId), tokenId, offerId);
     }
 
     /**
@@ -269,7 +269,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
     function redeemOfferSigned(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
         require(isOfferOwnerSigned(from, tokenId, offerId, v, r, s));
         require(msg.sender == from && isMinter(from));
-        super.redeemOffer(tokenId, offerId);
+        super.redeemOffer(ownerOf(tokenId), tokenId, offerId);
     }
 
     /**
@@ -280,7 +280,7 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
     function redeemOfferSignedEIP191(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
         require(isOfferOwnerSignedEIP191(from, tokenId, offerId, v, r, s));
         require(msg.sender == from && isMinter(from));
-        super.redeemOffer(tokenId, offerId);
+        super.redeemOffer(ownerOf(tokenId), tokenId, offerId);
     }
 
 }

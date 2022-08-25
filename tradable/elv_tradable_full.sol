@@ -110,9 +110,6 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
     }
 
-    /**
-     * This function can only be called by an ElvTokenHelper contract.
-     */
     function burnSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public returns (bool) {
         require(isOwnerSigned(from, tokenId, v, r, s));
         require(msg.sender == from && isMinter(from));

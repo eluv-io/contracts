@@ -49,5 +49,3 @@ contract RedeemableScript is Script {
     }
 }
 
-
-//maybe we can add a getter for redemptions with a parameter tokenId

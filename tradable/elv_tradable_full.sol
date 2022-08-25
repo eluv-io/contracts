@@ -240,8 +240,9 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
      * Require caller is the owner of the token.
      *
      */
-    function redeemOffer(uint256 tokenId, uint8 offerId) public payable {
+    function redeemOffer(address redeemer, uint256 tokenId, uint8 offerId) public payable {
         require(_isApprovedOrOwner(msg.sender, tokenId));
+        require(redeemer == ownerOf(tokenId));
         super.redeemOffer(ownerOf(tokenId), tokenId, offerId);
     }
 

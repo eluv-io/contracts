@@ -10,6 +10,7 @@ contract RedeemableTest is Test {
     Redeemable redeemable;
     address creator = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
     address minter = 0x2233709ecfa91A80626Ff3989d68f67F5B1dD12d;
+    address user = 0x5372642648d93315f121dEa8B5b0E3568A894d94;
 
     event RedeemableAdded(uint tokenId);
 
@@ -40,21 +41,21 @@ contract RedeemableTest is Test {
     function testRedeemBasics() public {
 
         vm.expectRevert(bytes("offer not active"));
-        redeemable.redeemOffer(1000, 0);
+        redeemable.redeemOffer(user, 1000, 0);
 
         vm.prank(minter);
         uint res = redeemable.addRedeemableOffer();
         assertEq(res, 0, "result != 0");
 
-        redeemable.redeemOffer(1000, 0);
+        redeemable.redeemOffer(user, 1000, 0);
 
         vm.expectRevert(bytes("offer already redeemed"));
-        redeemable.redeemOffer(1000, 0);
+        redeemable.redeemOffer(user, 1000, 0);
 
         vm.expectRevert(bytes("offer already redeemed"));
-        redeemable.redeemOffer(1000, 0);
+        redeemable.redeemOffer(user, 1000, 0);
 
-        redeemable.redeemOffer(1001, 0);
+        redeemable.redeemOffer(user, 1001, 0);
 
     }
 
@@ -131,7 +132,7 @@ contract RedeemableTest is Test {
             res = redeemable.isOfferRedeemed(tokenId, 255);
             assertEq(res, false, "isOfferRedeemed 255 should be false");
 
-            redeemable.redeemOffer(tokenId, i);
+            redeemable.redeemOffer(user, tokenId, i);
 
             res = redeemable.isOfferRedeemed(tokenId, i);
             assertEq(res, true, "isOfferRedeemed should be true");
@@ -153,7 +154,7 @@ contract RedeemableTest is Test {
         uint n = 800;
 
         for (uint i = 0; i < n; i ++ ) {
-            redeemable.redeemOffer(i, 0);
+            redeemable.redeemOffer(user, i, 0);
         }
     }
 

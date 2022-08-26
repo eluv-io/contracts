@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 # Must use:
 # - solc 0.5.4
+badreq=
 solc --version | grep -q 0.5.4+commit.9549d8ff || badreq=true
 if test $badreq; then
   echo "Must use abigen 1.9.19 and solc 0.5.4"

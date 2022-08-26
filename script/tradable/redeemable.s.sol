@@ -13,6 +13,8 @@ import "src/redeemable.sol";
  */
 contract RedeemableScript is Script {
 
+    address user = 0x5372642648d93315f121dEa8B5b0E3568A894d94;
+
     function run() external {
         vm.startBroadcast();
         Redeemable redeemable = new Redeemable();
@@ -34,11 +36,11 @@ contract RedeemableScript is Script {
         console.log("Expected : true, Result : ", vm.toString(redeemable.isOfferActive(3)));
         console.log("Expected : false, Result : ", vm.toString(redeemable.isOfferActive(4)));
 
-        
+
         //test the offers for a specific token
         uint tokenId = 1000;
-        redeemable.redeemOffer(tokenId, 1);
-        
+        redeemable.redeemOffer(user, tokenId, 1);
+
         console.log("Expected : false, Result : ", vm.toString(redeemable.isOfferRedeemed(tokenId, 0)));
         console.log("Expected : true, Result : ", vm.toString(redeemable.isOfferRedeemed(tokenId, 1)));
         console.log("Expected : false, Result : ", vm.toString(redeemable.isOfferRedeemed(tokenId, 2)));

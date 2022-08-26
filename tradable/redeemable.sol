@@ -19,7 +19,7 @@ contract Redeemable is MinterRole {
 
     event RedeemableAdded(uint8 offerId);
     event RedeemableRemoved(uint8 offerId);
-    event Redeem(address redeemer, uint256 tokenId, uint offerId);
+    event Redeem(address redeemer, uint256 tokenId, uint8 offerId);
 
     // Offers
     uint256 private offers;  // Bitmap of current offers - "1" means active

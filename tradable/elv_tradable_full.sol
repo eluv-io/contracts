@@ -87,11 +87,15 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
     }
 
     function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
-        return _isApprovedOrOwner(ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId)), v, r, s), tokenId);
+        address signer = ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId)), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
     }
 
     function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
-        return _isApprovedOrOwner(ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId))), v, r, s), tokenId);
+        address signer = ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId))), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
     }
 
     /**
@@ -251,7 +255,9 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
      * Simmilar to isOwnerSigned but includes the offer ID in the signed message
      */
     function isOfferOwnerSigned(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
-        return _isApprovedOrOwner(ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId, offerId)), v, r, s), tokenId);
+        address signer = ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId, offerId)), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
     }
 
     /**
@@ -259,7 +265,9 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
      * Simmilar to isOwnerSignedEIP191 but includes the offer ID in the signed message
      */
     function isOfferOwnerSignedEIP191(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
-        return _isApprovedOrOwner(ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId, offerId))), v, r, s), tokenId);
+        address signer = ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId, offerId))), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
     }
 
     /**

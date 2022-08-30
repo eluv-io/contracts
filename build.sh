@@ -1,33 +1,39 @@
 #!/bin/bash
 set -Eeuo pipefail
 
+
+source ./build-common.sh
+
+## NOTE: this script does not generate go-bindings anymore.
+##       Use build-go.sh to generate go-bindings
+
 run_solc() {
-    bsc_name=$(basename "${1}")
-    if $(solc "${1}" --abi --hashes --optimize -o "${abi_dir}" --overwrite) ; then
+    local version=$1
+    solc_bin="${solc_folder}/${version}/solc"
+
+    bsc_name=$(basename "${2}")
+
+    if $($solc_bin "${2}" --abi --hashes --optimize -o "${abi_dir}" --overwrite) ; then
         echo -e "\n SUCCESS : ${bsc_name} ABI and function hashes present in ${abi_dir}"
+    fi
+
+    if $($solc_bin "${2}" --bin --optimize -o "${abi_dir}/bin" --overwrite) ; then
+        echo -e "\n SUCCESS : ${bsc_name} BIN present in ${abi_dir}/bin"
     fi
 }
 
 # to get path to sol folder
-sol_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+abi_dir=$base_dir/dist
 
 separator="====================================================================================================="
 
-hash solc || {
-    echo "Error : solc is not found"
-    exit 1
-}
 
 
-abi_dir=$sol_dir/dist
+run_solc $solc_0_5_4 "${base_dir}/base_content_space.sol"
+echo -e "\n${separator}\n"
 
-run_solc "${sol_dir}/base_content_space.sol"
-echo -e "\n${separator}\n"
-run_solc "${sol_dir}/lv_recording.sol"
-echo -e "\n${separator}\n"
-run_solc "${sol_dir}/payment_service.sol"
-echo -e "\n${separator}\n"
-run_solc "${sol_dir}/tradable/elv_tradable_full.sol"
+run_solc $solc_0_5_4 "${base_dir}/tradable/elv_tradable_full.sol"
 echo -e "\n${separator}\n"
 
 pushd cmds > /dev/null 2>&1

@@ -10,12 +10,13 @@ import "./elv_wrapped.sol";
 import "./elv_token.sol";
 import "./elv_token_helper.sol";
 import "./elv_proxy.sol";
+import "./redeemable.sol";
 
 /**
  * @title ElvTradable
  * ElvTradable - ERC721 contract that whitelists a trading address, and has minting functionality.
  */
-contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableTokenURI, MinterRole, Ownable {
+contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableTokenURI, MinterRole, Redeemable, Ownable {
     using Strings for string;
 
     address public proxyRegistryAddress;
@@ -86,11 +87,15 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
     }
 
     function isOwnerSigned(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
-        return _isApprovedOrOwner(ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId)), v, r, s), tokenId);
+        address signer = ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId)), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
     }
 
     function isOwnerSignedEIP191(address from, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
-        return _isApprovedOrOwner(ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId))), v, r, s), tokenId);
+        address signer = ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId))), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
     }
 
     /**
@@ -233,6 +238,60 @@ contract ElvTradable is ERC721, ERC721Enumerable, ERC721Metadata, ISettableToken
             return true;
         return super.isApprovedForAll(owner, operator);
     }
+
+    /**
+     * Override Redeemable.redeemOffer(tokenId, offerId)
+     * Require caller is the owner of the token.
+     *
+     */
+    function redeemOffer(address redeemer, uint256 tokenId, uint8 offerId) public payable {
+        require(_isApprovedOrOwner(msg.sender, tokenId));
+        require(redeemer == ownerOf(tokenId));
+        super.redeemOffer(ownerOf(tokenId), tokenId, offerId);
+    }
+
+    /**
+     * Check that an offer redemption message is signed by the token owner or approved proy.
+     * Simmilar to isOwnerSigned but includes the offer ID in the signed message
+     */
+    function isOfferOwnerSigned(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
+        address signer = ecrecover(keccak256(abi.encodePacked(address(this), from, tokenId, offerId)), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
+    }
+
+    /**
+     * Check that an offer redemption message is signed by the token owner or approved proy.
+     * Simmilar to isOwnerSignedEIP191 but includes the offer ID in the signed message
+     */
+    function isOfferOwnerSignedEIP191(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public view returns (bool) {
+        address signer = ecrecover(toEthSignedMessageHash(keccak256(abi.encodePacked(address(this), from, tokenId, offerId))), v, r, s);
+        require(signer != address(0), "invalid signature");
+        return _isApprovedOrOwner(signer, tokenId);
+    }
+
+    /**
+     * Delegated Redeemable.redeemOffer(tokenId, offerId)
+     * Require caller is minter and call is signed by owner of the token.
+     *
+     */
+    function redeemOfferSigned(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
+        require(isOfferOwnerSigned(from, tokenId, offerId, v, r, s));
+        require(msg.sender == from && isMinter(from));
+        super.redeemOffer(ownerOf(tokenId), tokenId, offerId);
+    }
+
+    /**
+     * Delegated Redeemable.redeemOffer(tokenId, offerId) using Ethereum EIP191 personal signature
+     * Require caller is minter and call is signed by owner of the token.
+     *
+     */
+    function redeemOfferSignedEIP191(address from, uint256 tokenId, uint8 offerId, uint8 v, bytes32 r, bytes32 s) public {
+        require(isOfferOwnerSignedEIP191(from, tokenId, offerId, v, r, s));
+        require(msg.sender == from && isMinter(from));
+        super.redeemOffer(ownerOf(tokenId), tokenId, offerId);
+    }
+
 }
 
 // ElvTradableLocal

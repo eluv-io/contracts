@@ -171,14 +171,14 @@ var ParsedABIS = map[string]*abi.ABI{}
 // ABI names are constants starting with K_
 var BoundContracts = map[string]*bind.BoundContract{}
 
-// Map of Unique events names to *EventInfo. 
-// Unique events names are constants starting with E_ 
+// Map of Unique events names to *EventInfo.
+// Unique events names are constants starting with E_
 var UniqueEvents = map[string]*EventInfo{}
 
-// Map of Unique events types to *EventInfo 
+// Map of Unique events types to *EventInfo
 var EventsByType = map[reflect.Type]*EventInfo{}
 
-// Map of Unique events IDs to *EventInfo 
+// Map of Unique events IDs to *EventInfo
 var EventsByID   = map[common.Hash]*EventInfo{}
 
 
@@ -244,10 +244,10 @@ var ABIS = map[string]string{
 }
 
 // Unique events names.
-// Unique events are events whose ID and name are unique across contracts. 
+// Unique events are events whose ID and name are unique across contracts.
 const (
 	{{range $event := .Events}}
-	E_{{.EventName}} = "{{.EventName}}"{{end}} 
+	E_{{.EventName}} = "{{.EventName}}"{{end}}
 )
 
 type EventInfo = c.EventInfo
@@ -264,7 +264,7 @@ func init() {
 	{{range .Events}}
 	ev = &EventInfo{
 		Name:   "{{.EventName}}",
-		ID:     common.HexToHash("{{toString .EventID}}"), 
+		ID:     common.HexToHash("{{toString .EventID}}"),
 		Types: []EventType{
 			{{range .EventTypes -}}
 			{
@@ -421,7 +421,7 @@ type {{.Normalized.Name}} struct {
 			if err != nil {
 				return *outstruct, err
 			}
-			{{range $i, $t := .Normalized.Outputs}} 
+			{{range $i, $t := .Normalized.Outputs}}
 			outstruct.{{.Name}} = *abi.ConvertType(out[{{$i}}], new({{bindtype .Type $structs}})).(*{{bindtype .Type $structs}}){{end}}
 
 			return *outstruct, err
@@ -431,7 +431,7 @@ type {{.Normalized.Name}} struct {
 			}
 			{{range $i, $t := .Normalized.Outputs}}
 			out{{$i}} := *abi.ConvertType(out[{{$i}}], new({{bindtype .Type $structs}})).(*{{bindtype .Type $structs}}){{end}}
-			
+
 			return {{range $i, $t := .Normalized.Outputs}}out{{$i}}, {{end}} err
 			{{end}}
 		}
@@ -447,7 +447,7 @@ type {{.Normalized.Name}} struct {
 		}
 	{{end}}
 
-	{{if .Fallback}} 
+	{{if .Fallback}}
 		// Fallback is a paid mutator transaction binding the contract fallback function.
 		//
 		// Solidity: {{.Fallback.Original.String}}
@@ -456,7 +456,7 @@ type {{.Normalized.Name}} struct {
 		}
 	{{end}}
 
-	{{if .Receive}} 
+	{{if .Receive}}
 		// Receive is a paid mutator transaction binding the contract receive function.
 		//
 		// Solidity: {{.Receive.Original.String}}
@@ -464,6 +464,7 @@ type {{.Normalized.Name}} struct {
 			return _{{$contract.Type}}.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
 		}
 	{{end}}
+
 
 	{{range .Events}}
 		// {{$contract.Type}}{{.Normalized.Name}}Iterator is returned from Filter{{.Normalized.Name}} and is used to iterate over the raw logs and unpacked data for {{.Normalized.Name}} events raised by the {{$contract.Type}} contract.
@@ -731,7 +732,7 @@ import java.util.*;
 	// Fallback is a paid mutator transaction binding the contract fallback function.
 	//
 	// Solidity: {{.Fallback.Original.String}}
-	public Transaction Fallback(TransactOpts opts, byte[] calldata) throws Exception { 
+	public Transaction Fallback(TransactOpts opts, byte[] calldata) throws Exception {
 		return this.Contract.rawTransact(opts, calldata);
 	}
     {{end}}
@@ -740,7 +741,7 @@ import java.util.*;
 	// Receive is a paid mutator transaction binding the contract receive function.
 	//
 	// Solidity: {{.Receive.Original.String}}
-	public Transaction Receive(TransactOpts opts) throws Exception { 
+	public Transaction Receive(TransactOpts opts) throws Exception {
 		return this.Contract.rawTransact(opts, null);
 	}
     {{end}}

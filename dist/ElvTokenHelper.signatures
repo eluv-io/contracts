@@ -7,6 +7,8 @@ e39e2960: burnSignedAndMintMany(address,address,uint256,uint8,bytes32,bytes32,ad
 7d58f1de: mintWithTokenURIMany(address[],address[],uint256[],string[])
 6a6cb8b3: overrideHoldSecs()
 8da5cb5b: owner()
+92c7ea3f: redeemOfferSigned(address,uint256,uint8,uint8,bytes32,bytes32)
+200a2f82: redeemOfferSignedEIP191(address,uint256,uint8,uint8,bytes32,bytes32)
 715018a6: renounceOwnership()
 dae98009: setOverrideHoldSecs(uint256)
 f2fde38b: transferOwnership(address)

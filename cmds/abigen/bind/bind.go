@@ -293,7 +293,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		for _, event := range evByFullSig {
 			sort.Strings(event.contracts)
 			log.Info(event.ev.Normalized.Name, "hash", event.ev.Normalized.ID.String(), "<-", strings.Join(event.contracts, ","))
-			//log.Info(event.ev.Normalized.Name, "<-", len(event.contracts))
+			// log.Info(event.ev.Normalized.Name, "<-", len(event.contracts))
 
 			event.ev.KType = event.contracts[0]
 			if len(evByFullSig) > 1 {
@@ -561,20 +561,20 @@ func bindStructTypeGo(kind abi.Type, structs map[string]*tmplStruct) string {
 			return s.Name
 		}
 		var (
-			names  = make(map[string]bool)
+			// names  = make(map[string]bool)
 			fields []*tmplField
 		)
 		for i, elem := range kind.TupleElems {
 			name := capitalise(kind.TupleRawNames[i])
-			name = abi.ResolveNameConflict(name, func(s string) bool { return names[s] })
-			names[name] = true
+			// name = abi.ResolveNameConflict(name, func(s string) bool { return names[s] })
+			// names[name] = true
 			fields = append(fields, &tmplField{Type: bindStructTypeGo(*elem, structs), Name: name, SolKind: *elem})
 		}
 		name := kind.TupleRawName
 		if name == "" {
 			name = fmt.Sprintf("Struct%d", len(structs))
 		}
-		name = capitalise(name)
+		// name = capitalise(name)
 
 		structs[id] = &tmplStruct{
 			Name:   name,

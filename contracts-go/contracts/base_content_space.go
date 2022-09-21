@@ -1974,7 +1974,7 @@ func DeployAccessIndexor(auth *bind.TransactOpts, backend bind.ContractBackend) 
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(AccessIndexorBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(AccessIndexorBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -3169,7 +3169,7 @@ func DeployAccessible(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(AccessibleBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(AccessibleBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -3775,7 +3775,7 @@ func DeployAdminable(auth *bind.TransactOpts, backend bind.ContractBackend) (com
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(AdminableBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(AdminableBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -4112,7 +4112,7 @@ func DeployBaseAccessControlGroup(auth *bind.TransactOpts, backend bind.Contract
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseAccessControlGroupBin), backend, _contentSpace)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseAccessControlGroupBin), backend, _contentSpace)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -8225,7 +8225,7 @@ func DeployBaseAccessWallet(auth *bind.TransactOpts, backend bind.ContractBacken
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseAccessWalletBin), backend, content_space)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseAccessWalletBin), backend, content_space)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -11535,7 +11535,7 @@ func DeployBaseAccessWalletFactory(auth *bind.TransactOpts, backend bind.Contrac
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseAccessWalletFactoryBin), backend, _spaceAddr)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseAccessWalletFactoryBin), backend, _spaceAddr)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -11813,7 +11813,7 @@ func DeployBaseContent(auth *bind.TransactOpts, backend bind.ContractBackend, co
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseContentBin), backend, content_space, lib, content_type)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentBin), backend, content_space, lib, content_type)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -15486,7 +15486,7 @@ func DeployBaseContentFactory(auth *bind.TransactOpts, backend bind.ContractBack
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseContentFactoryBin), backend, _spaceAddr, _helperAddr)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentFactoryBin), backend, _spaceAddr, _helperAddr)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -15850,7 +15850,7 @@ func DeployBaseContentSpace(auth *bind.TransactOpts, backend bind.ContractBacken
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseContentSpaceBin), backend, content_space_name)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentSpaceBin), backend, content_space_name)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -20302,7 +20302,7 @@ func DeployBaseContentType(auth *bind.TransactOpts, backend bind.ContractBackend
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseContentTypeBin), backend, content_space)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentTypeBin), backend, content_space)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -21703,7 +21703,7 @@ func DeployBaseGroupFactory(auth *bind.TransactOpts, backend bind.ContractBacken
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseGroupFactoryBin), backend, _spaceAddr)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseGroupFactoryBin), backend, _spaceAddr)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -21991,7 +21991,7 @@ func DeployBaseLibrary(auth *bind.TransactOpts, backend bind.ContractBackend, ad
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseLibraryBin), backend, address_KMS, _content_space)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseLibraryBin), backend, address_KMS, _content_space)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -25913,7 +25913,7 @@ func DeployBaseLibraryFactory(auth *bind.TransactOpts, backend bind.ContractBack
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseLibraryFactoryBin), backend, _spaceAddr)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseLibraryFactoryBin), backend, _spaceAddr)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -26177,7 +26177,7 @@ func DeployBaseTenantConsumerGroup(auth *bind.TransactOpts, backend bind.Contrac
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseTenantConsumerGroupBin), backend, _tenantSpace)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseTenantConsumerGroupBin), backend, _tenantSpace)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -28646,7 +28646,7 @@ func DeployBaseTenantSpace(auth *bind.TransactOpts, backend bind.ContractBackend
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseTenantSpaceBin), backend, _contentSpace, _tenantName, _kmsAddr)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseTenantSpaceBin), backend, _contentSpace, _tenantName, _kmsAddr)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -32416,7 +32416,7 @@ func DeployBaseTypeFactory(auth *bind.TransactOpts, backend bind.ContractBackend
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(BaseTypeFactoryBin), backend, _spaceAddr)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseTypeFactoryBin), backend, _spaceAddr)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -32687,7 +32687,7 @@ func DeployContainer(auth *bind.TransactOpts, backend bind.ContractBackend) (com
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(ContainerBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ContainerBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -34584,7 +34584,7 @@ func DeployContent(auth *bind.TransactOpts, backend bind.ContractBackend) (commo
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(ContentBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ContentBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -36688,7 +36688,7 @@ func DeployContentFactoryHelper(auth *bind.TransactOpts, backend bind.ContractBa
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(ContentFactoryHelperBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ContentFactoryHelperBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -36813,7 +36813,7 @@ func DeployCounterObject(auth *bind.TransactOpts, backend bind.ContractBackend) 
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(CounterObjectBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(CounterObjectBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -37502,7 +37502,7 @@ func DeployERC721Proxy(auth *bind.TransactOpts, backend bind.ContractBackend, _e
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(ERC721ProxyBin), backend, _extAddr, _configName)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ERC721ProxyBin), backend, _extAddr, _configName)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -37699,7 +37699,7 @@ func DeployEditable(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(EditableBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(EditableBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -39087,7 +39087,7 @@ func DeployEncToken(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(EncTokenBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(EncTokenBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -39177,7 +39177,7 @@ func DeployExternalCall(auth *bind.TransactOpts, backend bind.ContractBackend) (
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(ExternalCallBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ExternalCallBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -39915,7 +39915,7 @@ func DeployKmsManager(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(KmsManagerBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(KmsManagerBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -40493,7 +40493,7 @@ func DeployMetaObject(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(MetaObjectBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(MetaObjectBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -40884,7 +40884,7 @@ func DeployNode(auth *bind.TransactOpts, backend bind.ContractBackend) (common.A
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(NodeBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(NodeBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -41926,7 +41926,7 @@ func DeployNodeSpace(auth *bind.TransactOpts, backend bind.ContractBackend) (com
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(NodeSpaceBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(NodeSpaceBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -42828,7 +42828,7 @@ func DeployOwnable(auth *bind.TransactOpts, backend bind.ContractBackend) (commo
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(OwnableBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(OwnableBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -43037,7 +43037,7 @@ func DeployPrecompile(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(PrecompileBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(PrecompileBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -43183,7 +43183,7 @@ func DeployTenantFuncsBase(auth *bind.TransactOpts, backend bind.ContractBackend
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(TenantFuncsBaseBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(TenantFuncsBaseBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -44431,7 +44431,7 @@ func DeployUserSpace(auth *bind.TransactOpts, backend bind.ContractBackend) (com
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(UserSpaceBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(UserSpaceBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -44562,7 +44562,7 @@ func DeployUtils(auth *bind.TransactOpts, backend bind.ContractBackend) (common.
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(UtilsBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(UtilsBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -44658,7 +44658,7 @@ func DeployVerifier(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(VerifierBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(VerifierBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}

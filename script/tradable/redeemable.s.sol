@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "forge-std/console2.sol";
@@ -8,7 +8,7 @@ import "src/redeemable.sol";
 /**
     To run this script on the testnet:
     export PRIVATE_KEY=your_private_key
-    export RPC_URL=https://host-766.contentfabric.io/eth 
+    export RPC_URL=https://host-766.contentfabric.io/eth
     forge script script/tradable/redeemable.s.sol:RedeemableScript --fork-url ${RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --legacy
  */
 contract RedeemableScript is Script {

@@ -28,7 +28,7 @@ contract Redeemable is MinterRole {
     // Redemption state - store an offers bitmap for each tokenId
     mapping(uint256 => uint256) private redemptions;
 
-    constructor() public {
+    constructor() {
         offers = 0;
         numOffers = 0;
     }

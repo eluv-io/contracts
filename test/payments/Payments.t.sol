@@ -5,7 +5,7 @@ import {console} from "forge-std/console.sol";
 import {Utilities} from "../utils/Utilities.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Payments} from "payments/ERC20Payments.sol";
+import {ERC20Payments} from "../../src/payments/ERC20Payments.sol";
 
 // Deployed at 0x60aa8e13feb9301ec17cdf07ff6a45b9cd472279
 contract TestToken is ERC20 {

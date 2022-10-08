@@ -15,6 +15,7 @@ contract ERC20Payments {
         Canceled
     }
     // Can be optimized by storing bytes instead of variable length arrays
+
     struct LockPayment {
         address sender;
         address[] receivers;
@@ -38,10 +39,7 @@ contract ERC20Payments {
 
     modifier tokensTransferable(address _token, uint256 _amount) {
         require(_amount > 0, "token amount must be > 0");
-        require(
-            ERC20(_token).allowance(msg.sender, address(this)) >= _amount,
-            "allowance must be >= amount"
-        );
+        require(ERC20(_token).allowance(msg.sender, address(this)) >= _amount, "allowance must be >= amount");
         _;
     }
 
@@ -75,13 +73,13 @@ contract ERC20Payments {
         _;
     }
 
-    mapping (bytes16 => LockPayment) paymentTransactions; // Change to paymentTransactions
+    mapping(bytes16 => LockPayment) paymentTransactions; // Change to paymentTransactions
 
     /**
      * @dev Create a new payment contract between the sender and the reciever arrays
      *
      * NOTE: _receiver must first call approve() on the token contract.
-     *       See allowance check in tokensTransferable modifier.
+     * See allowance check in tokensTransferable modifier.
      * @param _receivers Receivers of the tokens.
      * @param _paymentId PaymentID of the payment.
      * @param _tokenContract ERC20 Token contract address.
@@ -94,52 +92,49 @@ contract ERC20Payments {
         address _tokenContract,
         uint256[] calldata _amounts
     )
-    external
-    paymentNotExists(_paymentId.ref_id)
-    returns (bytes16 refId)
+        external
+        paymentNotExists(_paymentId.ref_id)
+        returns (bytes16 refId)
     {
         refId = _paymentId.ref_id;
 
         uint256 total = verifyAmounts(_amounts, _tokenContract);
         // Reject if a contract already exists with the same ID.
-        if (havePayment(refId))
+        if (havePayment(refId)) {
             revert("Contract already exists");
+        }
 
         // This contract becomes the temporary owner of the tokens
-        if (!ERC20(_tokenContract).transferFrom(msg.sender, address(this), total))
+        if (!ERC20(_tokenContract).transferFrom(msg.sender, address(this), total)) {
             revert("transferFrom sender to this failed");
+        }
 
-        paymentTransactions[refId] =  LockPayment(
-            msg.sender,
-            _receivers,
-            _tokenContract,
-            _amounts,
-            _paymentId.oracle_id,
-            PaymentState.Created
-        );
+        paymentTransactions[refId] =
+            LockPayment(msg.sender, _receivers, _tokenContract, _amounts, _paymentId.oracle_id, PaymentState.Created);
 
         emit Created(refId, msg.sender, _receivers, _tokenContract, _amounts);
     }
 
     /**
-    * @dev Called by the oracle after the NFT has been transfered to the initiater's account
-    *
-    * @param _refId reference ID of the contract
-    * @return bool true on success
+     * @dev Called by the oracle after the NFT has been transfered to the initiater's account
+     *
+     * @param _refId reference ID of the contract
+     * @return bool true on success
      */
     function claimPayment(bytes16 _refId)
-    external
-    contractExists(_refId)
-    withdrawable(_refId)
-    onlyOracle(_refId)
-    returns (bool)
+        external
+        contractExists(_refId)
+        withdrawable(_refId)
+        onlyOracle(_refId)
+        returns (bool)
     {
         LockPayment storage c = paymentTransactions[_refId];
         c.state = PaymentState.Withdrawn;
         // Iterate over all receivers and transfer the tokens to them
-        for (uint i = 0; i < c.receivers.length; i++) {
-            if (!ERC20(c.tokenContract).transfer(c.receivers[i], c.amounts[i]))
+        for (uint256 i = 0; i < c.receivers.length; i++) {
+            if (!ERC20(c.tokenContract).transfer(c.receivers[i], c.amounts[i])) {
                 revert("transfer failed");
+            }
         }
         emit Withdrawn(_refId);
         return true;
@@ -151,12 +146,7 @@ contract ERC20Payments {
      * @param _refId reference ID of the contract
      * @return bool true on success
      */
-    function cancelPayment(bytes16 _refId)
-    external
-    contractExists(_refId)
-    refundable(_refId)
-    returns (bool)
-    {
+    function cancelPayment(bytes16 _refId) external contractExists(_refId) refundable(_refId) returns (bool) {
         LockPayment storage c = paymentTransactions[_refId];
         c.state = PaymentState.Canceled;
         uint256 total = calculateTotal(c.amounts);
@@ -170,39 +160,29 @@ contract ERC20Payments {
      * @param _refId reference ID of the contract
      */
     function getContract(bytes16 _refId)
-    public
-    view
-    returns (
-        address sender,
-        address[] memory receivers,
-        address tokenContract,
-        uint256[] memory amounts,
-        address oracle,
-        PaymentState state
-    )
+        public
+        view
+        returns (
+            address sender,
+            address[] memory receivers,
+            address tokenContract,
+            uint256[] memory amounts,
+            address oracle,
+            PaymentState state
+        )
     {
-        if (havePayment(_refId) == false)
+        if (havePayment(_refId) == false) {
             revert("Contract does not exist");
+        }
         LockPayment storage c = paymentTransactions[_refId];
-        return (
-        c.sender,
-        c.receivers,
-        c.tokenContract,
-        c.amounts,
-        c.oracle,
-        c.state
-        );
+        return (c.sender, c.receivers, c.tokenContract, c.amounts, c.oracle, c.state);
     }
 
     /**
      * @dev Is there a contract with id _refId.
      * @param _refId Id into paymentTransactions mapping.
      */
-    function havePayment(bytes16 _refId)
-    internal
-    view
-    returns (bool exists)
-    {
+    function havePayment(bytes16 _refId) internal view returns (bool exists) {
         exists = (paymentTransactions[_refId].sender != address(0));
     }
 
@@ -212,33 +192,27 @@ contract ERC20Payments {
      * @param _amounts Amounts of the tokens.
      * @return total Total amount of the tokens.
      */
-    function verifyAmounts(uint256[] memory _amounts, address _tokenContract)
-    internal
-    view
-    returns (uint256 total)
-    {
+    function verifyAmounts(uint256[] memory _amounts, address _tokenContract) internal view returns (uint256 total) {
         require(_amounts.length > 0, "no amounts provided");
         total = 0;
-        for (uint i=0; i < _amounts.length; i++) {
+        for (uint256 i = 0; i < _amounts.length; i++) {
             require(_amounts[i] > 0, "amount must be greater than 0");
             total += _amounts[i];
         }
         require(
-            ERC20(_tokenContract).allowance(msg.sender, address(this)) >= total,
-            "allowance must be >= sum(amounts)"
+            ERC20(_tokenContract).allowance(msg.sender, address(this)) >= total, "allowance must be >= sum(amounts)"
         );
     }
 
     /**
-    * @dev Convenience method to calculate the total amount of the tokens.
-    * @param _amounts Amounts of the tokens.
-    * @return total Total amount of the tokens.
-    */
+     * @dev Convenience method to calculate the total amount of the tokens.
+     * @param _amounts Amounts of the tokens.
+     * @return total Total amount of the tokens.
+     */
 
-    function calculateTotal(uint256[] memory _amounts) public pure returns (uint256 total)
-    {
+    function calculateTotal(uint256[] memory _amounts) public pure returns (uint256 total) {
         total = 0;
-        for (uint i=0; i < _amounts.length; i++) {
+        for (uint256 i = 0; i < _amounts.length; i++) {
             total += _amounts[i];
         }
     }

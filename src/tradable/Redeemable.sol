@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.4 <0.9.0;
+pragma solidity ^0.8.13;
 
-import "src/MinterRole.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "tradable/cmn/Roles.sol";
 
 /**
  * @title Redeemable
@@ -15,14 +16,13 @@ import "src/MinterRole.sol";
  * have already been removed.
  * Redemption state is stored in one 256 bit bitmap per tokenId.
  */
-contract Redeemable is MinterRole {
-
+contract Redeemable is AccessControlEnumerable {
     event RedeemableAdded(uint8 offerId);
     event RedeemableRemoved(uint8 offerId);
-    event Redeem(address redeemer, uint256 tokenId, uint offerId);
+    event Redeem(address redeemer, uint256 tokenId, uint256 offerId);
 
     // Offers
-    uint256 private offers;  // Bitmap of current offers - "1" means active
+    uint256 private offers; // Bitmap of current offers - "1" means active
     uint16 private numOffers; // Number of offers created so far (16 bit to store '256')
 
     // Redemption state - store an offers bitmap for each tokenId
@@ -31,18 +31,22 @@ contract Redeemable is MinterRole {
     constructor() {
         offers = 0;
         numOffers = 0;
+
+        // TODO: rm when access control is added to ElvTradable..
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ElvCmnRoles.MINTER_ROLE, msg.sender);
     }
 
     /**
      * @dev Add an offer
      */
-    function addRedeemableOffer() public onlyMinter returns (uint8) {
+    function addRedeemableOffer() public onlyRole(ElvCmnRoles.MINTER_ROLE) returns (uint8) {
         require(numOffers < 256, "exceeded max number of offers");
 
         uint8 offerId = uint8(numOffers);
         uint256 mask = 1 << uint256(offerId);
         offers |= mask;
-        numOffers ++;
+        numOffers++;
         emit RedeemableAdded(offerId);
         return offerId;
     }
@@ -50,7 +54,7 @@ contract Redeemable is MinterRole {
     /**
      * @dev Remove an active offer (simply deactivates it and retains it's 'slot')
      */
-    function removeRedeemableOffer(uint8 offerId) public onlyMinter {
+    function removeRedeemableOffer(uint8 offerId) public onlyRole(ElvCmnRoles.MINTER_ROLE) {
         require(offerId < numOffers, "bad offer id");
 
         uint256 mask = 1 << uint256(offerId);
@@ -67,7 +71,6 @@ contract Redeemable is MinterRole {
      * - supply the correct 'redeemer' argument
      */
     function redeemOffer(address redeemer, uint256 tokenId, uint8 offerId) public payable virtual {
-
         uint256 mask = 1 << uint256(offerId);
         require(offers & mask > 0, "offer not active");
         require(redemptions[tokenId] & mask == 0, "offer already redeemed");
@@ -80,13 +83,12 @@ contract Redeemable is MinterRole {
      * @dev Check if an offer is already redeemed for a given token ID
      */
     function isOfferRedeemed(uint256 tokenId, uint8 offerId) public view returns (bool) {
-
         uint256 mask = 1 << uint256(offerId);
         if (offers & mask == 0) {
             return false; // This offer is not active
         }
         if (redemptions[tokenId] & mask > 0) {
-            return true;  // This offer is redeemed for tokenId
+            return true; // This offer is redeemed for tokenId
         }
         return false;
     }
@@ -108,5 +110,4 @@ contract Redeemable is MinterRole {
     function getOffers() public view returns (uint256, uint16) {
         return (offers, numOffers);
     }
-
 }

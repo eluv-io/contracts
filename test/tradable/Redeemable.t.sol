@@ -3,8 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
-import "src/redeemable.sol";
-
+import "src/tradable/Redeemable.sol";
 
 contract RedeemableTest is Test {
     Redeemable redeemable;
@@ -12,20 +11,22 @@ contract RedeemableTest is Test {
     address minter = 0x2233709ecfa91A80626Ff3989d68f67F5B1dD12d;
     address user = 0x5372642648d93315f121dEa8B5b0E3568A894d94;
 
-    event RedeemableAdded(uint tokenId);
+    event RedeemableAdded(uint256 tokenId);
 
     /**
-        Set up function, it is the first function executed when we run 'forge test'
-    */
+     * Set up function, it is the first function executed when we run 'forge test'
+     */
     function setUp() public {
         vm.prank(creator, creator); //adr is the creator and the owner of this smart contract
         redeemable = new Redeemable();
     }
 
-    function testAdminRedeemableBasics() public{
+    function testAdminRedeemableBasics() public {
+        vm.prank(creator, creator);
+        redeemable.grantRole(ElvCmnRoles.MINTER_ROLE, minter);
 
-        vm.prank(minter);
-        uint res = redeemable.addRedeemableOffer();
+        vm.startPrank(minter, minter);
+        uint256 res = redeemable.addRedeemableOffer();
         assertEq(res, 0, "result != 0");
 
         res = redeemable.addRedeemableOffer();
@@ -36,15 +37,18 @@ contract RedeemableTest is Test {
         vm.expectRevert(bytes("offer not active"));
         redeemable.removeRedeemableOffer(0);
 
+        vm.stopPrank();
     }
 
     function testRedeemBasics() public {
-
         vm.expectRevert(bytes("offer not active"));
         redeemable.redeemOffer(user, 1000, 0);
 
-        vm.prank(minter);
-        uint res = redeemable.addRedeemableOffer();
+        vm.prank(creator, creator);
+        redeemable.grantRole(ElvCmnRoles.MINTER_ROLE, minter);
+
+        vm.startPrank(minter, minter);
+        uint256 res = redeemable.addRedeemableOffer();
         assertEq(res, 0, "result != 0");
 
         redeemable.redeemOffer(user, 1000, 0);
@@ -57,18 +61,22 @@ contract RedeemableTest is Test {
 
         redeemable.redeemOffer(user, 1001, 0);
 
+        vm.stopPrank();
     }
 
-    function testOfferOps() public{
-        vm.prank(minter);
+    function testOfferOps() public {
+        vm.prank(creator, creator);
+        redeemable.grantRole(ElvCmnRoles.MINTER_ROLE, minter);
+
+        vm.startPrank(minter, minter);
 
         uint256 expectedBitmap = 0;
         uint256 offers;
         uint16 num;
 
         // Create all offers
-        for (uint i = 0; i < 256; i ++ ) {
-            uint res = redeemable.addRedeemableOffer();
+        for (uint256 i = 0; i < 256; i++) {
+            uint256 res = redeemable.addRedeemableOffer();
             assertEq(res, i, "result != i");
 
             (offers, num) = redeemable.getOffers();
@@ -101,18 +109,23 @@ contract RedeemableTest is Test {
         redeemable.removeRedeemableOffer(0);
         act = redeemable.isOfferActive(0);
         assertEq(act, false, "act not false");
+
+        vm.stopPrank();
     }
 
-    function testRedeemOps() public{
-        vm.prank(minter);
+    function testRedeemOps() public {
+        vm.prank(creator, creator);
+        redeemable.grantRole(ElvCmnRoles.MINTER_ROLE, minter);
+
+        vm.startPrank(minter, minter);
 
         uint256 expectedBitmap = 0;
         uint256 offers;
         uint16 num;
 
         // Create all offers
-        for (uint i = 0; i < 256; i ++ ) {
-            uint res = redeemable.addRedeemableOffer();
+        for (uint256 i = 0; i < 256; i++) {
+            uint256 res = redeemable.addRedeemableOffer();
             assertEq(res, i, "result != i");
 
             (offers, num) = redeemable.getOffers();
@@ -125,7 +138,7 @@ contract RedeemableTest is Test {
         // Redeem all offers
         uint256 tokenId = 131071;
 
-        for (uint8 i = 0; i <= 255; i ++) {
+        for (uint8 i = 0; i <= 255; i++) {
             bool res = redeemable.isOfferRedeemed(tokenId, i);
             assertEq(res, false, "isOfferRedeemed should be false");
 
@@ -141,21 +154,27 @@ contract RedeemableTest is Test {
                 break; // Avoid wrapping back to 0
             }
         }
+
+        vm.stopPrank();
     }
 
     /*
      * Redeem a large batch for gas testing
      */
-    function testRedeemMany() public{
-        vm.prank(minter);
-        uint res = redeemable.addRedeemableOffer();
+    function testRedeemMany() public {
+        vm.prank(creator, creator);
+        redeemable.grantRole(ElvCmnRoles.MINTER_ROLE, minter);
+
+        vm.startPrank(minter, minter);
+        uint256 res = redeemable.addRedeemableOffer();
         assertEq(res, 0, "result != 0");
 
-        uint n = 800;
+        uint256 n = 800;
 
-        for (uint i = 0; i < n; i ++ ) {
+        for (uint256 i = 0; i < n; i++) {
             redeemable.redeemOffer(user, i, 0);
         }
-    }
 
+        vm.stopPrank();
+    }
 }

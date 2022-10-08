@@ -3,16 +3,15 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "forge-std/console2.sol";
-import "src/redeemable.sol";
+import "src/tradable/Redeemable.sol";
 
 /**
-    To run this script on the testnet:
-    export PRIVATE_KEY=your_private_key
-    export RPC_URL=https://host-766.contentfabric.io/eth
-    forge script script/tradable/redeemable.s.sol:RedeemableScript --fork-url ${RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --legacy
+ * To run this script on the testnet:
+ * export PRIVATE_KEY=your_private_key
+ * export RPC_URL=https://host-766.contentfabric.io/eth
+ * forge script script/tradable/redeemable.s.sol:RedeemableScript --fork-url ${RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --legacy
  */
 contract RedeemableScript is Script {
-
     address user = 0x5372642648d93315f121dEa8B5b0E3568A894d94;
 
     function run() external {
@@ -20,7 +19,7 @@ contract RedeemableScript is Script {
         Redeemable redeemable = new Redeemable();
 
         //test add redeeemable offer
-        for(uint i=0; i<5; i ++){
+        for (uint256 i = 0; i < 5; i++) {
             redeemable.addRedeemableOffer();
         }
 
@@ -36,9 +35,8 @@ contract RedeemableScript is Script {
         console.log("Expected : true, Result : ", vm.toString(redeemable.isOfferActive(3)));
         console.log("Expected : false, Result : ", vm.toString(redeemable.isOfferActive(4)));
 
-
         //test the offers for a specific token
-        uint tokenId = 1000;
+        uint256 tokenId = 1000;
         redeemable.redeemOffer(user, tokenId, 1);
 
         console.log("Expected : false, Result : ", vm.toString(redeemable.isOfferRedeemed(tokenId, 0)));
@@ -50,4 +48,3 @@ contract RedeemableScript is Script {
         vm.stopBroadcast();
     }
 }
-

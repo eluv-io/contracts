@@ -74,7 +74,7 @@ contract ERC20PaymentsTest is Test {
         vm.prank(alice);
         erc20Payments.createPayment(receivers, ERC20Payments.Payment(paymentId, alice), address(token), amounts);
         (address s, address[] memory r, address tc, uint256[] memory a, address o, ERC20Payments.PaymentState st) =
-            erc20Payments.getContract(paymentId);
+            erc20Payments.getPayment(paymentId);
         require(
             initialBalance - token.balanceOf(alice) == 1000 * 10 ** token.decimals(),
             "Balance should be decreased by 1000"
@@ -100,7 +100,7 @@ contract ERC20PaymentsTest is Test {
         vm.prank(carol);
         erc20Payments.cancelPayment(paymentId);
         (address s, address[] memory r, address tc, uint256[] memory a, address o, ERC20Payments.PaymentState st) =
-            erc20Payments.getContract(paymentId);
+            erc20Payments.getPayment(paymentId);
         require(token.balanceOf(alice) == 10000 * 10 ** token.decimals(), "Alice should have 10k");
         require((token.balanceOf(address(erc20Payments)) == 0), "ERC20Payments should have 0 balance");
         require(s == alice, "Sender is wrong");
@@ -118,7 +118,7 @@ contract ERC20PaymentsTest is Test {
         erc20Payments.claimPayment(paymentId);
         vm.stopPrank();
         (address s, address[] memory r, address tc, uint256[] memory a, address o, ERC20Payments.PaymentState st) =
-            erc20Payments.getContract(paymentId);
+            erc20Payments.getPayment(paymentId);
         require(token.balanceOf(alice) == 9000 * 10 ** token.decimals(), "Alice should have 9k");
         require(token.balanceOf(bob) == 1000 * 10 ** token.decimals(), "Bob should have 1k");
         require(token.balanceOf(carol) == 0, "Carol should have 0");
@@ -180,7 +180,7 @@ contract ERC20PaymentsTest is Test {
         erc20Payments.claimPayment(paymentId);
         vm.stopPrank();
         (address s, address[] memory r, address tc,, address o, ERC20Payments.PaymentState st) =
-            erc20Payments.getContract(paymentId);
+            erc20Payments.getPayment(paymentId);
         require(token.balanceOf(alice) == 0, "Alice should have 0");
         for (uint256 i = 0; i < amounts.length; i++) {
             require(

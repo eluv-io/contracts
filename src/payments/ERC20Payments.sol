@@ -166,7 +166,7 @@ contract ERC20Payments {
      * @dev Get contract details.
      * @param _paymentId payment id of the contract
      */
-    function getContract(bytes16 _paymentId)
+    function getPayment(bytes16 _paymentId)
         public
         view
         returns (

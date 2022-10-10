@@ -129,13 +129,15 @@ contract ERC20Payments {
         returns (bool)
     {
         LockPayment storage c = paymentTransactions[_paymentId];
-        c.state = PaymentState.Claimed;
+
         // Iterate over all receivers and transfer the tokens to them
         for (uint256 i = 0; i < c.receivers.length; i++) {
             if (!ERC20(c.tokenContract).transfer(c.receivers[i], c.amounts[i])) {
                 revert("transfer failed");
             }
         }
+
+        c.state = PaymentState.Claimed;
         emit Claimed(_paymentId);
         return true;
     }

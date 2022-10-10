@@ -12,7 +12,7 @@ contract ERC20PaymentsTest is Test {
     Utilities internal utils;
     address payable[] internal users;
     ElvToken internal token;
-    ERC20Payments internal escrow;
+    ERC20Payments internal erc20Payments;
 
     address internal alice;
     address internal bob;
@@ -30,157 +30,157 @@ contract ERC20PaymentsTest is Test {
         vm.label(carol, "Carol");
 
         token = new ElvToken("ElvToken","ELV",20000000);
-        escrow = new ERC20Payments();
+        erc20Payments = new ERC20Payments();
     }
 
-    function aliceCreateEscrow(
-        bytes16 refId,
-        address[] memory recievers,
+    function aliceCreateERC20Payments(
+        bytes16 paymentId,
+        address[] memory receivers,
         uint256[] memory amounts,
         address oracle,
-        uint256 init_bal
+        uint256 initBal
     )
         private
     {
-        token.transfer(alice, init_bal * 10 ** token.decimals());
-        uint256 total = escrow.calculateTotal(amounts);
+        token.transfer(alice, initBal * 10 ** token.decimals());
+        uint256 total = erc20Payments.calculateTotal(amounts);
         vm.prank(alice);
-        token.approve(address(escrow), total);
+        token.approve(address(erc20Payments), total);
         vm.prank(alice);
-        escrow.createPayment(recievers, ERC20Payments.PaymentID(refId, oracle), address(token), amounts);
+        erc20Payments.createPayment(receivers, ERC20Payments.Payment(paymentId, oracle), address(token), amounts);
     }
 
-    function preloadedInit() private returns (bytes16 refId) {
-        refId = "stringliteral";
-        address[] memory recievers = new address[](1);
+    function preloadedInit() private returns (bytes16 paymentId) {
+        paymentId = "stringLiteral";
+        address[] memory receivers = new address[](1);
         uint256[] memory amounts = new uint256[](1);
-        recievers[0] = bob;
+        receivers[0] = bob;
         amounts[0] = 1000 * 10 ** token.decimals();
         uint256 initBal = 10000;
-        aliceCreateEscrow(refId, recievers, amounts, carol, initBal);
+        aliceCreateERC20Payments(paymentId, receivers, amounts, carol, initBal);
     }
 
-    function testCreateEscrowState() public {
-        console.log("Testing Correct Escrow Creation");
+    function testCreateERC20PaymentsState() public {
+        console.log("Testing Correct ERC20Payments Creation");
         token.transfer(alice, 10000 * 10 ** 18);
         uint256 initialBalance = token.balanceOf(alice);
-        bytes16 refId = "stringliteral";
-        address[] memory recievers = new address[](1);
+        bytes16 paymentId = "stringLiteral";
+        address[] memory receivers = new address[](1);
         uint256[] memory amounts = new uint256[](1);
-        recievers[0] = bob;
+        receivers[0] = bob;
         amounts[0] = 1000 * 10 ** token.decimals();
         vm.prank(alice);
-        token.approve(address(escrow), amounts[0]);
+        token.approve(address(erc20Payments), amounts[0]);
         vm.prank(alice);
-        escrow.createPayment(recievers, ERC20Payments.PaymentID(refId, alice), address(token), amounts);
+        erc20Payments.createPayment(receivers, ERC20Payments.Payment(paymentId, alice), address(token), amounts);
         (address s, address[] memory r, address tc, uint256[] memory a, address o, ERC20Payments.PaymentState st) =
-            escrow.getContract(refId);
+            erc20Payments.getContract(paymentId);
         require(
             initialBalance - token.balanceOf(alice) == 1000 * 10 ** token.decimals(),
             "Balance should be decreased by 1000"
         );
         require(token.balanceOf(alice) == 9000 * 10 ** token.decimals(), "Alice should have 9k");
-        require(s == alice, "sender is wrong");
-        require(r[0] == bob, "receiver is not Bob");
-        require(tc == address(token), "token contract is not token");
-        require(a[0] == 1000 * 10 ** token.decimals(), "amount is not 1000");
-        require(o == alice, "oracle is not alice");
-        require(st == ERC20Payments.PaymentState.Created, "state is not Created");
+        require(s == alice, "Sender is wrong");
+        require(r[0] == bob, "Receiver is not Bob");
+        require(tc == address(token), "Token contract is not token");
+        require(a[0] == 1000 * 10 ** token.decimals(), "Amount is not 1000");
+        require(o == alice, "Oracle is not alice");
+        require(st == ERC20Payments.PaymentState.Created, "State is not Created");
     }
 
-    function testCancelEscrow() public {
-        console.log("Testing Correct Escrow Cancelation");
-        bytes16 refId = "stringliteral";
-        address[] memory recievers = new address[](1);
+    function testCancelERC20Payments() public {
+        console.log("Testing Correct ERC20Payments Cancellation");
+        bytes16 paymentId = "stringLiteral";
+        address[] memory receivers = new address[](1);
         uint256[] memory amounts = new uint256[](1);
-        recievers[0] = bob;
+        receivers[0] = bob;
         amounts[0] = 1000 * 10 ** token.decimals();
         uint256 init_bal = 10000;
-        aliceCreateEscrow(refId, recievers, amounts, carol, init_bal);
+        aliceCreateERC20Payments(paymentId, receivers, amounts, carol, init_bal);
         vm.prank(carol);
-        escrow.cancelPayment(refId);
+        erc20Payments.cancelPayment(paymentId);
         (address s, address[] memory r, address tc, uint256[] memory a, address o, ERC20Payments.PaymentState st) =
-            escrow.getContract(refId);
+            erc20Payments.getContract(paymentId);
         require(token.balanceOf(alice) == 10000 * 10 ** token.decimals(), "Alice should have 10k");
-        require((token.balanceOf(address(escrow)) == 0), "Escrow should have 0 balance");
-        require(s == alice, "sender is wrong");
-        require(r[0] == bob, "receiver is not Bob");
-        require(tc == address(token), "token contract is not token");
-        require(a[0] == 1000 * 10 ** token.decimals(), "amount is not 1000");
-        require(o == carol, "oracle is not carol");
-        require(st == ERC20Payments.PaymentState.Canceled, "state is not Canceled");
+        require((token.balanceOf(address(erc20Payments)) == 0), "ERC20Payments should have 0 balance");
+        require(s == alice, "Sender is wrong");
+        require(r[0] == bob, "Receiver is not Bob");
+        require(tc == address(token), "Token contract is not token");
+        require(a[0] == 1000 * 10 ** token.decimals(), "Amount is not 1000");
+        require(o == carol, "Oracle is not carol");
+        require(st == ERC20Payments.PaymentState.Canceled, "State is not Canceled");
     }
 
-    function testWithdrawEscrow() public {
-        console.log("Testing Correct Escrow Withdrawal");
-        bytes16 refId = preloadedInit();
+    function testClaimERC20Payments() public {
+        console.log("Testing Correct ERC20Payments Claimable");
+        bytes16 paymentId = preloadedInit();
         vm.startPrank(carol);
-        escrow.claimPayment(refId);
+        erc20Payments.claimPayment(paymentId);
         vm.stopPrank();
         (address s, address[] memory r, address tc, uint256[] memory a, address o, ERC20Payments.PaymentState st) =
-            escrow.getContract(refId);
+            erc20Payments.getContract(paymentId);
         require(token.balanceOf(alice) == 9000 * 10 ** token.decimals(), "Alice should have 9k");
         require(token.balanceOf(bob) == 1000 * 10 ** token.decimals(), "Bob should have 1k");
         require(token.balanceOf(carol) == 0, "Carol should have 0");
-        require(token.balanceOf(address(escrow)) == 0, "Escrow should have 0 balance");
-        require(s == alice, "sender is wrong");
-        require(r[0] == bob, "receiver is not Bob");
-        require(tc == address(token), "token contract is not token");
-        require(a[0] == 1000 * 10 ** token.decimals(), "amount is not 1000");
-        require(o == carol, "oracle is not carol");
-        require(st == ERC20Payments.PaymentState.Withdrawn, "state is not Withdrawn");
+        require(token.balanceOf(address(erc20Payments)) == 0, "ERC20Payments should have 0 balance");
+        require(s == alice, "Sender is wrong");
+        require(r[0] == bob, "Receiver is not Bob");
+        require(tc == address(token), "Token contract is not token");
+        require(a[0] == 1000 * 10 ** token.decimals(), "Amount is not 1000");
+        require(o == carol, "Oracle is not carol");
+        require(st == ERC20Payments.PaymentState.Claimed, "State is not claimed");
     }
 
     function testFailRepeatedCreate() public {
-        console.log("Testing Repeated Escrow Creation");
-        bytes16 refId = "stringliteral";
-        address[] memory recievers = new address[](1);
+        console.log("Testing Repeated ERC20Payments Creation");
+        bytes16 paymentId = "stringLiteral";
+        address[] memory receivers = new address[](1);
         uint256[] memory amounts = new uint256[](1);
-        recievers[0] = bob;
+        receivers[0] = bob;
         amounts[0] = 1000 * 10 ** token.decimals();
         uint256 init_bal = 10000;
-        aliceCreateEscrow(refId, recievers, amounts, carol, init_bal);
+        aliceCreateERC20Payments(paymentId, receivers, amounts, carol, init_bal);
         // Idk why I can't get expect revert to work
         // vm.expectRevert(bytes("contractId already exists"));
-        aliceCreateEscrow(refId, recievers, amounts, carol, init_bal);
+        aliceCreateERC20Payments(paymentId, receivers, amounts, carol, init_bal);
     }
 
-    function testFailWithdraw() public {
-        console.log("Testing Escrow Withdrawal");
-        bytes16 refId = preloadedInit();
+    function testFailClaim() public {
+        console.log("Testing ERC20Payments Claim");
+        bytes16 paymentId = preloadedInit();
         vm.prank(carol);
         // Idk why I can't get expect revert to work
         // vm.expectRevert(bytes("contractId does not exist"));
         vm.prank(alice);
-        escrow.claimPayment(refId);
+        erc20Payments.claimPayment(paymentId);
     }
 
-    function testMultipleRecievers(uint256 len) public {
+    function testMultipleReceivers(uint256 len) public {
         vm.assume(len > 0 && len < 500);
         uint256[] memory amounts = new uint256[](len);
         for (uint256 i = 0; i < len; i++) {
             amounts[i] = (i + 1) * 100 * 10 ** token.decimals();
         }
-        uint256 initBal = escrow.calculateTotal(amounts);
+        uint256 initBal = erc20Payments.calculateTotal(amounts);
         token.transfer(alice, initBal);
 
-        console.log("Testing Multiple Recievers");
-        bytes16 refId = "stringliteral";
-        address[] memory recievers = new address[](amounts.length);
+        console.log("Testing Multiple receivers");
+        bytes16 paymentId = "stringLiteral";
+        address[] memory receivers = new address[](amounts.length);
         address payable[] memory payables = utils.createUsers(amounts.length);
         for (uint256 i = 0; i < len; i++) {
-            recievers[i] = payables[i];
+            receivers[i] = payables[i];
         }
 
         vm.startPrank(alice);
-        token.approve(address(escrow), initBal);
-        escrow.createPayment(recievers, ERC20Payments.PaymentID(refId, carol), address(token), amounts);
+        token.approve(address(erc20Payments), initBal);
+        erc20Payments.createPayment(receivers, ERC20Payments.Payment(paymentId, carol), address(token), amounts);
         vm.stopPrank();
         vm.startPrank(carol);
-        escrow.claimPayment(refId);
+        erc20Payments.claimPayment(paymentId);
         vm.stopPrank();
         (address s, address[] memory r, address tc,, address o, ERC20Payments.PaymentState st) =
-            escrow.getContract(refId);
+            erc20Payments.getContract(paymentId);
         require(token.balanceOf(alice) == 0, "Alice should have 0");
         for (uint256 i = 0; i < amounts.length; i++) {
             require(
@@ -188,18 +188,18 @@ contract ERC20PaymentsTest is Test {
                 string(abi.encodePacked("Recipient ", i, " should have ", amounts[i]))
             );
         }
-        require(token.balanceOf(address(escrow)) == 0, "Escrow should have 0 balance");
-        require(s == alice, "sender is wrong");
-        require(r[0] == payables[0], "receiver is not Bob");
-        require(tc == address(token), "token contract is not token");
-        require(o == carol, "oracle is not carol");
-        require(st == ERC20Payments.PaymentState.Withdrawn, "state is not Confirmed");
+        require(token.balanceOf(address(erc20Payments)) == 0, "ERC20Payments should have 0 balance");
+        require(s == alice, "Sender is wrong");
+        require(r[0] == payables[0], "Receiver is not Bob");
+        require(tc == address(token), "Token contract is not token");
+        require(o == carol, "Oracle is not carol");
+        require(st == ERC20Payments.PaymentState.Claimed, "State is not Confirmed");
     }
 
     function testFailBobCancels() public {
         console.log("Testing Bob Cancelling");
-        bytes16 refId = preloadedInit();
+        bytes16 paymentId = preloadedInit();
         vm.prank(bob);
-        escrow.cancelPayment(refId);
+        erc20Payments.cancelPayment(paymentId);
     }
 }

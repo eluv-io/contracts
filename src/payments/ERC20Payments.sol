@@ -25,15 +25,7 @@ contract ERC20Payments {
         PaymentState state;
     }
 
-    // Maybe this can be simplified to just be the contractId
-    event Created(
-        bytes16 indexed paymentId,
-        address indexed sender,
-        address[] indexed receivers,
-        address tokenContract,
-        uint256[] amounts
-    );
-
+    event Created(bytes16 indexed paymentId);
     event Claimed(bytes16 indexed paymentId);
     event Canceled(bytes16 indexed paymentId);
 
@@ -112,7 +104,7 @@ contract ERC20Payments {
         paymentTransactions[paymentId] =
             LockPayment(msg.sender, _receivers, _tokenContract, _amounts, _payment.oracleId, PaymentState.Created);
 
-        emit Created(paymentId, msg.sender, _receivers, _tokenContract, _amounts);
+        emit Created(paymentId);
     }
 
     /**
@@ -186,7 +178,7 @@ contract ERC20Payments {
     }
 
     /**
-     * @dev Is there a contract with id _refId.
+     * @dev Is there a contract with id _paymentId.
      * @param _paymentId payment id in paymentTransactions mapping.
      */
     function havePayment(bytes16 _paymentId) internal view returns (bool exists) {

@@ -140,22 +140,18 @@ contract ERC20PaymentsTest is Test {
         amounts[0] = 1000 * 10 ** token.decimals();
         uint256 init_bal = 10000;
         aliceCreateERC20Payments(paymentId, receivers, amounts, carol, init_bal);
-        // Idk why I can't get expect revert to work
-        // vm.expectRevert(bytes("contractId already exists"));
         aliceCreateERC20Payments(paymentId, receivers, amounts, carol, init_bal);
     }
 
     function testFailClaim() public {
         console.log("Testing ERC20Payments Claim");
         bytes16 paymentId = preloadedInit();
-        vm.prank(carol);
-        // Idk why I can't get expect revert to work
-        // vm.expectRevert(bytes("contractId does not exist"));
         vm.prank(alice);
         erc20Payments.claimPayment(paymentId);
     }
 
     function testMultipleReceivers(uint256 len) public {
+        //len = 1;
         vm.assume(len > 0 && len < 500);
         uint256[] memory amounts = new uint256[](len);
         for (uint256 i = 0; i < len; i++) {

@@ -3,9 +3,9 @@ e2f5f998: calculateTotal(uint256[])
 f2c9f603: cancelPayment(bytes16)
 820b71ca: claimPayment(bytes16)
 732760a1: createPayment(address[],(bytes16,address),address,uint256[])
-9c6173be: getContract(bytes16)
+8e2aa1f3: getPayment(bytes16)
 
 Event signatures:
 25ccef20460325159f2f1853d4e2f53d50e508519fd950a1b57ca5f4f92ea264: Canceled(bytes16)
-f5b628ae04a2e801c4184fb9b99c711c49643bbf8e1c6a0a70c10e3f5c32c0e2: Created(bytes16,address,address[],address,uint256[])
-e2676bf5a4d68036e2fc017546a033acda64f74e24c77a7aacea919422b891e9: Withdrawn(bytes16)
+51630b38d4d2aa8f785cae61e1d06989553fa9b886c9f286106e331a8ff2e57a: Claimed(bytes16)
+1a5cbdfaa174b8c077f5e32871877ef08cbf1cdba62a1ca568f500124c7a2411: Created(bytes16)

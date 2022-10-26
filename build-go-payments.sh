@@ -47,8 +47,8 @@ solc_0_8_13_dir=$(realpath "$1")
     echo "#### generating latest src/payments/ERC20Payments.sol"
     ./abigen --abi "${payments_out_dir}/ERC20Payments.abi" --bin "${payments_out_dir}/ERC20Payments.bin" --pkg payments --out "${payments_abigen_dir}/erc20_payments.go"
 
-    echo "#### generating latest src/tradable/ElvToken.sol"
-    ./abigen --abi "${elv_token_out_dir}/ElvToken.abi" --bin "${elv_token_out_dir}/ElvToken.bin" --pkg token --out "${elv_token_abigen_dir}/ElvToken.go"
+    echo "#### generating latest src/tradable/Elvtoken.sol"
+    ./abigen --abi "${elv_token_out_dir}/ElvToken.abi" --bin "${elv_token_out_dir}/ElvToken.bin" --pkg token --out "${elv_token_abigen_dir}/elv_token.go"
 
   )
 )

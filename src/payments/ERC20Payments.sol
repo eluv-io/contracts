@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ERC20Payments {
     struct Payment {
@@ -31,7 +31,7 @@ contract ERC20Payments {
 
     modifier tokensTransferable(address _token, uint256 _amount) {
         require(_amount > 0, "token amount must be > 0");
-        require(ERC20(_token).allowance(msg.sender, address(this)) >= _amount, "allowance must be >= amount");
+        require(IERC20(_token).allowance(msg.sender, address(this)) >= _amount, "allowance must be >= amount");
         _;
     }
 
@@ -97,7 +97,7 @@ contract ERC20Payments {
         }
 
         // This contract becomes the temporary owner of the tokens
-        if (!ERC20(_tokenContract).transferFrom(msg.sender, address(this), total)) {
+        if (!IERC20(_tokenContract).transferFrom(msg.sender, address(this), total)) {
             revert("transferFrom sender to this failed");
         }
 
@@ -124,7 +124,7 @@ contract ERC20Payments {
 
         // Iterate over all receivers and transfer the tokens to them
         for (uint256 i = 0; i < c.receivers.length; i++) {
-            if (!ERC20(c.tokenContract).transfer(c.receivers[i], c.amounts[i])) {
+            if (!IERC20(c.tokenContract).transfer(c.receivers[i], c.amounts[i])) {
                 revert("transfer failed");
             }
         }
@@ -149,7 +149,7 @@ contract ERC20Payments {
         LockPayment storage c = paymentTransactions[_paymentId];
         c.state = PaymentState.Canceled;
         uint256 total = calculateTotal(c.amounts);
-        ERC20(c.tokenContract).transfer(c.sender, total);
+        IERC20(c.tokenContract).transfer(c.sender, total);
         emit Canceled(_paymentId);
         return true;
     }
@@ -171,7 +171,7 @@ contract ERC20Payments {
         )
     {
         if (havePayment(_paymentId) == false) {
-            revert("Contract does not exist");
+            revert("contract does not exist");
         }
         LockPayment storage c = paymentTransactions[_paymentId];
         return (c.sender, c.receivers, c.tokenContract, c.amounts, c.oracle, c.state);
@@ -199,7 +199,7 @@ contract ERC20Payments {
             total += _amounts[i];
         }
         require(
-            ERC20(_tokenContract).allowance(msg.sender, address(this)) >= total, "allowance must be >= sum(amounts)"
+            IERC20(_tokenContract).allowance(msg.sender, address(this)) >= total, "allowance must be >= sum(amounts)"
         );
     }
 

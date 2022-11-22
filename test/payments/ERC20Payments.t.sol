@@ -5,10 +5,13 @@ import {console} from "forge-std/console.sol";
 import {Utilities} from "../utils/Utilities.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC20Payments} from "../../src/payments/ERC20Payments.sol";
 import "src/tradable/ElvToken.sol";
 
 contract ERC20PaymentsTest is Test {
+    using Strings for uint256;
+
     Utilities internal utils;
     address payable[] internal users;
     ElvToken internal token;
@@ -50,8 +53,8 @@ contract ERC20PaymentsTest is Test {
         erc20Payments.createPayment(receivers, ERC20Payments.Payment(paymentId, oracle), address(token), amounts);
     }
 
-    function preloadedInit() private returns (bytes16 paymentId) {
-        paymentId = "stringLiteral";
+    function preloadedInit(string memory id) private returns (bytes16 paymentId) {
+        paymentId = bytes16(bytes(id));
         address[] memory receivers = new address[](1);
         uint256[] memory amounts = new uint256[](1);
         receivers[0] = bob;
@@ -113,7 +116,7 @@ contract ERC20PaymentsTest is Test {
 
     function testClaimERC20Payments() public {
         console.log("Testing Correct ERC20Payments Claimable");
-        bytes16 paymentId = preloadedInit();
+        bytes16 paymentId = preloadedInit("stringLiteral");
         vm.startPrank(carol);
         erc20Payments.claimPayment(paymentId);
         vm.stopPrank();
@@ -145,7 +148,7 @@ contract ERC20PaymentsTest is Test {
 
     function testFailClaim() public {
         console.log("Testing ERC20Payments Claim");
-        bytes16 paymentId = preloadedInit();
+        bytes16 paymentId = preloadedInit("stringLiteral");
         vm.prank(alice);
         erc20Payments.claimPayment(paymentId);
     }
@@ -194,8 +197,18 @@ contract ERC20PaymentsTest is Test {
 
     function testFailBobCancels() public {
         console.log("Testing Bob Cancelling");
-        bytes16 paymentId = preloadedInit();
+        bytes16 paymentId = preloadedInit("stringLiteral");
         vm.prank(bob);
         erc20Payments.cancelPayment(paymentId);
+    }
+
+    function testRetrieveAllPaymentIds() public {
+        console.log("Test retrieving payment id's");
+        for (uint256 i = 0; i < 10; i++){
+            bytes16 paymentId = preloadedInit(i.toString());
+            require(erc20Payments.getPaymentIdAt(i) == paymentId, "payment id retrieved not equal");
+        }
+        uint256 total = erc20Payments.totalPaymentId();
+        require(total == 10, "list length not equal");
     }
 }

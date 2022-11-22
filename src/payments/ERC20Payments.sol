@@ -24,6 +24,8 @@ contract ERC20Payments {
         address oracle;
         PaymentState state;
     }
+    mapping(bytes16 => LockPayment) paymentTransactions;
+    bytes16[] paymentIdSet;
 
     event Created(bytes16 indexed paymentId);
     event Claimed(bytes16 indexed paymentId);
@@ -65,7 +67,7 @@ contract ERC20Payments {
         _;
     }
 
-    mapping(bytes16 => LockPayment) paymentTransactions; // Change to paymentTransactions
+
 
     /**
      * @dev Create a new payment contract between the sender and the receiver arrays
@@ -91,10 +93,6 @@ contract ERC20Payments {
         paymentId = _payment.paymentId;
 
         uint256 total = verifyAmounts(_amounts, _tokenContract);
-        // Reject if a contract already exists with the same ID.
-        if (havePayment(paymentId)) {
-            revert("paymentId already exists");
-        }
 
         // This contract becomes the temporary owner of the tokens
         if (!IERC20(_tokenContract).transferFrom(msg.sender, address(this), total)) {
@@ -103,6 +101,7 @@ contract ERC20Payments {
 
         paymentTransactions[paymentId] =
             LockPayment(msg.sender, _receivers, _tokenContract, _amounts, _payment.oracleId, PaymentState.Created);
+        paymentIdSet.push(paymentId);
 
         emit Created(paymentId);
     }
@@ -155,6 +154,19 @@ contract ERC20Payments {
     }
 
     /**
+     * @dev Convenience method to calculate the total amount of the tokens.
+     * @param _amounts Amounts of the tokens.
+     * @return total Total amount of the tokens.
+     */
+
+    function calculateTotal(uint256[] memory _amounts) public pure returns (uint256 total) {
+        total = 0;
+        for (uint256 i = 0; i < _amounts.length; i++) {
+            total += _amounts[i];
+        }
+    }
+
+    /**
      * @dev Get contract details.
      * @param _paymentId payment id of the contract
      */
@@ -176,6 +188,16 @@ contract ERC20Payments {
         LockPayment storage c = paymentTransactions[_paymentId];
         return (c.sender, c.receivers, c.tokenContract, c.amounts, c.oracle, c.state);
     }
+
+    function totalPaymentId() public view returns (uint256) {
+        return paymentIdSet.length;
+    }
+
+    function getPaymentIdAt(uint256 index) public view returns (bytes16){
+        return paymentIdSet[index];
+    }
+
+    // =============
 
     /**
      * @dev Is there a contract with id _paymentId.
@@ -201,18 +223,5 @@ contract ERC20Payments {
         require(
             IERC20(_tokenContract).allowance(msg.sender, address(this)) >= total, "allowance must be >= sum(amounts)"
         );
-    }
-
-    /**
-     * @dev Convenience method to calculate the total amount of the tokens.
-     * @param _amounts Amounts of the tokens.
-     * @return total Total amount of the tokens.
-     */
-
-    function calculateTotal(uint256[] memory _amounts) public pure returns (uint256 total) {
-        total = 0;
-        for (uint256 i = 0; i < _amounts.length; i++) {
-            total += _amounts[i];
-        }
     }
 }

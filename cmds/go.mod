@@ -3,7 +3,7 @@ module github.com/eluv-io/contracts/cmds
 go 1.17
 
 require (
-	github.com/eluv-io/contracts v0.0.0-20220704124958-6e385d8bb07f
+	github.com/eluv-io/contracts v1.3.10
 	github.com/ethereum/go-ethereum v1.10.2
 	github.com/mattn/go-colorable v0.1.8
 	github.com/mattn/go-isatty v0.0.12

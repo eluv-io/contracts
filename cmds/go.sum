@@ -129,8 +129,8 @@ github.com/eclipse/paho.mqtt.golang v1.2.0/go.mod h1:H9keYFcgq3Qr5OUJm/JZI/i6U7j
 github.com/edsrzf/mmap-go v0.0.0-20160512033002-935e0e8a636c/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/edsrzf/mmap-go v1.0.0 h1:CEBF7HpRnUCSJgGUb5h1Gm7e3VkmVDrR8lvWVLtrOFw=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
-github.com/eluv-io/contracts v0.0.0-20220704124958-6e385d8bb07f h1:YCUFFQ0tDyGmNr5O4vydS9bFGj8wMn3WYz6qiitbKKo=
-github.com/eluv-io/contracts v0.0.0-20220704124958-6e385d8bb07f/go.mod h1:ayUr6hjS+E9TwaOaCD7DZD3y5zi4novUt3UDZ+LCPr8=
+github.com/eluv-io/contracts v1.3.10 h1:mqjLTpXNwGk/9Txm8lKl82vixfy0Hgb8Hjt8TcsuUeU=
+github.com/eluv-io/contracts v1.3.10/go.mod h1:ayUr6hjS+E9TwaOaCD7DZD3y5zi4novUt3UDZ+LCPr8=
 github.com/emirpasic/gods v1.12.0 h1:QAUIPSaCu4G+POclxeqb3F+WPpdKqFGlw36+yOzGlrg=
 github.com/emirpasic/gods v1.12.0/go.mod h1:YfzfFFoVP/catgzJb4IKIqXjX78Ha8FMSDh3ymbK86o=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=

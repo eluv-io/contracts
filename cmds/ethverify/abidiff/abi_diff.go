@@ -10,9 +10,10 @@ import (
 	"sort"
 	"strings"
 
-	contractsFromDevelop "github.com/eluv-io/contracts/build"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/log"
+
+	contractsFromDevelop "github.com/eluv-io/contracts/build"
 )
 
 type ContractInfo struct {
@@ -144,7 +145,7 @@ func diffABIs(contractName string, currentABI, storeABI abi.ABI) ([]DiffItem, er
 	storedMethodKeys := getMethodKeys(storeABI.Methods)
 
 	cmpMethodFunc := func(methodKey string) {
-		if bytes.Compare(currentABI.Methods[methodKey].ID(), storeABI.Methods[methodKey].ID()) != 0 {
+		if bytes.Compare(currentABI.Methods[methodKey].ID, storeABI.Methods[methodKey].ID) != 0 {
 			diffs = append(diffs, DiffItem{true, fmt.Sprintf("%v, current and stored METHOD signatures differ: %v", contractName, methodKey)})
 		}
 	}
@@ -172,7 +173,7 @@ func diffABIs(contractName string, currentABI, storeABI abi.ABI) ([]DiffItem, er
 	storedEventKeys := getEventKeys(storeABI.Events)
 
 	cmpEventFunc := func(eventKey string) {
-		if bytes.Compare(currentABI.Events[eventKey].ID().Bytes(), storeABI.Events[eventKey].ID().Bytes()) != 0 {
+		if bytes.Compare(currentABI.Events[eventKey].ID.Bytes(), storeABI.Events[eventKey].ID.Bytes()) != 0 {
 			diffs = append(diffs, DiffItem{true, fmt.Sprintf("%v, current and stored EVENT signatures differ: %v", contractName, eventKey)})
 		}
 	}

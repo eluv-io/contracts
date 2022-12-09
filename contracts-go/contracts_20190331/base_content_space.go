@@ -5,6 +5,7 @@ package contracts_20190331
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -23,6 +24,7 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
@@ -2025,6 +2027,9 @@ func DeployAccessIndexor(auth *bind.TransactOpts, backend bind.ContractBackend) 
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(AccessIndexorBin), backend)
 	if err != nil {
@@ -2104,132 +2109,187 @@ func bindAccessIndexor(address common.Address, caller bind.ContractCaller, trans
 //
 // Solidity: function ACCESS_CONFIRMED() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) ACCESSCONFIRMED(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "ACCESS_CONFIRMED")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "ACCESS_CONFIRMED")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
 //
 // Solidity: function ACCESS_NONE() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) ACCESSNONE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "ACCESS_NONE")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "ACCESS_NONE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
 //
 // Solidity: function ACCESS_TENTATIVE() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) ACCESSTENTATIVE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "ACCESS_TENTATIVE")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "ACCESS_TENTATIVE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
 //
 // Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) CATEGORYCONTENTOBJECT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "CATEGORY_CONTENT_OBJECT")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "CATEGORY_CONTENT_OBJECT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
 //
 // Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) CATEGORYCONTENTTYPE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "CATEGORY_CONTENT_TYPE")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "CATEGORY_CONTENT_TYPE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
 //
 // Solidity: function CATEGORY_CONTRACT() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) CATEGORYCONTRACT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "CATEGORY_CONTRACT")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "CATEGORY_CONTRACT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
 //
 // Solidity: function CATEGORY_GROUP() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) CATEGORYGROUP(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "CATEGORY_GROUP")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "CATEGORY_GROUP")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
 //
 // Solidity: function CATEGORY_LIBRARY() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) CATEGORYLIBRARY(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "CATEGORY_LIBRARY")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "CATEGORY_LIBRARY")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
 //
 // Solidity: function TYPE_ACCESS() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) TYPEACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "TYPE_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "TYPE_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
 //
 // Solidity: function TYPE_EDIT() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) TYPEEDIT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "TYPE_EDIT")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "TYPE_EDIT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
 //
 // Solidity: function TYPE_SEE() view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) TYPESEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "TYPE_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "TYPE_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
@@ -2239,97 +2299,141 @@ func (_AccessIndexor *AccessIndexorCaller) AccessGroups(opts *bind.CallOpts) (st
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "accessGroups")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _AccessIndexor.contract.Call(opts, out, "accessGroups")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
 //
 // Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) CheckAccessGroupRights(opts *bind.CallOpts, group common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "checkAccessGroupRights", group, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "checkAccessGroupRights", group, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
 //
 // Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) CheckContentObjectRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "checkContentObjectRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "checkContentObjectRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
 //
 // Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) CheckContentTypeRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "checkContentTypeRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "checkContentTypeRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
 //
 // Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) CheckContractRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "checkContractRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "checkContractRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
 //
 // Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) CheckDirectRights(opts *bind.CallOpts, index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "checkDirectRights", index_type, obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "checkDirectRights", index_type, obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
 //
 // Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) CheckLibraryRights(opts *bind.CallOpts, lib common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "checkLibraryRights", lib, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "checkLibraryRights", lib, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
 //
 // Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) CheckRights(opts *bind.CallOpts, index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "checkRights", index_type, obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "checkRights", index_type, obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
@@ -2339,25 +2443,39 @@ func (_AccessIndexor *AccessIndexorCaller) ContentObjects(opts *bind.CallOpts) (
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "contentObjects")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _AccessIndexor.contract.Call(opts, out, "contentObjects")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
@@ -2367,25 +2485,39 @@ func (_AccessIndexor *AccessIndexorCaller) ContentTypes(opts *bind.CallOpts) (st
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "contentTypes")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _AccessIndexor.contract.Call(opts, out, "contentTypes")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
 //
 // Solidity: function contractExists(address addr) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) ContractExists(opts *bind.CallOpts, addr common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "contractExists", addr)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "contractExists", addr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
@@ -2395,217 +2527,311 @@ func (_AccessIndexor *AccessIndexorCaller) Contracts(opts *bind.CallOpts) (struc
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "contracts")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _AccessIndexor.contract.Call(opts, out, "contracts")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
 //
 // Solidity: function getAccessGroup(uint256 position) view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) GetAccessGroup(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getAccessGroup", position)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getAccessGroup", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
 //
 // Solidity: function getAccessGroupRights(address group) view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) GetAccessGroupRights(opts *bind.CallOpts, group common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getAccessGroupRights", group)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getAccessGroupRights", group)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
 //
 // Solidity: function getAccessGroupsLength() view returns(uint256)
 func (_AccessIndexor *AccessIndexorCaller) GetAccessGroupsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getAccessGroupsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getAccessGroupsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
 //
 // Solidity: function getContentObject(uint256 position) view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) GetContentObject(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContentObject", position)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContentObject", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
 //
 // Solidity: function getContentObjectRights(address obj) view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) GetContentObjectRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContentObjectRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContentObjectRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
 //
 // Solidity: function getContentObjectsLength() view returns(uint256)
 func (_AccessIndexor *AccessIndexorCaller) GetContentObjectsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContentObjectsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContentObjectsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
 //
 // Solidity: function getContentType(uint256 position) view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) GetContentType(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContentType", position)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContentType", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
 //
 // Solidity: function getContentTypeRights(address obj) view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) GetContentTypeRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContentTypeRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContentTypeRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
 //
 // Solidity: function getContentTypesLength() view returns(uint256)
 func (_AccessIndexor *AccessIndexorCaller) GetContentTypesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContentTypesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContentTypesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
 //
 // Solidity: function getContract(uint256 position) view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) GetContract(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContract", position)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContract", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
 //
 // Solidity: function getContractRights(address obj) view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) GetContractRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContractRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContractRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
 //
 // Solidity: function getContractsLength() view returns(uint256)
 func (_AccessIndexor *AccessIndexorCaller) GetContractsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getContractsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getContractsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
 //
 // Solidity: function getLibrariesLength() view returns(uint256)
 func (_AccessIndexor *AccessIndexorCaller) GetLibrariesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getLibrariesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getLibrariesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
 //
 // Solidity: function getLibrary(uint256 position) view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) GetLibrary(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getLibrary", position)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getLibrary", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
 //
 // Solidity: function getLibraryRights(address lib) view returns(uint8)
 func (_AccessIndexor *AccessIndexorCaller) GetLibraryRights(opts *bind.CallOpts, lib common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "getLibraryRights", lib)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "getLibraryRights", lib)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
 //
 // Solidity: function hasManagerAccess(address candidate) view returns(bool)
 func (_AccessIndexor *AccessIndexorCaller) HasManagerAccess(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "hasManagerAccess", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "hasManagerAccess", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
@@ -2615,37 +2841,56 @@ func (_AccessIndexor *AccessIndexorCaller) Libraries(opts *bind.CallOpts) (struc
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "libraries")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _AccessIndexor.contract.Call(opts, out, "libraries")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_AccessIndexor *AccessIndexorCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_AccessIndexor *AccessIndexorCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _AccessIndexor.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _AccessIndexor.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
@@ -3050,6 +3295,9 @@ func DeployAccessible(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(AccessibleBin), backend)
 	if err != nil {
@@ -3129,12 +3377,17 @@ func bindAccessible(address common.Address, caller bind.ContractCaller, transact
 //
 // Solidity: function version() view returns(bytes32)
 func (_Accessible *AccessibleCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Accessible.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _Accessible.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
@@ -3374,6 +3627,9 @@ func DeployBaseAccessControlGroup(auth *bind.TransactOpts, backend bind.Contract
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseAccessControlGroupBin), backend, content_space)
 	if err != nil {
@@ -3453,132 +3709,187 @@ func bindBaseAccessControlGroup(address common.Address, caller bind.ContractCall
 //
 // Solidity: function ACCESS_CONFIRMED() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ACCESSCONFIRMED(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "ACCESS_CONFIRMED")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "ACCESS_CONFIRMED")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
 //
 // Solidity: function ACCESS_NONE() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ACCESSNONE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "ACCESS_NONE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "ACCESS_NONE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
 //
 // Solidity: function ACCESS_TENTATIVE() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ACCESSTENTATIVE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "ACCESS_TENTATIVE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "ACCESS_TENTATIVE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
 //
 // Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYCONTENTOBJECT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "CATEGORY_CONTENT_OBJECT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "CATEGORY_CONTENT_OBJECT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
 //
 // Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYCONTENTTYPE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "CATEGORY_CONTENT_TYPE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "CATEGORY_CONTENT_TYPE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
 //
 // Solidity: function CATEGORY_CONTRACT() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYCONTRACT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "CATEGORY_CONTRACT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "CATEGORY_CONTRACT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
 //
 // Solidity: function CATEGORY_GROUP() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYGROUP(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "CATEGORY_GROUP")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "CATEGORY_GROUP")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
 //
 // Solidity: function CATEGORY_LIBRARY() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CATEGORYLIBRARY(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "CATEGORY_LIBRARY")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "CATEGORY_LIBRARY")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
 //
 // Solidity: function TYPE_ACCESS() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) TYPEACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "TYPE_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "TYPE_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
 //
 // Solidity: function TYPE_EDIT() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) TYPEEDIT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "TYPE_EDIT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "TYPE_EDIT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
 //
 // Solidity: function TYPE_SEE() view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) TYPESEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "TYPE_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "TYPE_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
@@ -3588,121 +3899,175 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) AccessGroups(opts *
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "accessGroups")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "accessGroups")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
 //
 // Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckAccessGroupRights(opts *bind.CallOpts, group common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "checkAccessGroupRights", group, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "checkAccessGroupRights", group, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
 //
 // Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckContentObjectRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "checkContentObjectRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "checkContentObjectRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
 //
 // Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckContentTypeRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "checkContentTypeRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "checkContentTypeRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
 //
 // Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckContractRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "checkContractRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "checkContractRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
 //
 // Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckDirectRights(opts *bind.CallOpts, index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "checkDirectRights", index_type, obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "checkDirectRights", index_type, obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
 //
 // Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckLibraryRights(opts *bind.CallOpts, lib common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "checkLibraryRights", lib, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "checkLibraryRights", lib, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
 //
 // Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CheckRights(opts *bind.CallOpts, index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "checkRights", index_type, obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "checkRights", index_type, obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
@@ -3712,25 +4077,39 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContentObjects(opts
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "contentObjects")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "contentObjects")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x9f46133e.
@@ -3740,25 +4119,39 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContentTypes(opts *
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "contentTypes")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "contentTypes")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
 //
 // Solidity: function contractExists(address addr) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ContractExists(opts *bind.CallOpts, addr common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "contractExists", addr)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "contractExists", addr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
@@ -3768,253 +4161,362 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Contracts(opts *bin
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "contracts")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "contracts")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
 //
 // Solidity: function getAccessGroup(uint256 position) view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetAccessGroup(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getAccessGroup", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getAccessGroup", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
 //
 // Solidity: function getAccessGroupRights(address group) view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetAccessGroupRights(opts *bind.CallOpts, group common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getAccessGroupRights", group)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getAccessGroupRights", group)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
 //
 // Solidity: function getAccessGroupsLength() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetAccessGroupsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getAccessGroupsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getAccessGroupsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
 //
 // Solidity: function getContentObject(uint256 position) view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentObject(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContentObject", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContentObject", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
 //
 // Solidity: function getContentObjectRights(address obj) view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentObjectRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContentObjectRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContentObjectRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
 //
 // Solidity: function getContentObjectsLength() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentObjectsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContentObjectsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContentObjectsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
 //
 // Solidity: function getContentType(uint256 position) view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentType(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContentType", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContentType", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
 //
 // Solidity: function getContentTypeRights(address obj) view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentTypeRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContentTypeRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContentTypeRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
 //
 // Solidity: function getContentTypesLength() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContentTypesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContentTypesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContentTypesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
 //
 // Solidity: function getContract(uint256 position) view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContract(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContract", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContract", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
 //
 // Solidity: function getContractRights(address obj) view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContractRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContractRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContractRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
 //
 // Solidity: function getContractsLength() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetContractsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getContractsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getContractsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
 //
 // Solidity: function getLibrariesLength() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetLibrariesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getLibrariesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getLibrariesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
 //
 // Solidity: function getLibrary(uint256 position) view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetLibrary(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getLibrary", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getLibrary", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
 //
 // Solidity: function getLibraryRights(address lib) view returns(uint8)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) GetLibraryRights(opts *bind.CallOpts, lib common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "getLibraryRights", lib)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "getLibraryRights", lib)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address candidate) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) HasAccess(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "hasAccess", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "hasAccess", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // HasAccessRight is a free data retrieval call binding the contract method 0xd8961c8d.
 //
 // Solidity: function hasAccessRight(address candidate, bool mgr) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) HasAccessRight(opts *bind.CallOpts, candidate common.Address, mgr bool) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "hasAccessRight", candidate, mgr)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "hasAccessRight", candidate, mgr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
 //
 // Solidity: function hasManagerAccess(address candidate) view returns(bool)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) HasManagerAccess(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "hasManagerAccess", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "hasManagerAccess", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
@@ -4024,145 +4526,209 @@ func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Libraries(opts *bin
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "libraries")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "libraries")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ManagersList is a free data retrieval call binding the contract method 0x1fcd7794.
 //
 // Solidity: function managersList(uint256 ) view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ManagersList(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "managersList", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "managersList", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ManagersNum is a free data retrieval call binding the contract method 0x638d0290.
 //
 // Solidity: function managersNum() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ManagersNum(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "managersNum")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "managersNum")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // MembersList is a free data retrieval call binding the contract method 0x13b8ad31.
 //
 // Solidity: function membersList(uint256 ) view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) MembersList(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "membersList", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "membersList", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // MembersNum is a free data retrieval call binding the contract method 0x55277a5b.
 //
 // Solidity: function membersNum() view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) MembersNum(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "membersNum")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "membersNum")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_BaseAccessControlGroup *BaseAccessControlGroupCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessControlGroup.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessControlGroup.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // CleanUpAccessGroups is a paid mutator transaction binding the contract method 0xd30f8cd0.
@@ -5935,6 +6501,9 @@ func DeployBaseAccessWallet(auth *bind.TransactOpts, backend bind.ContractBacken
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseAccessWalletBin), backend, content_space)
 	if err != nil {
@@ -6014,144 +6583,204 @@ func bindBaseAccessWallet(address common.Address, caller bind.ContractCaller, tr
 //
 // Solidity: function ACCESS_CONFIRMED() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ACCESSCONFIRMED(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "ACCESS_CONFIRMED")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "ACCESS_CONFIRMED")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ACCESSNONE is a free data retrieval call binding the contract method 0x8232f3f1.
 //
 // Solidity: function ACCESS_NONE() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ACCESSNONE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "ACCESS_NONE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "ACCESS_NONE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ACCESSTENTATIVE is a free data retrieval call binding the contract method 0x479a0c51.
 //
 // Solidity: function ACCESS_TENTATIVE() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ACCESSTENTATIVE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "ACCESS_TENTATIVE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "ACCESS_TENTATIVE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTENTOBJECT is a free data retrieval call binding the contract method 0x091600e6.
 //
 // Solidity: function CATEGORY_CONTENT_OBJECT() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYCONTENTOBJECT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "CATEGORY_CONTENT_OBJECT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "CATEGORY_CONTENT_OBJECT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTENTTYPE is a free data retrieval call binding the contract method 0x68a0469a.
 //
 // Solidity: function CATEGORY_CONTENT_TYPE() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYCONTENTTYPE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "CATEGORY_CONTENT_TYPE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "CATEGORY_CONTENT_TYPE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYCONTRACT is a free data retrieval call binding the contract method 0x6373a411.
 //
 // Solidity: function CATEGORY_CONTRACT() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYCONTRACT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "CATEGORY_CONTRACT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "CATEGORY_CONTRACT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYGROUP is a free data retrieval call binding the contract method 0x12915a30.
 //
 // Solidity: function CATEGORY_GROUP() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYGROUP(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "CATEGORY_GROUP")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "CATEGORY_GROUP")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CATEGORYLIBRARY is a free data retrieval call binding the contract method 0x16aed232.
 //
 // Solidity: function CATEGORY_LIBRARY() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CATEGORYLIBRARY(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "CATEGORY_LIBRARY")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "CATEGORY_LIBRARY")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPEACCESS is a free data retrieval call binding the contract method 0xd1aeb651.
 //
 // Solidity: function TYPE_ACCESS() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) TYPEACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "TYPE_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "TYPE_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPEEDIT is a free data retrieval call binding the contract method 0x5d97b6c2.
 //
 // Solidity: function TYPE_EDIT() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) TYPEEDIT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "TYPE_EDIT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "TYPE_EDIT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // TYPESEE is a free data retrieval call binding the contract method 0x96eba03d.
 //
 // Solidity: function TYPE_SEE() view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) TYPESEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "TYPE_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "TYPE_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // AccessCompleteMsg is a free data retrieval call binding the contract method 0x97510671.
 //
 // Solidity: function accessCompleteMsg(address content_address, uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) pure returns(bytes32)
 func (_BaseAccessWallet *BaseAccessWalletCaller) AccessCompleteMsg(opts *bind.CallOpts, content_address common.Address, request_ID *big.Int, score_pct *big.Int, ml_out_hash [32]byte) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "accessCompleteMsg", content_address, request_ID, score_pct, ml_out_hash)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "accessCompleteMsg", content_address, request_ID, score_pct, ml_out_hash)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // AccessGroups is a free data retrieval call binding the contract method 0x30e66949.
@@ -6161,193 +6790,277 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) AccessGroups(opts *bind.CallOpt
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "accessGroups")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessWallet.contract.Call(opts, out, "accessGroups")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // AccessRequestMsg is a free data retrieval call binding the contract method 0x957a3aa4.
 //
 // Solidity: function accessRequestMsg(address content_address, uint8 level, string pke_requestor, string pke_AFGH, bytes32[] custom_values, address[] stakeholders) pure returns(bytes32)
 func (_BaseAccessWallet *BaseAccessWalletCaller) AccessRequestMsg(opts *bind.CallOpts, content_address common.Address, level uint8, pke_requestor string, pke_AFGH string, custom_values [][32]byte, stakeholders []common.Address) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "accessRequestMsg", content_address, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "accessRequestMsg", content_address, level, pke_requestor, pke_AFGH, custom_values, stakeholders)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
 //
 // Solidity: function addressKMS() view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) AddressKMS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "addressKMS")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "addressKMS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CanContribute(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "canContribute", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "canContribute", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
 //
 // Solidity: function canNodePublish(address candidate) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CanNodePublish(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "canNodePublish", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "canNodePublish", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CanPublish(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "canPublish", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "canPublish", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
 //
 // Solidity: function canReview(address ) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CanReview(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "canReview", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "canReview", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckAccessGroupRights is a free data retrieval call binding the contract method 0x15c0bac1.
 //
 // Solidity: function checkAccessGroupRights(address group, uint8 access_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CheckAccessGroupRights(opts *bind.CallOpts, group common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "checkAccessGroupRights", group, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "checkAccessGroupRights", group, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContentObjectRights is a free data retrieval call binding the contract method 0x5faecb76.
 //
 // Solidity: function checkContentObjectRights(address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CheckContentObjectRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "checkContentObjectRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "checkContentObjectRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContentTypeRights is a free data retrieval call binding the contract method 0xfe538c5a.
 //
 // Solidity: function checkContentTypeRights(address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CheckContentTypeRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "checkContentTypeRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "checkContentTypeRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckContractRights is a free data retrieval call binding the contract method 0xa864dfa5.
 //
 // Solidity: function checkContractRights(address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CheckContractRights(opts *bind.CallOpts, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "checkContractRights", obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "checkContractRights", obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckDirectRights is a free data retrieval call binding the contract method 0xa00b38c4.
 //
 // Solidity: function checkDirectRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CheckDirectRights(opts *bind.CallOpts, index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "checkDirectRights", index_type, obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "checkDirectRights", index_type, obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckLibraryRights is a free data retrieval call binding the contract method 0x6813b6d1.
 //
 // Solidity: function checkLibraryRights(address lib, uint8 access_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CheckLibraryRights(opts *bind.CallOpts, lib common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "checkLibraryRights", lib, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "checkLibraryRights", lib, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckRights is a free data retrieval call binding the contract method 0x7fb52f1a.
 //
 // Solidity: function checkRights(uint8 index_type, address obj, uint8 access_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CheckRights(opts *bind.CallOpts, index_type uint8, obj common.Address, access_type uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "checkRights", index_type, obj, access_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "checkRights", index_type, obj, access_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentObjects is a free data retrieval call binding the contract method 0xa980892d.
@@ -6357,49 +7070,73 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentObjects(opts *bind.CallO
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contentObjects")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessWallet.contract.Call(opts, out, "contentObjects")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
 //
 // Solidity: function contentTypeContracts(address ) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypeContracts(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "contentTypeContracts", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contentTypeContracts", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
 //
 // Solidity: function contentTypes(uint256 ) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypes(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "contentTypes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contentTypes", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypes0 is a free data retrieval call binding the contract method 0x9f46133e.
@@ -6409,37 +7146,56 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypes0(opts *bind.CallOp
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contentTypes0")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessWallet.contract.Call(opts, out, "contentTypes0")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
 //
 // Solidity: function contentTypesLength() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ContentTypesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "contentTypesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contentTypesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ContractExists is a free data retrieval call binding the contract method 0x7709bc78.
 //
 // Solidity: function contractExists(address addr) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ContractExists(opts *bind.CallOpts, addr common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "contractExists", addr)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contractExists", addr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Contracts is a free data retrieval call binding the contract method 0x6c0f79b6.
@@ -6449,325 +7205,464 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) Contracts(opts *bind.CallOpts) 
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "contracts")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessWallet.contract.Call(opts, out, "contracts")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CurrentTimestamp is a free data retrieval call binding the contract method 0x1e2ff94f.
 //
 // Solidity: function currentTimestamp() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) CurrentTimestamp(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "currentTimestamp")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "currentTimestamp")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ExecStatusBalanceFail is a free data retrieval call binding the contract method 0x9476c478.
 //
 // Solidity: function execStatusBalanceFail() view returns(int256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusBalanceFail(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "execStatusBalanceFail")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "execStatusBalanceFail")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ExecStatusNonceFail is a free data retrieval call binding the contract method 0x04f55daf.
 //
 // Solidity: function execStatusNonceFail() view returns(int256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusNonceFail(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "execStatusNonceFail")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "execStatusNonceFail")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ExecStatusOk is a free data retrieval call binding the contract method 0x95ba60ba.
 //
 // Solidity: function execStatusOk() view returns(int256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusOk(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "execStatusOk")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "execStatusOk")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ExecStatusSendFail is a free data retrieval call binding the contract method 0x07a08237.
 //
 // Solidity: function execStatusSendFail() view returns(int256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusSendFail(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "execStatusSendFail")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "execStatusSendFail")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ExecStatusSigFail is a free data retrieval call binding the contract method 0xeb23b7aa.
 //
 // Solidity: function execStatusSigFail() view returns(int256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ExecStatusSigFail(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "execStatusSigFail")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "execStatusSigFail")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
 //
 // Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) FindTypeByHash(opts *bind.CallOpts, typeHash [32]byte) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "findTypeByHash", typeHash)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "findTypeByHash", typeHash)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetAccessGroup is a free data retrieval call binding the contract method 0x2d474cbd.
 //
 // Solidity: function getAccessGroup(uint256 position) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetAccessGroup(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getAccessGroup", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getAccessGroup", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetAccessGroupRights is a free data retrieval call binding the contract method 0x304f4a7b.
 //
 // Solidity: function getAccessGroupRights(address group) view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetAccessGroupRights(opts *bind.CallOpts, group common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getAccessGroupRights", group)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getAccessGroupRights", group)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetAccessGroupsLength is a free data retrieval call binding the contract method 0x0dc10d3f.
 //
 // Solidity: function getAccessGroupsLength() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetAccessGroupsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getAccessGroupsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getAccessGroupsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContentObject is a free data retrieval call binding the contract method 0xcf8a7503.
 //
 // Solidity: function getContentObject(uint256 position) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentObject(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContentObject", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContentObject", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContentObjectRights is a free data retrieval call binding the contract method 0x69881c0c.
 //
 // Solidity: function getContentObjectRights(address obj) view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentObjectRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContentObjectRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContentObjectRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContentObjectsLength is a free data retrieval call binding the contract method 0xebe9314e.
 //
 // Solidity: function getContentObjectsLength() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentObjectsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContentObjectsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContentObjectsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContentType is a free data retrieval call binding the contract method 0xaa3f6952.
 //
 // Solidity: function getContentType(uint256 position) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentType(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContentType", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContentType", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContentTypeRights is a free data retrieval call binding the contract method 0xa4081d62.
 //
 // Solidity: function getContentTypeRights(address obj) view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentTypeRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContentTypeRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContentTypeRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContentTypesLength is a free data retrieval call binding the contract method 0x5c1d3059.
 //
 // Solidity: function getContentTypesLength() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContentTypesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContentTypesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContentTypesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetContract is a free data retrieval call binding the contract method 0x6ebc8c86.
 //
 // Solidity: function getContract(uint256 position) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContract(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContract", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContract", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetContractRights is a free data retrieval call binding the contract method 0x08d865d7.
 //
 // Solidity: function getContractRights(address obj) view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContractRights(opts *bind.CallOpts, obj common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContractRights", obj)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContractRights", obj)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetContractsLength is a free data retrieval call binding the contract method 0xfccc134f.
 //
 // Solidity: function getContractsLength() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetContractsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getContractsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getContractsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetLibrariesLength is a free data retrieval call binding the contract method 0xcb86806d.
 //
 // Solidity: function getLibrariesLength() view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetLibrariesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getLibrariesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getLibrariesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetLibrary is a free data retrieval call binding the contract method 0xd15d62a7.
 //
 // Solidity: function getLibrary(uint256 position) view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetLibrary(opts *bind.CallOpts, position *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getLibrary", position)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getLibrary", position)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetLibraryRights is a free data retrieval call binding the contract method 0xfb52222c.
 //
 // Solidity: function getLibraryRights(address lib) view returns(uint8)
 func (_BaseAccessWallet *BaseAccessWalletCaller) GetLibraryRights(opts *bind.CallOpts, lib common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "getLibraryRights", lib)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "getLibraryRights", lib)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address ) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) HasAccess(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "hasAccess", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "hasAccess", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // HasManagerAccess is a free data retrieval call binding the contract method 0x42e7ba7b.
 //
 // Solidity: function hasManagerAccess(address candidate) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) HasManagerAccess(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "hasManagerAccess", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "hasManagerAccess", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Libraries is a free data retrieval call binding the contract method 0xc4b1978d.
@@ -6777,157 +7672,226 @@ func (_BaseAccessWallet *BaseAccessWalletCaller) Libraries(opts *bind.CallOpts) 
 	Category uint8
 	Length   *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "libraries")
+
+	outstruct := new(struct {
 		Category uint8
 		Length   *big.Int
 	})
-	out := ret
-	err := _BaseAccessWallet.contract.Call(opts, out, "libraries")
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Category = *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	outstruct.Length = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_BaseAccessWallet *BaseAccessWalletCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
 //
 // Solidity: function requiresReview() view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) RequiresReview(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "requiresReview")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "requiresReview")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
 //
 // Solidity: function validType(address content_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ValidType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "validType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "validType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ValidateTimestamp is a free data retrieval call binding the contract method 0xf50b2efe.
 //
 // Solidity: function validateTimestamp(uint256 _ts) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ValidateTimestamp(opts *bind.CallOpts, _ts *big.Int) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "validateTimestamp", _ts)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "validateTimestamp", _ts)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
 //
 // Solidity: function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) ValidateTransaction(opts *bind.CallOpts, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "validateTransaction", _v, _r, _s, _dest, _value, _ts)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "validateTransaction", _v, _r, _s, _dest, _value, _ts)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseAccessWallet *BaseAccessWalletCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_BaseAccessWallet *BaseAccessWalletCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_BaseAccessWallet *BaseAccessWalletCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
 //
 // Solidity: function whitelistedType(address content_type) view returns(bool)
 func (_BaseAccessWallet *BaseAccessWalletCaller) WhitelistedType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseAccessWallet.contract.Call(opts, out, "whitelistedType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWallet.contract.Call(opts, &out, "whitelistedType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
@@ -8500,6 +9464,9 @@ func DeployBaseAccessWalletFactory(auth *bind.TransactOpts, backend bind.Contrac
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseAccessWalletFactoryBin), backend)
 	if err != nil {
@@ -8579,48 +9546,68 @@ func bindBaseAccessWalletFactory(address common.Address, caller bind.ContractCal
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWalletFactory.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWalletFactory.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWalletFactory.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWalletFactory.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseAccessWalletFactory.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWalletFactory.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseAccessWalletFactory *BaseAccessWalletFactoryCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseAccessWalletFactory.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseAccessWalletFactory.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // CreateAccessWallet is a paid mutator transaction binding the contract method 0x7708bc41.
@@ -8729,6 +9716,9 @@ func DeployBaseContent(auth *bind.TransactOpts, backend bind.ContractBackend, co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentBin), backend, content_space, lib, content_type)
 	if err != nil {
@@ -8808,328 +9798,447 @@ func bindBaseContent(address common.Address, caller bind.ContractCaller, transac
 //
 // Solidity: function CAN_ACCESS() view returns(uint8)
 func (_BaseContent *BaseContentCaller) CANACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "CAN_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "CAN_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CANEDIT is a free data retrieval call binding the contract method 0xef1d7dc2.
 //
 // Solidity: function CAN_EDIT() view returns(uint8)
 func (_BaseContent *BaseContentCaller) CANEDIT(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "CAN_EDIT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "CAN_EDIT")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CANSEE is a free data retrieval call binding the contract method 0x100508a2.
 //
 // Solidity: function CAN_SEE() view returns(uint8)
 func (_BaseContent *BaseContentCaller) CANSEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "CAN_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "CAN_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // STATUSDRAFT is a free data retrieval call binding the contract method 0x4dd70788.
 //
 // Solidity: function STATUS_DRAFT() view returns(bytes32)
 func (_BaseContent *BaseContentCaller) STATUSDRAFT(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "STATUS_DRAFT")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "STATUS_DRAFT")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // STATUSPUBLISHED is a free data retrieval call binding the contract method 0x0017de98.
 //
 // Solidity: function STATUS_PUBLISHED() view returns(bytes32)
 func (_BaseContent *BaseContentCaller) STATUSPUBLISHED(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "STATUS_PUBLISHED")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "STATUS_PUBLISHED")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // STATUSREVIEW is a free data retrieval call binding the contract method 0xd810f8c8.
 //
 // Solidity: function STATUS_REVIEW() view returns(bytes32)
 func (_BaseContent *BaseContentCaller) STATUSREVIEW(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "STATUS_REVIEW")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "STATUS_REVIEW")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // AccessCharge is a free data retrieval call binding the contract method 0x64ade32b.
 //
 // Solidity: function accessCharge() view returns(uint256)
 func (_BaseContent *BaseContentCaller) AccessCharge(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "accessCharge")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "accessCharge")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
 //
 // Solidity: function addressKMS() view returns(address)
 func (_BaseContent *BaseContentCaller) AddressKMS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "addressKMS")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "addressKMS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
 func (_BaseContent *BaseContentCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_BaseContent *BaseContentCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanEdit is a free data retrieval call binding the contract method 0x81beeb64.
 //
 // Solidity: function canEdit() view returns(bool)
 func (_BaseContent *BaseContentCaller) CanEdit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "canEdit")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "canEdit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanPublish is a free data retrieval call binding the contract method 0xcbcd4461.
 //
 // Solidity: function canPublish() view returns(bool)
 func (_BaseContent *BaseContentCaller) CanPublish(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "canPublish")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "canPublish")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentContractAddress is a free data retrieval call binding the contract method 0x2310167f.
 //
 // Solidity: function contentContractAddress() view returns(address)
 func (_BaseContent *BaseContentCaller) ContentContractAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "contentContractAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "contentContractAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseContent *BaseContentCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentType is a free data retrieval call binding the contract method 0x36ebffca.
 //
 // Solidity: function contentType() view returns(address)
 func (_BaseContent *BaseContentCaller) ContentType(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "contentType")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "contentType")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_BaseContent *BaseContentCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseContent *BaseContentCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetAccessInfo is a free data retrieval call binding the contract method 0x38d0f504.
 //
 // Solidity: function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) view returns(uint8, uint8, uint256)
 func (_BaseContent *BaseContentCaller) GetAccessInfo(opts *bind.CallOpts, level uint8, custom_values [][32]byte, stakeholders []common.Address) (uint8, uint8, *big.Int, error) {
-	var (
-		ret0 = new(uint8)
-		ret1 = new(uint8)
-		ret2 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
-		ret2,
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "getAccessInfo", level, custom_values, stakeholders)
+
+	if err != nil {
+		return *new(uint8), *new(uint8), *new(*big.Int), err
 	}
-	err := _BaseContent.contract.Call(opts, out, "getAccessInfo", level, custom_values, stakeholders)
-	return *ret0, *ret1, *ret2, err
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out1 := *abi.ConvertType(out[1], new(uint8)).(*uint8)
+	out2 := *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
+
+	return out0, out1, out2, err
+
 }
 
 // GetCustomInfo is a free data retrieval call binding the contract method 0x3ba58afb.
 //
 // Solidity: function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) view returns(uint8, uint8, uint256)
 func (_BaseContent *BaseContentCaller) GetCustomInfo(opts *bind.CallOpts, level uint8, custom_values [][32]byte, stakeholders []common.Address) (uint8, uint8, *big.Int, error) {
-	var (
-		ret0 = new(uint8)
-		ret1 = new(uint8)
-		ret2 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
-		ret2,
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "getCustomInfo", level, custom_values, stakeholders)
+
+	if err != nil {
+		return *new(uint8), *new(uint8), *new(*big.Int), err
 	}
-	err := _BaseContent.contract.Call(opts, out, "getCustomInfo", level, custom_values, stakeholders)
-	return *ret0, *ret1, *ret2, err
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out1 := *abi.ConvertType(out[1], new(uint8)).(*uint8)
+	out2 := *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
+
+	return out0, out1, out2, err
+
 }
 
 // GetKMSInfo is a free data retrieval call binding the contract method 0xa8d4160e.
 //
 // Solidity: function getKMSInfo(bytes prefix) view returns(string, string)
 func (_BaseContent *BaseContentCaller) GetKMSInfo(opts *bind.CallOpts, prefix []byte) (string, string, error) {
-	var (
-		ret0 = new(string)
-		ret1 = new(string)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "getKMSInfo", prefix)
+
+	if err != nil {
+		return *new(string), *new(string), err
 	}
-	err := _BaseContent.contract.Call(opts, out, "getKMSInfo", prefix)
-	return *ret0, *ret1, err
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+	out1 := *abi.ConvertType(out[1], new(string)).(*string)
+
+	return out0, out1, err
+
 }
 
 // LibraryAddress is a free data retrieval call binding the contract method 0xb816f513.
 //
 // Solidity: function libraryAddress() view returns(address)
 func (_BaseContent *BaseContentCaller) LibraryAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "libraryAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "libraryAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_BaseContent *BaseContentCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseContent *BaseContentCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_BaseContent *BaseContentCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_BaseContent *BaseContentCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // RequestID is a free data retrieval call binding the contract method 0x8f779201.
 //
 // Solidity: function requestID() view returns(uint256)
 func (_BaseContent *BaseContentCaller) RequestID(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "requestID")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "requestID")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // RequestMap is a free data retrieval call binding the contract method 0x1a735f18.
@@ -9141,99 +10250,145 @@ func (_BaseContent *BaseContentCaller) RequestMap(opts *bind.CallOpts, arg0 *big
 	Status     int8
 	Settled    *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "requestMap", arg0)
+
+	outstruct := new(struct {
 		Originator common.Address
 		AmountPaid *big.Int
 		Status     int8
 		Settled    *big.Int
 	})
-	out := ret
-	err := _BaseContent.contract.Call(opts, out, "requestMap", arg0)
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Originator = *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	outstruct.AmountPaid = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+	outstruct.Status = *abi.ConvertType(out[2], new(int8)).(*int8)
+	outstruct.Settled = *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // StatusCode is a free data retrieval call binding the contract method 0x27c1c21d.
 //
 // Solidity: function statusCode() view returns(int256)
 func (_BaseContent *BaseContentCaller) StatusCode(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "statusCode")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "statusCode")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // StatusCodeDescription is a free data retrieval call binding the contract method 0x38864284.
 //
 // Solidity: function statusCodeDescription(int256 status_code) view returns(bytes32)
 func (_BaseContent *BaseContentCaller) StatusCodeDescription(opts *bind.CallOpts, status_code *big.Int) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "statusCodeDescription", status_code)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "statusCodeDescription", status_code)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // StatusDescription is a free data retrieval call binding the contract method 0xf81ab0ae.
 //
 // Solidity: function statusDescription() view returns(bytes32)
 func (_BaseContent *BaseContentCaller) StatusDescription(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "statusDescription")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "statusDescription")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseContent *BaseContentCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_BaseContent *BaseContentCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_BaseContent *BaseContentCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Visibility is a free data retrieval call binding the contract method 0x29adec14.
 //
 // Solidity: function visibility() view returns(uint8)
 func (_BaseContent *BaseContentCaller) Visibility(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _BaseContent.contract.Call(opts, out, "visibility")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContent.contract.Call(opts, &out, "visibility")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // AccessComplete is a paid mutator transaction binding the contract method 0x5cc4aa9b.
@@ -12522,6 +13677,9 @@ func DeployBaseContentFactory(auth *bind.TransactOpts, backend bind.ContractBack
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentFactoryBin), backend)
 	if err != nil {
@@ -12601,48 +13759,68 @@ func bindBaseContentFactory(address common.Address, caller bind.ContractCaller, 
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseContentFactory *BaseContentFactoryCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentFactory.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactory.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseContentFactory *BaseContentFactoryCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentFactory.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactory.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseContentFactory *BaseContentFactoryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentFactory.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactory.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseContentFactory *BaseContentFactoryCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContentFactory.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactory.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
@@ -12706,6 +13884,9 @@ func DeployBaseContentFactoryExt(auth *bind.TransactOpts, backend bind.ContractB
 	parsed, err := ParsedABI(K_BaseContentFactoryExt)
 	if err != nil {
 		return common.Address{}, nil, nil, err
+	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentFactoryExtBin), backend)
@@ -12786,72 +13967,102 @@ func bindBaseContentFactoryExt(address common.Address, caller bind.ContractCalle
 //
 // Solidity: function OP_ACCESS_COMPLETE() view returns(uint32)
 func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) OPACCESSCOMPLETE(opts *bind.CallOpts) (uint32, error) {
-	var (
-		ret0 = new(uint32)
-	)
-	out := ret0
-	err := _BaseContentFactoryExt.contract.Call(opts, out, "OP_ACCESS_COMPLETE")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactoryExt.contract.Call(opts, &out, "OP_ACCESS_COMPLETE")
+
+	if err != nil {
+		return *new(uint32), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+
+	return out0, err
+
 }
 
 // OPACCESSREQUEST is a free data retrieval call binding the contract method 0x52344328.
 //
 // Solidity: function OP_ACCESS_REQUEST() view returns(uint32)
 func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) OPACCESSREQUEST(opts *bind.CallOpts) (uint32, error) {
-	var (
-		ret0 = new(uint32)
-	)
-	out := ret0
-	err := _BaseContentFactoryExt.contract.Call(opts, out, "OP_ACCESS_REQUEST")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactoryExt.contract.Call(opts, &out, "OP_ACCESS_REQUEST")
+
+	if err != nil {
+		return *new(uint32), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentFactoryExt.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactoryExt.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentFactoryExt.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactoryExt.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentFactoryExt.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactoryExt.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseContentFactoryExt *BaseContentFactoryExtCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContentFactoryExt.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentFactoryExt.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // CreateContent is a paid mutator transaction binding the contract method 0xbf4e088f.
@@ -13269,6 +14480,9 @@ func DeployBaseContentSpace(auth *bind.TransactOpts, backend bind.ContractBacken
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentSpaceBin), backend, content_space_name)
 	if err != nil {
@@ -13348,544 +14562,766 @@ func bindBaseContentSpace(address common.Address, caller bind.ContractCaller, tr
 //
 // Solidity: function activeNodeAddresses(uint256 ) view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) ActiveNodeAddresses(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "activeNodeAddresses", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "activeNodeAddresses", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
 //
 // Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
 func (_BaseContentSpace *BaseContentSpaceCaller) ActiveNodeLocators(opts *bind.CallOpts, arg0 *big.Int) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "activeNodeLocators", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "activeNodeLocators", arg0)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
 //
 // Solidity: function addressKMS() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) AddressKMS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "addressKMS")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "addressKMS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) CanContribute(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "canContribute", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "canContribute", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
 //
 // Solidity: function canNodePublish(address candidate) view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) CanNodePublish(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "canNodePublish", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "canNodePublish", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) CanPublish(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "canPublish", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "canPublish", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
 //
 // Solidity: function canReview(address ) view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) CanReview(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "canReview", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "canReview", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CheckKMS is a free data retrieval call binding the contract method 0x8d2a23db.
 //
 // Solidity: function checkKMS(string _kmsIdStr) view returns(uint256)
 func (_BaseContentSpace *BaseContentSpaceCaller) CheckKMS(opts *bind.CallOpts, _kmsIdStr string) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "checkKMS", _kmsIdStr)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "checkKMS", _kmsIdStr)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // CheckKMSAddr is a free data retrieval call binding the contract method 0xd6be0f49.
 //
 // Solidity: function checkKMSAddr(address _kmsAddr) view returns(uint256)
 func (_BaseContentSpace *BaseContentSpaceCaller) CheckKMSAddr(opts *bind.CallOpts, _kmsAddr common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "checkKMSAddr", _kmsAddr)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "checkKMSAddr", _kmsAddr)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ContentFactory is a free data retrieval call binding the contract method 0x904696a8.
 //
 // Solidity: function contentFactory() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) ContentFactory(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "contentFactory")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "contentFactory")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
 //
 // Solidity: function contentTypeContracts(address ) view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) ContentTypeContracts(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "contentTypeContracts", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "contentTypeContracts", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
 //
 // Solidity: function contentTypes(uint256 ) view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) ContentTypes(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "contentTypes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "contentTypes", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
 //
 // Solidity: function contentTypesLength() view returns(uint256)
 func (_BaseContentSpace *BaseContentSpaceCaller) ContentTypesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "contentTypesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "contentTypesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_BaseContentSpace *BaseContentSpaceCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Description is a free data retrieval call binding the contract method 0x7284e416.
 //
 // Solidity: function description() view returns(string)
 func (_BaseContentSpace *BaseContentSpaceCaller) Description(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "description")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "description")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
 // Solidity: function factory() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) Factory(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "factory")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "factory")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
 //
 // Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) FindTypeByHash(opts *bind.CallOpts, typeHash [32]byte) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "findTypeByHash", typeHash)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "findTypeByHash", typeHash)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetKMSID is a free data retrieval call binding the contract method 0x589aafc1.
 //
 // Solidity: function getKMSID(address _kmsAddr) view returns(string)
 func (_BaseContentSpace *BaseContentSpaceCaller) GetKMSID(opts *bind.CallOpts, _kmsAddr common.Address) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "getKMSID", _kmsAddr)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "getKMSID", _kmsAddr)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // GetKMSInfo is a free data retrieval call binding the contract method 0x268bfac4.
 //
 // Solidity: function getKMSInfo(string _kmsID, bytes prefix) view returns(string, string)
 func (_BaseContentSpace *BaseContentSpaceCaller) GetKMSInfo(opts *bind.CallOpts, _kmsID string, prefix []byte) (string, string, error) {
-	var (
-		ret0 = new(string)
-		ret1 = new(string)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "getKMSInfo", _kmsID, prefix)
+
+	if err != nil {
+		return *new(string), *new(string), err
 	}
-	err := _BaseContentSpace.contract.Call(opts, out, "getKMSInfo", _kmsID, prefix)
-	return *ret0, *ret1, err
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+	out1 := *abi.ConvertType(out[1], new(string)).(*string)
+
+	return out0, out1, err
+
 }
 
 // GetMeta is a free data retrieval call binding the contract method 0xac55c906.
 //
 // Solidity: function getMeta(bytes key) view returns(bytes)
 func (_BaseContentSpace *BaseContentSpaceCaller) GetMeta(opts *bind.CallOpts, key []byte) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "getMeta", key)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "getMeta", key)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // GroupFactory is a free data retrieval call binding the contract method 0xb04b6caa.
 //
 // Solidity: function groupFactory() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) GroupFactory(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "groupFactory")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "groupFactory")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address ) view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) HasAccess(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "hasAccess", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "hasAccess", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // LibraryFactory is a free data retrieval call binding the contract method 0x441c5aa3.
 //
 // Solidity: function libraryFactory() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) LibraryFactory(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "libraryFactory")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "libraryFactory")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() view returns(string)
 func (_BaseContentSpace *BaseContentSpaceCaller) Name(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "name")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "name")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // NodeMapping is a free data retrieval call binding the contract method 0xfbd1b4ce.
 //
 // Solidity: function nodeMapping(address ) view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) NodeMapping(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "nodeMapping", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "nodeMapping", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
 //
 // Solidity: function numActiveNodes() view returns(uint256)
 func (_BaseContentSpace *BaseContentSpaceCaller) NumActiveNodes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "numActiveNodes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "numActiveNodes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
 //
 // Solidity: function numPendingNodes() view returns(uint256)
 func (_BaseContentSpace *BaseContentSpaceCaller) NumPendingNodes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "numPendingNodes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "numPendingNodes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_BaseContentSpace *BaseContentSpaceCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_BaseContentSpace *BaseContentSpaceCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
 //
 // Solidity: function pendingNodeAddresses(uint256 ) view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) PendingNodeAddresses(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "pendingNodeAddresses", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "pendingNodeAddresses", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
 //
 // Solidity: function pendingNodeLocators(uint256 ) view returns(bytes)
 func (_BaseContentSpace *BaseContentSpaceCaller) PendingNodeLocators(opts *bind.CallOpts, arg0 *big.Int) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "pendingNodeLocators", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "pendingNodeLocators", arg0)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
 //
 // Solidity: function requiresReview() view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) RequiresReview(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "requiresReview")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "requiresReview")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // UserWallets is a free data retrieval call binding the contract method 0x63e6ffdd.
 //
 // Solidity: function userWallets(address ) view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) UserWallets(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "userWallets", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "userWallets", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
 //
 // Solidity: function validType(address content_type) view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) ValidType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "validType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "validType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseContentSpace *BaseContentSpaceCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_BaseContentSpace *BaseContentSpaceCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_BaseContentSpace *BaseContentSpaceCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // WalletFactory is a free data retrieval call binding the contract method 0xc5c03699.
 //
 // Solidity: function walletFactory() view returns(address)
 func (_BaseContentSpace *BaseContentSpaceCaller) WalletFactory(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "walletFactory")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "walletFactory")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
 //
 // Solidity: function whitelistedType(address content_type) view returns(bool)
 func (_BaseContentSpace *BaseContentSpaceCaller) WhitelistedType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentSpace.contract.Call(opts, out, "whitelistedType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentSpace.contract.Call(opts, &out, "whitelistedType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
@@ -17413,6 +18849,9 @@ func DeployBaseContentType(auth *bind.TransactOpts, backend bind.ContractBackend
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseContentTypeBin), backend, content_space)
 	if err != nil {
@@ -17492,144 +18931,204 @@ func bindBaseContentType(address common.Address, caller bind.ContractCaller, tra
 //
 // Solidity: function canCommit() view returns(bool)
 func (_BaseContentType *BaseContentTypeCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_BaseContentType *BaseContentTypeCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseContentType *BaseContentTypeCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_BaseContentType *BaseContentTypeCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseContentType *BaseContentTypeCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_BaseContentType *BaseContentTypeCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseContentType *BaseContentTypeCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_BaseContentType *BaseContentTypeCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_BaseContentType *BaseContentTypeCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseContentType *BaseContentTypeCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_BaseContentType *BaseContentTypeCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_BaseContentType *BaseContentTypeCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseContentType.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseContentType.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
@@ -18408,6 +19907,9 @@ func DeployBaseFactory(auth *bind.TransactOpts, backend bind.ContractBackend) (c
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseFactoryBin), backend)
 	if err != nil {
@@ -18487,48 +19989,68 @@ func bindBaseFactory(address common.Address, caller bind.ContractCaller, transac
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseFactory *BaseFactoryCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseFactory.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseFactory.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseFactory *BaseFactoryCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseFactory.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseFactory.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseFactory *BaseFactoryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseFactory.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseFactory.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseFactory *BaseFactoryCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseFactory.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseFactory.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // CreateContentType is a paid mutator transaction binding the contract method 0xb8cfaf05.
@@ -18596,6 +20118,9 @@ func DeployBaseGroupFactory(auth *bind.TransactOpts, backend bind.ContractBacken
 	parsed, err := ParsedABI(K_BaseGroupFactory)
 	if err != nil {
 		return common.Address{}, nil, nil, err
+	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseGroupFactoryBin), backend)
@@ -18676,48 +20201,68 @@ func bindBaseGroupFactory(address common.Address, caller bind.ContractCaller, tr
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseGroupFactory *BaseGroupFactoryCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseGroupFactory.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseGroupFactory.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseGroupFactory *BaseGroupFactoryCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseGroupFactory.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseGroupFactory.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseGroupFactory *BaseGroupFactoryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseGroupFactory.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseGroupFactory.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseGroupFactory *BaseGroupFactoryCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseGroupFactory.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseGroupFactory.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // CreateGroup is a paid mutator transaction binding the contract method 0x575185ed.
@@ -18833,6 +20378,9 @@ func DeployBaseLibrary(auth *bind.TransactOpts, backend bind.ContractBackend, ad
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseLibraryBin), backend, address_KMS, content_space)
 	if err != nil {
@@ -18912,432 +20460,612 @@ func bindBaseLibrary(address common.Address, caller bind.ContractCaller, transac
 //
 // Solidity: function accessorGroups(uint256 ) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) AccessorGroups(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "accessorGroups", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "accessorGroups", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // AccessorGroupsLength is a free data retrieval call binding the contract method 0xe5538fd2.
 //
 // Solidity: function accessorGroupsLength() view returns(uint256)
 func (_BaseLibrary *BaseLibraryCaller) AccessorGroupsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "accessorGroupsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "accessorGroupsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // AddressKMS is a free data retrieval call binding the contract method 0x32eaf21b.
 //
 // Solidity: function addressKMS() view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) AddressKMS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "addressKMS")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "addressKMS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ApprovalRequests is a free data retrieval call binding the contract method 0x8cb13c2e.
 //
 // Solidity: function approvalRequests(uint256 ) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) ApprovalRequests(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "approvalRequests", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "approvalRequests", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ApprovalRequestsLength is a free data retrieval call binding the contract method 0x16308394.
 //
 // Solidity: function approvalRequestsLength() view returns(uint256)
 func (_BaseLibrary *BaseLibraryCaller) ApprovalRequestsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "approvalRequestsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "approvalRequestsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) CanContribute(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "canContribute", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "canContribute", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
 //
 // Solidity: function canNodePublish(address candidate) view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) CanNodePublish(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "canNodePublish", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "canNodePublish", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) CanPublish(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "canPublish", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "canPublish", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanPublish0 is a free data retrieval call binding the contract method 0xcbcd4461.
 //
 // Solidity: function canPublish() view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) CanPublish0(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "canPublish0")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "canPublish0")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
 //
 // Solidity: function canReview(address _candidate) view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) CanReview(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "canReview", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "canReview", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
 //
 // Solidity: function contentTypeContracts(address ) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) ContentTypeContracts(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "contentTypeContracts", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "contentTypeContracts", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
 //
 // Solidity: function contentTypes(uint256 ) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) ContentTypes(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "contentTypes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "contentTypes", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
 //
 // Solidity: function contentTypesLength() view returns(uint256)
 func (_BaseLibrary *BaseLibraryCaller) ContentTypesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "contentTypesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "contentTypesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ContributorGroups is a free data retrieval call binding the contract method 0x2393553b.
 //
 // Solidity: function contributorGroups(uint256 ) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) ContributorGroups(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "contributorGroups", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "contributorGroups", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContributorGroupsLength is a free data retrieval call binding the contract method 0x470750bb.
 //
 // Solidity: function contributorGroupsLength() view returns(uint256)
 func (_BaseLibrary *BaseLibraryCaller) ContributorGroupsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "contributorGroupsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "contributorGroupsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_BaseLibrary *BaseLibraryCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
 //
 // Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) FindTypeByHash(opts *bind.CallOpts, typeHash [32]byte) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "findTypeByHash", typeHash)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "findTypeByHash", typeHash)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetMeta is a free data retrieval call binding the contract method 0xac55c906.
 //
 // Solidity: function getMeta(bytes key) view returns(bytes)
 func (_BaseLibrary *BaseLibraryCaller) GetMeta(opts *bind.CallOpts, key []byte) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "getMeta", key)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "getMeta", key)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // GetPendingApprovalRequest is a free data retrieval call binding the contract method 0x63dab9d4.
 //
 // Solidity: function getPendingApprovalRequest(uint256 index) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) GetPendingApprovalRequest(opts *bind.CallOpts, index *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "getPendingApprovalRequest", index)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "getPendingApprovalRequest", index)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address _candidate) view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) HasAccess(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "hasAccess", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "hasAccess", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_BaseLibrary *BaseLibraryCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_BaseLibrary *BaseLibraryCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
 //
 // Solidity: function requiresReview() view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) RequiresReview(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "requiresReview")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "requiresReview")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ReviewerGroups is a free data retrieval call binding the contract method 0x952e464b.
 //
 // Solidity: function reviewerGroups(uint256 ) view returns(address)
 func (_BaseLibrary *BaseLibraryCaller) ReviewerGroups(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "reviewerGroups", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "reviewerGroups", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ReviewerGroupsLength is a free data retrieval call binding the contract method 0x21770a84.
 //
 // Solidity: function reviewerGroupsLength() view returns(uint256)
 func (_BaseLibrary *BaseLibraryCaller) ReviewerGroupsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "reviewerGroupsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "reviewerGroupsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
 //
 // Solidity: function validType(address content_type) view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) ValidType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "validType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "validType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseLibrary *BaseLibraryCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_BaseLibrary *BaseLibraryCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_BaseLibrary *BaseLibraryCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
 //
 // Solidity: function whitelistedType(address content_type) view returns(bool)
 func (_BaseLibrary *BaseLibraryCaller) WhitelistedType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _BaseLibrary.contract.Call(opts, out, "whitelistedType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibrary.contract.Call(opts, &out, "whitelistedType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // AccessRequest is a paid mutator transaction binding the contract method 0xf1551887.
@@ -22111,6 +23839,9 @@ func DeployBaseLibraryFactory(auth *bind.TransactOpts, backend bind.ContractBack
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(BaseLibraryFactoryBin), backend)
 	if err != nil {
@@ -22190,48 +23921,68 @@ func bindBaseLibraryFactory(address common.Address, caller bind.ContractCaller, 
 //
 // Solidity: function contentSpace() view returns(address)
 func (_BaseLibraryFactory *BaseLibraryFactoryCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibraryFactory.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibraryFactory.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_BaseLibraryFactory *BaseLibraryFactoryCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibraryFactory.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibraryFactory.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_BaseLibraryFactory *BaseLibraryFactoryCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _BaseLibraryFactory.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibraryFactory.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_BaseLibraryFactory *BaseLibraryFactoryCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _BaseLibraryFactory.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _BaseLibraryFactory.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // CreateLibrary is a paid mutator transaction binding the contract method 0x40b89f06.
@@ -22321,6 +24072,9 @@ func DeployContainer(auth *bind.TransactOpts, backend bind.ContractBackend) (com
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ContainerBin), backend)
 	if err != nil {
@@ -22400,300 +24154,425 @@ func bindContainer(address common.Address, caller bind.ContractCaller, transacto
 //
 // Solidity: function addressKMS() view returns(address)
 func (_Container *ContainerCaller) AddressKMS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "addressKMS")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "addressKMS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CanCommit is a free data retrieval call binding the contract method 0x6e375427.
 //
 // Solidity: function canCommit() view returns(bool)
 func (_Container *ContainerCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_Container *ContainerCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanContribute is a free data retrieval call binding the contract method 0x0eaec2c5.
 //
 // Solidity: function canContribute(address _candidate) view returns(bool)
 func (_Container *ContainerCaller) CanContribute(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "canContribute", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "canContribute", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
 //
 // Solidity: function canNodePublish(address candidate) view returns(bool)
 func (_Container *ContainerCaller) CanNodePublish(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "canNodePublish", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "canNodePublish", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanPublish is a free data retrieval call binding the contract method 0x9b55f901.
 //
 // Solidity: function canPublish(address _candidate) view returns(bool)
 func (_Container *ContainerCaller) CanPublish(opts *bind.CallOpts, _candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "canPublish", _candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "canPublish", _candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanReview is a free data retrieval call binding the contract method 0x29d00219.
 //
 // Solidity: function canReview(address ) view returns(bool)
 func (_Container *ContainerCaller) CanReview(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "canReview", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "canReview", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_Container *ContainerCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypeContracts is a free data retrieval call binding the contract method 0x1cdbee5a.
 //
 // Solidity: function contentTypeContracts(address ) view returns(address)
 func (_Container *ContainerCaller) ContentTypeContracts(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "contentTypeContracts", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "contentTypeContracts", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypes is a free data retrieval call binding the contract method 0x991a3a7c.
 //
 // Solidity: function contentTypes(uint256 ) view returns(address)
 func (_Container *ContainerCaller) ContentTypes(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "contentTypes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "contentTypes", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentTypesLength is a free data retrieval call binding the contract method 0xc65bcbe2.
 //
 // Solidity: function contentTypesLength() view returns(uint256)
 func (_Container *ContainerCaller) ContentTypesLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "contentTypesLength")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "contentTypesLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_Container *ContainerCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_Container *ContainerCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // FindTypeByHash is a free data retrieval call binding the contract method 0x1f2caaec.
 //
 // Solidity: function findTypeByHash(bytes32 typeHash) view returns(address)
 func (_Container *ContainerCaller) FindTypeByHash(opts *bind.CallOpts, typeHash [32]byte) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "findTypeByHash", typeHash)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "findTypeByHash", typeHash)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // HasAccess is a free data retrieval call binding the contract method 0x95a078e8.
 //
 // Solidity: function hasAccess(address ) view returns(bool)
 func (_Container *ContainerCaller) HasAccess(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "hasAccess", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "hasAccess", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_Container *ContainerCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_Container *ContainerCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_Container *ContainerCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_Container *ContainerCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // RequiresReview is a free data retrieval call binding the contract method 0x3dd71d99.
 //
 // Solidity: function requiresReview() view returns(bool)
 func (_Container *ContainerCaller) RequiresReview(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "requiresReview")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "requiresReview")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ValidType is a free data retrieval call binding the contract method 0x29dedde5.
 //
 // Solidity: function validType(address content_type) view returns(bool)
 func (_Container *ContainerCaller) ValidType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "validType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "validType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_Container *ContainerCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_Container *ContainerCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_Container *ContainerCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // WhitelistedType is a free data retrieval call binding the contract method 0x9cb121ba.
 //
 // Solidity: function whitelistedType(address content_type) view returns(bool)
 func (_Container *ContainerCaller) WhitelistedType(opts *bind.CallOpts, content_type common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Container.contract.Call(opts, out, "whitelistedType", content_type)
-	return *ret0, err
+	var out []interface{}
+	err := _Container.contract.Call(opts, &out, "whitelistedType", content_type)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // AddContentType is a paid mutator transaction binding the contract method 0x0f58a786.
@@ -23624,6 +25503,9 @@ func DeployContent(auth *bind.TransactOpts, backend bind.ContractBackend) (commo
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ContentBin), backend)
 	if err != nil {
@@ -23703,116 +25585,156 @@ func bindContent(address common.Address, caller bind.ContractCaller, transactor 
 //
 // Solidity: function DEFAULT_ACCESS() view returns(uint8)
 func (_Content *ContentCaller) DEFAULTACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "DEFAULT_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "DEFAULT_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
 func (_Content *ContentCaller) DEFAULTCHARGE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "DEFAULT_CHARGE")
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "DEFAULT_CHARGE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
 //
 // Solidity: function DEFAULT_SEE() view returns(uint8)
 func (_Content *ContentCaller) DEFAULTSEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "DEFAULT_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "DEFAULT_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_Content *ContentCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_Content *ContentCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_Content *ContentCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
 //
 // Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
 func (_Content *ContentCaller) RunAccessInfo(opts *bind.CallOpts, arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	var (
-		ret0 = new(uint8)
-		ret1 = new(uint8)
-		ret2 = new(uint8)
-		ret3 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
-		ret2,
-		ret3,
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "runAccessInfo", arg0, arg1, arg2)
+
+	if err != nil {
+		return *new(uint8), *new(uint8), *new(uint8), *new(*big.Int), err
 	}
-	err := _Content.contract.Call(opts, out, "runAccessInfo", arg0, arg1, arg2)
-	return *ret0, *ret1, *ret2, *ret3, err
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out1 := *abi.ConvertType(out[1], new(uint8)).(*uint8)
+	out2 := *abi.ConvertType(out[2], new(uint8)).(*uint8)
+	out3 := *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
+
+	return out0, out1, out2, out3, err
+
 }
 
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
 func (_Content *ContentCaller) RunDescribeStatus(opts *bind.CallOpts, arg0 *big.Int) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "runDescribeStatus", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "runDescribeStatus", arg0)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_Content *ContentCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Content.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _Content.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -25673,6 +27595,9 @@ func DeployEditable(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(EditableBin), backend)
 	if err != nil {
@@ -25752,144 +27677,204 @@ func bindEditable(address common.Address, caller bind.ContractCaller, transactor
 //
 // Solidity: function canCommit() view returns(bool)
 func (_Editable *EditableCaller) CanCommit(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "canCommit")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "canCommit")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // CanConfirm is a free data retrieval call binding the contract method 0x14cfabb3.
 //
 // Solidity: function canConfirm() view returns(bool)
 func (_Editable *EditableCaller) CanConfirm(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "canConfirm")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "canConfirm")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_Editable *EditableCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // CountVersionHashes is a free data retrieval call binding the contract method 0x331b86c0.
 //
 // Solidity: function countVersionHashes() view returns(uint256)
 func (_Editable *EditableCaller) CountVersionHashes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "countVersionHashes")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "countVersionHashes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_Editable *EditableCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ObjectHash is a free data retrieval call binding the contract method 0xe02dd9c2.
 //
 // Solidity: function objectHash() view returns(string)
 func (_Editable *EditableCaller) ObjectHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "objectHash")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "objectHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_Editable *EditableCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ParentAddress is a free data retrieval call binding the contract method 0x00821de3.
 //
 // Solidity: function parentAddress() view returns(address)
 func (_Editable *EditableCaller) ParentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "parentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "parentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingHash is a free data retrieval call binding the contract method 0x628449fd.
 //
 // Solidity: function pendingHash() view returns(string)
 func (_Editable *EditableCaller) PendingHash(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "pendingHash")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "pendingHash")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_Editable *EditableCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // VersionHashes is a free data retrieval call binding the contract method 0x7ca8f618.
 //
 // Solidity: function versionHashes(uint256 ) view returns(string)
 func (_Editable *EditableCaller) VersionHashes(opts *bind.CallOpts, arg0 *big.Int) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "versionHashes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "versionHashes", arg0)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // VersionTimestamp is a free data retrieval call binding the contract method 0x7886f747.
 //
 // Solidity: function versionTimestamp(uint256 ) view returns(uint256)
 func (_Editable *EditableCaller) VersionTimestamp(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Editable.contract.Call(opts, out, "versionTimestamp", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Editable.contract.Call(opts, &out, "versionTimestamp", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Commit is a paid mutator transaction binding the contract method 0x9867db74.
@@ -26549,6 +28534,9 @@ func DeployLvRecordableStream(auth *bind.TransactOpts, backend bind.ContractBack
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(LvRecordableStreamBin), backend)
 	if err != nil {
@@ -26628,236 +28616,326 @@ func bindLvRecordableStream(address common.Address, caller bind.ContractCaller, 
 //
 // Solidity: function DEFAULT_ACCESS() view returns(uint8)
 func (_LvRecordableStream *LvRecordableStreamCaller) DEFAULTACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "DEFAULT_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "DEFAULT_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
 func (_LvRecordableStream *LvRecordableStreamCaller) DEFAULTCHARGE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "DEFAULT_CHARGE")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "DEFAULT_CHARGE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
 //
 // Solidity: function DEFAULT_SEE() view returns(uint8)
 func (_LvRecordableStream *LvRecordableStreamCaller) DEFAULTSEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "DEFAULT_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "DEFAULT_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // CanRecord is a free data retrieval call binding the contract method 0xd52e6679.
 //
 // Solidity: function canRecord() view returns(bool)
 func (_LvRecordableStream *LvRecordableStreamCaller) CanRecord(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "canRecord")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "canRecord")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_LvRecordableStream *LvRecordableStreamCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_LvRecordableStream *LvRecordableStreamCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
 //
 // Solidity: function endTime() view returns(uint256)
 func (_LvRecordableStream *LvRecordableStreamCaller) EndTime(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "endTime")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "endTime")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Handle is a free data retrieval call binding the contract method 0xfd0da099.
 //
 // Solidity: function handle() view returns(string)
 func (_LvRecordableStream *LvRecordableStreamCaller) Handle(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "handle")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "handle")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // HasMembership is a free data retrieval call binding the contract method 0xa88db6ad.
 //
 // Solidity: function hasMembership(address accessor) view returns(bool)
 func (_LvRecordableStream *LvRecordableStreamCaller) HasMembership(opts *bind.CallOpts, accessor common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "hasMembership", accessor)
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "hasMembership", accessor)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // MembershipGroups is a free data retrieval call binding the contract method 0x5f7231ab.
 //
 // Solidity: function membershipGroups(uint256 ) view returns(address)
 func (_LvRecordableStream *LvRecordableStreamCaller) MembershipGroups(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "membershipGroups", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "membershipGroups", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // MembershipGroupsLength is a free data retrieval call binding the contract method 0xecedf6d7.
 //
 // Solidity: function membershipGroupsLength() view returns(uint256)
 func (_LvRecordableStream *LvRecordableStreamCaller) MembershipGroupsLength(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "membershipGroupsLength")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "membershipGroupsLength")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_LvRecordableStream *LvRecordableStreamCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // RecordingEnabled is a free data retrieval call binding the contract method 0x684e9657.
 //
 // Solidity: function recordingEnabled() view returns(bool)
 func (_LvRecordableStream *LvRecordableStreamCaller) RecordingEnabled(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "recordingEnabled")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "recordingEnabled")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // RecordingStream is a free data retrieval call binding the contract method 0x21130b6d.
 //
 // Solidity: function recordingStream() view returns(address)
 func (_LvRecordableStream *LvRecordableStreamCaller) RecordingStream(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "recordingStream")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "recordingStream")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // RightsHolder is a free data retrieval call binding the contract method 0x81e20e6e.
 //
 // Solidity: function rightsHolder() view returns(address)
 func (_LvRecordableStream *LvRecordableStreamCaller) RightsHolder(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "rightsHolder")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "rightsHolder")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
 //
 // Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
 func (_LvRecordableStream *LvRecordableStreamCaller) RunAccessInfo(opts *bind.CallOpts, arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	var (
-		ret0 = new(uint8)
-		ret1 = new(uint8)
-		ret2 = new(uint8)
-		ret3 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
-		ret2,
-		ret3,
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "runAccessInfo", arg0, arg1, arg2)
+
+	if err != nil {
+		return *new(uint8), *new(uint8), *new(uint8), *new(*big.Int), err
 	}
-	err := _LvRecordableStream.contract.Call(opts, out, "runAccessInfo", arg0, arg1, arg2)
-	return *ret0, *ret1, *ret2, *ret3, err
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out1 := *abi.ConvertType(out[1], new(uint8)).(*uint8)
+	out2 := *abi.ConvertType(out[2], new(uint8)).(*uint8)
+	out3 := *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
+
+	return out0, out1, out2, out3, err
+
 }
 
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
 func (_LvRecordableStream *LvRecordableStreamCaller) RunDescribeStatus(opts *bind.CallOpts, arg0 *big.Int) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "runDescribeStatus", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "runDescribeStatus", arg0)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // StartTime is a free data retrieval call binding the contract method 0x78e97925.
 //
 // Solidity: function startTime() view returns(uint256)
 func (_LvRecordableStream *LvRecordableStreamCaller) StartTime(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "startTime")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "startTime")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_LvRecordableStream *LvRecordableStreamCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _LvRecordableStream.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecordableStream.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // AddMembershipGroup is a paid mutator transaction binding the contract method 0x90657ca0.
@@ -30746,6 +32824,9 @@ func DeployLvRecording(auth *bind.TransactOpts, backend bind.ContractBackend) (c
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(LvRecordingBin), backend)
 	if err != nil {
@@ -30825,176 +32906,241 @@ func bindLvRecording(address common.Address, caller bind.ContractCaller, transac
 //
 // Solidity: function DEFAULT_ACCESS() view returns(uint8)
 func (_LvRecording *LvRecordingCaller) DEFAULTACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "DEFAULT_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "DEFAULT_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
 func (_LvRecording *LvRecordingCaller) DEFAULTCHARGE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "DEFAULT_CHARGE")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "DEFAULT_CHARGE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
 //
 // Solidity: function DEFAULT_SEE() view returns(uint8)
 func (_LvRecording *LvRecordingCaller) DEFAULTSEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "DEFAULT_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "DEFAULT_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ContentAddress is a free data retrieval call binding the contract method 0x129b9775.
 //
 // Solidity: function contentAddress() view returns(address)
 func (_LvRecording *LvRecordingCaller) ContentAddress(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "contentAddress")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "contentAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_LvRecording *LvRecordingCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_LvRecording *LvRecordingCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // EndTime is a free data retrieval call binding the contract method 0x3197cbb6.
 //
 // Solidity: function endTime() view returns(uint256)
 func (_LvRecording *LvRecordingCaller) EndTime(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "endTime")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "endTime")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_LvRecording *LvRecordingCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // RecordingStatus is a free data retrieval call binding the contract method 0x922386c5.
 //
 // Solidity: function recordingStatus() view returns(uint8)
 func (_LvRecording *LvRecordingCaller) RecordingStatus(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "recordingStatus")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "recordingStatus")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // RecordingStreamContract is a free data retrieval call binding the contract method 0x5ebfe071.
 //
 // Solidity: function recordingStreamContract() view returns(address)
 func (_LvRecording *LvRecordingCaller) RecordingStreamContract(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "recordingStreamContract")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "recordingStreamContract")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
 //
 // Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
 func (_LvRecording *LvRecordingCaller) RunAccessInfo(opts *bind.CallOpts, arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	var (
-		ret0 = new(uint8)
-		ret1 = new(uint8)
-		ret2 = new(uint8)
-		ret3 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
-		ret2,
-		ret3,
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "runAccessInfo", arg0, arg1, arg2)
+
+	if err != nil {
+		return *new(uint8), *new(uint8), *new(uint8), *new(*big.Int), err
 	}
-	err := _LvRecording.contract.Call(opts, out, "runAccessInfo", arg0, arg1, arg2)
-	return *ret0, *ret1, *ret2, *ret3, err
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out1 := *abi.ConvertType(out[1], new(uint8)).(*uint8)
+	out2 := *abi.ConvertType(out[2], new(uint8)).(*uint8)
+	out3 := *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
+
+	return out0, out1, out2, out3, err
+
 }
 
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
 func (_LvRecording *LvRecordingCaller) RunDescribeStatus(opts *bind.CallOpts, arg0 *big.Int) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "runDescribeStatus", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "runDescribeStatus", arg0)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // StartTime is a free data retrieval call binding the contract method 0x78e97925.
 //
 // Solidity: function startTime() view returns(uint256)
 func (_LvRecording *LvRecordingCaller) StartTime(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "startTime")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "startTime")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_LvRecording *LvRecordingCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _LvRecording.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _LvRecording.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -33314,6 +35460,9 @@ func DeployLvStreamRightsHolder(auth *bind.TransactOpts, backend bind.ContractBa
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(LvStreamRightsHolderBin), backend)
 	if err != nil {
@@ -33393,128 +35542,173 @@ func bindLvStreamRightsHolder(address common.Address, caller bind.ContractCaller
 //
 // Solidity: function DEFAULT_ACCESS() view returns(uint8)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) DEFAULTACCESS(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "DEFAULT_ACCESS")
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "DEFAULT_ACCESS")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTCHARGE is a free data retrieval call binding the contract method 0xf185db0c.
 //
 // Solidity: function DEFAULT_CHARGE() view returns(uint8)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) DEFAULTCHARGE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "DEFAULT_CHARGE")
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "DEFAULT_CHARGE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // DEFAULTSEE is a free data retrieval call binding the contract method 0xb535b03e.
 //
 // Solidity: function DEFAULT_SEE() view returns(uint8)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) DEFAULTSEE(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "DEFAULT_SEE")
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "DEFAULT_SEE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // RecordingStreams is a free data retrieval call binding the contract method 0x250fc29a.
 //
 // Solidity: function recordingStreams(address ) view returns(bool)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) RecordingStreams(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "recordingStreams", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "recordingStreams", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // RunAccessInfo is a free data retrieval call binding the contract method 0x0f82c16f.
 //
 // Solidity: function runAccessInfo(uint8 , bytes32[] , address[] ) view returns(uint8, uint8, uint8, uint256)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) RunAccessInfo(opts *bind.CallOpts, arg0 uint8, arg1 [][32]byte, arg2 []common.Address) (uint8, uint8, uint8, *big.Int, error) {
-	var (
-		ret0 = new(uint8)
-		ret1 = new(uint8)
-		ret2 = new(uint8)
-		ret3 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
-		ret2,
-		ret3,
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "runAccessInfo", arg0, arg1, arg2)
+
+	if err != nil {
+		return *new(uint8), *new(uint8), *new(uint8), *new(*big.Int), err
 	}
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "runAccessInfo", arg0, arg1, arg2)
-	return *ret0, *ret1, *ret2, *ret3, err
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out1 := *abi.ConvertType(out[1], new(uint8)).(*uint8)
+	out2 := *abi.ConvertType(out[2], new(uint8)).(*uint8)
+	out3 := *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
+
+	return out0, out1, out2, out3, err
+
 }
 
 // RunDescribeStatus is a free data retrieval call binding the contract method 0x45080442.
 //
 // Solidity: function runDescribeStatus(int256 ) pure returns(bytes32)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) RunDescribeStatus(opts *bind.CallOpts, arg0 *big.Int) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "runDescribeStatus", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "runDescribeStatus", arg0)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_LvStreamRightsHolder *LvStreamRightsHolderCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _LvStreamRightsHolder.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _LvStreamRightsHolder.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // AuthorizeRecording is a paid mutator transaction binding the contract method 0x6135c504.
@@ -35802,6 +37996,9 @@ func DeployMetaObject(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(MetaObjectBin), backend)
 	if err != nil {
@@ -35881,60 +38078,85 @@ func bindMetaObject(address common.Address, caller bind.ContractCaller, transact
 //
 // Solidity: function contentSpace() view returns(address)
 func (_MetaObject *MetaObjectCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _MetaObject.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _MetaObject.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_MetaObject *MetaObjectCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _MetaObject.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _MetaObject.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // GetMeta is a free data retrieval call binding the contract method 0xac55c906.
 //
 // Solidity: function getMeta(bytes key) view returns(bytes)
 func (_MetaObject *MetaObjectCaller) GetMeta(opts *bind.CallOpts, key []byte) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _MetaObject.contract.Call(opts, out, "getMeta", key)
-	return *ret0, err
+	var out []interface{}
+	err := _MetaObject.contract.Call(opts, &out, "getMeta", key)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_MetaObject *MetaObjectCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _MetaObject.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _MetaObject.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_MetaObject *MetaObjectCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _MetaObject.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _MetaObject.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -35995,6 +38217,9 @@ func DeployNode(auth *bind.TransactOpts, backend bind.ContractBackend) (common.A
 	parsed, err := ParsedABI(K_Node)
 	if err != nil {
 		return common.Address{}, nil, nil, err
+	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(NodeBin), backend)
@@ -36075,48 +38300,68 @@ func bindNode(address common.Address, caller bind.ContractCaller, transactor bin
 //
 // Solidity: function contentSpace() view returns(address)
 func (_Node *NodeCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Node.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _Node.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_Node *NodeCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Node.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _Node.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_Node *NodeCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Node.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Node.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_Node *NodeCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Node.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _Node.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -36997,6 +39242,9 @@ func DeployNodeSpace(auth *bind.TransactOpts, backend bind.ContractBackend) (com
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(NodeSpaceBin), backend)
 	if err != nil {
@@ -37076,132 +39324,187 @@ func bindNodeSpace(address common.Address, caller bind.ContractCaller, transacto
 //
 // Solidity: function activeNodeAddresses(uint256 ) view returns(address)
 func (_NodeSpace *NodeSpaceCaller) ActiveNodeAddresses(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "activeNodeAddresses", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "activeNodeAddresses", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ActiveNodeLocators is a free data retrieval call binding the contract method 0x5272ae17.
 //
 // Solidity: function activeNodeLocators(uint256 ) view returns(bytes)
 func (_NodeSpace *NodeSpaceCaller) ActiveNodeLocators(opts *bind.CallOpts, arg0 *big.Int) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "activeNodeLocators", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "activeNodeLocators", arg0)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // CanNodePublish is a free data retrieval call binding the contract method 0x26683e14.
 //
 // Solidity: function canNodePublish(address candidate) view returns(bool)
 func (_NodeSpace *NodeSpaceCaller) CanNodePublish(opts *bind.CallOpts, candidate common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "canNodePublish", candidate)
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "canNodePublish", candidate)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // ContentSpace is a free data retrieval call binding the contract method 0xaf570c04.
 //
 // Solidity: function contentSpace() view returns(address)
 func (_NodeSpace *NodeSpaceCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_NodeSpace *NodeSpaceCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // NumActiveNodes is a free data retrieval call binding the contract method 0x43f59ec7.
 //
 // Solidity: function numActiveNodes() view returns(uint256)
 func (_NodeSpace *NodeSpaceCaller) NumActiveNodes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "numActiveNodes")
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "numActiveNodes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // NumPendingNodes is a free data retrieval call binding the contract method 0xf41a1587.
 //
 // Solidity: function numPendingNodes() view returns(uint256)
 func (_NodeSpace *NodeSpaceCaller) NumPendingNodes(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "numPendingNodes")
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "numPendingNodes")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_NodeSpace *NodeSpaceCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingNodeAddresses is a free data retrieval call binding the contract method 0x6be9514c.
 //
 // Solidity: function pendingNodeAddresses(uint256 ) view returns(address)
 func (_NodeSpace *NodeSpaceCaller) PendingNodeAddresses(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "pendingNodeAddresses", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "pendingNodeAddresses", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PendingNodeLocators is a free data retrieval call binding the contract method 0x69e30ff8.
 //
 // Solidity: function pendingNodeLocators(uint256 ) view returns(bytes)
 func (_NodeSpace *NodeSpaceCaller) PendingNodeLocators(opts *bind.CallOpts, arg0 *big.Int) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "pendingNodeLocators", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "pendingNodeLocators", arg0)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_NodeSpace *NodeSpaceCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _NodeSpace.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _NodeSpace.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // AddNode is a paid mutator transaction binding the contract method 0x64f0f050.
@@ -37823,6 +40126,9 @@ func DeployOwnable(auth *bind.TransactOpts, backend bind.ContractBackend) (commo
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(OwnableBin), backend)
 	if err != nil {
@@ -37902,48 +40208,68 @@ func bindOwnable(address common.Address, caller bind.ContractCaller, transactor 
 //
 // Solidity: function contentSpace() view returns(address)
 func (_Ownable *OwnableCaller) ContentSpace(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Ownable.contract.Call(opts, out, "contentSpace")
-	return *ret0, err
+	var out []interface{}
+	err := _Ownable.contract.Call(opts, &out, "contentSpace")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Creator is a free data retrieval call binding the contract method 0x02d05d3f.
 //
 // Solidity: function creator() view returns(address)
 func (_Ownable *OwnableCaller) Creator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Ownable.contract.Call(opts, out, "creator")
-	return *ret0, err
+	var out []interface{}
+	err := _Ownable.contract.Call(opts, &out, "creator")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
 func (_Ownable *OwnableCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Ownable.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Ownable.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_Ownable *OwnableCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Ownable.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _Ownable.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Kill is a paid mutator transaction binding the contract method 0x41c0e1b5.
@@ -37990,6 +40316,9 @@ func DeployPrecompile(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 	parsed, err := ParsedABI(K_Precompile)
 	if err != nil {
 		return common.Address{}, nil, nil, err
+	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(PrecompileBin), backend)
@@ -38070,12 +40399,17 @@ func bindPrecompile(address common.Address, caller bind.ContractCaller, transact
 //
 // Solidity: function KMS() view returns(int256)
 func (_Precompile *PrecompileCaller) KMS(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Precompile.contract.Call(opts, out, "KMS")
-	return *ret0, err
+	var out []interface{}
+	err := _Precompile.contract.Call(opts, &out, "KMS")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TransactableABI is the input ABI used to generate the binding from.
@@ -38159,28 +40493,35 @@ func bindTransactable(address common.Address, caller bind.ContractCaller, transa
 //
 // Solidity: function validateTimestamp(uint256 _ts) view returns(bool, uint256)
 func (_Transactable *TransactableCaller) ValidateTimestamp(opts *bind.CallOpts, _ts *big.Int) (bool, *big.Int, error) {
-	var (
-		ret0 = new(bool)
-		ret1 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
+	var out []interface{}
+	err := _Transactable.contract.Call(opts, &out, "validateTimestamp", _ts)
+
+	if err != nil {
+		return *new(bool), *new(*big.Int), err
 	}
-	err := _Transactable.contract.Call(opts, out, "validateTimestamp", _ts)
-	return *ret0, *ret1, err
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return out0, out1, err
+
 }
 
 // ValidateTransaction is a free data retrieval call binding the contract method 0x763d5ee6.
 //
 // Solidity: function validateTransaction(uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts) view returns(bool)
 func (_Transactable *TransactableCaller) ValidateTransaction(opts *bind.CallOpts, _v uint8, _r [32]byte, _s [32]byte, _dest common.Address, _value *big.Int, _ts *big.Int) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Transactable.contract.Call(opts, out, "validateTransaction", _v, _r, _s, _dest, _value, _ts)
-	return *ret0, err
+	var out []interface{}
+	err := _Transactable.contract.Call(opts, &out, "validateTransaction", _v, _r, _s, _dest, _value, _ts)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Execute is a paid mutator transaction binding the contract method 0x508ad278.
@@ -38207,6 +40548,9 @@ func DeployUserSpace(auth *bind.TransactOpts, backend bind.ContractBackend) (com
 	parsed, err := ParsedABI(K_UserSpace)
 	if err != nil {
 		return common.Address{}, nil, nil, err
+	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(UserSpaceBin), backend)
@@ -38287,24 +40631,34 @@ func bindUserSpace(address common.Address, caller bind.ContractCaller, transacto
 //
 // Solidity: function userWallets(address ) view returns(address)
 func (_UserSpace *UserSpaceCaller) UserWallets(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UserSpace.contract.Call(opts, out, "userWallets", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _UserSpace.contract.Call(opts, &out, "userWallets", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(bytes32)
 func (_UserSpace *UserSpaceCaller) Version(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _UserSpace.contract.Call(opts, out, "version")
-	return *ret0, err
+	var out []interface{}
+	err := _UserSpace.contract.Call(opts, &out, "version")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // StringsABI is the input ABI used to generate the binding from.
@@ -38318,6 +40672,9 @@ func DeployStrings(auth *bind.TransactOpts, backend bind.ContractBackend) (commo
 	parsed, err := ParsedABI(K_Strings)
 	if err != nil {
 		return common.Address{}, nil, nil, err
+	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(StringsBin), backend)

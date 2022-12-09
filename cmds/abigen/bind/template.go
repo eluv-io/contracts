@@ -34,7 +34,7 @@ type tmplData struct {
 type tmplContract struct {
 	Type        string                 // Type name of the main contract binding
 	InputABI    string                 // JSON ABI used as the input to generate the binding from
-	InputBin    string                 // Optional EVM bytecode used to denetare deploy code from
+	InputBin    string                 // Optional EVM bytecode used to generate deploy code from
 	FuncSigs    map[string]string      // Optional map: string signature -> 4-byte signature
 	Constructor abi.Method             // Contract constructor for deploy parametrization
 	Calls       map[string]*tmplMethod // Contract calls that only read state data
@@ -54,7 +54,8 @@ type tmplMethod struct {
 	Structured bool       // Whether the returns should be accumulated into a struct
 }
 
-// tmplEvent is a wrapper around an abi.Event
+// tmplEvent is a wrapper around an abi.Event that contains a few preprocessed
+// and cached data fields.
 type tmplEvent struct {
 	KType      string    // Type name of a contract binding where the event was found
 	Original   abi.Event // Original event as parsed by the abi package
@@ -109,7 +110,7 @@ type tmplField struct {
 	SolKind abi.Type // Raw abi type information
 }
 
-// tmplStruct is a wrapper around an abi.tuple contains a auto-generated
+// tmplStruct is a wrapper around an abi.tuple and contains an auto-generated
 // struct name.
 type tmplStruct struct {
 	Name   string       // Auto-generated struct name(before solidity v0.5.11) or raw name.
@@ -123,7 +124,8 @@ var tmplSource = map[Lang]string{
 	LangJava: tmplSourceJava,
 }
 
-// tmplSourceGo is the Go source template use to generate the contract binding
+// tmplSourceGo is the Go source template that the generated Go contract binding
+// is based on.
 const tmplSourceGo = `
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
@@ -132,6 +134,7 @@ package {{.Package}}
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -150,6 +153,7 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
@@ -167,14 +171,14 @@ var ParsedABIS = map[string]*abi.ABI{}
 // ABI names are constants starting with K_
 var BoundContracts = map[string]*bind.BoundContract{}
 
-// Map of Unique events names to *EventInfo. 
-// Unique events names are constants starting with E_ 
+// Map of Unique events names to *EventInfo.
+// Unique events names are constants starting with E_
 var UniqueEvents = map[string]*EventInfo{}
 
-// Map of Unique events types to *EventInfo 
+// Map of Unique events types to *EventInfo
 var EventsByType = map[reflect.Type]*EventInfo{}
 
-// Map of Unique events IDs to *EventInfo 
+// Map of Unique events IDs to *EventInfo
 var EventsByID   = map[common.Hash]*EventInfo{}
 
 
@@ -240,10 +244,10 @@ var ABIS = map[string]string{
 }
 
 // Unique events names.
-// Unique events are events whose ID and name are unique across contracts. 
+// Unique events are events whose ID and name are unique across contracts.
 const (
 	{{range $event := .Events}}
-	E_{{.EventName}} = "{{.EventName}}"{{end}} 
+	E_{{.EventName}} = "{{.EventName}}"{{end}}
 )
 
 type EventInfo = c.EventInfo
@@ -260,7 +264,7 @@ func init() {
 	{{range .Events}}
 	ev = &EventInfo{
 		Name:   "{{.EventName}}",
-		ID:     common.HexToHash("{{toString .EventID}}"), 
+		ID:     common.HexToHash("{{toString .EventID}}"),
 		Types: []EventType{
 			{{range .EventTypes -}}
 			{
@@ -306,9 +310,12 @@ type {{.Normalized.Name}} struct {
 
 		// Deploy{{.Type}} deploys a new Ethereum contract, binding an instance of {{.Type}} to it.
 		func Deploy{{.Type}}(auth *bind.TransactOpts, backend bind.ContractBackend {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type $structs}}{{end}}) (common.Address, *types.Transaction, *{{.Type}}, error) {
-	      parsed, err := ParsedABI(K_{{.Type}})
+		  parsed, err := ParsedABI(K_{{.Type}})
 		  if err != nil {
 		    return common.Address{}, nil, nil, err
+		  }
+          if parsed == nil {
+			return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 		  }
 		  {{range $pattern, $name := .Libraries}}
 			{{decapitalise $name}}Addr, _, _, _ := Deploy{{capitalise $name}}(auth, backend)
@@ -394,19 +401,26 @@ type {{.Normalized.Name}} struct {
 		//
 		// Solidity: {{.Original.String}}
 		func (_{{$contract.Type}} *{{$contract.Type}}Caller) {{.Normalized.Name}}(opts *bind.CallOpts {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type $structs}} {{end}}) ({{if .Structured}}struct{ {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}};{{end}} },{{else}}{{range .Normalized.Outputs}}{{bindtype .Type $structs}},{{end}}{{end}} error) {
-			{{if .Structured}}ret := new(struct{
-				{{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}}
-				{{end}}
-			}){{else}}var (
-				{{range $i, $_ := .Normalized.Outputs}}ret{{$i}} = new({{bindtype .Type $structs}})
-				{{end}}
-			){{end}}
-			out := {{if .Structured}}ret{{else}}{{if eq (len .Normalized.Outputs) 1}}ret0{{else}}&[]interface{}{
-				{{range $i, $_ := .Normalized.Outputs}}ret{{$i}},
-				{{end}}
-			}{{end}}{{end}}
-			err := _{{$contract.Type}}.contract.Call(opts, out, "{{.Original.Name}}" {{range .Normalized.Inputs}}, {{.Name}}{{end}})
-			return {{if .Structured}}*ret,{{else}}{{range $i, $_ := .Normalized.Outputs}}*ret{{$i}},{{end}}{{end}} err
+			var out []interface{}
+			err := _{{$contract.Type}}.contract.Call(opts, &out, "{{.Original.Name}}" {{range .Normalized.Inputs}}, {{.Name}}{{end}})
+			{{if .Structured}}
+			outstruct := new(struct{ {{range .Normalized.Outputs}} {{.Name}} {{bindtype .Type $structs}}; {{end}} })
+			if err != nil {
+				return *outstruct, err
+			}
+			{{range $i, $t := .Normalized.Outputs}}
+			outstruct.{{.Name}} = *abi.ConvertType(out[{{$i}}], new({{bindtype .Type $structs}})).(*{{bindtype .Type $structs}}){{end}}
+
+			return *outstruct, err
+			{{else}}
+			if err != nil {
+				return {{range $i, $_ := .Normalized.Outputs}}*new({{bindtype .Type $structs}}), {{end}} err
+			}
+			{{range $i, $t := .Normalized.Outputs}}
+			out{{$i}} := *abi.ConvertType(out[{{$i}}], new({{bindtype .Type $structs}})).(*{{bindtype .Type $structs}}){{end}}
+
+			return {{range $i, $t := .Normalized.Outputs}}out{{$i}}, {{end}} err
+			{{end}}
 		}
 
 	{{end}}
@@ -420,7 +434,7 @@ type {{.Normalized.Name}} struct {
 		}
 	{{end}}
 
-	{{if .Fallback}} 
+	{{if .Fallback}}
 		// Fallback is a paid mutator transaction binding the contract fallback function.
 		//
 		// Solidity: {{.Fallback.Original.String}}
@@ -429,7 +443,7 @@ type {{.Normalized.Name}} struct {
 		}
 	{{end}}
 
-	{{if .Receive}} 
+	{{if .Receive}}
 		// Receive is a paid mutator transaction binding the contract receive function.
 		//
 		// Solidity: {{.Receive.Original.String}}
@@ -585,10 +599,8 @@ type {{.Normalized.Name}} struct {
 {{end}}
 `
 
-// based on.
-
-// tmplSourceJava is the Java source template use to generate the contract binding
-// based on.
+// tmplSourceJava is the Java source template that the generated Java contract binding
+// is based on.
 const tmplSourceJava = `
 // This file is an automatically generated Java binding. Do not modify as any
 // change will likely be lost upon the next re-generation!
@@ -707,7 +719,7 @@ import java.util.*;
 	// Fallback is a paid mutator transaction binding the contract fallback function.
 	//
 	// Solidity: {{.Fallback.Original.String}}
-	public Transaction Fallback(TransactOpts opts, byte[] calldata) throws Exception { 
+	public Transaction Fallback(TransactOpts opts, byte[] calldata) throws Exception {
 		return this.Contract.rawTransact(opts, calldata);
 	}
     {{end}}
@@ -716,7 +728,7 @@ import java.util.*;
 	// Receive is a paid mutator transaction binding the contract receive function.
 	//
 	// Solidity: {{.Receive.Original.String}}
-	public Transaction Receive(TransactOpts opts) throws Exception { 
+	public Transaction Receive(TransactOpts opts) throws Exception {
 		return this.Contract.rawTransact(opts, null);
 	}
     {{end}}

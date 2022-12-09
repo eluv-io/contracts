@@ -5,6 +5,7 @@ package payments
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -23,6 +24,7 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
@@ -200,6 +202,9 @@ func DeployPayments(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
 	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(PaymentsBin), backend)
 	if err != nil {
@@ -279,12 +284,17 @@ func bindPayments(address common.Address, caller bind.ContractCaller, transactor
 //
 // Solidity: function calculateTotal(uint256[] _amounts) pure returns(uint256 total)
 func (_Payments *PaymentsCaller) CalculateTotal(opts *bind.CallOpts, _amounts []*big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Payments.contract.Call(opts, out, "calculateTotal", _amounts)
-	return *ret0, err
+	var out []interface{}
+	err := _Payments.contract.Call(opts, &out, "calculateTotal", _amounts)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetPayment is a free data retrieval call binding the contract method 0x8e2aa1f3.
@@ -298,7 +308,10 @@ func (_Payments *PaymentsCaller) GetPayment(opts *bind.CallOpts, _paymentId [16]
 	Oracle        common.Address
 	State         uint8
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _Payments.contract.Call(opts, &out, "getPayment", _paymentId)
+
+	outstruct := new(struct {
 		Sender        common.Address
 		Receivers     []common.Address
 		TokenContract common.Address
@@ -306,9 +319,19 @@ func (_Payments *PaymentsCaller) GetPayment(opts *bind.CallOpts, _paymentId [16]
 		Oracle        common.Address
 		State         uint8
 	})
-	out := ret
-	err := _Payments.contract.Call(opts, out, "getPayment", _paymentId)
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Sender = *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	outstruct.Receivers = *abi.ConvertType(out[1], new([]common.Address)).(*[]common.Address)
+	outstruct.TokenContract = *abi.ConvertType(out[2], new(common.Address)).(*common.Address)
+	outstruct.Amounts = *abi.ConvertType(out[3], new([]*big.Int)).(*[]*big.Int)
+	outstruct.Oracle = *abi.ConvertType(out[4], new(common.Address)).(*common.Address)
+	outstruct.State = *abi.ConvertType(out[5], new(uint8)).(*uint8)
+
+	return *outstruct, err
+
 }
 
 // CancelPayment is a paid mutator transaction binding the contract method 0xf2c9f603.

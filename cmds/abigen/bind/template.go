@@ -323,10 +323,11 @@ type {{.Normalized.Name}} struct {
 
 		// Deploy{{.Type}} deploys a new Ethereum contract, binding an instance of {{.Type}} to it.
 		func Deploy{{.Type}}(auth *bind.TransactOpts, backend bind.ContractBackend {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type $structs}}{{end}}) (common.Address, *types.Transaction, *{{.Type}}, error) {
-	      parsed, err := ParsedABI(K_{{.Type}})
+		  parsed, err := ParsedABI(K_{{.Type}})
 		  if err != nil {
 		    return common.Address{}, nil, nil, err
 		  }
+
 		  if parsed == nil {
 			return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 		  }

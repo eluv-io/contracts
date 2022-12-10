@@ -294,6 +294,7 @@ func DeployToken(auth *bind.TransactOpts, backend bind.ContractBackend, name str
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}

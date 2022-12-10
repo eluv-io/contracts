@@ -612,6 +612,7 @@ func DeployAddress(auth *bind.TransactOpts, backend bind.ContractBackend) (commo
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -824,6 +825,7 @@ func DeployERC20(auth *bind.TransactOpts, backend bind.ContractBackend) (common.
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -1335,6 +1337,7 @@ func DeployERC20Capped(auth *bind.TransactOpts, backend bind.ContractBackend, ca
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -2710,6 +2713,7 @@ func DeployERC20Mintable(auth *bind.TransactOpts, backend bind.ContractBackend) 
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -3548,6 +3552,7 @@ func DeployERC20Pausable(auth *bind.TransactOpts, backend bind.ContractBackend) 
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -4674,6 +4679,7 @@ func DeployERC721(auth *bind.TransactOpts, backend bind.ContractBackend) (common
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -5389,6 +5395,7 @@ func DeployERC721Enumerable(auth *bind.TransactOpts, backend bind.ContractBacken
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -6155,6 +6162,7 @@ func DeployERC721Metadata(auth *bind.TransactOpts, backend bind.ContractBackend,
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -6930,6 +6938,7 @@ func DeployElvToken(auth *bind.TransactOpts, backend bind.ContractBackend, cap *
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -8454,6 +8463,7 @@ func DeployElvTokenHelper(auth *bind.TransactOpts, backend bind.ContractBackend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -8898,6 +8908,7 @@ func DeployElvTradable(auth *bind.TransactOpts, backend bind.ContractBackend, _n
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -11576,6 +11587,7 @@ func DeployElvTradableLocal(auth *bind.TransactOpts, backend bind.ContractBacken
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -17844,6 +17856,7 @@ func DeployOwnableDelegateProxy(auth *bind.TransactOpts, backend bind.ContractBa
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -17956,6 +17969,7 @@ func DeployOwnerProxyRegistry(auth *bind.TransactOpts, backend bind.ContractBack
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -19420,6 +19434,7 @@ func DeployProxyRegistry(auth *bind.TransactOpts, backend bind.ContractBackend) 
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -19550,6 +19565,7 @@ func DeployRedeemable(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -20444,6 +20460,7 @@ func DeployRoles(auth *bind.TransactOpts, backend bind.ContractBackend) (common.
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -20542,6 +20559,7 @@ func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -20640,6 +20658,7 @@ func DeployStrings(auth *bind.TransactOpts, backend bind.ContractBackend) (commo
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -20854,6 +20873,7 @@ func DeployTransferProxyRegistry(auth *bind.TransactOpts, backend bind.ContractB
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
@@ -21232,6 +21252,7 @@ func DeployWELV9(auth *bind.TransactOpts, backend bind.ContractBackend) (common.
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	if parsed == nil {
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}

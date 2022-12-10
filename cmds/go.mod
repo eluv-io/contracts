@@ -3,7 +3,7 @@ module github.com/eluv-io/contracts/cmds
 go 1.17
 
 require (
-	github.com/eluv-io/contracts v0.0.0-20220704124958-6e385d8bb07f
+	github.com/eluv-io/contracts v1.3.11
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/mattn/go-colorable v0.1.8
 	github.com/mattn/go-isatty v0.0.12
@@ -19,7 +19,6 @@ require (
 require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
-	github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -27,6 +26,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/eluv-io/contracts/contracts-go v1.3.11 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fjl/memsize v0.0.0-20190710130421-bcb5799ab5e5 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect

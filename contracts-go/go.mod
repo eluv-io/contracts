@@ -3,8 +3,8 @@ module github.com/eluv-io/contracts/contracts-go
 go 1.17
 
 require (
-	github.com/ethereum/go-ethereum v1.10.19
-	github.com/stretchr/testify v1.7.0
+	github.com/ethereum/go-ethereum v1.10.22
+	github.com/stretchr/testify v1.7.2
 )
 
 require (
@@ -23,7 +23,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tklauser/numcpus v0.2.2 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

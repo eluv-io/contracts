@@ -561,21 +561,21 @@ func bindStructTypeGo(kind abi.Type, structs map[string]*tmplStruct) string {
 			return s.Name
 		}
 		var (
-			// names  = make(map[string]bool)
+			names  = make(map[string]bool)
 			fields []*tmplField
 		)
 		for i, elem := range kind.TupleElems {
 			name := capitalise(kind.TupleRawNames[i])
-			// name = abi.ResolveNameConflict(name, func(s string) bool { return names[s] })
-			// names[name] = true
+			name = abi.ResolveNameConflict(name, func(s string) bool { return names[s] })
+			names[name] = true
 			fields = append(fields, &tmplField{Type: bindStructTypeGo(*elem, structs), Name: name, SolKind: *elem})
 		}
 		name := kind.TupleRawName
 		if name == "" {
 			name = fmt.Sprintf("Struct%d", len(structs))
 		}
-		// name = capitalise(name)
 
+		name = capitalise(name)
 		structs[id] = &tmplStruct{
 			Name:   name,
 			Fields: fields,

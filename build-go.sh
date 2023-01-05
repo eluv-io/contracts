@@ -1,8 +1,7 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-#
-# This build script regenerates go bindings for go-ethereum 1.10.2
+# This build script regenerates go bindings for go-ethereum 1.10.19
 # NOTE:
 # * abigen does not anymore invoke solc (solc output must be explicitly provided).
 

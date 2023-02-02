@@ -60,6 +60,12 @@ mkdir -p _build_contracts_go
     abigen $solc_0_5_4 base_content_space.sol contracts ../../contracts-go/contracts/base_content_space.go
     echo "#### generating latest contracts/tradable"
     abigen $solc_0_5_4 tradable/elv_tradable_full.sol tradable ../../contracts-go/tradable/elv_tradable_full.go
+
+    git checkout "9b7ee1f581cb1391f6295ed9fbcc8affc192b7c2"
+    echo "#### generating contracts_v4.0.0"
+    mkdir -p ../../contracts-go/contracts_v4_0_0
+    abigen $solc_0_5_4 base_content_space.sol contracts_v4_0_0 ../../contracts-go/contracts_v4_0_0/base_content_space.go
+
   )
 
   # older contracts require solc 0.4.24

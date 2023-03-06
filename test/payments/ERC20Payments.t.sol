@@ -29,7 +29,7 @@ contract ERC20PaymentsTest is Test {
         carol = users[2];
         vm.label(carol, "Carol");
 
-        token = new ElvToken("ElvToken","ELV",20000000);
+        token = new ElvToken("ElvToken","ELV",18, 20000000);
         erc20Payments = new ERC20Payments();
     }
 

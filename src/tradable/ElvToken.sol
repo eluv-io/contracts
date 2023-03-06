@@ -8,11 +8,18 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./cmn/Roles.sol";
 
 contract ElvToken is ERC20, ERC20Burnable, Pausable, AccessControlEnumerable {
-    constructor(string memory name, string memory symbol, uint256 amount) ERC20(name, symbol) {
+
+    uint8 private tokenDecimal;
+    constructor(string memory name, string memory symbol, uint8 decimal, uint256 amount) ERC20(name, symbol) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ElvCmnRoles.PAUSER_ROLE, msg.sender);
+        tokenDecimal = decimal;
         _mint(msg.sender, amount * 10 ** decimals());
         _grantRole(ElvCmnRoles.MINTER_ROLE, msg.sender);
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return tokenDecimal;
     }
 
     function pause() public onlyRole(ElvCmnRoles.PAUSER_ROLE) {

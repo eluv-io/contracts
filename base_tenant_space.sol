@@ -14,6 +14,7 @@ import "./meta_object.sol";
 import "./lib_precompile.sol";
 import "./base_content_space.sol";
 import "./lib_enctoken.sol";
+import {factoryHelper} from "./base_tenant_factory.sol";
 
 // CAREFUL: no storage! - otherwise it will conflict with the calling contract
 contract TenantFuncsBase is MetaObject, CounterObject {
@@ -87,6 +88,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
         contentSpace = address(_contentSpace);
+        require(msg.sender == contentSpace || factoryHelper.isValidTenantCreator(contentSpace), "tenant_creator(msg.sender) invalid");
         addressKMS = _kmsAddr;
 
         // using CATEGORY_CONTRACT for tenant

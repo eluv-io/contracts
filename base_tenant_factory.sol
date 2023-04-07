@@ -3,7 +3,9 @@ pragma solidity 0.5.4;
 import {Ownable} from "./ownable.sol";
 import {Utils} from "./utils.sol";
 import {AccessIndexor} from "./access_indexor.sol";
+import "./base_content_space.sol";
 import "./base_tenant_space.sol";
+import "./user_space.sol";
 import "./base_access_control_group.sol";
 import "./strings_utils.sol";
 import "./address_utils.sol";
@@ -34,7 +36,6 @@ contract BaseTenantFactory is Ownable {
      * 3. set rights to tx.origin for baseTenantSpace contract
     */
     function createTenant(string memory _tenantName, address _kmsAddr) public returns (address) {
-        require(msg.sender == contentSpace || factoryHelper.isValidTenantCreator(contentSpace), "tenant_creator(msg.sender) invalid");
         address payable newTenant = address(new BaseTenantSpace(contentSpace, _tenantName, _kmsAddr));
         BaseTenantSpace theTenant = BaseTenantSpace(newTenant);
 
@@ -87,7 +88,7 @@ library factoryHelper {
             // check if msg.sender is member of the group
             // TODO: should we check checkAccessRights...
             BaseAccessControlGroup theGroup = BaseAccessControlGroup(grpAddr);
-            bool isMember = theGroup.membersMap(msg.sender);
+            bool isMember = theGroup.membersMap(tx.origin);
             if (isMember) {
                 return true;
             }

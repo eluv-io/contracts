@@ -86,10 +86,11 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     constructor(address payable _contentSpace, string memory _tenantName, address _kmsAddr) public payable {
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
-        // allow either the space owner or a trusted address to refer to the space
-        require(msg.sender == spc.owner() || spc.checkKMSAddr(msg.sender) > 0);
         contentSpace = address(_contentSpace);
         addressKMS = _kmsAddr;
+
+        // using CATEGORY_CONTRACT for tenant
+        indexCategory = 5; // AccessIndexor CATEGORY_CONTRACT
         emit CreateTenant(version, owner);
     }
 

@@ -482,7 +482,6 @@ contract BaseContentFactory is Ownable {
         address _typeAddr) private view returns (bytes memory) {
 
         bytes memory bytecode = ContentFactoryHelper(factoryHelper).getContentObjectBytecode();
-        //bytes memory bytecode = type(BaseContent).creationCode;
         return abi.encodePacked(bytecode, abi.encode(_spcAddr, _libAddr, _typeAddr));
     }
 

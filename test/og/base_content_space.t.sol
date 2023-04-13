@@ -101,6 +101,43 @@ contract BaseContentSpaceTest is OgTest {
         address tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
         console.log(tenantAddress);
         vm.stopPrank();
+
+        salt = 1111;
+        vm.startPrank(groupUser1, groupUser1);
+        tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
+        console.log(tenantAddress);
+        vm.stopPrank();
+    }
+
+    function testRevert_CreateBaseTenantSpaceWithSameSalt() public {
+        // create the groups
+        vm.startPrank(groupCreator, groupCreator);
+        address group1 = createGroupAndAddUsers();
+        address group2 = createGroupAndAddUsers();
+        vm.stopPrank();
+        bytes memory value = bytes(Strings.strConcat(vm.toString(group1), ",", vm.toString(group2)));
+
+        vm.startPrank(spaceCreator, spaceCreator);
+        bytes memory key = bytes("_ELV_GROUP_TENANT_AUTHORITIES");
+        space.putMeta(key, value);
+        bytes memory meta = space.getMeta(key);
+        console.log("meta", string(meta));
+        vm.stopPrank();
+
+        vm.startPrank(groupUser1, groupUser1);
+        tenantFactory = new BaseTenantFactory(spaceAddr);
+        vm.stopPrank();
+
+        vm.startPrank(groupUser1, groupUser1);
+        address tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
+        console.log(tenantAddress);
+        vm.stopPrank();
+
+        vm.startPrank(groupUser1, groupUser1);
+        vm.expectRevert();
+        tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
+        console.log(tenantAddress);
+        vm.stopPrank();
     }
 
     function testRevert_CreateTenantFactoryWhenMetaNotSet() public {

@@ -82,7 +82,8 @@ contract BaseContentSpaceTest is OgTest {
         vm.startPrank(libraryCreator, libraryCreator);
         address payable libraryAddr = address(uint160(space.createLibrary(kmsAddr)));
         console.log("library Address:", libraryAddr);
-        address contentAddr = space.createContent(libraryAddr, address(0x1));
+        BaseLibrary libInst = BaseLibrary(libraryAddr);
+        address contentAddr = libInst.createContent(address(0x1));
         console.log("content Address:", contentAddr);
         vm.stopPrank();
     }

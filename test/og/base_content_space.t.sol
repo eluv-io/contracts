@@ -78,6 +78,15 @@ contract BaseContentSpaceTest is OgTest {
         vm.stopPrank();
     }
 
+    function testCreateContent() public {
+        vm.startPrank(libraryCreator, libraryCreator);
+        address payable libraryAddr = address(uint160(space.createLibrary(kmsAddr)));
+        console.log("library Address:", libraryAddr);
+        address contentAddr = space.createContent(libraryAddr, address(0x1));
+        console.log("content Address:", contentAddr);
+        vm.stopPrank();
+    }
+
     function testCreateTenantFactoryAndBaseTenantSpace() public {
         // create the groups
         vm.startPrank(groupCreator, groupCreator);

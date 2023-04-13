@@ -239,7 +239,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
 
     function createContent(address payable lib, address payable content_type) public returns (address) {
         require(msg.sender == tx.origin || msg.sender == lib);
-        address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
+        address contentAddress = BaseContentFactory(contentFactory).createContent2(lib, content_type);
         emit CreateContent(contentAddress);
         return contentAddress;
     }
@@ -250,7 +250,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         emit CreateGroup(groupAddress);
         return groupAddress;
     }
-    
+
     function createUserWallet(address payable _user) external returns (address) {
         return createUserWalletInternal(_user);
     }
@@ -500,6 +500,74 @@ contract BaseContentFactory is Ownable {
         // BaseContent content = new BaseContent(msg.sender, lib, content_type);
         bytes memory cObjBin = ContentFactoryHelper(factoryHelper).getContentObjectBin();
         address payable contentAddr = createContractBytes(cObjBin, msg.sender, lib, content_type);
+        BaseContent content = BaseContent(contentAddr);
+
+        content.setAddressKMS(libraryObj.addressKMS());
+        content.setContentContractAddress(libraryObj.contentTypeContracts(content_type));
+
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address payable userWallet = address(uint160(userSpaceObj.userWallets(tx.origin)));
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            content.transferOwnership(tx.origin);
+            index.setContentObjectRights(address(content), 0, 2);
+        } else {
+            // v3+ path ...
+            BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+            content.transferOwnership(tx.origin);
+        }
+
+        return address(content);
+    }
+
+    // creationBytecode uses the creationCode of baseContent ..
+    // but this does not work and the contracts reverts
+    function creationBytecode(
+        address _spcAddr,
+        address _libAddr,
+        address _typeAddr) private pure returns (bytes memory) {
+
+        bytes memory bytecode = type(BaseContent).creationCode;
+        return abi.encodePacked(bytecode, abi.encode(_spcAddr, _libAddr, _typeAddr));
+    }
+
+    // saltFor computes a salt for the given address: 'address++block.number'
+    // The function is public for testing purposes.
+    function saltFor(address addr) public view returns (uint256) {
+        uint256 ret;
+        ret = uint256(uint160(addr));
+        ret <<= 96;
+        return uint256(ret) + block.number;
+    }
+
+    function deploy(bytes memory bytecode, uint _salt) private returns (address payable _addr) {
+        assembly {
+            _addr := create2(0, add(bytecode, 0x20), mload(bytecode), _salt)
+
+            if iszero(extcodesize(_addr)) {
+                revert(0, 0)
+            }
+        }
+    }
+
+    function createContent2(address payable lib, address payable content_type) public  returns (address) {
+        require(msg.sender == contentSpace);
+        Container libraryObj = Container(lib);
+
+        // this looks suspicious because it *can* be spoofed, but the object owner and the rights holder ends up being tx.origin
+        //  as well so there doesn't seem to be a legit spoofing attack.
+        require(libraryObj.canContribute(tx.origin)); // check if sender has contributor access
+        require(libraryObj.validType(content_type));
+
+        // BaseContent content = new BaseContent(msg.sender, lib, content_type);
+        // ideally we would use this but it does not work
+        bytes memory encodeBytes = creationBytecode(msg.sender, lib, content_type);
+        address payable contentAddr = deploy(encodeBytes, saltFor(tx.origin));
+
         BaseContent content = BaseContent(contentAddr);
 
         content.setAddressKMS(libraryObj.addressKMS());

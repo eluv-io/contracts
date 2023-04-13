@@ -8,7 +8,6 @@ import "./og-forge-std/OgTest.sol";
 import "../../tradable/Strings.sol";
 
 contract BaseContentSpaceTest is OgTest {
-
     BaseContentSpace space;
     BaseTypeFactory typeFactory;
     BaseGroupFactory groupFactory;
@@ -29,6 +28,8 @@ contract BaseContentSpaceTest is OgTest {
     address payable groupUser1 = address(uint160(vm.addr(0x6)));
     address payable groupUser2 = address(uint160(vm.addr(0x7)));
 
+    uint256 salt = 12345;
+
     function setUp() public {
         vm.startPrank(spaceCreator, spaceCreator);
         space = new BaseContentSpace("test_space");
@@ -42,7 +43,6 @@ contract BaseContentSpaceTest is OgTest {
         contentFactory = new BaseContentFactory(spaceAddr, cfHelperAddr);
         walletFactory = new BaseAccessWalletFactory(spaceAddr);
 
-
         space.setFactory(address(typeFactory));
         space.setWalletFactory(address(walletFactory));
         space.setGroupFactory(address(groupFactory));
@@ -52,26 +52,26 @@ contract BaseContentSpaceTest is OgTest {
 
         // make access wallet for all the keys
         vm.prank(spaceCreator);
-        makeAccessWallet(spaceCreator);
+        makeAccessWallet();
         vm.prank(libraryCreator);
-        makeAccessWallet(libraryCreator);
+        makeAccessWallet();
         vm.prank(tenantFactoryCreator);
-        makeAccessWallet(tenantFactoryCreator);
+        makeAccessWallet();
         vm.prank(kmsAddr);
-        makeAccessWallet(kmsAddr);
+        makeAccessWallet();
         vm.prank(groupCreator);
-        makeAccessWallet(groupCreator);
+        makeAccessWallet();
         vm.prank(groupUser1);
-        makeAccessWallet(groupUser1);
+        makeAccessWallet();
         vm.prank(groupUser2);
-        makeAccessWallet(groupUser2);
+        makeAccessWallet();
     }
 
     function testOwner() public {
         assertEq(space.owner(), spaceCreator);
     }
 
-    function testCreateLibrary() public{
+    function testCreateLibrary() public {
         vm.startPrank(libraryCreator, libraryCreator);
         address libraryAddr = space.createLibrary(kmsAddr);
         console.log("library Address:", libraryAddr);
@@ -79,13 +79,12 @@ contract BaseContentSpaceTest is OgTest {
     }
 
     function testCreateTenantFactoryAndBaseTenantSpace() public {
-
         // create the groups
         vm.startPrank(groupCreator, groupCreator);
         address group1 = createGroupAndAddUsers();
         address group2 = createGroupAndAddUsers();
         vm.stopPrank();
-        bytes memory value = bytes(Strings.strConcat(vm.toString(group1),",",vm.toString(group2)));
+        bytes memory value = bytes(Strings.strConcat(vm.toString(group1), ",", vm.toString(group2)));
 
         vm.startPrank(spaceCreator, spaceCreator);
         bytes memory key = bytes("_ELV_GROUP_TENANT_AUTHORITIES");
@@ -99,7 +98,7 @@ contract BaseContentSpaceTest is OgTest {
         vm.stopPrank();
 
         vm.startPrank(groupUser1, groupUser1);
-        address tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr);
+        address tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
         console.log(tenantAddress);
         vm.stopPrank();
     }
@@ -110,17 +109,15 @@ contract BaseContentSpaceTest is OgTest {
         vm.expectRevert("tenant_factory_creator(msg.sender) invalid");
         tenantFactory = new BaseTenantFactory(spaceAddr);
         vm.stopPrank();
-
     }
 
     function testRevert_CreateTenantFactoryWhenNotPartOfGroup() public {
-
         // create the groups
         vm.startPrank(groupCreator, groupCreator);
         address group1 = createGroupAndAddUsers();
         address group2 = createGroupAndAddUsers();
         vm.stopPrank();
-        bytes memory value = bytes(Strings.strConcat(vm.toString(group1),",",vm.toString(group2)));
+        bytes memory value = bytes(Strings.strConcat(vm.toString(group1), ",", vm.toString(group2)));
 
         vm.startPrank(spaceCreator, spaceCreator);
         bytes memory key = bytes("_ELV_GROUP_TENANT_AUTHORITIES");
@@ -150,11 +147,11 @@ contract BaseContentSpaceTest is OgTest {
     // ==================
     // helper funcs
 
-    function makeAccessWallet(address user) private returns (address){
+    function makeAccessWallet() private returns (address) {
         return space.getAccessWallet();
     }
 
-    function createGroupAndAddUsers() private returns (address){
+    function createGroupAndAddUsers() private returns (address) {
         address payable groupAddr = address(uint160(space.createGroup()));
         console.log("group Address:", groupAddr);
         BaseAccessControlGroup theGroup = BaseAccessControlGroup(groupAddr);
@@ -164,4 +161,3 @@ contract BaseContentSpaceTest is OgTest {
         return groupAddr;
     }
 }
-

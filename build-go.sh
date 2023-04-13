@@ -26,7 +26,7 @@ abigen(){
     local version=$1
     solc_bin="${solc_folder}/${version}/solc"
 
-    "${solc_bin}" "$2" --combined-json bin,bin-runtime,srcmap,srcmap-runtime,abi,userdoc,devdoc,metadata,hashes --optimize | "$abigen_dir/abigen" --pkg=${3} --out "${4}" --combined-json -
+    "${solc_bin}" "$2"  --evm-version constantinople --combined-json bin,bin-runtime,srcmap,srcmap-runtime,abi,userdoc,devdoc,metadata,hashes --optimize | "$abigen_dir/abigen" --pkg=${3} --out "${4}" --combined-json -
     ###./abigen --sol "${sol_dir}/${2}" --pkg=${3} --out "${out_dir}/${5}"
     ret=$?
     if [[ $ret -ne 0 ]]; then
@@ -36,6 +36,13 @@ abigen(){
         echo "SUCCESS : go binding for ${2} generated at ${4}"
     fi
 }
+
+#TEMPORARY / generate binding directly
+
+ # shellcheck disable=SC2030
+ echo "#### generating latest contracts"
+ abigen $solc_0_5_4 base_content_space.sol contracts contracts-go/contracts/base_content_space.go
+ exit 0
 
 # checkout 'known' versions of contracts in folder _build_contracts_go
 # and produce go-bindings in ../../contracts-go

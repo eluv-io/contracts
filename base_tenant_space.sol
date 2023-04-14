@@ -317,10 +317,14 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     }
 
     function createContent(address payable _lib, address payable _contentType) public returns (address) {
+        return createContent(_lib, _contentType, 0);
+    }
+
+    function createContent(address payable _lib, address payable _contentType, uint64 _nonce) public returns (address) {
         if (factoryManager != address(0x0)) {
-            return IFactorySpace(factoryManager).createContent(_lib, _contentType);
+            return IFactorySpace(factoryManager).createContent(_lib, _contentType, _nonce);
         }
-        return IFactorySpace(contentSpace).createContent(_lib, _contentType);
+        return IFactorySpace(contentSpace).createContent(_lib, _contentType, _nonce);
     }
 
     function createGroup() public returns (address) {

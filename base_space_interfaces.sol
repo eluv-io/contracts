@@ -1,8 +1,9 @@
 pragma solidity 0.5.4;
 
 interface IFactorySpace {
-    // this is the only method that's not directly called on the space
+    // these are the only 2 methods that are not directly called on the space
     function createContent(address payable lib, address payable content_type) external returns (address);
+    function createContent(address payable lib, address payable content_type, uint64 nonce) external returns (address);
 
     // current factory methods of space - not including wallet ...
     function createContentType() external returns (address);

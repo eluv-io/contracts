@@ -237,11 +237,15 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return libraryAddress;
     }
 
-    function createContent(address payable lib, address payable content_type) public returns (address) {
+    function createContent(address payable lib, address payable content_type, uint64 nonce) public returns (address) {
         require(msg.sender == tx.origin || msg.sender == lib);
-        address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
+        address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type, nonce);
         emit CreateContent(contentAddress);
         return contentAddress;
+    }
+
+    function createContent(address payable lib, address payable content_type) public returns (address) {
+        return createContent(lib, content_type, 0);
     }
 
     function createGroup() public returns (address) {
@@ -487,13 +491,19 @@ contract BaseContentFactory is Ownable {
         return abi.encodePacked(bytecode, abi.encode(_spcAddr, _libAddr, _typeAddr));
     }
 
-    // saltFor computes a salt for the given address: 'address++block.number'
+    // saltFor computes a salt for the given address: 'address++nonce'.
+    // block.number is used as nonce if the provided nonce is zero.
     // The function is public for testing purposes.
-    function saltFor(address addr) public view returns (uint256) {
+    function saltFor(address addr, uint64 nonce) public view returns (uint256) {
         uint256 ret;
         ret = uint256(uint160(addr));
         ret <<= 96;
-        return uint256(ret) + block.number;
+        if (nonce == 0) {
+            // block.number has to fit into a uint64
+            // see go-ethereum@v1.10.19/core/types/block.go in Header.SanityCheck
+            nonce = uint64(block.number);
+        }
+        return uint256(ret) + nonce;
     }
 
     function deploy(bytes memory bytecode, uint _salt) private returns (address payable _addr) {
@@ -506,8 +516,12 @@ contract BaseContentFactory is Ownable {
         }
     }
 
-    // see note on BaseFactory re tx.origin
     function createContent(address payable lib, address payable content_type) public returns (address) {
+        return createContent(lib, content_type, 0);
+    }
+
+    // see note on BaseFactory re tx.origin
+    function createContent(address payable lib, address payable content_type, uint64 salt) public returns (address) {
         require(msg.sender == contentSpace);
         Container libraryObj = Container(lib);
 
@@ -518,7 +532,7 @@ contract BaseContentFactory is Ownable {
 
         // BaseContent content = new BaseContent(msg.sender, lib, content_type);
         bytes memory encodeBytes = creationBytecode(msg.sender, lib, content_type);
-        address payable contentAddr = deploy(encodeBytes, saltFor(tx.origin));
+        address payable contentAddr = deploy(encodeBytes, saltFor(tx.origin, salt));
         BaseContent content = BaseContent(contentAddr);
 
         content.setAddressKMS(libraryObj.addressKMS());

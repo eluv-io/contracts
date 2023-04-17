@@ -491,19 +491,23 @@ contract BaseContentFactory is Ownable {
         return abi.encodePacked(bytecode, abi.encode(_spcAddr, _libAddr, _typeAddr));
     }
 
-    // saltFor computes a salt for the given address: 'address++nonce'.
-    // block.number is used as nonce if the provided nonce is zero.
+    // saltFor computes a salt for the given address as: 'address++zero++nonce'.
+    // If the provided nonce is zero, block.number is used and the salt becomes:
+    // 'address++block.number++zero'. Hence the layout is 20 bytes for address,
+    // 8 bytes for block number and 4 bytes for nonce.
     // The function is public for testing purposes.
     function saltFor(address addr, uint64 nonce) public view returns (uint256) {
-        uint256 ret;
-        ret = uint256(uint160(addr));
+        uint256 ret = uint256(uint160(addr));
         ret <<= 96;
+        uint256 blockNumber;
         if (nonce == 0) {
-            // block.number has to fit into a uint64
+            // use block number but shift it to avoid collision on young chain
+            // note that block.number has to fit into a uint64
             // see go-ethereum@v1.10.19/core/types/block.go in Header.SanityCheck
-            nonce = uint64(block.number);
+            blockNumber = block.number;
+            blockNumber <<= 32;
         }
-        return uint256(ret) + nonce;
+        return uint256(ret) + blockNumber + nonce;
     }
 
     function deploy(bytes memory bytecode, uint _salt) private returns (address payable _addr) {

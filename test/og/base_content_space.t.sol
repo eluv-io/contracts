@@ -28,7 +28,7 @@ contract BaseContentSpaceTest is OgTest {
     address payable groupUser1 = address(uint160(vm.addr(0x6)));
     address payable groupUser2 = address(uint160(vm.addr(0x7)));
 
-    uint256 salt = 12345;
+    uint64 salt = 12345;
 
     function setUp() public {
         vm.startPrank(spaceCreator, spaceCreator);

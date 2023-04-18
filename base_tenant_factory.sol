@@ -21,11 +21,11 @@ contract BaseTenantFactory is Ownable {
 
     constructor(address payable _spaceAddr) public {
         require(
-            (msg.sender == _spaceAddr || factoryHelper.isValidTenantCreator(_spaceAddr)),
+            (msg.sender == _spaceAddr || tenantFactoryHelper.isValidTenantCreator(_spaceAddr)),
             "tenant_factory_creator(msg.sender) invalid"
         );
         if (msg.sender == _spaceAddr) {
-            require(factoryHelper.isBaseContentSpaceContract(_spaceAddr), "msg.sender != content_space_address");
+            require(tenantFactoryHelper.isBaseContentSpaceContract(_spaceAddr), "msg.sender != content_space_address");
         }
         contentSpace = _spaceAddr;
     }
@@ -96,7 +96,7 @@ contract BaseTenantFactory is Ownable {
     }
 }
 
-library factoryHelper {
+library tenantFactoryHelper {
     using strings for *;
 
     bytes public constant tenantCreatorMetaKey = bytes("_ELV_GROUP_TENANT_AUTHORITIES");

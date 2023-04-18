@@ -83,6 +83,21 @@ library tenantFactoryHelper {
     bytes public constant tenantCreatorMetaKey = bytes("_ELV_GROUP_TENANT_AUTHORITIES");
     bytes16 private constant expectedVersionSubString = "BaseContentSpace";
 
+    function getGroupAddrSlice(bytes memory value) public view returns(address payable[] memory){
+        strings.slice memory s = string(value).toSlice();
+        strings.slice memory delim = ",".toSlice();
+        string[] memory parts = new string[](s.count(delim) + 1);
+        address payable[] memory addr;
+
+        for (uint256 i = 0; i < parts.length; i++) {
+            parts[i] = s.split(delim).toString();
+            address gaddr = Address.bytesToAddress(bytes(parts[i]));
+            address payable grpAddr = address(uint160(gaddr));
+            addr[i] = grpAddr;
+        }
+        return addr;
+    }
+
     function isValidTenantCreator(address payable _spaceAddr) internal view returns (bool) {
         BaseContentSpace space = BaseContentSpace(_spaceAddr);
         bytes memory value = space.getMeta(tenantCreatorMetaKey);

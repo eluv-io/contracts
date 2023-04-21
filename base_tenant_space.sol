@@ -14,10 +14,10 @@ import "./meta_object.sol";
 import "./lib_precompile.sol";
 import "./base_content_space.sol";
 import "./lib_enctoken.sol";
+import {BaseTenantSpaceHelper} from "./base_tenant_factory.sol";
 
 // CAREFUL: no storage! - otherwise it will conflict with the calling contract
 contract TenantFuncsBase is MetaObject, CounterObject {
-
     event TenantTransfer(address to, uint256 amount);
 
     function checkAndSet(bytes memory _encToken) private {
@@ -44,7 +44,8 @@ contract TenantFuncsBase is MetaObject, CounterObject {
     event ApplyGroups(address to, uint256 numGroups);
 
     function applyGroups(bytes memory _encToken, uint256, address payable _to) public {
-        string[10] memory groupOrdNames = ["grp:0", "grp:1", "grp:2", "grp:3", "grp:4", "grp:5", "grp:6", "grp:7", "grp:8", "grp:9"];
+        string[10] memory groupOrdNames =
+            ["grp:0", "grp:1", "grp:2", "grp:3", "grp:4", "grp:5", "grp:6", "grp:7", "grp:8", "grp:9"];
 
         checkAndSet(_encToken);
 
@@ -60,8 +61,7 @@ contract TenantFuncsBase is MetaObject, CounterObject {
 }
 
 contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INodeSpace, IKmsSpace, IFactorySpace {
-
-    bytes32 public version ="BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "BaseTenantSpace20200504120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -76,20 +76,42 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     uint256 public defTokenExpSecs = 24 * 60 * 60; // default one day
     uint256 public defLeewaySecs = 2 * 60; // default two minutes
 
-    function setDescription(string memory _desc) public onlyAdmin {
-        description = _desc;
-    }
+    // commenting below method, since the size is maxed out...
+    // size info :
+    //╭────────────────────────────┬───────────┬─────────────╮
+    //│ Contract                   ┆ Size (kB) ┆ Margin (kB) │
+    //╞════════════════════════════╪═══════════╪═════════════╡
+    //├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+    //│ BaseTenantSpace            ┆ 24.12     ┆ 0.456       │
+    //├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+    //│ BaseTenantSpaceBinProvider ┆ 24.424    ┆ 0.152       │
+    //├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+    //    function setDescription(string memory _desc) public onlyAdmin {
+    //        description = _desc;
+    //    }
 
     event CreateTenant(bytes32 version, address owner);
     event GetAccessWallet(address walletAddress);
 
-    constructor(address payable _contentSpace, string memory _tenantName, address _kmsAddr) public payable {
+    constructor(
+        address payable _contentSpace,
+        string memory _tenantName,
+        address _kmsAddr,
+        address _baseTenantSpaceHelperAddr
+    )
+        public
+        payable
+    {
         name = _tenantName;
-        BaseContentSpace spc = BaseContentSpace(_contentSpace);
-        // allow either the space owner or a trusted address to refer to the space
-        require(msg.sender == spc.owner() || spc.checkKMSAddr(msg.sender) > 0);
         contentSpace = address(_contentSpace);
+        BaseTenantSpaceHelper helper = BaseTenantSpaceHelper(_baseTenantSpaceHelperAddr);
+        require(
+            msg.sender == contentSpace || helper.isValidTenantCreator(contentSpace), "tenant_creator(msg.sender) invalid"
+        );
         addressKMS = _kmsAddr;
+
+        // using CATEGORY_CONTRACT for tenant
+        indexCategory = 5; // AccessIndexor CATEGORY_CONTRACT
         emit CreateTenant(version, owner);
     }
 
@@ -104,8 +126,8 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
         listsMapping[listKey].push(itemVal);
     }
 
-    function removeListOrd(bytes32 listKey, uint itemOrd) public onlyAdmin {
-        uint lastOrd = listsMapping[listKey].length - 1;
+    function removeListOrd(bytes32 listKey, uint256 itemOrd) public onlyAdmin {
+        uint256 lastOrd = listsMapping[listKey].length - 1;
         if (itemOrd < lastOrd) {
             listsMapping[listKey][itemOrd] = listsMapping[listKey][lastOrd];
         }
@@ -113,7 +135,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
         listsMapping[listKey].length--;
     }
 
-    function listLength(bytes32 listKey) public view returns (uint) {
+    function listLength(bytes32 listKey) public view returns (uint256) {
         return listsMapping[listKey].length;
     }
 
@@ -144,8 +166,11 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
         emit FunctionsAdded(_func4Bytes, _funcAddr);
     }
 
-    function checkCallFunc(bytes4 _func4Bytes, bytes memory _encAuthToken, uint8 _v, bytes32 _r, bytes32 _s) public view returns (bool) {
-
+    function checkCallFunc(bytes4 _func4Bytes, bytes memory _encAuthToken, uint8 _v, bytes32 _r, bytes32 _s)
+        public
+        view
+        returns (bool)
+    {
         address maybeFuncAddr = funcMapping[_func4Bytes];
         require(maybeFuncAddr != address(0x0));
 
@@ -161,16 +186,24 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
 
         uint256 maybeIATMillis = EncToken.getUint("iat", _encAuthToken);
         if (maybeIATMillis != 0) {
-            uint secSinceIAT = now + defLeewaySecs - (maybeIATMillis / 1000);
+            uint256 secSinceIAT = now + defLeewaySecs - (maybeIATMillis / 1000);
             require(secSinceIAT <= defTokenExpSecs);
         }
 
         return true;
     }
 
-    function callFuncUintAddr(bytes4 _func4Bytes, uint256 _p1, address payable _p2, bytes memory _encAuthToken,
-        uint8 _v, bytes32 _r, bytes32 _s) public {
-
+    function callFuncUintAddr(
+        bytes4 _func4Bytes,
+        uint256 _p1,
+        address payable _p2,
+        bytes memory _encAuthToken,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+    {
         require(checkCallFunc(_func4Bytes, _encAuthToken, _v, _r, _s));
 
         address maybeFuncAddr = funcMapping[_func4Bytes];
@@ -246,6 +279,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     // implement IUserSpace
 
     address public userManager;
+
     event SetUserManager(address newManager, address prevManager);
 
     function setUserManager(address _userMan) public onlyAdmin {
@@ -271,6 +305,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     // implement INodeSpace
 
     address public nodeManager;
+
     event SetNodeManager(address newManager, address prevManager);
 
     function setNodeManager(address _nodeMan) public onlyAdmin {
@@ -295,6 +330,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     // implement IFactorySpace
 
     address public factoryManager;
+
     event SetFactoryManager(address newManager, address prevManager);
 
     function setFactoryManager(address _factMan) public onlyAdmin {
@@ -331,6 +367,7 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     }
 
     address public kmsManager;
+
     event SetKmsManager(address newManager, address prevManager);
 
     function setKmsManager(address _kmsMan) public onlyAdmin {
@@ -347,21 +384,25 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
         return IKmsSpace(contentSpace).getKMSID(_kmsAddr);
     }
 
-    function checkKMS(string calldata _kmsIdStr) external view returns (uint) {
+    function checkKMS(string calldata _kmsIdStr) external view returns (uint256) {
         if (kmsManager != address(0x0)) {
             return IKmsSpace(kmsManager).checkKMS(_kmsIdStr);
         }
         return IKmsSpace(contentSpace).checkKMS(_kmsIdStr);
     }
 
-    function checkKMSAddr(address _kmsAddr) public view returns (uint) {
+    function checkKMSAddr(address _kmsAddr) public view returns (uint256) {
         if (kmsManager != address(0x0)) {
             return IKmsSpace(kmsManager).checkKMSAddr(_kmsAddr);
         }
         return IKmsSpace(contentSpace).checkKMSAddr(_kmsAddr);
     }
 
-    function getKMSInfo(string calldata _kmsID, bytes calldata _prefix) external view returns (string memory, string memory) {
+    function getKMSInfo(string calldata _kmsID, bytes calldata _prefix)
+        external
+        view
+        returns (string memory, string memory)
+    {
         if (kmsManager != address(0x0)) {
             return IKmsSpace(kmsManager).getKMSInfo(_kmsID, _prefix);
         }

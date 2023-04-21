@@ -14,7 +14,7 @@ import "./meta_object.sol";
 import "./lib_precompile.sol";
 import "./base_content_space.sol";
 import "./lib_enctoken.sol";
-import {tenantFactoryHelper} from "./base_tenant_factory.sol";
+import {BaseTenantSpaceHelper} from "./base_tenant_factory.sol";
 
 // CAREFUL: no storage! - otherwise it will conflict with the calling contract
 contract TenantFuncsBase is MetaObject, CounterObject {
@@ -76,19 +76,37 @@ contract BaseTenantSpace is MetaObject, CounterObject, Editable, IUserSpace, INo
     uint256 public defTokenExpSecs = 24 * 60 * 60; // default one day
     uint256 public defLeewaySecs = 2 * 60; // default two minutes
 
-    function setDescription(string memory _desc) public onlyAdmin {
-        description = _desc;
-    }
+    // commenting below method, since the size is maxed out...
+    // size info :
+    //╭────────────────────────────┬───────────┬─────────────╮
+    //│ Contract                   ┆ Size (kB) ┆ Margin (kB) │
+    //╞════════════════════════════╪═══════════╪═════════════╡
+    //├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+    //│ BaseTenantSpace            ┆ 24.12     ┆ 0.456       │
+    //├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+    //│ BaseTenantSpaceBinProvider ┆ 24.424    ┆ 0.152       │
+    //├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+    //    function setDescription(string memory _desc) public onlyAdmin {
+    //        description = _desc;
+    //    }
 
     event CreateTenant(bytes32 version, address owner);
     event GetAccessWallet(address walletAddress);
 
-    constructor(address payable _contentSpace, string memory _tenantName, address _kmsAddr) public payable {
+    constructor(
+        address payable _contentSpace,
+        string memory _tenantName,
+        address _kmsAddr,
+        address _baseTenantSpaceHelperAddr
+    )
+        public
+        payable
+    {
         name = _tenantName;
         contentSpace = address(_contentSpace);
+        BaseTenantSpaceHelper helper = BaseTenantSpaceHelper(_baseTenantSpaceHelperAddr);
         require(
-            msg.sender == contentSpace || tenantFactoryHelper.isValidTenantCreator(contentSpace),
-            "tenant_creator(msg.sender) invalid"
+            msg.sender == contentSpace || helper.isValidTenantCreator(contentSpace), "tenant_creator(msg.sender) invalid"
         );
         addressKMS = _kmsAddr;
 

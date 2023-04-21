@@ -16,8 +16,15 @@ contract BaseContentSpaceTest is OgTest {
     BaseContentFactory contentFactory;
     BaseAccessWalletFactory walletFactory;
     BaseTenantFactory tenantFactory;
+    BaseTenantSpaceHelper tenantSpaceHelper;
+    BaseTenantSpaceBinProvider tenantSpaceBinProvider;
+
+
 
     address payable spaceAddr;
+
+    address tenantSpaceHelperAddr;
+    address tenantSpaceBinProviderAddr;
 
     address payable spaceCreator = address(uint160(vm.addr(0x1)));
     address libraryCreator = vm.addr(0x2);
@@ -42,6 +49,11 @@ contract BaseContentSpaceTest is OgTest {
         address payable cfHelperAddr = address(uint160(address(cfHelper)));
         contentFactory = new BaseContentFactory(spaceAddr, cfHelperAddr);
         walletFactory = new BaseAccessWalletFactory(spaceAddr);
+
+        tenantSpaceHelper = new BaseTenantSpaceHelper();
+        tenantSpaceBinProvider = new BaseTenantSpaceBinProvider();
+        tenantSpaceHelperAddr = address(tenantSpaceHelper);
+        tenantSpaceBinProviderAddr = address(tenantSpaceBinProvider);
 
         space.setFactory(address(typeFactory));
         space.setWalletFactory(address(walletFactory));
@@ -94,12 +106,16 @@ contract BaseContentSpaceTest is OgTest {
         vm.stopPrank();
 
         vm.startPrank(groupUser1, groupUser1);
-        tenantFactory = new BaseTenantFactory(spaceAddr);
+        tenantFactory = new BaseTenantFactory(spaceAddr, tenantSpaceHelperAddr, tenantSpaceBinProviderAddr);
         vm.stopPrank();
 
         vm.startPrank(groupUser1, groupUser1);
-        address tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
+        console.log("groupUser1", groupUser1, tx.origin, msg.sender);
+        address payable tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
         console.log(tenantAddress);
+        BaseTenantSpace theTenant = BaseTenantSpace(tenantAddress);
+        console.log("tenant owner", address(tenantFactory), theTenant.owner(), theTenant.creator());
+
         vm.stopPrank();
 
         salt = 1111;
@@ -125,7 +141,7 @@ contract BaseContentSpaceTest is OgTest {
         vm.stopPrank();
 
         vm.startPrank(groupUser1, groupUser1);
-        tenantFactory = new BaseTenantFactory(spaceAddr);
+        tenantFactory = new BaseTenantFactory(spaceAddr, tenantSpaceHelperAddr, tenantSpaceBinProviderAddr);
         vm.stopPrank();
 
         vm.startPrank(groupUser1, groupUser1);
@@ -144,7 +160,7 @@ contract BaseContentSpaceTest is OgTest {
         // meta not set
         vm.startPrank(groupUser1, groupUser1);
         vm.expectRevert("tenant_factory_creator(msg.sender) invalid");
-        tenantFactory = new BaseTenantFactory(spaceAddr);
+        tenantFactory = new BaseTenantFactory(spaceAddr, tenantSpaceHelperAddr, tenantSpaceBinProviderAddr);
         vm.stopPrank();
     }
 
@@ -165,19 +181,19 @@ contract BaseContentSpaceTest is OgTest {
 
         vm.startPrank(spaceCreator, spaceCreator);
         vm.expectRevert("tenant_factory_creator(msg.sender) invalid");
-        tenantFactory = new BaseTenantFactory(spaceAddr);
+        tenantFactory = new BaseTenantFactory(spaceAddr, tenantSpaceHelperAddr, tenantSpaceBinProviderAddr);
         vm.stopPrank();
     }
 
     function testCreateTenantFactoryBySpace() public {
         vm.startPrank(spaceAddr, spaceAddr);
-        tenantFactory = new BaseTenantFactory(spaceAddr);
+        tenantFactory = new BaseTenantFactory(spaceAddr, tenantSpaceHelperAddr, tenantSpaceBinProviderAddr);
         vm.stopPrank();
     }
 
     function testFail_CreateTenantFactoryWhenSpaceAddressInvalid() public {
         vm.startPrank(spaceCreator, spaceCreator);
-        tenantFactory = new BaseTenantFactory(spaceCreator);
+        tenantFactory = new BaseTenantFactory(spaceCreator, tenantSpaceHelperAddr, tenantSpaceBinProviderAddr);
         vm.stopPrank();
     }
 

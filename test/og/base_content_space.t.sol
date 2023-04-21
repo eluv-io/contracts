@@ -156,6 +156,40 @@ contract BaseContentSpaceTest is OgTest {
         vm.stopPrank();
     }
 
+    function testRevert_CreateBaseTenantSpaceWithZeroSalt() public {
+        // create the groups
+        vm.startPrank(groupCreator, groupCreator);
+        address group1 = createGroupAndAddUsers();
+        address group2 = createGroupAndAddUsers();
+        vm.stopPrank();
+        bytes memory value = bytes(Strings.strConcat(vm.toString(group1), ",", vm.toString(group2)));
+
+        vm.startPrank(spaceCreator, spaceCreator);
+        bytes memory key = bytes("_ELV_GROUP_TENANT_AUTHORITIES");
+        space.putMeta(key, value);
+        bytes memory meta = space.getMeta(key);
+        console.log("meta", string(meta));
+        vm.stopPrank();
+
+        vm.startPrank(groupUser1, groupUser1);
+        tenantFactory = new BaseTenantFactory(spaceAddr, tenantSpaceHelperAddr, tenantSpaceBinProviderAddr);
+        vm.stopPrank();
+
+        salt = 0;
+        vm.startPrank(groupUser1, groupUser1);
+        address tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
+        console.log(tenantAddress);
+        vm.stopPrank();
+
+        // same block number so reverts
+        vm.startPrank(groupUser1, groupUser1);
+        vm.expectRevert();
+        tenantAddress = tenantFactory.createTenant("TST_TNT", kmsAddr, salt);
+        console.log(tenantAddress);
+        vm.stopPrank();
+    }
+
+
     function testRevert_CreateTenantFactoryWhenMetaNotSet() public {
         // meta not set
         vm.startPrank(groupUser1, groupUser1);

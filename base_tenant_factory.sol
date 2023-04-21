@@ -122,7 +122,7 @@ contract BaseTenantFactory is Ownable {
      * 2. create baseTenantSpace contract using CREATE2 EVM opcode ( has indexCaterory set to CATEGORY_CONTRACT())
      * 3. set rights to tx.origin for baseTenantSpace contract
      * 4. if _salt > 0, tenant_address is calcualted as 'address++zero++nonce' else 'address++block.number++zero'
-     *    for more info, check tenantFactoryHelper.saltFor() library method
+     *    for more info, check BaseTenantSpaceHelper.saltFor() method
     */
     function createTenant(string memory _tenantName, address _kmsAddr, uint64 _salt) public returns (address payable) {
         address payable newTenant = deployTenant(_tenantName, _kmsAddr, _salt);

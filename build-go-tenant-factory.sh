@@ -17,7 +17,7 @@ set -Eeuo pipefail
 source ./build-common.sh
 
 
-# solc ./base_content_space.sol --combined-json bin,bin-runtime,srcmap,srcmap-runtime,abi,userdoc,devdoc,metadata,hashes --optimize | abigen --pkg=contracts --out build/base_content_space.go --combined-json -
+# solc ./base_tenant_factory.sol --evm-version constantinople --combined-json bin,bin-runtime,srcmap,srcmap-runtime,abi,userdoc,devdoc,metadata,hashes --optimize | abigen --pkg=contracts --out build/base_content_space.go --combined-json -
 abigen(){
     # 1: solc version
     # 2: contract file (.sol)

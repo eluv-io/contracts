@@ -13,11 +13,11 @@ run_solc() {
 
     bsc_name=$(basename "${2}")
 
-    if $($solc_bin "${2}" --abi --hashes --optimize -o "${abi_dir}" --overwrite) ; then
+    if $($solc_bin "${2}" --evm-version constantinople --abi --hashes --optimize -o "${abi_dir}" --overwrite) ; then
         echo -e "\n SUCCESS : ${bsc_name} ABI and function hashes present in ${abi_dir}"
     fi
 
-    if $($solc_bin "${2}" --bin --optimize -o "${abi_dir}/bin" --overwrite) ; then
+    if $($solc_bin "${2}" --evm-version constantinople --bin --optimize -o "${abi_dir}/bin" --overwrite) ; then
         echo -e "\n SUCCESS : ${bsc_name} BIN present in ${abi_dir}/bin"
     fi
 }

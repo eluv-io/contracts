@@ -311,11 +311,15 @@ contract BaseLibrary is MetaObject, Container {
         }
     }
 
-    function createContent(address payable content_type) public  returns (address) {
+    function createContent(address payable content_type, uint64 nonce) public  returns (address) {
         require(msg.sender == tx.origin, "only direct calls allowed");
-        address content = IFactorySpace(contentSpace).createContent(address(this), content_type);
+        address content = IFactorySpace(contentSpace).createContent(address(this), content_type, nonce);
         emit ContentObjectCreated(content, content_type, contentSpace);
         return content;
+    }
+
+    function createContent(address payable content_type) public  returns (address) {
+        return createContent(content_type, 0);
     }
 
     // content can be deleted by content owner or the library owner - enforced inside the kill

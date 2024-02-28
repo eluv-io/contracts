@@ -481,7 +481,6 @@ contract BaseContentFactory is Ownable {
     }
 
     // creationBytecode uses the creationCode of baseContent ..
-    // but this does not work and the contracts reverts
     function creationBytecode(
         address _spcAddr,
         address _libAddr,
@@ -535,8 +534,8 @@ contract BaseContentFactory is Ownable {
         require(libraryObj.validType(content_type));
 
         // BaseContent content = new BaseContent(msg.sender, lib, content_type);
-        bytes memory encodeBytes = creationBytecode(msg.sender, lib, content_type);
-        address payable contentAddr = deploy(encodeBytes, saltFor(tx.origin, salt));
+        bytes memory encodedBytes = creationBytecode(msg.sender, lib, content_type);
+        address payable contentAddr = deploy(encodedBytes, saltFor(tx.origin, salt));
         BaseContent content = BaseContent(contentAddr);
 
         content.setAddressKMS(libraryObj.addressKMS());
